@@ -12,12 +12,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { removeToken } from "@/utils/storage";
 
 function CustomDrawerContent() {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
   const [role, setRole] = useState<string | null>(null);
+
+ const logout = async () => {
+  await removeToken();
+};
 
   useEffect(() => {
     const loadRole = async () => {
@@ -103,7 +108,7 @@ function CustomDrawerContent() {
       <View style={styles.logoutContainer}>
         <TouchableOpacity
           onPress={async () => {
-            await AsyncStorage.removeItem("role");
+            await logout();
             router.replace("/(auth)/login");
           }}
           style={styles.logoutButton}
