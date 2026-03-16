@@ -13,11 +13,39 @@ import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
+import { useEffect, useState } from "react";
+import { getAdminProfile } from "@/api/profile";
 
 export default function AdminProfile() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+  const [pageLoading, setPageLoading] = useState(true);
+
+  const [adminProfile, setAdminProfile] = useState<any>(null);
+
+
+   const fetchAdminProfile = async () => {
+    try {
+      setPageLoading(true);
+
+      const adminProfile = await getAdminProfile();
+
+
+      console.log("adminProfile",adminProfile);
+      
+     console.log("adminProfile",adminProfile);
+     setAdminProfile(adminProfile);
+    } catch (error) {
+      console.error("Failed to fetch admin profile", error);
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminProfile();
+  }, []);
 
   return (
     <>
@@ -67,12 +95,12 @@ export default function AdminProfile() {
 
                 {/* Name */}
                 <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>
-                  Admin
+                  {adminProfile?.username}
                 </ThemedText>
 
                 {/* Role */}
                 <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
-                  <ThemedText style={{ fontSize: 14 }}>Admin</ThemedText>
+                  <ThemedText style={{ fontSize: 14 }}>{adminProfile?.role}</ThemedText>
                 </Box>
               </VStack>
             </Box>
@@ -88,13 +116,13 @@ export default function AdminProfile() {
                       Email
                     </ThemedText>
 
-                    <ThemedText>Admin@email.com</ThemedText>
+                    <ThemedText>{adminProfile?.email}</ThemedText>
                   </VStack>
                 </HStack>
 
                 <Divider />
 
-                <HStack className="items-center gap-3">
+                {/* <HStack className="items-center gap-3">
                   <BookA size={20} color="#8bc34a" />
                   <VStack>
                     <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
@@ -105,7 +133,7 @@ export default function AdminProfile() {
                       Active
                     </ThemedText>
                   </VStack>
-                </HStack>
+                </HStack> */}
               </VStack>
             </Box>
           </ScrollView>
