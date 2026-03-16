@@ -130,6 +130,12 @@ export default function AdminTabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="combinedLeaderboards/index"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

@@ -323,7 +323,7 @@ export default function NewRoundScreen() {
               </Pressable>
 
               <Pressable
-                onPress={() => routePage.push("/newRound/scoreCard")}
+                onPress={() => routePage.push("/tournaments/scoreCardUser")}
                 style={styles.startButton}
               >
                 <ThemedText style={{ color: "white", fontWeight: "600" }}>

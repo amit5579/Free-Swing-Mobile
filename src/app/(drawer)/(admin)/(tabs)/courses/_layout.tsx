@@ -6,15 +6,11 @@ export default function coursesLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
         name="teeBox"
-        options={{
-          title: "Tee Boxes",
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="holes"
-        options={{
-          title: "Edit Holes",
-        }}
+         options={{ headerShown: false }}
       />
     </Stack>
   );
