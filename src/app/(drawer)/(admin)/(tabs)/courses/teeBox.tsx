@@ -19,17 +19,26 @@ import { Divider } from "@/components/divider";
 import { Text } from "@/components/text";
 import { ThemedView } from "@/components/themed-view";
 import { TextInput } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 export default function teeBoxPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const routePage = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  const [selectedColor, setSelectedColor] = useState<
-    "red" | "blue" | "black" | "white" | "gold" | "green" | "silver" | null
-  >(null);
+  const color = [
+    { label: "Red", value: "red" },
+    { label: "Blue", value: "blue" },
+    { label: "Black", value: "black" },
+    { label: "White", value: "white" },
+    { label: "Gold", value: "gold" },
+    { label: "Green", value: "green" },
+    { label: "Silver", value: "silver" },
+  ];
 
   const tees = [
     {
@@ -109,9 +118,38 @@ export default function teeBoxPage() {
       <ThemedView
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#000" : "#f2f2f2",
         }}
       >
+        {/* HEADER */}
+        <HStack
+          className="px-3 pt-5 pb-3 items-center"
+          style={{ justifyContent: "space-between" }}
+        >
+          {/* LEFT: Back button */}
+          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+            <Ionicons
+              name="arrow-back-outline"
+              size={22}
+              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* CENTER: Title */}
+          <ThemedText
+            style={{
+              flex: 1,
+              fontSize: 24,
+              fontWeight: "700",
+              textAlign: "center",
+              lineHeight: 30,
+            }}
+          >
+            Tee Boxes
+          </ThemedText>
+
+          {/* RIGHT: Spacer */}
+          <View style={{ width: 34 }} />
+        </HStack>
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -207,80 +245,23 @@ export default function teeBoxPage() {
               </HStack>
 
               {/* Color Dropdown */}
-              <VStack className="mb-4">
-                <Text style={styles.label}>Select Color</Text>
+             
 
-                <Pressable
-                  onPress={() => setDropdownOpen(!dropdownOpen)}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: dropdownOpen ? "#8bc34a" : "#818589",
-                    borderRadius: 10,
-                    padding: 14,
-                  }}
-                >
-                  <HStack className="justify-between items-center">
-                    <ThemedText
-                      style={{
-                        fontSize: 16,
-                        color: selectedColor ? "#8bc34a" : "#999",
-                        fontWeight: selectedColor ? "600" : "400",
-                      }}
-                    >
-                      {selectedColor
-                        ? selectedColor.charAt(0).toUpperCase() +
-                          selectedColor.slice(1)
-                        : "Select Color"}
-                    </ThemedText>
-
-                    <Ionicons
-                      name={dropdownOpen ? "chevron-up" : "chevron-down"}
-                      size={20}
-                    />
-                  </HStack>
-                </Pressable>
-              </VStack>
-
-              {/* Dropdown Options */}
-              {dropdownOpen && (
-                <VStack className="border border-gray-400 rounded-lg overflow-hidden mb-4">
-                  {(
-                    [
-                      "red",
-                      "blue",
-                      "black",
-                      "white",
-                      "gold",
-                      "green",
-                      "silver",
-                    ] as const
-                  ).map((color) => (
-                    <Pressable
-                      key={color}
-                      onPress={() => {
-                        setSelectedColor(color);
-                        setDropdownOpen(false);
-                      }}
-                      style={{
-                        backgroundColor:
-                          selectedColor === color ? "#8bc34a" : "white",
-                        paddingVertical: 10,
-                      }}
-                    >
-                      <ThemedText
-                        style={{
-                          color: selectedColor === color ? "white" : "black",
-                          fontWeight: "500",
-                          textAlign: "center",
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {color}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </VStack>
-              )}
+              <Dropdown
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#818589",
+                  borderRadius: 10,
+                  padding: 14,
+                  marginBottom: 14,
+                }}
+                data={color}
+                labelField="label"
+                valueField="value"
+                placeholder="Select color"
+                value={selectedColor}
+                onChange={(item) => setSelectedColor(item.value)}
+              />
 
               <Text className="text-gray-500 mb-4">
                 *Premium tees are only available to subscribed members.
@@ -341,35 +322,36 @@ function TeeCardAdmin({ tee, isDark, openModal }: any) {
     >
       {/* Color Badge */}
       {/* Color Badge */}
-{tee.color && (() => {
-  const bgColor = teeColors[tee.color.toLowerCase()] || (isDark ? "#111" : "#fff");
+      {tee.color &&
+        (() => {
+          const bgColor =
+            teeColors[tee.color.toLowerCase()] || (isDark ? "#111" : "#fff");
 
-  const textColor =
-    tee.color.toLowerCase() === "white" ? "#000" : "#fff";
+          const textColor =
+            tee.color.toLowerCase() === "white" ? "#000" : "#fff";
 
-  return (
-    <Box
-      className="absolute top-3 right-3 px-3 py-1 rounded-full"
-      style={{
-        borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
-        backgroundColor: bgColor,
-      }}
-    >
-      <ThemedText
-        style={{
-          fontSize: 12,
-          fontWeight: "600",
-          color: textColor,
-        }}
-      >
-        {tee.color}
-      </ThemedText>
-    </Box>
-  );
-})()}
+          return (
+            <Box
+              className="absolute top-3 right-3 px-3 py-1 rounded-full"
+              style={{
+                borderWidth: 1,
+                borderColor: isDark ? "#262626" : "#e5e5e5",
+                backgroundColor: bgColor,
+              }}
+            >
+              <ThemedText
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: textColor,
+                }}
+              >
+                {tee.color}
+              </ThemedText>
+            </Box>
+          );
+        })()}
 
-    
       {/* tee Name */}
       <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
         {tee.color}

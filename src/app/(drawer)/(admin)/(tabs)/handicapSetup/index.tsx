@@ -15,6 +15,7 @@ import Watermark from "@/components/watermark";
 
 import { UserIcon } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemedView } from "@/components/themed-view";
 
 type Player = {
   id: string;
@@ -68,10 +69,9 @@ export default function PlayerHandicapSetup() {
   };
 
   return (
-    <SafeAreaView
+    <ThemedView
   style={{
     flex: 1,
-    backgroundColor: isDark ? "#000" : "#f2f2f2",
   }}
 >
   <Watermark />
@@ -238,6 +238,6 @@ export default function PlayerHandicapSetup() {
     </ScrollView>
 
   </VStack>
-</SafeAreaView>
+</ThemedView>
   );
 }

@@ -19,6 +19,7 @@ import { Divider } from "@/components/divider";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
+import { ThemedView } from "@/components/themed-view";
 
 export default function subAdminsPage() {
   const colorScheme = useColorScheme();
@@ -48,16 +49,15 @@ export default function subAdminsPage() {
 
   return (
     <>
-      <SafeAreaView
+      <ThemedView
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#000" : "#f2f2f2",
         }}
       >
         <Watermark />
 
         {/* Header */}
-        <HStack className="justify-between items-center px-4 mt-2">
+        <HStack className="justify-between items-center px-4 my-3">
           <ThemedText
             style={{
               fontSize: 24,
@@ -87,7 +87,7 @@ export default function subAdminsPage() {
             ))}
           </VStack>
         </ScrollView>
-      </SafeAreaView>
+      </ThemedView>
 
       {/* CREATE SUB ADMIN MODAL */}
       <Modal

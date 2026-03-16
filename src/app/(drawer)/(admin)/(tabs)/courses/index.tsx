@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
@@ -20,17 +19,16 @@ import { Modal, Pressable, useColorScheme, View } from "react-native";
 import { Divider } from "@/components/divider";
 import { Text } from "@/components/text";
 import { TextInput } from "react-native";
+import { ThemedView } from "@/components/themed-view";
+import { Dropdown } from "react-native-element-dropdown";
 export default function adminTournamentPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const routePage = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const [selectedPremium, setSelectedPremium] = useState<
-    "free" | "premium" | null
-  >(null);
+  const [selectedPremium, setSelectedPremium] = useState<string | null>(null);
   const [scoringMode, setScoringMode] = useState("netInclude");
 
   const courses = [
@@ -39,40 +37,62 @@ export default function adminTournamentPage() {
     { id: 3, name: "Palm Meadows", location: "Mumbai", tees: 3, free: true },
   ];
 
+  const premium = [
+    { label: "Free", value: "Free" },
+    { label: "Premium", value: "Premium" },
+  ];
   return (
     <>
-      <SafeAreaView
+      <ThemedView
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#000" : "#f2f2f2",
+          justifyContent: "center",
         }}
       >
-        <Watermark />
-        {/* Header */}
-        <VStack className="mb-6">
+        {/* HEADER */}
+        <VStack>
           <ThemedText
             style={{
-              fontSize: 28,
-              fontWeight: "700",
+              fontSize: 20,
+              fontWeight: "500",
               textAlign: "center",
-              lineHeight: 27,
+              lineHeight: 30,
+              marginTop: 10,
             }}
           >
-            Courses
+            Manage and explore your golf courses
           </ThemedText>
+          <HStack
+            className="p-3 items-center"
+            style={{ justifyContent: "flex-end" }}
+          >
+            {/* LEFT: Back button */}
+            {/* <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+              <Ionicons
+                name="arrow-back-outline"
+                size={22}
+                color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+              />
+            </Pressable> */}
+            {/* <View>
+  {" "}
+</View> */}
 
-          <ThemedText
-            style={{
-              fontSize: 15,
-              opacity: 0.6,
-              marginTop: 9,
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-          >
-            Manage and explore your golf courses.
-          </ThemedText>
+            {/* RIGHT: Add Button */}
+            <Pressable
+              onPress={() => setModalVisible(true)}
+              style={styles.createButton}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="add-outline" size={28} color="white" />
+              <ThemedText style={{ color: "white", fontWeight: "600" }}>
+                Add Courses
+              </ThemedText>
+            </Pressable>
+          </HStack>
         </VStack>
+        <Watermark />
+
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
@@ -87,7 +107,7 @@ export default function adminTournamentPage() {
             </VStack>
           </VStack>
         </ScrollView>
-      </SafeAreaView>
+      </ThemedView>
 
       <Modal
         animationType="slide"
@@ -100,7 +120,7 @@ export default function adminTournamentPage() {
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
               <Text style={{ fontSize: 18, fontWeight: "700", lineHeight: 27 }}>
-                Edit Course
+                Add Course
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
@@ -159,90 +179,22 @@ export default function adminTournamentPage() {
               >
                 Premium Status
               </Text>
-
-              <Pressable
-                onPress={() => setDropdownOpen(!dropdownOpen)}
+              <Dropdown
                 style={{
                   borderWidth: 1,
-                  borderColor: dropdownOpen ? "#8bc34a" : "#818589",
+                  borderColor: "#818589",
                   borderRadius: 10,
                   padding: 14,
                   marginBottom: 14,
                 }}
-              >
-                <HStack className="justify-between items-center">
-                  <ThemedText
-                    style={{
-                      fontSize: 16,
-                      color: selectedPremium ? "#8bc34a" : "#999",
-                      fontWeight: selectedPremium ? "600" : "400",
-                    }}
-                  >
-                    {selectedPremium
-                      ? selectedPremium === "free"
-                        ? "free (free)"
-                        : "premium (premium)"
-                      : "Choose a Tee box..."}
-                  </ThemedText>
-
-                  {dropdownOpen ? (
-                    <Ionicons name="chevron-up" size={20} />
-                  ) : (
-                    <Ionicons name="chevron-down" size={20} />
-                  )}
-                </HStack>
-              </Pressable>
+                data={premium}
+                labelField="label"
+                valueField="value"
+                placeholder="Select course"
+                value={selectedPremium}
+                onChange={(item) => setSelectedPremium(item.value)}
+              />
             </VStack>
-
-            {dropdownOpen && (
-              <VStack className="border border-gray-400 rounded-lg overflow-hidden">
-                {/* Free */}
-                <Pressable
-                  onPress={() => {
-                    setSelectedPremium("free");
-                    setDropdownOpen(false);
-                  }}
-                  style={{
-                    backgroundColor:
-                      selectedPremium === "free" ? "#8bc34a" : "white",
-                    paddingVertical: 7,
-                  }}
-                >
-                  <ThemedText
-                    style={{
-                      color: selectedPremium === "free" ? "white" : "black",
-                      fontWeight: "500",
-                      textAlign: "center",
-                    }}
-                  >
-                    Free
-                  </ThemedText>
-                </Pressable>
-
-                {/* Premium */}
-                <Pressable
-                  onPress={() => {
-                    setSelectedPremium("premium");
-                    setDropdownOpen(false);
-                  }}
-                  style={{
-                    backgroundColor:
-                      selectedPremium === "premium" ? "#8bc34a" : "white",
-                    paddingVertical: 7,
-                  }}
-                >
-                  <ThemedText
-                    style={{
-                      color: selectedPremium === "premium" ? "white" : "black",
-                      fontWeight: "500",
-                      textAlign: "center",
-                    }}
-                  >
-                    Premium
-                  </ThemedText>
-                </Pressable>
-              </VStack>
-            )}
 
             <Text className="text-gray-500">
               *Premium courses are only available to subscribed members.
@@ -390,6 +342,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  createButton: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 7,
   },
   modalView: {
     margin: 20,

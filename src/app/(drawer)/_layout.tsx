@@ -89,6 +89,14 @@ function CustomDrawerContent() {
           <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
           <Text style={styles.drawerText}>Player Handicap</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards")}
+          style={styles.drawerItem}
+        >
+          <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
+          <Text style={styles.drawerText}>Combined Leaderboards</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Logout */}
