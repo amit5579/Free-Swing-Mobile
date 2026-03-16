@@ -97,9 +97,56 @@ export default function SignupScreen() {
 
     const bgImage = require("/assets/golf-bgg.jpg");
 
-    const handleSignup = () => {
-        router.replace("/login");
+    const handleSignup = async () => {
+  try {
+    console.log("🟢 Signup started");
+
+    const payload = {
+      Username: name,
+      Email: email,
+      Password: password,
+      MobileNumber: mobile,
+      DateOfBirth: dob ? new Date(selectedDate).toISOString().split("T")[0] : null,
+      HomeCourse: course || null,
+      Handicap: hcp || null,
+      HandicapIndex: hIndex || null,
+      Slope: slope || null,
+      Rating: rating || null,
     };
+
+    console.log("📦 Payload:", payload);
+
+    const response = await fetch(
+      "https://kolve18freeswing.com/api/Auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    console.log("📡 Status:", response.status);
+
+    const data = await response.json();
+
+    console.log("📩 API Response:", data);
+
+    if (!response.ok) {
+      alert(data.message || "Signup failed");
+      return;
+    }
+
+    alert("Signup successful ✅");
+
+    router.replace("/login");
+
+  } catch (error) {
+    console.log("❌ Signup error:", error);
+  }
+};
 
     useEffect(() => {
         const showListener = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
