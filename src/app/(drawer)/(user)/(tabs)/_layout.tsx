@@ -10,8 +10,7 @@ import { Colors } from "@/constants/theme";
 
 export default function TabLayout() {
   const scheme = useColorScheme();
-  const theme = scheme === "dark" ? "dark" : "light";
-  const colors = Colors[theme];
+  const isDark = scheme === "dark";
 
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -42,8 +41,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          height: 60 + insets.bottom,
+          backgroundColor: isDark
+            ? "rgba(30,30,30,0.75)"
+            : "#fff", height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
       }}
@@ -112,27 +112,27 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   fabOuter: {
-  width: 70,
-  height: 70,
-  borderRadius: 35,
-  backgroundColor: "transparent",
-  borderWidth: 3,
-  borderColor: "#8bc34a",
-  justifyContent: "center",
-  alignItems: "center",
-  marginBottom: 25,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 5 },
-  shadowOpacity: 0.3,
-  shadowRadius: 5,
-  elevation: 5,
-},
-fabInner: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: "#8bc34a",
-  justifyContent: "center",
-  alignItems: "center",
-},
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "transparent",
+    borderWidth: 3,
+    borderColor: "#8bc34a",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  fabInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#8bc34a",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

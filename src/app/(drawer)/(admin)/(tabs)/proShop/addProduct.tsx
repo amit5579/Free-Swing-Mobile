@@ -49,7 +49,9 @@ export default function AddProduct() {
           {/* FORM CARD */}
           <Box
             style={{
-              backgroundColor: isDark ? "#1c1c1e" : "rgba(255,255,255,0.9)",
+              backgroundColor: isDark
+                    ? "rgba(30,30,30,0.75)"
+                    : "rgba(255,255,255,0.75)",
               padding: 20,
               borderRadius: 20,
               borderWidth: 1,
