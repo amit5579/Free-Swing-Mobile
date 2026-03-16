@@ -16,8 +16,7 @@ import { Colors } from "@/constants/theme";
 
 export default function AdminTabLayout() {
   const scheme = useColorScheme();
-  const theme = scheme === "dark" ? "dark" : "light";
-  const colors = Colors[theme];
+  const isDark = scheme === "dark";
 
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -48,7 +47,10 @@ export default function AdminTabLayout() {
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          // backgroundColor: "#ffffff",
+          backgroundColor: isDark
+            ? "rgba(30,30,30,0.75)"
+            : "#fff",
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
@@ -56,7 +58,7 @@ export default function AdminTabLayout() {
     >
       {/* DASHBOARD */}
       <Tabs.Screen
-        name="dashboard/index"
+        name="dashboard"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
@@ -130,8 +132,9 @@ export default function AdminTabLayout() {
           href: null,
         }}
       />
+
       <Tabs.Screen
-        name="combinedLeaderboards/index"
+        name="playerStatistics"
         options={{
           href: null,
         }}
