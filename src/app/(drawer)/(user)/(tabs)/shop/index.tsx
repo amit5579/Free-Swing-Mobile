@@ -1,18 +1,16 @@
-import { Badge, BadgeText } from '@/components/badge';
-import { Box } from '@/components/box';
-import { Button, ButtonText } from '@/components/button';
-import { Divider } from '@/components/divider';
-import { HStack } from '@/components/hstack';
-import { Text } from '@/components/text';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { VStack } from '@/components/vstack';
-import Watermark from '@/components/watermark';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Box } from "@/components/box";
+import { Button, ButtonText } from "@/components/button";
+import { HStack } from "@/components/hstack";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { VStack } from "@/components/vstack";
+import Watermark from "@/components/watermark";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import { Modal, ScrollView, StyleSheet, View, Linking, TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 export type Product = {
   id: string;
@@ -23,147 +21,176 @@ export type Product = {
   image: any;
 };
 
-export type CartItem = {
-  product: Product;
-  quantity: number;
-};
-
 const PRODUCTS: Product[] = [
   {
-    id: '1',
-    name: 'Caps with magnetic marker',
-    price: 1150.00,
-    description: 'mix brand, caps',
-    category: 'Accessories',
-    image: require('@/assets/images/favicon.png'), // Placeholder
+    id: "1",
+    name: "Caps with magnetic marker",
+    price: 1150.0,
+    description: "mix brand, caps",
+    category: "Accessories",
+    image: require("@/assets/images/golf_cap.png"),
   },
   {
-    id: '2',
-    name: 'T shirt, sea blue',
-    price: 1150.00,
-    description: 'polyester licrea',
-    category: 'Apparel',
-    image: require('@/assets/images/favicon.png'), // Placeholder
+    id: "2",
+    name: "T shirt",
+    price: 1150.0,
+    description: "polyester licrea",
+    category: "Apparel",
+    image: require("@/assets/images/golf_cap.png"),
   },
   {
-    id: '3',
-    name: 'shoes for golf',
-    price: 3456.00,
-    description: 'fxcvb',
-    category: 'Equipment',
-    image: require('@/assets/images/favicon.png'), // Placeholder
+    id: "3",
+    name: "golf club",
+    price: 3456.0,
+    description: "fxcvb",
+    category: "Equipment",
+    image: require("@/assets/images/golf_cap.png"),
   },
 ];
 
+type CartItem = Product & {
+  quantity: number;
+};
+
 export default function ShopScreen() {
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const cartTranslateX = useSharedValue(200);
+
+  const cartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: cartTranslateX.value }],
+  }));
+
+  useEffect(() => {
+    cartTranslateX.value = withSpring(cart.length > 0 ? 0 : 200, { damping: 15 });
+  }, [cart.length]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1 }];
     });
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== productId));
   };
 
   const updateQuantity = (productId: string, delta: number) => {
     setCart((prev) =>
-      prev.map((item) => {
-        if (item.product.id === productId) {
-          const newQty = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      })
+      prev.map((item) =>
+        item.id === productId
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item
+      )
     );
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
-  };
+  const calculateSubtotal = () =>
+    cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const checkoutViaWhatsApp = () => {
+    const subtotal = calculateSubtotal();
+    let message = `*Your Shopping Cart*\n\n`;
+    cart.forEach((item) => {
+      message += `- ${item.name} (x${item.quantity}): ₹${(item.price * item.quantity).toLocaleString()}\n`;
+    });
+    message += `\n*Subtotal: ₹${subtotal.toLocaleString()}*`;
 
-  const handleCheckout = () => {
-    const message = `Hello, I'd like to order:\n${cart
-      .map((item) => `- ${item.product.name} (x${item.quantity}): ₹${(item.product.price * item.quantity).toLocaleString()}`)
-      .join('\n')}\n\nSubtotal: ₹${subtotal.toLocaleString()}`;
-    const url = `https://wa.me/917807482806?text=${encodeURIComponent(message)}`;
-    console.log('Redirecting to WhatsApp:', url);
-    // In real implementation: Linking.openURL(url);
+    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    Linking.canOpenURL(whatsappUrl).then((supported) => {
+      if (supported) {
+        Linking.openURL(whatsappUrl);
+      } else {
+        alert("WhatsApp is not installed on this device.");
+      }
+    });
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <ThemedView style={styles.container}>
       <Watermark />
+
+      {/* Header */}
+      <VStack space="xs" className="mx-5 mt-5 mb-3">
+        <HStack className="justify-between items-center w-full">
+          <ThemedText style={{ fontSize: 24, fontWeight: "700" }}>
+            Pro Shop
+          </ThemedText>
+          <Animated.View style={cartAnimatedStyle}>
+            <TouchableOpacity
+              onPress={() => setIsCartOpen(true)}
+              style={styles.cartButton}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="cart-outline" size={20} color="white" />
+              <ThemedText style={{ color: "white", fontWeight: "600", fontSize: 12 }}>
+                My Cart {cart.length > 0 ? `(${cart.length})` : ""}
+              </ThemedText>
+            </TouchableOpacity>
+          </Animated.View>
+        </HStack>
+        <ThemedText type="small" themeColor="textSecondary">
+          Browse and purchase official gear and equipment.
+        </ThemedText>
+      </VStack>
+
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
       >
-        <ThemedView style={styles.container}>
-
-          {/* Header */}
-          <HStack className="justify-between items-start w-full">
-            <VStack space="xs">
-              <HStack space="xs" className="items-center">
-                <Ionicons name="storefront" size={24} color="#8BC34A" />
-                <ThemedText className="text-3xl font-extrabold text-green-600">Pro Shop</ThemedText>
-              </HStack>
-              <ThemedText className="text-sm text-gray-500">Browse and purchase official gear and equipment.</ThemedText>
-            </VStack>
-
-            <Button
-              variant="solid"
-              className="bg-[#8BC34A] rounded-lg px-4 flex-row items-center justify-center"
-              onPress={() => setIsCartOpen(true)}
+        <HStack className="flex-wrap justify-between mt-2">
+          {PRODUCTS.map((product) => (
+            <Box
+              key={product.id}
+              style={styles.card}
+              className="w-[48%]  rounded-xl overflow-hidden mb-4"
             >
-              <Ionicons name="cart-outline" size={15} color="white" />
-              <ButtonText className="text-white text-sm font-bold ml-2">View Cart</ButtonText>
-              {totalItems > 0 && (
-                <Badge className="bg-white rounded-full ml-2 px-1.5 py-0.5">
-                  <BadgeText className="text-[#8BC34A] font-bold text-[10px]">{totalItems}</BadgeText>
-                </Badge>
-              )}
-            </Button>
-          </HStack>
-
-          {/* Product Grid */}
-          <View className="flex-row flex-wrap justify-between mt-6">
-            {PRODUCTS.map((product) => (
-              <Box
-                key={product.id}
-                className="w-[48%] bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6 shadow-sm"
-              >
-                {/* Product Image Placeholder */}
-                <Box className="w-full aspect-square bg-gray-50 items-center justify-center p-4">
-                  <Ionicons name="images-outline" size={40} color="#d1d5db" />
-                </Box>
-
-                <VStack space="xs" className="p-4">
-                  <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>{product.name || 'Product'}</Text>
-                  <Text className="text-[#8BC34A] font-black text-lg">₹{product.price.toLocaleString()}</Text>
-                  <Text className="text-[11px] text-gray-400 mb-2" numberOfLines={1}>{product.description}</Text>
-
-                  <Button
-                    onPress={() => addToCart(product)}
-                    className="bg-[#8BC34A] rounded-lg h-10 w-full flex-row items-center justify-center"
-                  >
-                    <Ionicons name="cart" size={14} color="white" />
-                    <ButtonText className="text-white text-xs font-bold ml-2">Add to Cart</ButtonText>
-                  </Button>
-                </VStack>
+              {/* Product Image */}
+              <Box className="w-full aspect-square overflow-hidden">
+                <Image
+                  source={product.image}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="contain"
+                />
               </Box>
-            ))}
-          </View>
-        </ThemedView>
+
+              <VStack space="xs" className="p-3">
+                <ThemedText type="smallBold" numberOfLines={1} style={{ fontSize: 12 }}>
+                  {product.name || "Product"}
+                </ThemedText>
+                <ThemedText style={{ color: "#8BC34A", fontWeight: "900", fontSize: 14 }}>
+                  ₹{product.price.toLocaleString()}
+                </ThemedText>
+                <ThemedText
+                  type="small"
+                  themeColor="textSecondary"
+                  numberOfLines={1}
+                  style={{ fontSize: 10, marginBottom: 4 }}
+                >
+                  {product.description}
+                </ThemedText>
+
+                <Button
+                  onPress={() => addToCart(product)}
+                  className="bg-[#8BC34A] rounded-lg h-8 w-full flex-row items-center justify-center"
+                >
+                  <Ionicons name="cart" size={12} color="white" />
+                  <ButtonText className="text-white text-[10px] font-bold ml-1">
+                    Add to Cart
+                  </ButtonText>
+                </Button>
+              </VStack>
+            </Box>
+          ))}
+        </HStack>
       </ScrollView>
 
       {/* Cart Modal */}
@@ -174,170 +201,207 @@ export default function ShopScreen() {
         onRequestClose={() => setIsCartOpen(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <HStack className="justify-between items-center mb-4 px-2">
+          <View style={styles.modalContainer}>
+
+            {/* Modal Header */}
+            <HStack className="items-center justify-between p-4 border-b border-gray-100">
               <HStack space="xs" className="items-center">
-                <Ionicons name="cart-outline" size={20} color="#8BC34A" />
-                <Text style={styles.modalTitle}>Your Shopping Cart</Text>
+                <Ionicons name="cart" size={20} color="#8BC34A" />
+                <ThemedText type="smallBold" style={{ fontSize: 16 }}>
+                  Your Shopping Cart
+                </ThemedText>
               </HStack>
-              <Pressable onPress={() => setIsCartOpen(false)}>
-                <Ionicons name="close" size={24} color="#9ca3af" />
-              </Pressable>
+              <TouchableOpacity onPress={() => setIsCartOpen(false)}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
             </HStack>
 
-            <Divider className="mb-4" />
-
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
-              {cart.length === 0 ? (
-                <VStack className="items-center py-10" space="md">
-                  <Ionicons name="cart-outline" size={50} color="#d1d5db" />
-                  <Text className="text-gray-400">Your cart is empty</Text>
-                </VStack>
-              ) : (
-                cart.map((item) => (
-                  <View key={item.product.id} className="mb-6">
-                    <HStack className="justify-between items-start">
-                      <HStack space="md" className="flex-1">
-                        <Box className="w-16 h-16 bg-gray-50 rounded-lg items-center justify-center border border-gray-100">
-                          <Ionicons name="images-outline" size={20} color="#d1d5db" />
+            {/* ✅ FIX: flex: 1 so cart items scroll properly */}
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+              <VStack space="md">
+                {cart.length === 0 ? (
+                  <VStack className="items-center py-10" space="sm">
+                    <Ionicons name="cart-outline" size={48} color="#D1D5DB" />
+                    <ThemedText themeColor="textSecondary">Your cart is empty</ThemedText>
+                  </VStack>
+                ) : (
+                  cart.map((item) => (
+                    <HStack
+                      key={item.id}
+                      className="items-center justify-between py-2 border-b border-gray-100"
+                    >
+                      <HStack space="sm" className="flex-1 items-center">
+                        {/* ✅ Actual product image in cart */}
+                        <Box style={styles.cartItemImage}>
+                          <Image
+                            source={item.image}
+                            style={{ width: "100%", height: "100%" }}
+                            contentFit="contain"
+                          />
                         </Box>
-                        <VStack space="xs" className="flex-1">
-                          <Text style={styles.itemName} numberOfLines={1}>{item.product.name || 'Product'}</Text>
-                          <Text style={styles.itemPrice}>₹{item.product.price.toLocaleString()}</Text>
+                        <VStack style={{ flex: 1 }}>
+                          <ThemedText
+                            type="smallBold"
+                            numberOfLines={1}
+                            style={{ fontSize: 13 }}
+                          >
+                            {item.name}
+                          </ThemedText>
+                          <ThemedText style={{ color: "#8BC34A", fontWeight: "700", fontSize: 12 }}>
+                            ₹{item.price.toLocaleString()}
+                          </ThemedText>
                         </VStack>
                       </HStack>
 
-                      <VStack className="items-end" space="xs">
-                        <Text style={styles.itemTotal}>₹{(item.product.price * item.quantity).toLocaleString()}</Text>
-                        <Pressable onPress={() => removeFromCart(item.product.id)}>
-                          <HStack space="xs" className="items-center">
-                            <Ionicons name="trash-outline" size={12} color="#ef4444" />
-                            <Text className="text-red-500 text-xs font-medium underline">Remove</Text>
-                          </HStack>
-                        </Pressable>
-                      </VStack>
-                    </HStack>
+                      <HStack space="xs" className="items-center">
+                        {/* Quantity controls */}
+                        <HStack style={styles.quantityControl} className="items-center">
+                          <TouchableOpacity onPress={() => updateQuantity(item.id, -1)} className="p-1">
+                            <Ionicons name="remove" size={16} color="#4B5563" />
+                          </TouchableOpacity>
+                          <ThemedText style={{ paddingHorizontal: 6, fontSize: 13 }}>
+                            {item.quantity}
+                          </ThemedText>
+                          <TouchableOpacity onPress={() => updateQuantity(item.id, 1)} className="p-1">
+                            <Ionicons name="add" size={16} color="#4B5563" />
+                          </TouchableOpacity>
+                        </HStack>
 
-                    <HStack className="justify-end items-center mt-2" space="md">
-                      <HStack className="bg-gray-100 rounded-full px-2 py-1 items-center" space="md">
-                        <Pressable
-                          onPress={() => updateQuantity(item.product.id, -1)}
-                          className="w-6 h-6 rounded-full bg-white items-center justify-center shadow-sm"
-                        >
-                          <Ionicons name="remove" size={14} color="#374151" />
-                        </Pressable>
-                        <Text className="font-bold text-sm min-w-[12px] text-center">{item.quantity}</Text>
-                        <Pressable
-                          onPress={() => updateQuantity(item.product.id, 1)}
-                          className="w-6 h-6 rounded-full bg-white items-center justify-center shadow-sm"
-                        >
-                          <Ionicons name="add" size={14} color="#374151" />
-                        </Pressable>
+                        <VStack className="items-end" style={{ minWidth: 70 }}>
+                          <ThemedText type="smallBold" style={{ fontSize: 13 }}>
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </ThemedText>
+                          <TouchableOpacity
+                            onPress={() => removeFromCart(item.id)}
+                            className="flex-row items-center"
+                          >
+                            <Ionicons name="trash-outline" size={12} color="#EF4444" />
+                            <ThemedText style={{ color: "#EF4444", fontSize: 10, marginLeft: 2 }}>
+                              Remove
+                            </ThemedText>
+                          </TouchableOpacity>
+                        </VStack>
                       </HStack>
                     </HStack>
-                  </View>
-                ))
-              )}
+                  ))
+                )}
+              </VStack>
             </ScrollView>
 
-            {cart.length > 0 && (
-              <VStack className="mt-4 pt-4 border-t border-gray-100" space="lg">
-                <HStack className="justify-between items-center">
-                  <Text style={styles.subtotalLabel}>Subtotal ({totalItems} items):</Text>
-                  <Text style={styles.subtotalValue}>₹{subtotal.toLocaleString()}</Text>
-                </HStack>
+            {/* Footer */}
+            <Box style={styles.modalFooter}>
+              <HStack className="justify-between items-center mb-4">
+                <ThemedText themeColor="textSecondary" style={{ fontSize: 14 }}>
+                  Subtotal ({cart.reduce((a, i) => a + i.quantity, 0)} items):
+                </ThemedText>
+                <ThemedText type="subtitle" style={{ fontSize: 18, color: "#1F2937" }}>
+                  ₹{calculateSubtotal().toLocaleString()}
+                </ThemedText>
+              </HStack>
 
-                <HStack space="xs" className="items-center bg-gray-50 p-3 rounded-lg">
-                  <Ionicons name="information-circle-outline" size={16} color="#9ca3af" />
-                  <Text className="text-[10px] text-gray-500 flex-1">
-                    You will be redirected to WhatsApp to confirm this order.
-                  </Text>
-                </HStack>
+              <HStack space="xs" className="items-center mb-3">
+                <Ionicons name="information-circle-outline" size={14} color="#6B7280" />
+                <ThemedText style={{ fontSize: 10, color: "#6B7280", flex: 1 }}>
+                  You will be redirected to WhatsApp to confirm this order.
+                </ThemedText>
+              </HStack>
 
-                <VStack space="md">
-                  <Pressable onPress={() => setIsCartOpen(false)} className="items-end px-2">
-                    <Text className="text-gray-600 text-sm font-medium">Continue Shopping</Text>
-                  </Pressable>
+              <HStack space="md">
+                <TouchableOpacity
+                  onPress={() => setIsCartOpen(false)}
+                  style={{ flex: 1, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 8, borderWidth: 1, borderColor: "#E5E7EB" }}
+                >
+                  <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>Continue</ThemedText>
+                </TouchableOpacity>
 
-                  <Button
-                    onPress={handleCheckout}
-                    className="bg-[#8BC34A] rounded-xl h-14 w-full flex-row items-center justify-center shadow-md active:opacity-90"
-                  >
-                    <Ionicons name="logo-whatsapp" size={20} color="white" />
-                    <ButtonText className="text-white text-base font-bold ml-2">Checkout via WhatsApp</ButtonText>
-                  </Button>
-                </VStack>
-              </VStack>
-            )}
+                {/* ✅ FIX: flex-2 → style={{ flex: 2 }} */}
+                <TouchableOpacity
+                  onPress={checkoutViaWhatsApp}
+                  disabled={cart.length === 0}
+                  style={{
+                    flex: 2,
+                    height: 40,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    backgroundColor: cart.length === 0 ? "#D1D5DB" : "#8BC34A",
+                  }}
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color="white" />
+                  <ThemedText style={{ color: "white", fontSize: 13, fontWeight: "700", marginLeft: 6 }}>
+                    Checkout via WhatsApp
+                  </ThemedText>
+                </TouchableOpacity>
+              </HStack>
+            </Box>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  scrollContent: {
-    paddingBottom: BottomTabInset + 40,
-    paddingHorizontal: Spacing.four,
-    flexGrow: 1,
-  },
   container: {
+    flex: 1, // ✅ FIX: flex:1 added
     paddingTop: Spacing.four,
     maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    width: '100%',
+    alignSelf: "center",
+    width: "100%",
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: 20,
+  },
+  card: {
+    borderRadius: 14,
+    borderColor: "#8bc34a",
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  cartButton: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 5,
+  modalContainer: {
+    backgroundColor: "white",
+    width: "90%",
+    maxHeight: "80%",
+    borderRadius: 16,
+    overflow: "hidden",
+    // ✅ FIX: flex column so ScrollView can flex:1 inside
+    flexDirection: "column",
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1f2937',
+  cartItemImage: {
+    width: 48,
+    height: 48,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    overflow: "hidden",
   },
-  itemName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+  quantityControl: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 20,
+    paddingHorizontal: 4,
   },
-  itemPrice: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8BC34A',
-  },
-  itemTotal: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  subtotalLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  subtotalValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#111827',
+  modalFooter: {
+    padding: 16,
+    backgroundColor: "#F9FAFB",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
   },
 });

@@ -10,6 +10,7 @@ import { Divider } from "@/components/divider";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
+import { ThemedView } from "@/components/themed-view";
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -62,10 +63,9 @@ export default function managePlayers() {
   };
 
   return (
-    <View
+    <ThemedView
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
       <Watermark />
@@ -85,7 +85,7 @@ export default function managePlayers() {
 
         </VStack>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 

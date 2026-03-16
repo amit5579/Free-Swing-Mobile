@@ -7,6 +7,7 @@ import { VStack } from "@/components/vstack";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
+import { ThemedView } from "@/components/themed-view";
 //               onPress={() => routePage.push("/newRound/scoreCard")}
 //     const routePage = useRouter();
 
@@ -15,10 +16,9 @@ export default function leaderboard() {
   const isDark = colorScheme === "dark";
 
   return (
-    <SafeAreaView
+    <ThemedView
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
       <Watermark />
@@ -40,6 +40,6 @@ export default function leaderboard() {
           </VStack>
         </VStack>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }

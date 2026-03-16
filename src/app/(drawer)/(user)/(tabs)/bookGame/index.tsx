@@ -16,6 +16,7 @@ import { ThemedText } from "@/components/themed-text";
 
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
+import { ThemedView } from "@/components/themed-view";
 
 export default function BookGameScreen() {
   const colorScheme = useColorScheme();
@@ -79,10 +80,9 @@ export default function BookGameScreen() {
   ];
 
   return (
-    <SafeAreaView
+    <ThemedView
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
       <Watermark />
@@ -170,7 +170,7 @@ export default function BookGameScreen() {
           </VStack>
         </VStack>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 

@@ -23,6 +23,7 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { Text } from "@/components/text";
 import { useRouter } from "expo-router";
+import { ThemedView } from "@/components/themed-view";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
@@ -93,16 +94,15 @@ export default function adminTournamentsPage() {
   ];
   return (
     <>
-      <SafeAreaView
+      <ThemedView
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#000" : "#f2f2f2",
         }}
       >
         <Watermark />
 
         {/* Header */}
-        <HStack className="justify-between items-center px-4 mt-2">
+        <HStack className="justify-between items-center p-4 mt-2">
           <ThemedText
             style={{
               fontSize: 24,
@@ -135,7 +135,7 @@ export default function adminTournamentsPage() {
             ))}
           </VStack>
         </ScrollView>
-      </SafeAreaView>
+      </ThemedView>
 
       {/* CREATE TOURNAMENT MODAL */}
       <Modal

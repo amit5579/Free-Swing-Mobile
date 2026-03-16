@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HistoryTab, type GameHistory } from "./tabs/HistoryTab";
 import { InProgressTab, type InProgressGame } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/OverviewTab";
+import { ThemedView } from "@/components/themed-view";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_MARGIN = 8;
@@ -46,7 +47,7 @@ export default function DashboardScreen() {
     );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+    <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         {loading ? (
           <ActivityIndicator size="small" color="#dc2626" />
@@ -182,7 +183,7 @@ export default function DashboardScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ThemedView>
   );
 }
 

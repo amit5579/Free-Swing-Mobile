@@ -24,6 +24,7 @@ import Svg, { Path } from "react-native-svg";
 import { Text } from "@/components/text";
 import { useRouter } from "expo-router";
 import Watermark from "@/components/watermark";
+import { ThemedView } from "@/components/themed-view";
 
 export default function NewRoundScreen() {
   const colorScheme = useColorScheme();
@@ -54,7 +55,7 @@ export default function NewRoundScreen() {
   };
   return (
     <>
-      <SafeAreaView
+      <ThemedView
         style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}
       >
         <Watermark />
@@ -99,7 +100,7 @@ export default function NewRoundScreen() {
             </VStack>
           </VStack>
         </ScrollView>
-      </SafeAreaView>
+      </ThemedView>
 
       <Modal
         animationType="slide"

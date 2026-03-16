@@ -10,6 +10,7 @@ import { Divider } from "@/components/divider";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
+import { ThemedView } from "@/components/themed-view";
 
 export default function tournamentHistory() {
   const colorScheme = useColorScheme();
@@ -37,10 +38,9 @@ export default function tournamentHistory() {
   ];
 
   return (
-    <View
+    <ThemedView
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
       <Watermark />
@@ -67,7 +67,7 @@ export default function tournamentHistory() {
           ))}
         </VStack>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
