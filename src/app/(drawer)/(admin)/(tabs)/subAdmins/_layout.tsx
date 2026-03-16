@@ -5,8 +5,7 @@ export default function SubAdminsLayout() {
     <Stack>
       <Stack.Screen
         name="index"
-        options={{ title: "Sub Admins" }}
-      />
+        options={{ headerShown: false }} />
     </Stack>
   );
 }

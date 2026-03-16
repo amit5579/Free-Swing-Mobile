@@ -11,7 +11,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 
-// Prevent splash screen auto hide 
+import { AuthProvider } from "@/context/AuthContext";
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -33,11 +34,11 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

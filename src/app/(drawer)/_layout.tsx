@@ -75,7 +75,7 @@ function CustomDrawerContent() {
 
         {/* SHOW THESE TWO TABS ALWAYS */}
         <TouchableOpacity
-          onPress={() => router.replace("/(drawer)/(admin)/subAdmins")}
+          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/subAdmins")}
           style={styles.drawerItem}
         >
           <Ionicons name="people-outline" size={26} color="#2e7d32" />
@@ -83,7 +83,7 @@ function CustomDrawerContent() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.replace("/(drawer)/(admin)/handicapSetup")}
+          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/handicapSetup")}
           style={styles.drawerItem}
         >
           <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
