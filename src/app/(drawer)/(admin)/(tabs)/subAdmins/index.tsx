@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -8,8 +8,9 @@ import {
   View,
   Text,
 } from "react-native";
+import Checkbox from "expo-checkbox";
+
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { VStack } from "@/components/vstack";
@@ -20,6 +21,8 @@ import { Divider } from "@/components/divider";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { ThemedView } from "@/components/themed-view";
+import { deleteSubAdmin, getCourse, getSubAdminList } from "@/api/subAdmins";
+import { MultiSelect } from "react-native-element-dropdown";
 
 export default function subAdminsPage() {
   const colorScheme = useColorScheme();
@@ -27,25 +30,64 @@ export default function subAdminsPage() {
 
   const [modalVisible, setModalVisible] = useState(false);
 
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const [pageLoading, setPageLoading] = useState(true);
+  const [subAdminList, setSubAdminList] = useState<any>([]);
+
+  const [courseList, setCourseList] = useState<any>([]);
+
+  const [selectedCourses, setSelectedCourses] = useState([]);
+
   // Dummy data (can be replaced with API later)
-  const subAdmins = [
-    {
-      id: 1,
-      name: "ASC AEPTA",
-      email: "asc@mail.com",
-      mobile: "987766554",
-      courses: ["ASC AEPTA"],
-      players: 4,
-    },
-    {
-      id: 2,
-      name: "Rahul Sharma",
-      email: "rahul@mail.com",
-      mobile: "989898989",
-      courses: ["Delhi Golf Club"],
-      players: 7,
-    },
+  // const subAdmins = [
+  //   {
+  //     id: 1,
+  //     name: "ASC AEPTA",
+  //     email: "asc@mail.com",
+  //     mobile: "987766554",
+  //     courses: ["ASC AEPTA"],
+  //     players: 4,
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Rahul Sharma",
+  //     email: "rahul@mail.com",
+  //     mobile: "989898989",
+  //     courses: ["Delhi Golf Club"],
+  //     players: 7,
+  //   },
+  // ];
+
+  const courses = [
+    { label: "ASC AEPTA", value: "1" },
+    { label: "Bangalore Golf Club", value: "2" },
+    { label: "Clover Greens Golf Course", value: "3" },
+    { label: "Club Prestige Golfshire Club", value: "4" },
   ];
+
+  const fetchSubAdmin = async () => {
+    try {
+      setPageLoading(true);
+
+      const subAdminList = await getSubAdminList();
+      const courseList = await getCourse();
+      // console.log("courseList", courseList);
+
+      setSubAdminList(subAdminList);
+      setCourseList(courseList);
+      // console.log("subAdminList", subAdminList);
+      console.log("courseList", courseList);
+    } catch (error) {
+      console.error("Failed to fetch sub admin list", error);
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubAdmin();
+  }, []);
 
   return (
     <>
@@ -82,8 +124,14 @@ export default function subAdminsPage() {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">
-            {subAdmins.map((admin) => (
-              <SubAdminCard key={admin.id} admin={admin} isDark={isDark} setModalVisible={setModalVisible} />
+            {subAdminList.map((sbadmin: any) => (
+              <SubAdminCard
+                key={sbadmin.id}
+                sbadmin={sbadmin}
+                isDark={isDark}
+                setModalVisible={setModalVisible}
+                // setDeleteModalVisible={setDeleteModalVisible}
+              />
             ))}
           </VStack>
         </ScrollView>
@@ -100,9 +148,7 @@ export default function subAdminsPage() {
           <View style={styles.modalContainer}>
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text className="text-xl font-bold">
-                Create Sub Admin
-              </Text>
+              <Text className="text-xl font-bold">Create Sub Admin</Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={22} />
@@ -113,7 +159,7 @@ export default function subAdminsPage() {
             <VStack className="gap-3">
               <TextInput placeholder="Full name" style={styles.input} />
 
-              <TextInput placeholder="Email" style={styles.input} />
+              <TextInput placeholder="email@example.com" style={styles.input} />
 
               <TextInput placeholder="Phone number" style={styles.input} />
 
@@ -124,6 +170,39 @@ export default function subAdminsPage() {
               />
 
               <TextInput placeholder="Assign courses" style={styles.input} />
+
+              <MultiSelect
+                style={styles.input}
+                data={courses}
+                labelField="label"
+                valueField="value"
+                placeholder="Assign Courses"
+                value={selectedCourses}
+                onChange={(item: any) => {
+                  setSelectedCourses(item);
+                }}
+                renderItem={(item: any) => {
+                  const isSelected = selectedCourses.includes(item.value);
+
+                  return (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: 12,
+                      }}
+                    >
+                      <Checkbox
+                        value={isSelected}
+                        onValueChange={() => {}}
+                        color={isSelected ? "#8bc34a" : undefined}
+                      />
+
+                      <Text style={{ marginLeft: 10 }}>{item.label}</Text>
+                    </View>
+                  );
+                }}
+              />
             </VStack>
 
             {/* Buttons */}
@@ -148,66 +227,133 @@ export default function subAdminsPage() {
   );
 }
 
-function SubAdminCard({ admin, isDark, setModalVisible }: any) {
+function SubAdminCard({
+  sbadmin,
+  isDark,
+  setModalVisible,
+  // setDeleteModalVisible,
+}: any) {
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const handleDelete = async (id: number) => {
+  try {
+    await deleteSubAdmin(id);
+
+    // console.log("Sub-admin deleted successfully",id);
+    
+  } catch (error) {
+    console.log(error);
+  }
+};
   return (
-    <Box
-      className="rounded-2xl p-4"
-      style={{
-        borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
-      }}
-    >
-      <VStack className="gap-2">
-        <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-          {admin.name}
-        </ThemedText>
+    <>
+      <Box
+        className="rounded-2xl p-4"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+        }}
+      >
+        <VStack className="gap-2">
+          <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+            {sbadmin.username}
+          </ThemedText>
 
-        <ThemedText style={{ opacity: 0.7 }}>{admin.email}</ThemedText>
+          <ThemedText style={{ opacity: 0.7 }}>{sbadmin.email}</ThemedText>
 
-        <ThemedText style={{ opacity: 0.7 }}>{admin.mobile}</ThemedText>
+          <ThemedText style={{ opacity: 0.7 }}>
+            {sbadmin.mobileNumber}
+          </ThemedText>
 
-        {/* Courses */}
-        <HStack className="items-center mt-2 gap-2">
-          <ThemedText style={{ fontWeight: "600" }}>Courses:</ThemedText>
-
-          <Box style={styles.courseBadge}>
-            <ThemedText style={{ color: "#8bc34a", fontSize: 12 }}>
-              {admin.courses[0]}
+          {/* Courses */}
+          <ThemedView className="flex-row flex-wrap mt-2 gap-2">
+            <ThemedText style={{ fontWeight: "600", width: "100%" }}>
+              Courses:
             </ThemedText>
-          </Box>
-        </HStack>
 
-        {/* Players */}
-        <HStack className="items-center mt-2 gap-2">
-          <ThemedText style={{ fontWeight: "600" }}>Players:</ThemedText>
+            {sbadmin.courses?.map((course: any, index: number) => (
+              <Box key={index} style={styles.courseBadge}>
+                <ThemedText style={{ color: "#8bc34a", fontSize: 12 }}>
+                  {course.name}
+                </ThemedText>
+              </Box>
+            ))}
+          </ThemedView>
 
-          <Box style={styles.playerBadge}>
-            <ThemedText style={{ color: "#8bc34a" }}>
-              {admin.players}
-            </ThemedText>
-          </Box>
-        </HStack>
+          {/* Players */}
+          <HStack className="items-center mt-2 gap-2">
+            <ThemedText style={{ fontWeight: "600" }}>Players:</ThemedText>
 
-        <Divider className="my-2" />
+            <Box style={styles.playerBadge}>
+              <ThemedText style={{ color: "#8bc34a" }}>
+                {sbadmin.playerCount}
+              </ThemedText>
+            </Box>
+          </HStack>
 
-        {/* Actions */}
-        <HStack className="justify-between">
-          <Pressable
-          onPress={() => setModalVisible(true)}
-          className="flex-row items-center gap-1">
-            <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
+          <Divider className="my-2" />
 
-            <ThemedText style={{ color: "#3b82f6" }}>Edit</ThemedText>
-          </Pressable>
+          {/* Actions */}
+          <HStack className="justify-between">
+            <Pressable
+              onPress={() => setModalVisible(true)}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
 
-          <Pressable className="flex-row items-center gap-1">
-            <Ionicons name="trash-outline" size={16} color="#ef4444" />
+              <ThemedText style={{ color: "#3b82f6" }}>Edit</ThemedText>
+            </Pressable>
 
-            <ThemedText style={{ color: "#ef4444" }}>Delete</ThemedText>
-          </Pressable>
-        </HStack>
-      </VStack>
-    </Box>
+            <Pressable
+              onPress={() => setDeleteModalVisible(true)}
+              className="flex-row items-center gap-1"
+            >
+              <Ionicons name="trash-outline" size={16} color="#ef4444" />
+
+              <ThemedText style={{ color: "#ef4444" }}>Delete</ThemedText>
+            </Pressable>
+          </HStack>
+        </VStack>
+      </Box>
+      {/* Delete Sub Admin Modal */}
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={deleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            {/* FORM */}
+            <VStack className="gap-3">
+              <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+                Delete sub-admin "{sbadmin.username}"? Their invited players
+                will be preserved.
+              </ThemedText>
+            </VStack>
+
+            {/* Buttons */}
+            <HStack className="justify-end mt-6 gap-3">
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => handleDelete(sbadmin.id)}
+              style={styles.createButton}>
+                <ThemedText style={{ color: "white", fontWeight: "600" }}>
+                  Yes, I'm sure
+                </ThemedText>
+              </Pressable>
+            </HStack>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -248,6 +394,8 @@ const styles = StyleSheet.create({
   },
 
   courseBadge: {
+    display: "flex",
+    flexDirection: "column",
     backgroundColor: "#f0fdf4",
     paddingHorizontal: 8,
     paddingVertical: 4,

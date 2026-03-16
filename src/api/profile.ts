@@ -10,3 +10,23 @@ export const getAdminProfile = async () => {
         throw error;
     }
 };
+
+
+export const uploadProfileImage = async (image: any) => {
+  const formData = new FormData();
+
+   formData.append("profileImage", {
+    uri: image.uri,
+    name: image.fileName || "profile.jpg",
+    type: image.mimeType || "image/jpeg",
+  } as any);
+
+  const response = await https.post("User/upload-profile", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+console.log("profile response:",response);
+
+  return response.data;
+};
