@@ -1,0 +1,208 @@
+import https from "./https";
+
+/* =========================
+   Feed API
+========================= */
+
+export interface FeedItem {
+  roundRefId: number;
+  playerName: string;
+  playerAvatar: string | null;
+  courseName: string;
+  teeBoxName: string;
+  date: string;
+  grossScore: number;
+  netScore: number;
+  stablefordPoints: number;
+  totalPar: number;
+  scoreToPar: number;
+  holesPlayed: number;
+  likeCount: number;
+  isLikedByMe: boolean;
+  isAuthenticated: boolean;
+  authenticatedBy: string | null;
+  canAuthenticate: boolean;
+  isDQ: boolean;
+  isTournament: boolean;
+}
+
+export const getFeedApi = async () => {
+  try {
+    const response = await https.get(`feed`);
+    return response.data as FeedItem[];
+  } catch (error) {
+    console.error("Fetching Feed Error:", error);
+    throw error;
+  }
+};
+
+export const likeFeedApi = async (id: string | number) => {
+  try {
+    const response = await https.post(`feed/like/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error liking feed item ${id}:`, error);
+    throw error;
+  }
+};
+
+/* =========================
+   In Progress API
+========================= */
+
+export interface InProgressApiItem {
+  scorecardId: number;
+  date: string;
+  courseName: string;
+  score: number;
+  netScore: number;
+  par: number;
+  holesPlayed: number;
+  isDQ: boolean;
+  tournamentId: number | null;
+}
+
+export const getInProgressGames = async (playerId: number) => {
+  try {
+    const response = await https.get(`scorecard/history-inprogress/${playerId}`);
+    return response.data as InProgressApiItem[];
+  } catch (error) {
+    console.error("Fetching InProgress Games Error:", error);
+    throw error;
+  }
+};
+
+/* =========================
+   User API
+========================= */
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  mobileNumber: string;
+  role: string;
+  handicap: number;
+  handicapIndex: number;
+  homeCourse: string | null;
+  isBlocked: boolean;
+  profilePictureUrl: string | null;
+}
+
+export const getUserProfile = async (userId: number) => {
+  try {
+    const response = await https.get(`User/${userId}`);
+    return response.data as UserProfile;
+  } catch (error) {
+    console.error(`Fetching user profile ${userId} error:`, error);
+    throw error;
+  }
+};
+
+/* =========================
+   Leaderboard API
+========================= */
+
+export interface LeaderboardPlayer {
+  id: number;
+  username: string;
+  handicap: number;
+}
+
+export const getLeaderboard = async () => {
+  try {
+    const response = await https.get(`user/leaderboard`);
+    return response.data as LeaderboardPlayer[];
+  } catch (error) {
+    console.error("Fetching Leaderboard Error:", error);
+    throw error;
+  }
+};
+
+/* =========================
+   Player Count API
+========================= */
+
+export interface PlayerCount {
+  totalPlayers: number;
+}
+
+export const getPlayerCount = async () => {
+  try {
+    const response = await https.get(`user/count`);
+    return response.data as PlayerCount;
+  } catch (error) {
+    console.error("Fetching Player Count Error:", error);
+    throw error;
+  }
+};
+
+/* =========================
+   Score Stats API
+========================= */
+
+export interface ScoreStats {
+  totalGames: number;
+  averageScore: number;
+  bestScore: number;
+  coursesPlayed: number;
+}
+
+export const getScoreStats = async (playerId: number) => {
+  try {
+    const response = await https.get(`scorecard/stats/${playerId}`);
+    return response.data as ScoreStats;
+  } catch (error) {
+    console.error(`Fetching Score Stats for player ${playerId} error:`, error);
+    throw error;
+  }
+};
+
+/* =========================
+   Score History API
+========================= */
+
+export interface ScoreHistoryItem {
+  scorecardId: number;
+  date: string;
+  courseName: string;
+  score: number;
+  netScore: number;
+  par: number;
+  isDQ: boolean;
+  tournamentId: number | null;
+}
+
+export const getScoreHistory = async (playerId: number) => {
+  try {
+    const response = await https.get(`scorecard/history/${playerId}`);
+    return response.data as ScoreHistoryItem[];
+  } catch (error) {
+    console.error(`Fetching Score History for player ${playerId} error:`, error);
+    throw error;
+  }
+};
+
+/* =========================
+   Updates API
+========================= */
+
+export interface UpdateItem {
+  id: number;
+  content: string | null;
+  mediaUrl: string | null;
+  type: "text" | "image";
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+}
+
+export const getUpdates = async () => {
+  try {
+    const response = await https.get(`Updates`);
+    return response.data as UpdateItem[];
+  } catch (error) {
+    console.error("Fetching Updates Error:", error);
+    throw error;
+  }
+};

@@ -74,7 +74,8 @@ const login = async (email: string, password: string): Promise<UserType | null> 
 
     console.log("1️⃣3️⃣ Saving token in AsyncStorage...");
     await AsyncStorage.setItem("token", data.token);
-
+    await AsyncStorage.setItem("userId", data.id.toString());
+    await AsyncStorage.setItem("role",data.role);
     console.log("1️⃣4️⃣ Login successful");
 
     return userData;
@@ -88,6 +89,7 @@ const login = async (email: string, password: string): Promise<UserType | null> 
   const logout = async () => {
     setUser(null);
     await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("userId");
   };
 
   return (
