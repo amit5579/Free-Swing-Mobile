@@ -102,7 +102,6 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "statistics" && (
-          // FlatList inside PlayerStatistics already scrollable
           <PlayerStatistics />
         )}
       </View>
