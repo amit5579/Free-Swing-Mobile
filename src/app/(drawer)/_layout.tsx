@@ -13,25 +13,46 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
+import { getUserProfile, UserProfile } from "@/api/dashboard";
 
 function CustomDrawerContent() {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
   const [role, setRole] = useState<string | null>(null);
-
- const logout = async () => {
-  await removeToken();
-};
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+const [profile, setProfile] = useState<UserProfile | null>(null);
+  const logout = async () => {
+    await removeToken();
+  };
+   const fetchProfile = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+  
+        if (!userId) return;
+  
+        const data = await getUserProfile(Number(userId));
+        if(data.profilePictureUrl!=null || data.username !=null || data.handicap)
+       
+        setProfile(data);
+      } catch (error) {
+        console.log("Profile error:", error);
+      }
+    };
 
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
+     
+      if (storedRole == "Admin") {
+        setIsAdmin(true);
+      }
       setRole(storedRole);
+
     };
 
     loadRole();
-  }, []);
+  }, [fetchProfile()]);
 
   return (
     <SafeAreaView
@@ -41,69 +62,81 @@ function CustomDrawerContent() {
       ]}
     >
       {/* Profile Section */}
-      <View style={styles.topSection}>
-        <View style={styles.avatarWrapper}>
-          <Image
-            source={{ uri: "https://i.pravatar.cc/100" }}
-            style={styles.avatar}
-          />
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{role === "admin" ? "Admin" : "User"}</Text>
+      <View>
+
+
+        <View style={styles.topSection}>
+          <View style={styles.avatarWrapper}>
+            <Image
+               source={{ uri: profile?.profilePictureUrl || undefined }}
+              style={styles.avatar}
+            />
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{role === "admin" ? "Admin" : "User"}</Text>
+            </View>
           </View>
+
+          <Text style={styles.userName}>{profile?.username}</Text>
+          <Text style={styles.handicap}>
+            {role === "admin" ? "Administrator" : "Handicap: 5"}
+          </Text>
         </View>
 
-        <Text style={styles.userName}>John Doe</Text>
-        <Text style={styles.handicap}>
-          {role === "admin" ? "Administrator" : "Handicap: 5"}
-        </Text>
+        {/* Drawer Menu */}
+        <View style={styles.drawerItems}>
+          {/* ADMIN PROFILE */}
+
+          {isAdmin && (
+            <>
+              <TouchableOpacity
+                onPress={() => router.push("/(drawer)/(profile)/adminProfile")}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="shield-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Admin Profile</Text>
+              </TouchableOpacity>
+            </>)}
+          {/* USER PROFILE */}
+            {!isAdmin && (
+            <>
+          <TouchableOpacity
+            onPress={() => router.push("/(drawer)/(profile)/userProfile")}
+            style={styles.drawerItem}
+          >
+            <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+            <Text style={styles.drawerText}>User Profile</Text>
+          </TouchableOpacity>
+</>)}
+          {/* SHOW THESE TWO TABS ALWAYS */}
+          {isAdmin && (
+            <>
+
+              <TouchableOpacity
+                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/subAdmins")}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="people-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Sub Admins</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/handicapSetup")}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Player Handicap</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards")}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Combined Leaderboards</Text>
+              </TouchableOpacity>
+            </>)}
+        </View>
       </View>
-
-      {/* Drawer Menu */}
-      <View style={styles.drawerItems}>
-        {/* ADMIN PROFILE */}
-        <TouchableOpacity
-          onPress={() => router.push("/(drawer)/(profile)/adminProfile")}
-          style={styles.drawerItem}
-        >
-          <Ionicons name="shield-outline" size={26} color="#2e7d32" />
-          <Text style={styles.drawerText}>Admin Profile</Text>
-        </TouchableOpacity>
-
-        {/* USER PROFILE */}
-        <TouchableOpacity
-          onPress={() => router.push("/(drawer)/(profile)/userProfile")}
-          style={styles.drawerItem}
-        >
-          <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
-          <Text style={styles.drawerText}>User Profile</Text>
-        </TouchableOpacity>
-
-        {/* SHOW THESE TWO TABS ALWAYS */}
-        <TouchableOpacity
-          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/subAdmins")}
-          style={styles.drawerItem}
-        >
-          <Ionicons name="people-outline" size={26} color="#2e7d32" />
-          <Text style={styles.drawerText}>Sub Admins</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/handicapSetup")}
-          style={styles.drawerItem}
-        >
-          <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
-          <Text style={styles.drawerText}>Player Handicap</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards")}
-          style={styles.drawerItem}
-        >
-          <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
-          <Text style={styles.drawerText}>Combined Leaderboards</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Logout */}
       <View style={styles.logoutContainer}>
         <TouchableOpacity

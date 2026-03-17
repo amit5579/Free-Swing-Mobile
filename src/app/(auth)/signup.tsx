@@ -141,7 +141,11 @@ export default function SignupScreen() {
 
     alert("Signup successful ✅");
 
-    router.replace("/login");
+    // router.replace("/login");
+    router.replace({
+  pathname: "/login",
+  params: { email: email, password: password },
+});
 
   } catch (error) {
     console.log("❌ Signup error:", error);

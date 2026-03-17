@@ -5,10 +5,12 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, useColorScheme } from "react-native";
+import { Pressable, StyleSheet, useColorScheme, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
 
-// ─── Type ─────────────────────────────────────────────────────────────────────
+import { getScoreHistory, ScoreHistoryItem } from "@/api/dashboard";
+
 export type GameHistory = {
     id: string;
     date: string;
@@ -16,29 +18,61 @@ export type GameHistory = {
     course: string;
     score: number;
     net: number;
-    parDiff: number;   // e.g. +72 -> store as 72
+    parDiff: number;
     isTournament: boolean;
 };
 
 type HistoryTabProps = {
-    games: GameHistory[];
-    onViewGame: (id: string) => void;
+    playerId: number;
+    onViewGame?: (id: string) => void;
 };
 
-export function HistoryTab({ games, onViewGame }: HistoryTabProps) {
+export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
 
+    const [history, setHistory] = useState<GameHistory[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchHistory();
+    }, [playerId]);
+
+    const fetchHistory = async () => {
+        try {
+            const data: ScoreHistoryItem[] = await getScoreHistory(playerId);
+
+            const mapped: GameHistory[] = data.map((item) => ({
+                id: item.scorecardId.toString(),
+                date: new Date(item.date).toLocaleDateString(),
+                time: new Date(item.date).toLocaleTimeString(),
+                course: item.courseName,
+                score: item.score,
+                net: item.netScore,
+                parDiff: item.score - item.par,
+                isTournament: !!item.tournamentId,
+            }));
+
+            setHistory(mapped);
+        } catch (error) {
+            console.error("Failed to fetch history:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" color="#8BC34A" />
+            </SafeAreaView>
+        );
+    }
 
     return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                backgroundColor: isDark ? "#000" : "#f2f2f2",
-            }}
-        >
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
             <VStack space="md" className="pb-8">
-                {games.length === 0 ? (
+                {history.length === 0 ? (
                     <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4">
                         <Ionicons name="time-outline" size={40} color="#9ca3af" />
                         <Text className="text-typography-400 font-semibold text-sm mt-3">
@@ -46,22 +80,17 @@ export function HistoryTab({ games, onViewGame }: HistoryTabProps) {
                         </Text>
                     </Box>
                 ) : (
-                    games.map((item) => (
-                        <Pressable key={item.id} onPress={() => onViewGame(item.id)}>
-                            <Box className="bg-white rounded-2xl border border-gray-200 p-4"
-                                style={{
-                                    ...styles.historyCard,
-                                    backgroundColor: isDark ? "#111" : "#fff",
-                                }}
-
+                    history.map((item) => (
+                        <Pressable key={item.id} onPress={() => onViewGame?.(item.id)}>
+                            <Box
+                                className="bg-white rounded-2xl border border-gray-200 p-4 mb-3"
+                                style={{ backgroundColor: isDark ? "#111" : "#fff" }}
                             >
-
-                                {/* Top row: Date + Tournament badge */}
                                 <HStack className="justify-between items-center mb-2">
                                     <VStack>
                                         <Text className="font-bold text-gray-900">{item.date}</Text>
                                         <Text className="text-xs text-gray-400">{item.time}</Text>
-                                        <Button size="sm" className="rounded-full bg-[#8BC34A] px-6 h-10 shadow-sm">
+                                        <Button size="sm" className="rounded-full bg-[#8BC34A] px-6 h-10 shadow-sm mt-2">
                                             <Ionicons name="eye-outline" size={14} color="white" />
                                             <ButtonText className="text-white text-xs font-bold ml-1.5">
                                                 View
@@ -75,12 +104,8 @@ export function HistoryTab({ games, onViewGame }: HistoryTabProps) {
                                     )}
                                 </HStack>
 
-                                {/* Course name */}
-                                <Text className="text-[#8BC34A] font-semibold text-sm mb-3">
-                                    {item.course}
-                                </Text>
+                                <Text className="text-[#8BC34A] font-semibold text-sm mb-3">{item.course}</Text>
 
-                                {/* Score / Net / Par pills */}
                                 <HStack space="sm">
                                     <Box className="flex-1 bg-gray-50 rounded-xl items-center py-2">
                                         <Text className="text-xs text-gray-400 uppercase tracking-tight">Score</Text>
@@ -92,10 +117,11 @@ export function HistoryTab({ games, onViewGame }: HistoryTabProps) {
                                     </Box>
                                     <Box className="flex-1 bg-red-50 rounded-xl items-center py-2">
                                         <Text className="text-xs text-gray-400 uppercase tracking-tight">Par</Text>
-                                        <Text className="font-bold text-red-400">{item.parDiff >= 0 ? `+${item.parDiff}` : item.parDiff}</Text>
+                                        <Text className="font-bold text-red-400">
+                                            {item.parDiff >= 0 ? `+${item.parDiff}` : item.parDiff}
+                                        </Text>
                                     </Box>
                                 </HStack>
-
                             </Box>
                         </Pressable>
                     ))
@@ -103,14 +129,6 @@ export function HistoryTab({ games, onViewGame }: HistoryTabProps) {
             </VStack>
         </SafeAreaView>
     );
-
 }
 
-const styles = StyleSheet.create({
-
-    historyCard: {
-        padding: 14,
-        borderRadius: 12,
-    },
-
-});
+const styles = StyleSheet.create({});
