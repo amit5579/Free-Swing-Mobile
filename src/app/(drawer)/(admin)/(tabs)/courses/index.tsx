@@ -85,15 +85,21 @@ export default function adminTournamentPage() {
         isPremium: data.isPremium,
       };
 
-      console.log("Payload:", payload);
+      if (isEditMode) {
+        console.log("EDIT MODE");
 
-      await createCourse(payload);
+        // 👉 when backend ready
+        // await updateCourse(editingCourse.courseId, payload);
+      } else {
+        console.log("CREATE MODE");
+        await createCourse(payload);
+      }
 
       setModalVisible(false);
       reset();
       fetchCourse();
     } catch (error) {
-      console.error("Create course failed", error);
+      console.error("Submit failed", error);
     }
   };
 
@@ -107,10 +113,21 @@ export default function adminTournamentPage() {
   };
 
   useEffect(() => {
-    if (isEditMode && editingCourse) {
-      setSelectedPremium(editingCourse.isPremium);
-    }
-  }, [editingCourse, isEditMode]);
+  if (isEditMode && editingCourse) {
+    reset({
+      name: editingCourse.name,
+      location: editingCourse.location,
+      isPremium: editingCourse.isPremium,
+    });
+  } else {
+    // 👉 CLEAR FORM when not editing
+    reset({
+      name: "",
+      location: "",
+      isPremium: undefined,
+    });
+  }
+}, [editingCourse, isEditMode]);
 
   useEffect(() => {
     fetchCourse();
@@ -156,7 +173,9 @@ export default function adminTournamentPage() {
             {/* RIGHT: Add Button */}
             <Pressable
               onPress={() => {
+                debugger;
                 setIsEditMode(false);
+                setEditingCourse(null);
                 reset();
                 setModalVisible(true);
               }}
@@ -327,7 +346,7 @@ function CourseCardAdmin({
   isDark,
   openModal,
   setIsEditMode,
-  // setEditingCourse,
+  setEditingCourse,
   onDelete,
 }: any) {
   const routePage = useRouter();
@@ -418,9 +437,9 @@ function CourseCardAdmin({
           {/* Edit */}
           <Pressable
             onPress={() => {
-              openModal();
+              setEditingCourse(course);
               setIsEditMode(true);
-              // setEditingCourse(course);
+              openModal();
             }}
             className="flex-row items-center gap-1"
           >
@@ -455,7 +474,9 @@ function CourseCardAdmin({
           <View style={styles.modalContainer}>
             {/* FORM */}
             <VStack className="gap-3">
-              <ThemedText style={{ fontSize: 16, fontWeight: "700", textAlign:"center" }}>
+              <ThemedText
+                style={{ fontSize: 16, fontWeight: "700", textAlign: "center" }}
+              >
                 Delete Course
               </ThemedText>
               <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
@@ -469,7 +490,7 @@ function CourseCardAdmin({
                 style={styles.cancelButton}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
               </Pressable>
 
               <Pressable
