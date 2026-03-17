@@ -68,8 +68,8 @@ export default function AdminProfile() {
 
       const adminProfile = await getAdminProfile();
 
-      // console.log("adminProfile", adminProfile);
       setAdminProfile(adminProfile);
+      console.log("adminProfile", adminProfile);
     } catch (error) {
       console.error("Failed to fetch admin profile", error);
     } finally {

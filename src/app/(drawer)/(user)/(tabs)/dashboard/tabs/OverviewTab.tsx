@@ -22,6 +22,7 @@ export type Scorecard = {
     points: number;
     par: number;
     likes: number;
+    isLiked?: boolean;
     isTournament: boolean;
 };
 
@@ -41,25 +42,40 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
         <SafeAreaView
             style={{
                 flex: 1,
-                backgroundColor: isDark ? "#000" : "#f2f2f2",
+                backgroundColor: isDark ? "#161618" : "#f2f2f2",
             }}
         >
             <VStack space="md">
                 {/* Header */}
                 <HStack className="justify-between items-center">
                     <HStack space="sm" className="items-center">
-                        <Text className="text-xl font-bold text-typography-900">
+                        <Text
+                            className="text-xl font-bold"
+                            style={{ color: isDark ? "#fff" : "#000" }}
+                        >
                             Game Feed
                         </Text>
-                        <HStack className="items-center bg-green-100 px-3 py-1 rounded-full space-x-2">
+                        <HStack
+                            className="items-center px-3 py-1 rounded-full space-x-2"
+                            style={{
+                                backgroundColor: isDark ? "transparent" : "#D1FAE5",
+                                borderWidth: isDark ? 1 : 0,
+                                borderColor: isDark ? "#fff" : "transparent",
+                            }}
+                        >
                             {/* Logo Icon */}
-                            <Ionicons name="pulse" size={16} color="#8BC34A" />
-
-                            {/* Status dot */}
-                            <Box className="w-2 h-2 rounded-full bg-success-500" />
+                            <Ionicons
+                                name="pulse"
+                                size={16}
+                                color={isDark ? "#fff" : "#22C55E"}
+                                style={{ marginRight: 4 }}
+                            />
 
                             {/* Status text */}
-                            <Text className="text-xs text-success-700 font-semibold">
+                            <Text
+                                className="text-xs font-semibold"
+                                style={{ color: isDark ? "#fff" : "#15803D" }}
+                            >
                                 Live
                             </Text>
                         </HStack>
@@ -77,45 +93,90 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                 )}
 
                 {/* Cards */}
-                {cards.map((card) => (
+                {cards.map((card: any, index: number) => (
                     <Box
-                        key={card.id}
-                        className="bg-white rounded-3xl border border-gray-100 overflow-hidden mb-4 shadow-sm"
+                        key={card.roundRefId ?? `card-${index}`}
+                        className="rounded-3xl border overflow-hidden mb-4 shadow-sm"
                         style={{
                             shadowColor: "#000",
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.05,
                             shadowRadius: 10,
                             elevation: 2,
-
-                            backgroundColor: isDark ? "#111" : "#fff",
+                            backgroundColor: isDark ? "#161618" : "#fff",
+                            borderColor: isDark ? "#8bc34a" : "#F3F3F3",
                         }}
                     >
                         {/* Header row */}
                         <HStack className="px-4 pt-4 pb-3 justify-between items-start">
                             <HStack space="sm" className="items-center flex-1">
-                                <Avatar size="md" className="bg-outline-400">
-                                    <AvatarFallbackText>
+                                <Box
+                                    style={{
+                                        width: 45,
+                                        height: 45,
+                                        borderRadius: 48,
+                                        borderWidth: 2,
+                                        borderColor: "#8BC34A",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        backgroundColor: "transparent",
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            color: isDark ? "#fff" : "#111",
+                                            fontWeight: "bold",
+                                            fontSize: 18,
+                                        }}
+                                    >
                                         {card.playerName.charAt(0).toUpperCase()}
-                                    </AvatarFallbackText>
-                                </Avatar>
+                                    </Text>
+                                </Box>
                                 <VStack>
-                                    <Text className="text-typography-900 font-semibold text-sm">
+                                    <Text
+                                        className="font-semibold text-sm"
+                                        style={{ color: isDark ? "#fff" : "#111" }}
+                                    >
                                         {card.playerName}
                                     </Text>
                                     <HStack space="xs" className="items-center flex-wrap mt-0.5">
-                                        <Ionicons name="calendar-outline" size={11} color="#9ca3af" />
-                                        <Text className="text-typography-400 text-xs">
+                                        <Ionicons
+                                            name="calendar-outline"
+                                            size={11}
+                                            color={isDark ? "#aaa" : "#9ca3af"}
+                                        />
+                                        <Text
+                                            className="text-xs"
+                                            style={{ color: isDark ? "#ccc" : "#6b7280" }}
+                                        >
                                             {card.date}
                                         </Text>
-                                        <Text className="text-outline-200 text-xs">•</Text>
-                                        <Ionicons name="flag-outline" size={11} color="#9ca3af" />
-                                        <Text className="text-typography-400 text-xs">
-                                            {card.course}
+                                        <Text
+                                            className="text-xs"
+                                            style={{ color: isDark ? "#666" : "#d1d5db" }}
+                                        >
+                                            •
                                         </Text>
-                                        <Box className="bg-info-100 rounded px-1.5 py-0.5">
-                                            <Text className="text-info-700 text-[10px] font-bold">
-                                                {card.tee}
+                                        <Ionicons
+                                            name="flag-outline"
+                                            size={11}
+                                            color={isDark ? "#aaa" : "#9ca3af"}
+                                        />
+                                        <Text
+                                            className="text-xs"
+                                            style={{ color: isDark ? "#ccc" : "#6b7280" }}
+                                        >
+                                            {card.courseName}
+                                        </Text>
+                                        <Box
+                                            className="rounded px-1.5 py-0.5"
+                                            style={{ backgroundColor: isDark ? "#333" : "#DBEAFE" }}
+                                        >
+                                            <Text
+                                                className="text-[10px] font-bold"
+                                                style={{ color: isDark ? "#fff" : "#1E3A8A" }}
+                                            >
+                                                {card.teeBoxName}
                                             </Text>
                                         </Box>
                                     </HStack>
@@ -126,16 +187,21 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                                 {card.isTournament && (
                                     <Badge
                                         size="sm"
-                                        className="bg-warning-400 rounded-full px-3 py-1"
+                                        className="rounded-full px-3 py-1"
+                                        style={{ backgroundColor: isDark ? "#F59E0B" : "#FBBF24" }}
                                     >
-                                        <BadgeText className="text-white font-bold text-xs">
+                                        <BadgeText
+                                            className="text-white font-bold text-xs"
+                                            style={{ color: "#fff" }}
+                                        >
                                             Tournament
                                         </BadgeText>
                                     </Badge>
                                 )}
                                 <Badge
                                     size="sm"
-                                    className="bg-typography-800 rounded-full px-3 py-1"
+                                    className="rounded-full px-3 py-1"
+                                    style={{ backgroundColor: isDark ? "#374151" : "#111827" }}
                                 >
                                     <BadgeText className="text-white font-semibold text-xs">
                                         {card.holes} Holes
@@ -145,8 +211,17 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                         </HStack>
 
                         {/* Gross Score block */}
-                        <Box className="mx-4 mb-4 bg-gray-50 rounded-2xl py-8 items-center border border-gray-100">
-                            <Text className="text-6xl font-black text-gray-900 tracking-tighter">
+                        <Box
+                            className="mx-4 mb-4 rounded-2xl py-8 items-center border"
+                            style={{
+                                borderColor: isDark ? "#8bc34a" : "#F3F3F3",
+                                backgroundColor: isDark ? "#161618" : "#F9FAFB",
+                            }}
+                        >
+                            <Text
+                                className="text-6xl font-black tracking-tighter"
+                                style={{ color: isDark ? "#fff" : "#111" }}
+                            >
                                 {card.grossScore}
                             </Text>
                             <HStack space="xs" className="items-center mt-1">
@@ -156,7 +231,10 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                                 >
                                     {diffLabel(card.grossDiff)}
                                 </Text>
-                                <Text className="text-[10px] uppercase font-bold text-gray-400 tracking-widest ml-1">
+                                <Text
+                                    className="text-[10px] uppercase font-bold tracking-widest ml-1"
+                                    style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
+                                >
                                     Gross
                                 </Text>
                             </HStack>
@@ -171,14 +249,21 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                             ].map((s) => (
                                 <Box
                                     key={s.label}
-                                    className="flex-1 bg-background-0 rounded-xl border border-outline-200 items-center py-3"
+                                    className="flex-1 rounded-xl items-center py-3 border"
+                                    style={{
+                                        backgroundColor: isDark ? "#161618" : "#F9FAFB",
+                                        borderColor: isDark ? "#8bc34a" : "#E5E7EB",
+                                    }}
                                 >
-                                    <Text className="text-[10px] text-typography-400 uppercase tracking-widest mb-1">
+                                    <Text
+                                        className="text-[10px] uppercase tracking-widest mb-1"
+                                        style={{ color: isDark ? "#aaa" : "#6b7280" }}
+                                    >
                                         {s.label}
                                     </Text>
                                     <Text
-                                        className={`text-base font-bold ${s.green ? "text-success-500" : "text-typography-800"
-                                            }`}
+                                        className={`text-base font-bold`}
+                                        style={{ color: s.green ? "#10B981" : isDark ? "#fff" : "#111" }}
                                     >
                                         {s.value}
                                     </Text>
@@ -186,46 +271,75 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                             ))}
                         </HStack>
 
-                        <Divider className="bg-outline-100" />
+                        <Divider
+                            className="bg-outline-100"
+                            style={{ backgroundColor: isDark ? "#333" : "#E5E7EB" }}
+                        />
 
                         {/* Footer */}
-                        <HStack className="px-4 py-4 justify-between items-center bg-gray-50/50">
+                        <HStack
+                            className="px-4 py-4 justify-between items-center"
+                            style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}
+                        >
                             <HStack space="lg" className="items-center">
-                                <Pressable
-                                    onPress={() => handleLike(card.id)}
-                                    className="flex-row items-center"
-                                >
-                                    <Ionicons name="heart-outline" size={20} color="#6b7280" />
-                                    <Text className="text-gray-500 text-sm font-semibold ml-1.5">
+                                {/* <Pressable onPress={() => handleLike(card.id)} className="flex-row items-center">
+                                    <Ionicons
+                                        name="heart-outline"
+                                        size={20}
+                                        color={isDark ? "#fff" : "#6b7280"}
+                                    />
+                                    <Text
+                                        className="text-sm font-semibold ml-1.5"
+                                        style={{ color: isDark ? "#fff" : "#6b7280" }}
+                                    >
                                         {card.likes}
                                     </Text>
-                                </Pressable>
-                                <Pressable className="bg-gray-200/50 p-2 rounded-full">
-                                    <Ionicons name="share-social-outline" size={18} color="#6b7280" />
+                                </Pressable> */}
+                                <Pressable
+                                    className="p-2 rounded-full flex-row items-center"
+                                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB" }}
+                                >
+                                    <Ionicons
+                                        name={card.isLiked ? "heart" : "heart-outline"}
+                                        size={20}
+                                        color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"}
+                                    />
+                                <Text
+                                    className="text-sm font-semibold ml-1.5"
+                                    style={{ color: isDark ? "#fff" : "#6b7280" }}
+                                >
+                                    {card.likes}
+                                </Text>
                                 </Pressable>
                             </HStack>
 
                             <HStack space="md" className="items-center">
                                 <Button
                                     size="sm"
-                                    className="rounded-full bg-[#8BC34A] px-6 h-10 shadow-sm"
+                                    className="rounded-full px-6 h-10 shadow-sm"
+                                    style={{ backgroundColor: "#8BC34A" }}
                                 >
-                                    <Ionicons name="eye-outline" size={14} color="white" />
-                                    <ButtonText className="text-white text-xs font-bold ml-1.5">
-                                        View
-                                    </ButtonText>
+                                    <Ionicons name="eye-outline" size={14} color="#fff" />
+                                    <ButtonText className="text-white text-xs font-bold ml-1.5">View</ButtonText>
                                 </Button>
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="rounded-full border-outline-200 bg-background-50 gap-1"
+                                    className="rounded-full gap-1"
+                                    style={{
+                                        borderColor: isDark ? "#fff" : "#E5E7EB",
+                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F9FAFB",
+                                    }}
                                 >
                                     <Ionicons
                                         name="shield-checkmark-outline"
                                         size={13}
-                                        color="#6b7280"
+                                        color={isDark ? "#fff" : "#6b7280"}
                                     />
-                                    <ButtonText className="text-typography-500 text-xs font-semibold">
+                                    <ButtonText
+                                        className="text-xs font-semibold"
+                                        style={{ color: isDark ? "#fff" : "#6b7280" }}
+                                    >
                                         Auth
                                     </ButtonText>
                                 </Button>
