@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
   StyleSheet,
   TextInput,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
@@ -23,6 +24,8 @@ import Watermark from "@/components/watermark";
 import { Text } from "@/components/text";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
+import { getTournaments } from "@/api/tournaments";
+import { getCourse } from "@/api/courses";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
@@ -37,6 +40,39 @@ export default function adminTournamentsPage() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
+  const [tournaments, setTournaments] = useState<any>([]);
+  const [courses, setCourses] = useState<any>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+
+  const fetchTournaments = async () => {
+    try {
+      const data = await getTournaments();
+      const courseData = await getCourse();
+
+      // 🔥 transform courses here
+      const formattedCourses = courseData.map((item: any) => ({
+        label: item.name,
+        value: item.courseId,
+      }));
+
+      setTournaments(data);
+      setCourses(formattedCourses);
+      // console.log("Tournaments:", tournaments);
+      // console.log("Formatted Courses:", formattedCourses);
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTournaments();
+    // console.log("cccc", courses);
+
+    // console.log("Tournaments:", tournaments);
+  }, []);
+
   const onChange = (event: any, selectedDate?: Date) => {
     setShowPicker(false);
 
@@ -44,36 +80,7 @@ export default function adminTournamentsPage() {
       setDate(selectedDate);
     }
   };
-  // Dummy data (replace with API later)
-  const tournaments = [
-    {
-      id: 1,
-      name: "BMW Cup",
-      course: "Club Prestige Golfshire Club",
-      start: "Mar 11, 2026",
-      end: "Mar 12, 2026",
-    },
-    {
-      id: 2,
-      name: "W12 Championship",
-      course: "ASC AEPTA",
-      start: "Mar 10, 2026",
-      end: "Mar 11, 2026",
-    },
-    {
-      id: 3,
-      name: "Practice Tour",
-      course: "Bangalore Golf Club",
-      start: "Mar 9, 2026",
-      end: "Mar 9, 2026",
-    },
-  ];
 
-  const courses = [
-    { label: "Club Prestige Golfshire Club", value: "1" },
-    { label: "ASC AEPTA", value: "2" },
-    { label: "Bangalore Golf Club", value: "3" },
-  ];
 
   const teeColors = [
     { label: "red", value: "1" },
@@ -85,12 +92,6 @@ export default function adminTournamentsPage() {
     { label: "silver", value: "7" },
   ];
 
-  const scoringTypes = [
-    { label: "Net Score (Include Par3)", value: "1" },
-    { label: "Net Score (Exclude Par3)", value: "2" },
-    { label: "Stableford", value: "3" },
-    { label: "Double Peoria", value: "4" },
-  ];
   return (
     <>
       <ThemedView
@@ -113,7 +114,11 @@ export default function adminTournamentsPage() {
 
           <Pressable
             style={styles.createButton}
-            onPress={() => setModalVisible(true)}
+            onPress={() => {
+              setIsEditMode(false);
+              setEditingCourse(null);
+              setModalVisible(true);
+            }}
             className="flex-row items-center gap-1"
           >
             <Ionicons name="add-outline" size={28} color="white" />
@@ -125,10 +130,13 @@ export default function adminTournamentsPage() {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">
-            {tournaments.map((tournament) => (
+            {tournaments.map((tournament: any) => (
               <TournamentCard
-                key={tournament.id}
+                key={tournament.tournamentId}
                 tournament={tournament}
+                setIsEditMode={setIsEditMode}
+                setEditingCourse={setEditingCourse}
+                setModalVisible={setModalVisible}
                 isDark={isDark}
               />
             ))}
@@ -146,8 +154,8 @@ export default function adminTournamentsPage() {
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
             <HStack className="justify-between items-center mb-4">
-              <ThemedText style={{ fontSize: 28, fontWeight: "700" }}>
-                Create Tournament
+              <ThemedText style={{ fontSize: 17, fontWeight: "700" }}>
+                {isEditMode ? "Edit Tournament" : "Create Tournament"}
               </ThemedText>
 
               <Pressable onPress={() => setModalVisible(false)}>
@@ -158,7 +166,7 @@ export default function adminTournamentsPage() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <VStack className="gap-3">
                 <VStack className="gap-1">
-                  <Text>Tournament Name</Text>
+                  {/* <Text>Tournament Name</Text> */}
                   <TextInput
                     placeholder="Enter Tournament Name"
                     style={styles.input}
@@ -166,7 +174,7 @@ export default function adminTournamentsPage() {
                 </VStack>
 
                 <VStack className="gap-1">
-                  <Text>Course</Text>
+                  {/* <Text>Course</Text> */}
                   <Dropdown
                     style={styles.input}
                     data={courses}
@@ -179,7 +187,7 @@ export default function adminTournamentsPage() {
                 </VStack>
 
                 <VStack className="gap-1">
-                  <Text>Tee Box</Text>
+                  {/* <Text>Tee Box</Text> */}
                   {/* <TextInput
                     placeholder="Select Tee Box..."
                     style={styles.input}
@@ -196,10 +204,15 @@ export default function adminTournamentsPage() {
                 </VStack>
 
                 <VStack className="gap-1">
-                  <Text>Scoring Type</Text>
+                  {/* <Text>Scoring Type</Text> */}
                   <Dropdown
                     style={styles.input}
-                    data={scoringTypes}
+                    data={[
+                      { label: "Net Score (Include Par3)", value: "1" },
+                      { label: "Net Score (Exclude Par3)", value: "2" },
+                      { label: "Stableford", value: "3" },
+                      { label: "Double Peoria", value: "4" },
+                    ]}
                     labelField="label"
                     valueField="value"
                     placeholder="Select Scoring Type"
@@ -209,7 +222,7 @@ export default function adminTournamentsPage() {
                 </VStack>
 
                 <VStack className="gap-1">
-                  <Text>Start Date</Text>
+                  {/* <Text>Start Date</Text> */}
                   <Pressable
                     onPress={() => setShowPicker(true)}
                     className="p-3 w-full border border-gray-400 rounded-md"
@@ -227,7 +240,7 @@ export default function adminTournamentsPage() {
                 </VStack>
 
                 <VStack className="gap-1">
-                  <Text>End Date</Text>
+                  {/* <Text>End Date</Text> */}
                   <Pressable
                     onPress={() => setShowPicker(true)}
                     className="p-3 w-full border border-gray-400 rounded-md"
@@ -244,7 +257,7 @@ export default function adminTournamentsPage() {
                   )}
                 </VStack>
                 <VStack className="gap-1">
-                  <Text>Description</Text>
+                  {/* <Text>Description</Text> */}
 
                   <TextInput
                     placeholder="Optional Description"
@@ -266,7 +279,7 @@ export default function adminTournamentsPage() {
 
               <Pressable style={styles.createButton}>
                 <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                  Create Tournament
+                  {isEditMode ? "Update Tournament" : "Create Tournament"}
                 </ThemedText>
               </Pressable>
             </HStack>
@@ -277,99 +290,169 @@ export default function adminTournamentsPage() {
   );
 }
 
-function TournamentCard({ tournament, isDark }: any) {
+function TournamentCard({
+  tournament,
+  isDark,
+  setIsEditMode,
+  setEditingCourse,
+  setModalVisible,
+}: any) {
   const routePage = useRouter();
 
+  function routePlayersPage(tournamentId: string, tournamentName: string) {
+    console.log(tournamentId);
+    routePage.push(`/tournaments/managePlayers?tournamentId=${tournamentId}&tournamentName=${tournamentName}`);
+  }
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const MenuItem = ({ icon, label, color, onPress }: any) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+      <Ionicons name={icon} size={20} color={color} />
+      <ThemedText style={styles.menuText}>{label}</ThemedText>
+    </TouchableOpacity>
+  );
   return (
-    <Box
-      className="rounded-2xl p-4"
-      style={{
-        borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
-      }}
-    >
-      <VStack className="gap-2">
-        <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-          {tournament.name}
-        </ThemedText>
-
-        <ThemedText style={{ opacity: 0.7 }}>{tournament.course}</ThemedText>
-
-        <HStack className="justify-between mt-2">
-          <VStack>
-            <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-              Start
+    <>
+      <Box
+        style={[
+          styles.card,
+          {
+            // backgroundColor: isDark ? "#0f0f0f" : "#fff",
+            borderColor: isDark ? "#262626" : "#e5e5e5",
+          },
+        ]}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.title}>
+              {tournament?.name || "No Name"}
             </ThemedText>
 
-            <ThemedText>{tournament.start}</ThemedText>
-          </VStack>
-
-          <VStack>
-            <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>End</ThemedText>
-
-            <ThemedText>{tournament.end}</ThemedText>
-          </VStack>
-        </HStack>
-
-        <Divider className="my-2" />
-
-        {/* Actions */}
-        <HStack className="justify-between">
-          <Pressable className="items-center">
-            <Ionicons name="create-outline" size={25} color="#6b7280" />
-            <ThemedText style={{ fontSize: 15, fontWeight: "400" }}>
-              Edit
+            <ThemedText style={styles.subtitle}>
+              {tournament?.course?.name || "No Course"}
             </ThemedText>
-          </Pressable>
+          </View>
 
+          {/* MORE MENU */}
           <Pressable
-            onPress={() => routePage.push("/(drawer)/(admin)/(tabs)/tournaments/managePlayers")}
-            className="items-center"
+            onPress={() => setMenuVisible(true)}
+            style={({ pressed }) => [
+              styles.iconBtn,
+              { opacity: pressed ? 0.5 : 1 },
+            ]}
           >
-            <Ionicons name="person-add-outline" size={25} color="#3b82f6" />
-            <ThemedText style={{ fontSize: 15, fontWeight: "400" }}>
-              Manage
-            </ThemedText>
+            <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
           </Pressable>
+        </View>
 
+        {/* DATES */}
+        <View style={styles.dateRow}>
+          <View>
+            <ThemedText style={styles.label}>Start</ThemedText>
+            <ThemedText style={styles.value}>
+              {formatDate(tournament?.startDate)}
+            </ThemedText>
+          </View>
+
+          <View>
+            <ThemedText style={styles.label}>End</ThemedText>
+            <ThemedText style={styles.value}>
+              {formatDate(tournament?.endDate)}
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* PRIMARY ACTIONS */}
+        <View style={styles.actions}>
           <Pressable
-            onPress={() => routePage.push("/(drawer)/(admin)/(tabs)/tournaments/tournamentHistory")}
-            className="items-center"
+            onPress={() => {
+              setIsEditMode(true);
+              setEditingCourse(tournament);
+              setModalVisible(true);
+            }}
+            style={styles.actionBtn}
+            android_ripple={{ color: "#ddd" }}
           >
-            <Ionicons name="time-outline" size={25} color="#06b6d4" />
-            <ThemedText style={{ fontSize: 15, fontWeight: "400" }}>
-              History
-            </ThemedText>
+            <Ionicons name="create-outline" size={22} color="#6b7280" />
+            <ThemedText style={styles.actionText}>Edit</ThemedText>
           </Pressable>
 
           <Pressable
-            onPress={() => routePage.push("/(drawer)/(admin)/(tabs)/tournaments/leaderboard")}
-            className="items-center">
-            <Ionicons name="stats-chart-outline" size={25} color="#f59e0b" />
-            <ThemedText style={{ fontSize: 15, fontWeight: "400" }}>
-              Leaderboard
-            </ThemedText>
+            style={styles.actionBtn}
+            android_ripple={{ color: "#ddd" }}
+            onPress={() => routePlayersPage(tournament?.tournamentId, tournament?.name)}
+          >
+            <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
+            <ThemedText style={styles.actionText}>Manage</ThemedText>
           </Pressable>
+        </View>
+      </Box>
 
-          <Pressable className="items-center">
-            <Ionicons name="trash-outline" size={25} color="#ef4444" />
-            <ThemedText style={{ fontSize: 15, fontWeight: "400" }}>
-              Delete
-            </ThemedText>
-          </Pressable>
-        </HStack>
-      </VStack>
-    </Box>
+      {/* MODAL MENU */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
+          <View style={styles.menu}>
+            <MenuItem
+              icon="time-outline"
+              label="History"
+              color="#06b6d4"
+              onPress={() => {
+                setMenuVisible(false);
+                routePage.push(
+                  "/(drawer)/(admin)/(tabs)/tournaments/tournamentHistory",
+                );
+              }}
+            />
+
+            <MenuItem
+              icon="stats-chart-outline"
+              label="Leaderboard"
+              color="#f59e0b"
+              onPress={() => {
+                setMenuVisible(false);
+                routePage.push(
+                  "/(drawer)/(admin)/(tabs)/tournaments/leaderboard",
+                );
+              }}
+            />
+
+            <MenuItem
+              icon="trash-outline"
+              label="Delete"
+              color="#ef4444"
+              onPress={() => {
+                setMenuVisible(false);
+                console.log("Delete clicked");
+              }}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    padding: 20,
-  },
+  // overlay: {
+  //   flex: 1,
+  //   justifyContent: "center",
+  //   backgroundColor: "rgba(0,0,0,0.4)",
+  //   padding: 20,
+  // },
 
   modalContainer: {
     backgroundColor: "white",
@@ -407,5 +490,96 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+
+    // shadowColor: "#000",
+    // shadowOpacity: 0.08,
+    // shadowRadius: 6,
+    // elevation: 3,
+  },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
+  subtitle: {
+    fontSize: 13,
+    opacity: 0.6,
+    marginTop: 2,
+  },
+
+  iconBtn: {
+    padding: 6,
+  },
+
+  dateRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+
+  label: {
+    fontSize: 12,
+    opacity: 0.5,
+  },
+
+  value: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderColor: "#e5e5e5",
+    paddingTop: 10,
+  },
+
+  actionBtn: {
+    alignItems: "center",
+    gap: 2,
+  },
+
+  actionText: {
+    fontSize: 12,
+  },
+
+  /* MODAL */
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    padding: 20,
+  },
+
+  menu: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+  },
+
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+  },
+
+  menuText: {
+    fontSize: 14,
   },
 });
