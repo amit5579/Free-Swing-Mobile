@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+// Handlesubmit of rhf and , post - put api calls , edit values dynamic
+
+import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -12,7 +14,7 @@ import Watermark from "@/components/watermark";
 //     const routePage = useRouter();
 
 import { HStack } from "@/components/hstack";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Modal, Pressable, useColorScheme, View } from "react-native";
 
 import { Divider } from "@/components/divider";
@@ -20,6 +22,11 @@ import { Text } from "@/components/text";
 import { ThemedView } from "@/components/themed-view";
 import { TextInput } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+import { getTeeBox } from "@/api/courses";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { teeBoxSchema } from "@/schema/adminSchemas";
+
 export default function teeBoxPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -28,7 +35,55 @@ export default function teeBoxPage() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [teeBox, setTeeBox] = useState<any>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: zodResolver(teeBoxSchema),
+    defaultValues: {
+      name: "",
+      color: "",
+      rating: 0,
+      slope: 0,
+    },
+  });
+
+  const { courseId } = useLocalSearchParams();
+  // console.log("asdfgh", courseId);
+
+  const fetchTeeDetails = async () => {
+    try {
+      const response = await getTeeBox(courseId as string);
+      setTeeBox(response);
+    } catch (error) {
+      console.error("Error fetching tee details:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isEditMode && editingCourse) {
+      reset({
+        name: editingCourse.name,
+        color: editingCourse.color,
+        rating: editingCourse.rating,
+        slope: editingCourse.slope,
+      });
+
+      setSelectedColor(editingCourse.color); // for UI
+    }
+  }, [editingCourse, isEditMode]);
+
+  useEffect(() => {
+    fetchTeeDetails();
+  }, [courseId]);
 
   const color = [
     { label: "Red", value: "red" },
@@ -147,20 +202,46 @@ export default function teeBoxPage() {
             Tee Boxes
           </ThemedText>
 
-          {/* RIGHT: Spacer */}
-          <View style={{ width: 34 }} />
+          {/* RIGHT: Add Button */}
+          <Pressable
+            onPress={() => {
+              setIsEditMode(false);
+              setEditingCourse(null);
+
+              reset({
+                name: "",
+                color: "",
+                rating: 0,
+                slope: 0,
+              });
+
+              setSelectedColor(null);
+
+              setModalVisible(true);
+            }}
+            style={styles.createButton}
+            className="flex-row items-center gap-1"
+          >
+            <Ionicons name="add-outline" size={28} color="white" />
+            <ThemedText style={{ color: "white", fontWeight: "600" }}>
+              Add Tee Box
+            </ThemedText>
+          </Pressable>
         </HStack>
+
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-3">
             <VStack className="gap-4">
-              {tees.map((tee) => (
+              {teeBox?.map((tee: any) => (
                 <TeeCardAdmin
                   key={tee.id}
                   tee={tee}
                   isDark={isDark}
                   openModal={() => setModalVisible(true)}
+                  setIsEditMode={setIsEditMode}
+                  setEditingCourse={setEditingCourse}
                 />
               ))}
             </VStack>
@@ -178,8 +259,8 @@ export default function teeBoxPage() {
           <View style={styles.modalContainer}>
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 18, fontWeight: "700" }}>
-                Edit Tee Box
+              <Text style={{ fontSize: 17, fontWeight: "700" }}>
+                {isEditMode ? "Edit Tee Box" : "Add Tee Box"}
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
@@ -191,32 +272,65 @@ export default function teeBoxPage() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Name */}
               <VStack className="mb-4">
-                <Text
+                {/* <Text
                   style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}
                 >
                   Name
-                </Text>
+                </Text> */}
 
-                <TextInput
-                  placeholder="Enter tee name"
-                  placeholderTextColor="#999"
-                  style={styles.input}
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      placeholder="Enter tee name"
+                      placeholderTextColor="#999"
+                      style={styles.input}
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )}
                 />
+                {errors.name && (
+                  <Text style={styles.errorText}>*{errors.name.message}</Text>
+                )}
               </VStack>
 
               {/* Color */}
               <VStack className="mb-4">
-                <Text
+                {/* <Text
                   style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}
                 >
                   Color
-                </Text>
+                </Text> */}
 
-                <TextInput
-                  placeholder="Enter color"
-                  placeholderTextColor="#999"
-                  style={styles.input}
+                <Controller
+                  control={control}
+                  name="color"
+                  render={({ field: { onChange, value } }) => (
+                    <Dropdown
+                      style={{
+                        borderWidth: 1,
+                        borderColor: "#818589",
+                        borderRadius: 10,
+                        padding: 14,
+                        marginBottom: 14,
+                      }}
+                      data={color}
+                      labelField="label"
+                      valueField="value"
+                      placeholder="Select color"
+                      value={isEditMode ? value : selectedColor}
+                      onChange={(item) => {
+                        onChange(item.value); // ✅ form update
+                        setSelectedColor(item.value); // UI
+                      }}
+                    />
+                  )}
                 />
+                {errors.color && (
+                  <Text style={styles.errorText}>*{errors.color.message}</Text>
+                )}
               </VStack>
 
               {/* Rating + Slope Row */}
@@ -224,48 +338,55 @@ export default function teeBoxPage() {
                 <VStack style={{ flex: 1 }}>
                   <Text style={styles.label}>Rating</Text>
 
-                  <TextInput
-                    placeholder="Rating"
-                    placeholderTextColor="#999"
-                    keyboardType="numeric"
-                    style={styles.input}
+                  <Controller
+                    control={control}
+                    name="rating"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Rating"
+                        keyboardType="numeric"
+                        style={styles.input}
+                        value={value?.toString()}
+                        onChangeText={(text) => onChange(Number(text))}
+                      />
+                    )}
                   />
+                  {errors.color && (
+                    <Text style={styles.errorText}>
+                      *{errors.color.message}
+                    </Text>
+                  )}
                 </VStack>
 
                 <VStack style={{ flex: 1 }}>
                   <Text style={styles.label}>Slope</Text>
 
-                  <TextInput
-                    placeholder="Slope"
-                    placeholderTextColor="#999"
-                    keyboardType="numeric"
-                    style={styles.input}
+                  <Controller
+                    control={control}
+                    name="slope"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Slope"
+                        keyboardType="numeric"
+                        style={styles.input}
+                        value={value?.toString()}
+                        onChangeText={(text) => onChange(Number(text))}
+                      />
+                    )}
                   />
+                  {errors.color && (
+                    <Text style={styles.errorText}>
+                      *{errors.color.message}
+                    </Text>
+                  )}
                 </VStack>
               </HStack>
 
               {/* Color Dropdown */}
-             
 
-              <Dropdown
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#818589",
-                  borderRadius: 10,
-                  padding: 14,
-                  marginBottom: 14,
-                }}
-                data={color}
-                labelField="label"
-                valueField="value"
-                placeholder="Select color"
-                value={selectedColor}
-                onChange={(item) => setSelectedColor(item.value)}
-              />
-
-              <Text className="text-gray-500 mb-4">
+              {/* <Text className="text-gray-500 mb-4">
                 *Premium tees are only available to subscribed members.
-              </Text>
+              </Text> */}
             </ScrollView>
 
             {/* Footer */}
@@ -287,7 +408,7 @@ export default function teeBoxPage() {
                 style={styles.startButton}
               >
                 <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                  Save Changes
+                  {isEditMode ? "Save Changes" : "Create Tee Box"}
                 </ThemedText>
               </Pressable>
             </HStack>
@@ -300,7 +421,13 @@ export default function teeBoxPage() {
 
 /* ---------- tee CARD ---------- */
 
-function TeeCardAdmin({ tee, isDark, openModal }: any) {
+function TeeCardAdmin({
+  tee,
+  isDark,
+  openModal,
+  setIsEditMode,
+  setEditingCourse,
+}: any) {
   const teeColors: Record<string, string> = {
     red: "#ef4444",
     blue: "#3b82f6",
@@ -401,7 +528,14 @@ function TeeCardAdmin({ tee, isDark, openModal }: any) {
       {/* Edit / Delete Actions */}
       <HStack className="justify-between">
         {/* Edit */}
-        <Pressable onPress={openModal} className="flex-row items-center gap-1">
+        <Pressable
+          onPress={() => {
+            setEditingCourse(tee);
+            setIsEditMode(true);
+            openModal();
+          }}
+          className="flex-row items-center gap-1"
+        >
           <Ionicons name="pencil-outline" size={15} color="#6b7280" />
           <ThemedText style={{ color: "#6b7280", fontWeight: "400" }}>
             Edit
@@ -425,6 +559,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  createButton: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 7,
   },
   modalView: {
     margin: 20,
@@ -516,5 +656,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     marginBottom: 6,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 1,
   },
 });

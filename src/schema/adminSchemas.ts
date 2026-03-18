@@ -16,3 +16,9 @@ export const courseSchema = z.object({
 });
 
 
+export const teeBoxSchema = z.object({
+    name: z.string().min(3, "Tee Box Name must be at least 3 characters"),
+    color: z.string().min(3, "Color must be at least 3 characters"),
+    rating: z.number(),
+    slope: z.number()  
+});
