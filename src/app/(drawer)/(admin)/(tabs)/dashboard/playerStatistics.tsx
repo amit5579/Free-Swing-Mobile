@@ -1,141 +1,199 @@
-import React from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, FlatList, TouchableOpacity, ActivityIndicator, useColorScheme, Pressable } from "react-native";
+import { PlayerApi } from "@/api/adminAPI/dashboard";
+import { useRouter } from "expo-router";
+import { Avatar, AvatarImage } from "@/components/avatar";
+import { ThemedText } from "@/components/themed-text";
+import { Box } from "@/components/box";
+import { HStack } from "@/components/hstack";
+import { VStack } from "@/components/vstack";
+import { Divider } from "@/components/divider";
+import { Ionicons } from "@expo/vector-icons";
 
-// Example player data
-const players = [
-  { id: "1", name: "narender", handicap: 0, rounds: 10, courses: 4, avgScore: 107.3 },
-  { id: "2", name: "rks", handicap: 5, rounds: 7, courses: 4, avgScore: 136.6 },
-  { id: "3", name: "newuser", handicap: 9, rounds: 2, courses: 2, avgScore: 267.5 },
-  { id: "4", name: "r1", handicap: 2, rounds: 3, courses: 2, avgScore: 200.7 },
-  { id: "5", name: "test2", handicap: 31, rounds: 7, courses: 6, avgScore: 87.9 },
-  { id: "6", name: "test3", handicap: 4, rounds: 18, courses: 5, avgScore: 94.9 },
-  { id: "7", name: "t3", handicap: 14, rounds: 1, courses: 1, avgScore: 86 },
-  { id: "8", name: "ab", handicap: 14, rounds: 0, courses: 0, avgScore: null },
-  { id: "9", name: "q1", handicap: 15, rounds: 1, courses: 1, avgScore: 9 },
-  { id: "10", name: "U1", handicap: 18, rounds: 1, courses: 1, avgScore: 169 },
-];
+const PlayerCard = ({ player, isDark, isExpanded, onToggle }: { player: PlayerApi, isDark: boolean, isExpanded: boolean, onToggle: () => void }) => {
+  const router = useRouter();
 
-const PlayerCard = ({ player }: { player: typeof players[0] }) => {
+  const handleViewHistory = () => {
+    router.push({
+      pathname: '/(drawer)/(admin)/(tabs)/dashboard/playerHistory',
+      params: { 
+        userId: player.id.toString(), 
+        username: player.username 
+      }
+    });
+  };
+
   return (
-    <View style={styles.card}>
-      {/* Name + Avatar Row */}
-      <View style={styles.nameRow}>
-        <Image
-          source={{ uri: `https://i.pravatar.cc/100?u=${player.id}` }}
-          style={styles.avatar}
-        />
-        <Text style={styles.name}>{player.name}</Text>
-      </View>
+    <Box
+      style={{
+        backgroundColor: isDark ? "rgba(26,26,26,0.85)" : "rgba(255,255,255,0.85)",
+        borderRadius: 20,
+        borderLeftWidth: 6,
+        borderLeftColor: player.isBlocked ? "#EF4444" : "#8BC34A",
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.08,
+        shadowRadius: 10,
+        elevation: 4,
+      }}
+    >
+      {/* CARD HEADER */}
+      <Pressable onPress={onToggle}>
+        <HStack className="items-center justify-between">
+          <HStack className="items-center" style={{ flex: 1 }}>
+            <Avatar
+              size="md"
+              style={{
+                borderWidth: 2,
+                borderColor: !player.isBlocked ? "#8BC34A" : "#EF4444",
+                backgroundColor: !player.isBlocked ? "rgba(139,195,74,0.1)" : "rgba(239,68,68,0.1)",
+                marginRight: 12,
+              }}
+            >
+              {!player.profilePictureUrl ? (
+                <ThemedText style={{ fontWeight: "800", color: !player.isBlocked ? "#8BC34A" : "#EF4444" }}>
+                  {player.username.charAt(0).toUpperCase()}
+                </ThemedText>
+              ) : (
+                <AvatarImage
+                  source={{ uri: `https://kolve18freeswing.com${player.profilePictureUrl}` }}
+                />
+              )}
+            </Avatar>
+            <VStack>
+              <ThemedText style={{ fontWeight: "800", fontSize: 17 }}>{player.username}</ThemedText>
+              <ThemedText style={{ fontSize: 11, color: isDark ? "#888" : "#999", textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Player ID: #{player.id}
+              </ThemedText>
+            </VStack>
+          </HStack>
 
-      {/* Stats */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Handicap:</Text>
-        <Text style={styles.value}>{player.handicap}</Text>
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Rounds:</Text>
-        <Text style={styles.value}>{player.rounds}</Text>
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Courses:</Text>
-        <Text style={styles.value}>{player.courses}</Text>
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Avg Score:</Text>
-        <Text style={styles.value}>{player.avgScore ?? "-"}</Text>
-      </View>
+          <HStack className="items-center">
+            <Ionicons
+              name={isExpanded ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={isDark ? "#555" : "#CCC"}
+            />
+          </HStack>
+        </HStack>
+      </Pressable>
 
-      {/* View History Button */}
-      <TouchableOpacity style={styles.historyButton}>
-        <Text style={styles.historyText}>View History</Text>
-      </TouchableOpacity>
-    </View>
+      {/* EXPANDED DETAILS */}
+      {isExpanded && (
+        <VStack style={{ marginTop: 20 }}>
+          <Divider style={{ marginBottom: 16, backgroundColor: isDark ? "#333" : "#F0F0F0" }} />
+
+          {/* Statistics Grid */}
+          <HStack style={{ flexWrap: 'wrap', gap: 16 }}>
+            <VStack style={{ width: '47%' }}>
+              <ThemedText style={{ fontSize: 10, color: '#999', fontWeight: '700', marginBottom: 4 }}>HANDICAP INDEX</ThemedText>
+              <HStack className="items-center">
+                <Ionicons name="ribbon-outline" size={14} color="#FFB300" />
+                <ThemedText style={{ marginLeft: 6, fontSize: 15, fontWeight: '800', color: '#FFB300' }}>{player.handicap}</ThemedText>
+              </HStack>
+            </VStack>
+
+            <VStack style={{ width: '47%' }}>
+              <ThemedText style={{ fontSize: 10, color: '#999', fontWeight: '700', marginBottom: 4 }}>TOTAL ROUNDS</ThemedText>
+              <HStack className="items-center">
+                <Ionicons name="golf-outline" size={14} color="#8BC34A" />
+                <ThemedText style={{ marginLeft: 6, fontSize: 14, fontWeight: '700' }}>{player.totalRounds}</ThemedText>
+              </HStack>
+            </VStack>
+
+            <VStack style={{ width: '47%' }}>
+              <ThemedText style={{ fontSize: 10, color: '#999', fontWeight: '700', marginBottom: 4 }}>AVERAGE SCORE</ThemedText>
+              <HStack className="items-center">
+                <Ionicons name="stats-chart-outline" size={14} color="#8BC34A" />
+                <ThemedText style={{ marginLeft: 6, fontSize: 14, fontWeight: '700' }}>{player.averageScore?.toFixed(1) ?? "-"}</ThemedText>
+              </HStack>
+            </VStack>
+
+            <VStack style={{ width: '47%' }}>
+              <ThemedText style={{ fontSize: 10, color: '#999', fontWeight: '700', marginBottom: 4 }}>COURSES PLAYED</ThemedText>
+              <HStack className="items-center">
+                <Ionicons name="map-outline" size={14} color="#8BC34A" />
+                <ThemedText style={{ marginLeft: 6, fontSize: 14, fontWeight: '700' }}>{player.coursesPlayed}</ThemedText>
+              </HStack>
+            </VStack>
+          </HStack>
+
+          {/* Action Button */}
+          <HStack style={{ marginTop: 24, justifyContent: 'flex-end' }}>
+            <TouchableOpacity 
+              style={{ 
+                backgroundColor: "rgba(139,195,74,0.15)", 
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 12,
+                flexDirection: 'row', 
+                alignItems: "center", 
+                borderWidth: 1,
+                borderColor: "rgba(139,195,74,0.2)",
+              }} 
+              onPress={handleViewHistory}
+            >
+              <Ionicons name="time-outline" size={16} color="#2E7D32" />
+              <ThemedText style={{ color: "#2E7D32", fontWeight: "800", marginLeft: 8, fontSize: 13 }}>View History</ThemedText>
+            </TouchableOpacity>
+          </HStack>
+        </VStack>
+      )}
+    </Box>
   );
 };
 
-export default function PlayerStatistics() {
+interface PlayerStatisticsProps {
+  players: PlayerApi[];
+  loading: boolean;
+}
+
+export default function PlayerStatistics({ players, loading }: PlayerStatisticsProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    // Auto-expand first item if it exists and no others are expanded
+    if (players && players.length > 0 && Object.keys(expanded).length === 0) {
+      setExpanded({ [players[0].id]: true });
+    }
+  }, [players]);
+
+  const toggleMember = (id: number) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#000' : '#f2f2f2' }}>
+        <ActivityIndicator size="large" color="#8BC34A" />
+        <ThemedText style={{ marginTop: 12, color: "#8BC34A" }}>Loading statistics...</ThemedText>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Player Statistics</Text>
-      <Text style={styles.subtitle}>Performance overview of all players.</Text>
+    <View style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f2' }}>
       <FlatList
         data={players}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PlayerCard player={item} />}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <PlayerCard 
+            player={item} 
+            isDark={isDark} 
+            isExpanded={!!expanded[item.id]} 
+            onToggle={() => toggleMember(item.id)} 
+          />
+        )}
+        contentContainerStyle={{ paddingBottom: 120, paddingTop: 10, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    backgroundColor: "#f0f0f0",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 4,
-    color: "#333",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 10,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1b5e20",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 2,
-  },
-  label: {
-    fontSize: 14,
-    color: "#555",
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000",
-  },
-  historyButton: {
-    marginTop: 12,
-    backgroundColor: "#8BC34A",
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  historyText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-});

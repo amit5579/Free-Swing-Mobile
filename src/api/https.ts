@@ -80,6 +80,10 @@ https.interceptors.response.use(
       await AsyncStorage.removeItem("userId");
 
       router.replace("/(auth)/login");
+      // Reset isRedirecting after a delay to allow future redirects if needed
+      setTimeout(() => {
+        isRedirecting = false;
+      }, 5000);
     }
 
     return Promise.reject(error);

@@ -206,3 +206,34 @@ export const getUpdates = async () => {
     throw error;
   }
 };
+
+export type ScorecardHole = {
+  holeId: number;
+  holeNumber: number;
+  par: number;
+  handicap: number;
+  yardage: number;
+  teeBoxId: number;
+  courseId: number;
+  score: number;
+  netScore: number;
+  roundNumber: number;
+  stablefordPoints: number;
+  isCompleted: boolean;
+  isDQ: boolean;
+  tournamentId?: number;
+  isDoublePeoria: boolean;
+};
+
+export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
+  try {
+    console.log("scorecardid",scorecardId);
+    const response = await https.get(`/scorecard/details/${scorecardId}`);
+    return response.data as ScorecardHole[];
+  } catch (error) {
+    console.error("Failed to fetch scorecard details:", error);
+    throw error;
+  }
+};
+
+

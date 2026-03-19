@@ -9,8 +9,18 @@ export default function dashboardLayout() {
       />
       
       <Stack.Screen
-        name="playerStatics"
+        name="playerStatistics"
         options={{ headerShown: false }}
+      />
+      
+      <Stack.Screen
+        name="playerHistory"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+
+      <Stack.Screen
+        name="scorecardDetails"
+        options={{ headerShown: false, presentation: 'modal' }}
       />
     </Stack>
   );

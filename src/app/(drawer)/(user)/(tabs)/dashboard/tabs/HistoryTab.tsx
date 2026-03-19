@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 
 import { getScoreHistory, ScoreHistoryItem } from "@/api/dashboard";
+import { router } from "expo-router";
 
 export type GameHistory = {
     id: string;
@@ -69,9 +70,34 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
         );
     }
 
+    const handleViewScorecard = (id: string) => {
+        router.push(`/(drawer)/(user)/(tabs)/dashboard/tabs/scoreCard/${id}`);
+    };
+
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
             <VStack space="md" className="pb-8">
+                <HStack
+                    className="justify-between items-center px-4 mb-3"
+                >
+                    <VStack>
+                        <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`}>
+                            Recent Activity
+                        </Text>
+                        <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                            Your game history and performance
+                        </Text>
+                    </VStack>
+
+                    <Pressable onPress={fetchHistory} className="p-2 rounded-full">
+                        <Ionicons
+                            name="refresh-outline"
+                            size={20}
+                            color={isDark ? "#fff" : "#6B7280"}
+                        />
+                    </Pressable>
+                </HStack>
+
                 {history.length === 0 ? (
                     <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4">
                         <Ionicons name="time-outline" size={40} color="#9ca3af" />
@@ -81,46 +107,146 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
                     </Box>
                 ) : (
                     history.map((item) => (
-                        <Pressable key={item.id} onPress={() => onViewGame?.(item.id)}>
+                        <Pressable key={item.id} onPress={() => handleViewScorecard(item.id)}>
                             <Box
-                                className="bg-white rounded-2xl border border-gray-200 p-4 mb-3"
-                                style={{ backgroundColor: isDark ? "#111" : "#fff" }}
+                                className="rounded-2xl p-4 mb-3"
+                                style={{
+                                    backgroundColor: isDark ? "#161618" : "#fff",
+                                    borderWidth: 1,
+                                    borderColor: isDark ? "#8BC34A" : "#E5E7EB", // ✅ green in dark mode
+                                }}
                             >
-                                <HStack className="justify-between items-center mb-2">
-                                    <VStack>
-                                        <Text className="font-bold text-gray-900">{item.date}</Text>
-                                        <Text className="text-xs text-gray-400">{item.time}</Text>
-                                        <Button size="sm" className="rounded-full bg-[#8BC34A] px-6 h-10 shadow-sm mt-2">
-                                            <Ionicons name="eye-outline" size={14} color="white" />
-                                            <ButtonText className="text-white text-xs font-bold ml-1.5">
-                                                View
-                                            </ButtonText>
-                                        </Button>
+                                {/* 🔹 Top Row */}
+                                <HStack className="justify-between items-start">
+
+                                    {/* LEFT */}
+                                    <VStack space="xs">
+                                        <Text
+                                            className="text-[#8BC34A] font-semibold text-base"
+                                            style={{ fontSize: 16 }}
+                                        >
+                                            {item.course}
+                                        </Text>
+
+                                        {item.isTournament && (
+                                            <Badge
+                                                className="rounded-full px-3 py-1 self-start flex-row items-center border"
+                                                style={{
+                                                    backgroundColor: isDark ? "#06B6D4" : "#22D3EE", // sky/cyan
+                                                    borderColor: isDark ? "#06B6D4" : "#22D3EE",     // same as bg
+                                                }}
+                                            >
+                                                <Ionicons
+                                                    name="trophy"
+                                                    size={12}
+                                                    color="#fff"
+                                                    style={{ marginRight: 4 }}
+                                                />
+
+                                                <BadgeText className="text-white text-xs">
+                                                    Tournament
+                                                </BadgeText>
+                                            </Badge>
+                                        )}
                                     </VStack>
-                                    {item.isTournament && (
-                                        <Badge className="bg-cyan-400 rounded-full px-3 py-1">
-                                            <BadgeText className="text-white text-xs">🏆 Tournament</BadgeText>
-                                        </Badge>
-                                    )}
+
+                                    {/* RIGHT */}
+                                    <VStack className="items-end">
+                                        <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                                            {item.date}
+                                        </Text>
+                                        <Text className="text-xs text-gray-400">
+                                            {item.time}
+                                        </Text>
+                                    </VStack>
                                 </HStack>
 
-                                <Text className="text-[#8BC34A] font-semibold text-sm mb-3">{item.course}</Text>
+                                {/* 🔹 Stats Row */}
+                                <HStack space="sm" className="mt-4">
+                                    {[
+                                        { label: "SCORE", value: item.score, type: "normal" },
+                                        { label: "NET", value: item.net, type: "green" },
+                                        { label: "PAR", value: item.parDiff, type: "par" },
+                                    ].map((s) => (
+                                        <Box
+                                            key={s.label}
+                                            className="flex-1 rounded-xl items-center py-3 border"
+                                            style={{
+                                                backgroundColor:
+                                                    isDark
+                                                        ? "#161618"
+                                                        : s.type === "par"
+                                                            ? "#FEE2E2"
+                                                            : "#F9FAFB",
 
-                                <HStack space="sm">
-                                    <Box className="flex-1 bg-gray-50 rounded-xl items-center py-2">
-                                        <Text className="text-xs text-gray-400 uppercase tracking-tight">Score</Text>
-                                        <Text className="font-black text-lg">{item.score}</Text>
-                                    </Box>
-                                    <Box className="flex-1 bg-gray-50 rounded-xl items-center py-2">
-                                        <Text className="text-xs text-gray-400 uppercase tracking-tight">Net</Text>
-                                        <Text className="font-black text-lg">{item.net}</Text>
-                                    </Box>
-                                    <Box className="flex-1 bg-red-50 rounded-xl items-center py-2">
-                                        <Text className="text-xs text-gray-400 uppercase tracking-tight">Par</Text>
-                                        <Text className="font-bold text-red-400">
-                                            {item.parDiff >= 0 ? `+${item.parDiff}` : item.parDiff}
-                                        </Text>
-                                    </Box>
+                                                borderColor:
+                                                    s.type === "par"
+                                                        ? isDark
+                                                            ? "#EF4444"
+                                                            : "#FCA5A5"
+                                                        : isDark
+                                                            ? "#8BC34A"
+                                                            : "#E5E7EB",
+
+                                                borderWidth: 1,
+                                            }}
+                                        >
+                                            {/* Label */}
+                                            <Text
+                                                className="text-[10px] uppercase tracking-widest mb-1"
+                                                style={{
+                                                    color:
+                                                        s.type === "par"
+                                                            ? isDark
+                                                                ? "#FCA5A5"
+                                                                : "#B91C1C"
+                                                            : isDark
+                                                                ? "#9CA3AF"
+                                                                : "#6B7280",
+                                                }}
+                                            >
+                                                {s.label}
+                                            </Text>
+
+                                            {/* Value */}
+                                            <Text
+                                                className="text-base font-bold"
+                                                style={{
+                                                    color:
+                                                        s.type === "par"
+                                                            ? isDark
+                                                                ? "#FECACA"
+                                                                : "#DC2626"
+                                                            : s.type === "green"
+                                                                ? "#10B981"
+                                                                : isDark
+                                                                    ? "#FFFFFF"
+                                                                    : "#111827",
+                                                }}
+                                            >
+                                                {s.type === "par"
+                                                    ? item.parDiff >= 0
+                                                        ? `+${item.parDiff}`
+                                                        : item.parDiff
+                                                    : s.value}
+                                            </Text>
+                                        </Box>
+                                    ))}
+                                </HStack>
+
+                                {/* 🔹 View Button */}
+                                <HStack className="mt-4 w-full">
+                                    <Button
+                                        size="sm"
+                                        className="w-full rounded-full h-10 flex-row items-center justify-center"
+                                        style={{ backgroundColor: "#8BC34A" }}
+                                        onPress={() => handleViewScorecard(item.id)}
+                                    >
+                                        <Ionicons name="eye-outline" size={14} color="white" />
+                                        <ButtonText className="text-white text-xs font-bold ml-1.5">
+                                            View
+                                        </ButtonText>
+                                    </Button>
                                 </HStack>
                             </Box>
                         </Pressable>
@@ -129,6 +255,5 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
             </VStack>
         </SafeAreaView>
     );
-}
 
-const styles = StyleSheet.create({});
+}

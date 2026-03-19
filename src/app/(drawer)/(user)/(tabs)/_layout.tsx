@@ -50,7 +50,7 @@ export default function TabLayout() {
     >
       {/* DASHBOARD */}
       <Tabs.Screen
-        name="dashboard/index"
+        name="dashboard"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
@@ -77,8 +77,19 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ focused }) => (
             <View style={styles.fabOuter}>
-              <View style={styles.fabInner}>
-                <Ionicons name="add" size={32} color="#fff" />
+              <View
+                style={[
+                  styles.fabInner,
+                  {
+                    backgroundColor: focused ? "#8bc34a" : "#fff",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="add"
+                  size={32}
+                  color={focused ? "#FFF" : "#8bc34a"}
+                />
               </View>
             </View>
           ),
@@ -131,7 +142,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#8bc34a",
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },

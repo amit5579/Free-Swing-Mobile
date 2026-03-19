@@ -43,16 +43,16 @@ const [profile, setProfile] = useState<UserProfile | null>(null);
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
-     
-      if (storedRole == "Admin") {
+
+      if (storedRole === "Admin") {
         setIsAdmin(true);
       }
       setRole(storedRole);
-
     };
 
     loadRole();
-  }, [fetchProfile()]);
+    fetchProfile();
+  }, []);
 
   return (
     <SafeAreaView
