@@ -1,29 +1,40 @@
-import { Redirect } from "expo-router";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
 
 export default function HomeScreen() {
-  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadRole = async () => {
+    const loadAuth = async () => {
       try {
-        const storedRole = await AsyncStorage.getItem("role");
+        const [storedRole, token] = await Promise.all([
+          AsyncStorage.getItem("role"),
+          AsyncStorage.getItem("token")
+        ]);
 
-        setRole(storedRole);
+        if (!token || !storedRole) {
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        if (storedRole.toLowerCase() === "admin") {
+          router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+        } else {
+          router.replace("/(drawer)/(user)/(tabs)/dashboard");
+        }
       } catch (err) {
-        console.log("Error reading role:", err);
+        console.log("Error reading auth state:", err);
+        router.replace("/(auth)/login");
       } finally {
         setLoading(false);
       }
     };
 
-    loadRole();
+    loadAuth();
   }, []);
 
-  // Show loader while checking storage
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -32,12 +43,7 @@ export default function HomeScreen() {
     );
   }
 
-  // Redirect after role is loaded
-  return role === "admin" ? (
-    <Redirect href="/(drawer)/(admin)/(tabs)/dashboard" />
-  ) : (
-    <Redirect href="/(drawer)/(user)/(tabs)/dashboard" />
-  );
+  return null;
 }
 
 
