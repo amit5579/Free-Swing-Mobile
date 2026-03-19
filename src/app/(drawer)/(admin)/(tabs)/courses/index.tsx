@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
+import { GestureResponderEvent, StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { Box } from "@/components/box";
@@ -34,24 +34,11 @@ export default function adminTournamentPage() {
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const [selectedPremium, setSelectedPremium] = useState<string | null>(null);
-  const [scoringMode, setScoringMode] = useState("netInclude");
   const [courseList, setCourseList] = useState<any>([]);
 
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [editingCourse, setEditingCourse] = useState<any>(null);
-
-  // const courses = [
-  //   { id: 1, name: "ASC AEPTA", location: "Bangalore", tees: 2, free: true },
-  //   { id: 2, name: "Royal Greens", location: "Delhi", tees: 4, free: false },
-  //   { id: 3, name: "Palm Meadows", location: "Mumbai", tees: 3, free: true },
-  // ];
-
-  // const premium = [
-  //   { label: "Free", value: false },
-  //   { label: "Premium", value: true },
-  // ];
 
   const {
     control,
@@ -113,21 +100,21 @@ export default function adminTournamentPage() {
   };
 
   useEffect(() => {
-  if (isEditMode && editingCourse) {
-    reset({
-      name: editingCourse.name,
-      location: editingCourse.location,
-      isPremium: editingCourse.isPremium,
-    });
-  } else {
-    // 👉 CLEAR FORM when not editing
-    reset({
-      name: "",
-      location: "",
-      isPremium: undefined,
-    });
-  }
-}, [editingCourse, isEditMode]);
+    if (isEditMode && editingCourse) {
+      reset({
+        name: editingCourse.name,
+        location: editingCourse.location,
+        isPremium: editingCourse.isPremium,
+      });
+    } else {
+      // 👉 CLEAR FORM when not editing
+      reset({
+        name: "",
+        location: "",
+        isPremium: undefined,
+      });
+    }
+  }, [editingCourse, isEditMode]);
 
   useEffect(() => {
     fetchCourse();
@@ -173,7 +160,7 @@ export default function adminTournamentPage() {
             {/* RIGHT: Add Button */}
             <Pressable
               onPress={() => {
-                debugger;
+                // debugger;
                 setIsEditMode(false);
                 setEditingCourse(null);
                 reset();
@@ -314,7 +301,6 @@ export default function adminTournamentPage() {
               <Pressable
                 style={styles.cancelButton}
                 onPress={() => {
-                  setSelectedPremium(null);
                   setModalVisible(false);
                 }}
               >
@@ -351,6 +337,11 @@ function CourseCardAdmin({
 }: any) {
   const routePage = useRouter();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  function routeTeeBox(courseId: string) {
+    console.log(courseId);
+    routePage.push(`/courses/teeBox?courseId=${courseId}`);
+  }
 
   return (
     <>
@@ -405,7 +396,7 @@ function CourseCardAdmin({
         </HStack>
 
         <Pressable
-          onPress={() => routePage.push("/courses/teeBox")}
+          onPress={() => routeTeeBox(course.courseId)}
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
             backgroundColor: pressed ? "#8bc34a" : "transparent",

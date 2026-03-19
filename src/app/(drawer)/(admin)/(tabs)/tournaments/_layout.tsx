@@ -4,12 +4,7 @@ export default function tournamentsLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="managePlayers"
-        options={{
-          title: "Manage Players",
-        }}
-      />
+      <Stack.Screen name="managePlayers" options={{ headerShown: false }} />
       <Stack.Screen
         name="tournamentHistory"
         options={{

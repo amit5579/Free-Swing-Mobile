@@ -113,7 +113,7 @@ export default function subAdminsPage() {
         value: String(course.courseId),
       }));
       setCourseList(formattedCourses);
-      console.log("courseList", formattedCourses);
+      // console.log("courseList", formattedCourses);
     } catch (error) {
       console.error("Failed to fetch sub admin list", error);
     } finally {
