@@ -117,7 +117,7 @@ export default function managePlayers() {
         </ThemedText>
 
         {/* RIGHT: Add Button */}
-        <View width={40} />
+        <View style={{ width: 40 }} />
       </HStack>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack className="p-4 gap-4">
