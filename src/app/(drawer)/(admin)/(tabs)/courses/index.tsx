@@ -24,8 +24,8 @@ import { Dropdown } from "react-native-element-dropdown";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createCourse, deleteCourse } from "@/api/courses";
-import { getCourse } from "@/api/courses";
+import { createCourse, deleteCourse } from "@/api/admin/courses";
+import { getCourse } from "@/api/admin/courses";
 import { courseSchema } from "@/schema/adminSchemas";
 export default function adminTournamentPage() {
   const colorScheme = useColorScheme();

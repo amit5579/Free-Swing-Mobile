@@ -7,6 +7,7 @@ import {
   useColorScheme,
   View,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 
@@ -26,17 +27,21 @@ import {
   deleteSubAdmin,
   // getCourse,
   getSubAdminList,
-} from "@/api/subAdmins";
+} from "@/api/admin/subAdmins";
 import { MultiSelect } from "react-native-element-dropdown";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { subAdminSchema } from "@/schema/adminSchemas";
 import { Controller } from "react-hook-form";
-import { getCourse } from "@/api/courses";
+import { getCourse } from "@/api/admin/courses";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 export default function subAdminsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+const router = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -145,7 +150,7 @@ export default function subAdminsPage() {
 
   return (
     <>
-      <ThemedView
+      <SafeAreaView
         style={{
           flex: 1,
         }}
@@ -154,6 +159,16 @@ export default function subAdminsPage() {
 
         {/* Header */}
         <HStack className="justify-between items-center px-4 my-3">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              // borderRadius: 12,
+              // backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e8f5e9",
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+          </TouchableOpacity>
+
           <ThemedText
             style={{
               fontSize: 24,
@@ -197,7 +212,7 @@ export default function subAdminsPage() {
             ))}
           </VStack>
         </ScrollView>
-      </ThemedView>
+      </SafeAreaView>
 
       {/* CREATE SUB ADMIN MODAL */}
       <Modal
@@ -338,7 +353,9 @@ export default function subAdminsPage() {
                         }}
                         renderItem={(item: any) => {
                           // const isSelected = selectedCourses.includes(item.value);
-                          const isSelected = value?.includes(Number(item.value));
+                          const isSelected = value?.includes(
+                            Number(item.value),
+                          );
 
                           return (
                             <View
@@ -434,7 +451,7 @@ function SubAdminCard({
           </ThemedText>
 
           {/* Courses */}
-          <ThemedView className="flex-row flex-wrap mt-2 gap-2">
+          <Box className="flex-row flex-wrap mt-2 gap-2">
             <ThemedText style={{ fontWeight: "600", width: "100%" }}>
               Courses:
             </ThemedText>
@@ -446,7 +463,7 @@ function SubAdminCard({
                 </ThemedText>
               </Box>
             ))}
-          </ThemedView>
+          </Box>
 
           {/* Players */}
           <HStack className="items-center mt-2 gap-2">

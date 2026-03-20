@@ -4,6 +4,8 @@ export default function AdminRootLayout() {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(feedbackInbox)" options={{ headerShown: false }} />
+            <Stack.Screen name="(combinedLeaderboards)" options={{ headerShown: false }} />
         </Stack>
     );
 }

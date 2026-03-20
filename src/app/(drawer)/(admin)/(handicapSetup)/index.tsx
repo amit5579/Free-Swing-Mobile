@@ -59,15 +59,13 @@ export default function PlayerHandicapSetup() {
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
-      style={{
-        flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
-      }}
-    >
-      <Watermark />
+  style={{
+    flex: 1,
+  }}
+>
+  <Watermark />
 
-      <VStack className="flex-1 px-4">
+  <VStack className="flex-1 p-4">
 
         {/* HEADER (FIXED) */}
         <HStack className="items-center justify-between mb-4">
@@ -99,19 +97,17 @@ export default function PlayerHandicapSetup() {
             </ThemedText>
           </HStack>
 
-          <Box
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 20,
-              backgroundColor: isDark ? "rgba(139,195,74,0.2)" : "#D1FAE5",
-              borderWidth: isDark ? 0 : 1,
-              borderColor: "#A7F3D0",
-            }}
-          >
-            <Ionicons name="people" size={14} color={isDark ? "#8bc34a" : "#059669"} />
+      <Box
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 12,
+          // backgroundColor: "rgba(139,195,74,0.15)",
+        }}
+      >
+        <Ionicons name="people-outline" size={16} color="#8bc34a" />
 
             <ThemedText
               style={{
@@ -126,38 +122,28 @@ export default function PlayerHandicapSetup() {
           </Box>
         </HStack>
 
-        {/* SCROLLABLE CONTENT */}
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {loading ? (
-            <Box className="flex-1 justify-center items-center py-20">
-              <ActivityIndicator size="large" color="#8bc34a" />
-              <ThemedText style={{ marginTop: 12, opacity: 0.6 }}>Loading Players...</ThemedText>
-            </Box>
-          ) : (
-            <VStack space="md" className="pb-20">
-              {players.length === 0 ? (
-                <Box className="items-center py-10">
-                  <ThemedText style={{ opacity: 0.5 }}>No players found</ThemedText>
-                </Box>
-              ) : players.map((player) => (
-                <Box
-                  key={player.id}
-                  className="rounded-3xl border overflow-hidden mb-4 shadow-sm"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 10,
-                    elevation: 2,
-                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-                    borderColor: isDark ? "#8bc34a" : "#F3F3F3",
-                    borderLeftWidth: 6,
-                    borderLeftColor: "#8BC34A",
-                  }}
-                >
-                  {/* PLAYER HEADER */}
-                  <Pressable onPress={() => togglePlayer(player.id.toString())} className="px-4 pt-4 pb-3">
-                    <HStack className="items-center justify-between">
+    {/* SCROLLABLE CONTENT */}
+    <ScrollView showsVerticalScrollIndicator={false}>
+
+      <VStack space="md" className="pb-20">
+        {players.map((player) => (
+          <Box
+            key={player.id}
+            className="p-4 rounded-2xl mb-3"
+            style={{
+              // backgroundColor: isDark
+              //   ? "rgba(30,30,30,0.75)"
+              //   : "rgba(255,255,255,0.75)",
+              borderWidth: 1,
+              borderColor: "#E5E7EB",
+              shadowColor: "#000",
+              shadowOpacity: 0.08,
+              shadowRadius: 6,
+            }}
+          >
+            {/* PLAYER HEADER */}
+            <Pressable onPress={() => togglePlayer(player.id)}>
+              <HStack className="items-center justify-between">
 
                       <HStack className="items-center">
 
@@ -258,7 +244,7 @@ export default function PlayerHandicapSetup() {
           )}
         </ScrollView>
 
-      </VStack>
-    </SafeAreaView>
+  </VStack>
+</SafeAreaView>
   );
 }

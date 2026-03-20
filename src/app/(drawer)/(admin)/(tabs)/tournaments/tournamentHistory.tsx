@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, useColorScheme, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -9,33 +9,31 @@ import { Divider } from "@/components/divider";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
+import { Ionicons } from "@expo/vector-icons";
+import { getTournamentHistory } from "@/api/admin/tournaments";
 
 export default function tournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const routePage = useRouter();
+  const { tournamentId, tournamentName } = useLocalSearchParams();
 
-  const history = [
-    {
-      id: 1,
-      date: "3/12/26, 8:18 AM",
-      player: "kpk1",
-      round: 1,
-      score: 78,
-      net: 74,
-      excluded: "Standard",
-    },
-    {
-      id: 2,
-      date: "3/12/26, 8:16 AM",
-      player: "rk123",
-      round: 1,
-      score: 114,
-      net: 88,
-      excluded: "Standard",
-    },
-  ];
+  const [history, setHistory] = useState<any>([]);
+
+  const fetchHistory = async () => {
+    try {
+      const data = await getTournamentHistory(Number(tournamentId));
+      setHistory(data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   return (
     <ThemedView
@@ -43,6 +41,35 @@ export default function tournamentHistory() {
         flex: 1,
       }}
     >
+      <HStack
+        className="px-3 pt-5 pb-3 items-center"
+        style={{ justifyContent: "space-between" }}
+      >
+        {/* LEFT: Back button */}
+        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+          <Ionicons
+            name="arrow-back-outline"
+            size={22}
+            color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+          />
+        </Pressable>
+
+        {/* CENTER: Title */}
+        <ThemedText
+          style={{
+            flex: 1,
+            fontSize: 20,
+            fontWeight: "700",
+            textAlign: "center",
+            lineHeight: 30,
+          }}
+        >
+          Game History: {tournamentName}
+        </ThemedText>
+
+        {/* RIGHT: Add Button */}
+        <View style={{ width: 40 }} />
+      </HStack>
       <Watermark />
 
       <ScrollView
@@ -52,17 +79,8 @@ export default function tournamentHistory() {
           paddingBottom: 80,
         }}
       >
-        {/* Header */}
-        <VStack className="mb-4">
-          <ThemedText
-             style={{ fontSize: 16, fontWeight: "700", textAlign: "center" , marginVertical: 16}}
-          >
-            Game History: bmw
-          </ThemedText>
-        </VStack>
-
         <VStack className="gap-4">
-          {history.map((item) => (
+          {history.map((item: any) => (
             <HistoryCard key={item.id} item={item} isDark={isDark} />
           ))}
         </VStack>
@@ -73,6 +91,16 @@ export default function tournamentHistory() {
 
 function HistoryCard({ item, isDark }: any) {
   const routePage = useRouter();
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("en-GB", {
+      day: "numeric",
+      month: "numeric",
+      year: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
   return (
     <Box
       style={{
@@ -83,48 +111,11 @@ function HistoryCard({ item, isDark }: any) {
       }}
     >
       <VStack className="gap-3">
-
         {/* Date */}
-        <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-          {item.date}
-        </ThemedText>
-
-        {/* Player */}
-        <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-          {item.player}
-        </ThemedText>
-
-        <Divider />
-
-        {/* Stats Row */}
         <HStack className="justify-between">
-
-          <VStack>
-            <ThemedText style={{ fontSize: 11, opacity: 0.6 }}>
-              Round
-            </ThemedText>
-            <ThemedText>{item.round}</ThemedText>
-          </VStack>
-
-          <VStack>
-            <ThemedText style={{ fontSize: 11, opacity: 0.6 }}>
-              Score
-            </ThemedText>
-            <ThemedText>{item.score}</ThemedText>
-          </VStack>
-
-          <VStack>
-            <ThemedText style={{ fontSize: 11, opacity: 0.6 }}>
-              Net
-            </ThemedText>
-            <ThemedText>{item.net}</ThemedText>
-          </VStack>
-
-        </HStack>
-
-        {/* Excluded Badge + Button */}
-        <HStack className="justify-between items-center mt-2">
-
+          <ThemedText style={{ fontSize: 15, opacity: 0.6 }}>
+            {formatDate(item.datePlayed)}
+          </ThemedText>
           <Box
             style={{
               backgroundColor: "#6b7280",
@@ -139,17 +130,57 @@ function HistoryCard({ item, isDark }: any) {
                 fontSize: 12,
               }}
             >
-              {item.excluded}
+              {/* {item.excluded} */}
+              Standard
             </ThemedText>
           </Box>
+        </HStack>
 
+        {/* Player */}
+        <ThemedText style={{ fontSize: 19, fontWeight: "700" }}>
+          {item.username}
+        </ThemedText>
+        <Divider />
+        {/* Stats Row */}
+        <HStack className="justify-between">
+          <VStack>
+            <ThemedText style={{ fontSize: 15, opacity: 0.6 }}>
+              Round
+            </ThemedText>
+            <ThemedText style={{ fontSize: 19, fontWeight: 700 }}>
+              {item.roundNumber}
+            </ThemedText>
+          </VStack>
+
+          <VStack>
+            <ThemedText style={{ fontSize: 15, opacity: 0.6 }}>
+              Score
+            </ThemedText>
+            <ThemedText style={{ fontSize: 19, fontWeight: 700 }}>
+              {item.totalScore}
+            </ThemedText>
+          </VStack>
+
+          <VStack>
+            <ThemedText style={{ fontSize: 15, opacity: 0.6 }}>Net</ThemedText>
+            <ThemedText style={{ fontSize: 19, fontWeight: 700 }}>
+              {item.totalNet}
+            </ThemedText>
+          </VStack>
+        </HStack>
+        {/* Excluded Badge + Button */}
+        <HStack className="justify-end items-center mt-2">
           <Pressable
-            onPress={() => routePage.push("/(drawer)/(admin)/(tabs)/tournaments/playerScorecard")}
+            onPress={() =>
+              routePage.push(
+                `/(drawer)/(admin)/(tabs)/tournaments/playerScorecard?scorecardId=${item.scorecardId}`,
+              )
+            }
             style={{
               borderWidth: 1,
               borderColor: "#2563eb",
               paddingHorizontal: 12,
-              paddingVertical: 6,
+              paddingVertical: 9,
               borderRadius: 8,
             }}
           >
@@ -162,9 +193,7 @@ function HistoryCard({ item, isDark }: any) {
               View Scorecard
             </ThemedText>
           </Pressable>
-
         </HStack>
-
       </VStack>
     </Box>
   );
