@@ -17,34 +17,111 @@ import { Dropdown } from "react-native-element-dropdown";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
-import { Divider } from "@/components/divider";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { Text } from "@/components/text";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
-import { getTournaments } from "@/api/tournaments";
-import { getCourse } from "@/api/courses";
+import {
+  createTournament,
+  deleteTournament,
+  getTournaments,
+  updateTournament,
+} from "@/api/admin/tournaments";
+import { getCourse } from "@/api/admin/courses";
+
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { tournamentSchema } from "@/schema/adminSchemas";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [selectedTeeColor, setSelectedTeeColor] = useState<string | null>(null);
-  const [selectedScoringType, setSelectedScoringType] = useState<string | null>(
-    null,
-  );
-  const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
+  // const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  // const [selectedTeeColor, setSelectedTeeColor] = useState<string | null>(null);
+  // const [selectedScoringType, setSelectedScoringType] = useState<string | null>(
+  //   null,
+  // );
+  // const [date, setDate] = useState(new Date());
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const [tournaments, setTournaments] = useState<any>([]);
   const [courses, setCourses] = useState<any>([]);
+  // const [scoringTypes, setScoringTypes] = useState<any>([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [editingCourse, setEditingCourse] = useState<any>(null);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(tournamentSchema),
+    defaultValues: {
+      name: "",
+      courseId: [],
+      teeColor: [],
+      scoringType: [],
+      startDate: null,
+      endDate: null,
+      description: "",
+    },
+  });
+
+  const scoringMap: any = {
+    3: "stableford",
+    1: "netScore",
+  };
+  // 👇 ADD HERE
+  const scoringTypes = [
+    { label: "Stableford", value: 3 },
+    { label: "Net Score", value: 1 },
+  ];
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split("T")[0]; // YYYY-MM-DD
+  };
+
+  const onSubmit = (data: any) => {
+    const tournamentData = {
+      name: data.name,
+
+      courseId: data.courseId[0], // ✅ array → single
+
+      teeBoxId: data.teeColor[0], // ✅ rename
+
+      scoringType: scoringMap[data.scoringType[0]],
+
+      startDate: formatDate(data.startDate),
+      endDate: formatDate(data.endDate),
+
+      description: data.description || "",
+
+      creatorId: 1, // ⚠️ replace with logged-in user later
+    };
+
+    if (isEditMode) {
+      console.log("UPDATE API", tournamentData);
+      updateTournament(editingCourse.tournamentId, tournamentData);
+    } else {
+      console.log("CREATE API", tournamentData);
+      createTournament(tournamentData);
+    }
+
+    setModalVisible(false);
+  };
+
+  // const scoringTypes = [
+  //   { label: "Stableford", value: 3 },
+  //   { label: "Net Score", value: 1 },
+  // ];
 
   const fetchTournaments = async () => {
     try {
@@ -59,6 +136,7 @@ export default function adminTournamentsPage() {
 
       setTournaments(data);
       setCourses(formattedCourses);
+      // setScoringTypes(formattedScoringType);
       // console.log("Tournaments:", tournaments);
       // console.log("Formatted Courses:", formattedCourses);
     } catch (error) {
@@ -68,29 +146,25 @@ export default function adminTournamentsPage() {
 
   useEffect(() => {
     fetchTournaments();
-    // console.log("cccc", courses);
-
-    // console.log("Tournaments:", tournaments);
   }, []);
 
-  const onChange = (event: any, selectedDate?: Date) => {
-    setShowPicker(false);
+  useEffect(() => {
+    if (!isEditMode || !editingCourse || !editingCourse.name) return;
 
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-  };
+    reset({
+      name: editingCourse.name || "",
+      courseId: [editingCourse.course?.courseId],
+      teeColor: [Number(editingCourse.teeColor)],
 
+      scoringType: [Number(editingCourse.scoringType)],
 
-  const teeColors = [
-    { label: "red", value: "1" },
-    { label: "blue", value: "2" },
-    { label: "black", value: "3" },
-    { label: "white", value: "4" },
-    { label: "gold", value: "5" },
-    { label: "green", value: "6" },
-    { label: "silver", value: "7" },
-  ];
+      startDate: editingCourse.startDate
+        ? new Date(editingCourse.startDate)
+        : null,
+
+      endDate: editingCourse.endDate ? new Date(editingCourse.endDate) : null,
+    });
+  }, [isEditMode, editingCourse, courses, scoringTypes]);
 
   return (
     <>
@@ -116,6 +190,14 @@ export default function adminTournamentsPage() {
             style={styles.createButton}
             onPress={() => {
               setIsEditMode(false);
+              reset({
+                name: "",
+                courseId: [],
+                teeColor: [],
+                scoringType: [],
+                startDate: null,
+                endDate: null,
+              });
               setEditingCourse(null);
               setModalVisible(true);
             }}
@@ -136,6 +218,7 @@ export default function adminTournamentsPage() {
                 tournament={tournament}
                 setIsEditMode={setIsEditMode}
                 setEditingCourse={setEditingCourse}
+                isEditMode={isEditMode}
                 setModalVisible={setModalVisible}
                 isDark={isDark}
               />
@@ -149,7 +232,12 @@ export default function adminTournamentsPage() {
         animationType="slide"
         transparent
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          reset();
+          setIsEditMode(false);
+          setEditingCourse(null);
+        }}
       >
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
@@ -158,7 +246,14 @@ export default function adminTournamentsPage() {
                 {isEditMode ? "Edit Tournament" : "Create Tournament"}
               </ThemedText>
 
-              <Pressable onPress={() => setModalVisible(false)}>
+              <Pressable
+                onPress={() => {
+                  setModalVisible(false);
+                  reset();
+                  setIsEditMode(false);
+                  setEditingCourse(null);
+                }}
+              >
                 <Ionicons name="close" size={22} />
               </Pressable>
             </HStack>
@@ -167,103 +262,193 @@ export default function adminTournamentsPage() {
               <VStack className="gap-3">
                 <VStack className="gap-1">
                   {/* <Text>Tournament Name</Text> */}
-                  <TextInput
-                    placeholder="Enter Tournament Name"
-                    style={styles.input}
+                  <Controller
+                    control={control}
+                    name="name"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Enter Tournament Name"
+                        style={styles.input}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    )}
                   />
+                  {errors.name && (
+                    <Text style={{ color: "red" }}>*{errors.name.message}</Text>
+                  )}
                 </VStack>
 
                 <VStack className="gap-1">
                   {/* <Text>Course</Text> */}
-                  <Dropdown
-                    style={styles.input}
-                    data={courses}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select course"
-                    value={selectedCourse}
-                    onChange={(item) => setSelectedCourse(item.value)}
+                  <Controller
+                    control={control}
+                    name="courseId"
+                    render={({ field: { onChange, value } }) => (
+                      <Dropdown
+                        style={styles.input}
+                        data={courses}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select course"
+                        value={value?.[0]}
+                        onChange={(item) => onChange([item.value])}
+                      />
+                    )}
                   />
+                  {errors.courseId && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.courseId.message}
+                    </Text>
+                  )}
                 </VStack>
 
                 <VStack className="gap-1">
-                  {/* <Text>Tee Box</Text> */}
-                  {/* <TextInput
-                    placeholder="Select Tee Box..."
-                    style={styles.input}
-                  /> */}
-                  <Dropdown
-                    style={styles.input}
-                    data={teeColors}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Tee Box..."
-                    value={selectedTeeColor}
-                    onChange={(item) => setSelectedTeeColor(item.value)}
+                  <Controller
+                    control={control}
+                    name="teeColor"
+                    render={({ field: { onChange, value } }) => (
+                      <Dropdown
+                        style={styles.input}
+                        data={[
+                          { label: "red", value: "1" },
+                          { label: "blue", value: "2" },
+                          { label: "black", value: "3" },
+                          { label: "white", value: "4" },
+                          { label: "gold", value: "5" },
+                          { label: "green", value: "6" },
+                          { label: "silver", value: "7" },
+                        ]}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select Tee Box"
+                        value={value?.[0]}
+                        onChange={(item) => onChange([Number(item.value)])}
+                      />
+                    )}
                   />
+                  {errors.teeColor && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.teeColor.message}
+                    </Text>
+                  )}
                 </VStack>
 
                 <VStack className="gap-1">
                   {/* <Text>Scoring Type</Text> */}
-                  <Dropdown
-                    style={styles.input}
-                    data={[
-                      { label: "Net Score (Include Par3)", value: "1" },
-                      { label: "Net Score (Exclude Par3)", value: "2" },
-                      { label: "Stableford", value: "3" },
-                      { label: "Double Peoria", value: "4" },
-                    ]}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Scoring Type"
-                    value={selectedScoringType}
-                    onChange={(item) => setSelectedScoringType(item.value)}
+
+                  <Controller
+                    control={control}
+                    name="scoringType"
+                    render={({ field: { onChange, value } }) => (
+                      <Dropdown
+                        style={styles.input}
+                        data={scoringTypes}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select Scoring Type"
+                        value={value?.[0]}
+                        onChange={(item) => onChange([item.value])}
+                      />
+                    )}
                   />
+                  {errors.scoringType && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.scoringType.message}
+                    </Text>
+                  )}
                 </VStack>
 
                 <VStack className="gap-1">
                   {/* <Text>Start Date</Text> */}
-                  <Pressable
-                    onPress={() => setShowPicker(true)}
-                    className="p-3 w-full border border-gray-400 rounded-md"
-                  >
-                    <Text>Select Start Date</Text>
-                  </Pressable>
-                  {showPicker && (
-                    <DateTimePicker
-                      value={date}
-                      mode="date"
-                      display="default"
-                      onChange={onChange}
-                    />
+                  <Controller
+                    control={control}
+                    name="startDate"
+                    render={({ field: { onChange, value } }) => (
+                      <>
+                        <Pressable
+                          onPress={() => setShowStartPicker(true)}
+                          style={styles.input}
+                        >
+                          <Text>
+                            {value
+                              ? value?.toDateString()
+                              : "Select start Date"}
+                          </Text>
+                        </Pressable>
+
+                        {showStartPicker && (
+                          <DateTimePicker
+                            value={value || new Date()}
+                            mode="date"
+                            maximumDate={watch("endDate") || undefined} // ✅ restrict
+                            onChange={(e, selectedDate) => {
+                              setShowStartPicker(false);
+                              if (selectedDate) onChange(selectedDate);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  />
+                  {errors.startDate && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.startDate.message}
+                    </Text>
                   )}
                 </VStack>
 
                 <VStack className="gap-1">
                   {/* <Text>End Date</Text> */}
-                  <Pressable
-                    onPress={() => setShowPicker(true)}
-                    className="p-3 w-full border border-gray-400 rounded-md"
-                  >
-                    <Text>Select End Date</Text>
-                  </Pressable>
-                  {showPicker && (
-                    <DateTimePicker
-                      value={date}
-                      mode="date"
-                      display="default"
-                      onChange={onChange}
-                    />
+                  <Controller
+                    control={control}
+                    name="endDate"
+                    render={({ field: { onChange, value } }) => (
+                      <>
+                        <Pressable
+                          onPress={() => setShowEndPicker(true)}
+                          style={styles.input}
+                        >
+                          <Text>
+                            {value ? value?.toDateString() : "Select End Date"}
+                          </Text>
+                        </Pressable>
+
+                        {showEndPicker && (
+                          <DateTimePicker
+                            value={value || new Date()}
+                            mode="date"
+                            minimumDate={watch("startDate") || new Date()} // ✅ restrict
+                            onChange={(e, selectedDate) => {
+                              setShowEndPicker(false);
+                              if (selectedDate) onChange(selectedDate);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  />
+                  {errors.endDate && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.endDate.message}
+                    </Text>
                   )}
                 </VStack>
                 <VStack className="gap-1">
                   {/* <Text>Description</Text> */}
-
-                  <TextInput
-                    placeholder="Optional Description"
-                    multiline
-                    numberOfLines={3}
-                    style={styles.textArea}
+                  <Controller
+                    control={control}
+                    name="description"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Optional Description"
+                        multiline
+                        numberOfLines={3}
+                        style={styles.textArea}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    )}
                   />
                 </VStack>
               </VStack>
@@ -272,12 +457,20 @@ export default function adminTournamentsPage() {
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
                 style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
+                onPress={() => {
+                  setModalVisible(false);
+                  reset();
+                  setIsEditMode(false);
+                  setEditingCourse(null);
+                }}
               >
                 <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
               </Pressable>
 
-              <Pressable style={styles.createButton}>
+              <Pressable
+                style={styles.createButton}
+                onPress={handleSubmit(onSubmit)}
+              >
                 <ThemedText style={{ color: "white", fontWeight: "600" }}>
                   {isEditMode ? "Update Tournament" : "Create Tournament"}
                 </ThemedText>
@@ -301,8 +494,21 @@ function TournamentCard({
 
   function routePlayersPage(tournamentId: string, tournamentName: string) {
     console.log(tournamentId);
-    routePage.push(`/tournaments/managePlayers?tournamentId=${tournamentId}&tournamentName=${tournamentName}`);
+    routePage.push(
+      `/tournaments/managePlayers?tournamentId=${tournamentId}&tournamentName=${tournamentName}`,
+    );
   }
+
+  function routeTournamentHistory(
+    tournamentId: string,
+    tournamentName: string,
+  ) {
+    console.log(tournamentId);
+    routePage.push(
+      `/tournaments/tournamentHistory?tournamentId=${tournamentId}&tournamentName=${tournamentName}`,
+    );
+  }
+
   const [menuVisible, setMenuVisible] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -319,6 +525,16 @@ function TournamentCard({
       <ThemedText style={styles.menuText}>{label}</ThemedText>
     </TouchableOpacity>
   );
+
+  // const onSubmit = (data: any) => {
+  //   if (isEditMode) {
+  //     console.log("UPDATE API", data);
+  //   } else {
+  //     console.log("CREATE API", data);
+  //   }
+
+  //   setModalVisible(false);
+  // };
   return (
     <>
       <Box
@@ -383,16 +599,22 @@ function TournamentCard({
             android_ripple={{ color: "#ddd" }}
           >
             <Ionicons name="create-outline" size={22} color="#6b7280" />
-            <ThemedText style={styles.actionText}>Edit</ThemedText>
+            <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
+              Edit
+            </ThemedText>
           </Pressable>
 
           <Pressable
             style={styles.actionBtn}
             android_ripple={{ color: "#ddd" }}
-            onPress={() => routePlayersPage(tournament?.tournamentId, tournament?.name)}
+            onPress={() =>
+              routePlayersPage(tournament?.tournamentId, tournament?.name)
+            }
           >
             <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
-            <ThemedText style={styles.actionText}>Manage</ThemedText>
+            <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
+              Manage
+            </ThemedText>
           </Pressable>
         </View>
       </Box>
@@ -406,39 +628,49 @@ function TournamentCard({
       >
         <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
           <View style={styles.menu}>
-            <MenuItem
-              icon="time-outline"
-              label="History"
-              color="#06b6d4"
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                routeTournamentHistory(
+                  tournament?.tournamentId,
+                  tournament?.name,
+                );
+              }}
+            >
+              <Ionicons name="time-outline" size={20} color="#06b6d4" />
+              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+                History
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
-                  "/(drawer)/(admin)/(tabs)/tournaments/tournamentHistory",
+                  `/(drawer)/(admin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId}`,
                 );
               }}
-            />
+            >
+              <Ionicons name="stats-chart-outline" size={20} color="#f59e0b" />
+              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+                Leaderboard
+              </ThemedText>
+            </TouchableOpacity>
 
-            <MenuItem
-              icon="stats-chart-outline"
-              label="Leaderboard"
-              color="#f59e0b"
+            <TouchableOpacity
+              style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                routePage.push(
-                  "/(drawer)/(admin)/(tabs)/tournaments/leaderboard",
-                );
+                deleteTournament(tournament?.tournamentId);
               }}
-            />
-
-            <MenuItem
-              icon="trash-outline"
-              label="Delete"
-              color="#ef4444"
-              onPress={() => {
-                setMenuVisible(false);
-                console.log("Delete clicked");
-              }}
-            />
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+                Delete
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         </Pressable>
       </Modal>

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useColorScheme, Pressable, Text, View, ScrollView, ActivityIndicator } from "react-native";
+import {
+  useColorScheme,
+  Pressable,
+  Text,
+  View,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
@@ -7,13 +14,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { HStack } from "@/components/hstack";
 import PlayerStatistics from "./playerStatistics";
 import Watermark from "@/components/watermark";
-import { getPlayers, getCourses, PlayerApi } from "@/api/adminAPI/dashboard";
+import { getPlayers, getCourses, PlayerApi } from "@/api/admin/dashboard";
 
 export default function AdminDashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [activeTab, setActiveTab] = useState("overview");
-  const [stats, setStats] = useState({ players: 0, courses: 0, bestHandicap: '-' });
+  const [stats, setStats] = useState({
+    players: 0,
+    courses: 0,
+    bestHandicap: "-",
+  });
   const [players, setPlayers] = useState<PlayerApi[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,14 +41,17 @@ export default function AdminDashboard() {
       ]);
 
       // Calculate best handicap (lowest value from index or baseline)
-      let best = '-';
+      let best = "-";
       if (players.length > 0) {
         const handicaps = players
-          .map(p => {
-            const val = p.handicapIndex !== null ? p.handicapIndex : (p.calculatedHandicap ?? p.handicap);
-            return typeof val === 'string' ? parseFloat(val) : val;
+          .map((p) => {
+            const val =
+              p.handicapIndex !== null
+                ? p.handicapIndex
+                : (p.calculatedHandicap ?? p.handicap);
+            return typeof val === "string" ? parseFloat(val) : val;
           })
-          .filter(h => h !== null && !isNaN(h) && typeof h === 'number');
+          .filter((h) => h !== null && !isNaN(h) && typeof h === "number");
 
         if (handicaps.length > 0) {
           const minHandicap = Math.min(...handicaps);
@@ -50,7 +64,7 @@ export default function AdminDashboard() {
       setStats({
         players: players.length,
         courses: courses.length,
-        bestHandicap: best
+        bestHandicap: best,
       });
     } catch (error) {
       console.error("Dashboard stats error:", error);
@@ -65,13 +79,18 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+    >
       <Watermark />
 
       {/* Header + Tabs */}
       <VStack className="px-4 bg-transparent">
         <VStack className="mb-6">
-          <Text className="text-3xl font-bold text-gray-900">Dashboard Overview</Text>
+          <Text className="text-3xl font-bold text-gray-900">
+            Dashboard Overview
+          </Text>
           <Text className="text-lg font-medium text-gray-700">
             Manage your golf league's players, courses, and tournaments.
           </Text>
@@ -94,7 +113,9 @@ export default function AdminDashboard() {
                   color={active ? "#fff" : "#6b7280"}
                   className="mr-1"
                 />
-                <Text className={`text-sm font-medium ${active ? "text-white" : "text-gray-600"}`}>
+                <Text
+                  className={`text-sm font-medium ${active ? "text-white" : "text-gray-600"}`}
+                >
                   {tab.label}
                 </Text>
               </Pressable>
@@ -108,7 +129,10 @@ export default function AdminDashboard() {
         {activeTab === "overview" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 120,
+            }}
           >
             {loading ? (
               <View className="flex-1 items-center justify-center pt-10">
@@ -120,18 +144,28 @@ export default function AdminDashboard() {
                 <HStack style={{ gap: 12 }}>
                   <Box className="flex-1 bg-white rounded-xl border border-gray-200 p-5 min-h-[160px]">
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
-                      <Ionicons name="people-outline" size={22} color="#8BC34A" />
+                      <Ionicons
+                        name="people-outline"
+                        size={22}
+                        color="#8BC34A"
+                      />
                     </Box>
                     <VStack className="flex-1 justify-between">
                       <VStack>
-                        <Text className="text-3xl font-bold text-gray-900">{stats.players}</Text>
-                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Players</Text>
+                        <Text className="text-3xl font-bold text-gray-900">
+                          {stats.players}
+                        </Text>
+                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Total Players
+                        </Text>
                       </VStack>
                       <Pressable
                         className="bg-gray-100 py-2 rounded-lg items-center mt-2"
-                        onPress={() => setActiveTab('statistics')}
+                        onPress={() => setActiveTab("statistics")}
                       >
-                        <Text className="text-[10px] font-bold text-[#2E7D32]">MEMBERS</Text>
+                        <Text className="text-[10px] font-bold text-[#2E7D32]">
+                          MEMBERS
+                        </Text>
                       </Pressable>
                     </VStack>
                   </Box>
@@ -142,11 +176,17 @@ export default function AdminDashboard() {
                     </Box>
                     <VStack className="flex-1 justify-between">
                       <VStack>
-                        <Text className="text-3xl font-bold text-gray-900">{stats.courses}</Text>
-                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Courses</Text>
+                        <Text className="text-3xl font-bold text-gray-900">
+                          {stats.courses}
+                        </Text>
+                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Total Courses
+                        </Text>
                       </VStack>
                       <Pressable className="bg-gray-100 py-2 rounded-lg items-center mt-2">
-                        <Text className="text-[10px] font-bold text-[#0288D1]">VENUES</Text>
+                        <Text className="text-[10px] font-bold text-[#0288D1]">
+                          VENUES
+                        </Text>
                       </Pressable>
                     </VStack>
                   </Box>
@@ -154,15 +194,25 @@ export default function AdminDashboard() {
 
                 <Box className="bg-white rounded-xl border border-gray-200 p-5 min-h-[160px]">
                   <Box className="absolute top-3 right-3 bg-yellow-100 p-2 rounded-full">
-                    <Ionicons name="trending-down-outline" size={22} color="#FBBF24" />
+                    <Ionicons
+                      name="trending-down-outline"
+                      size={22}
+                      color="#FBBF24"
+                    />
                   </Box>
                   <VStack className="flex-1 justify-between">
                     <VStack>
-                      <Text className="text-3xl font-bold text-gray-900">{stats.bestHandicap}</Text>
-                      <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Top Handicaps</Text>
+                      <Text className="text-3xl font-bold text-gray-900">
+                        {stats.bestHandicap}
+                      </Text>
+                      <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Top Handicaps
+                      </Text>
                     </VStack>
                     <Pressable className="bg-yellow-50 py-2 rounded-lg items-center mt-2 border border-yellow-100">
-                      <Text className="text-[10px] font-bold text-[#B08900]">TRACKED</Text>
+                      <Text className="text-[10px] font-bold text-[#B08900]">
+                        TRACKED
+                      </Text>
                     </Pressable>
                   </VStack>
                 </Box>

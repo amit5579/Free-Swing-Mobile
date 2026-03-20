@@ -17,7 +17,7 @@ import {
   getAllPlayers,
   getTournamentPlayers,
   removePlayerFromTournament,
-} from "@/api/tournaments";
+} from "@/api/admin/tournaments";
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();

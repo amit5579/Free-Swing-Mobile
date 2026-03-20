@@ -1,14 +1,14 @@
-import https from "./https";
+import https from "../https";
 
 export const getSubAdminList = async () => {
-    try {
-        const response = await https.get(`SubAdmin/list`);
-        return response.data;
+  try {
+    const response = await https.get(`SubAdmin/list`);
+    return response.data;
 
-    } catch (error) {
-        console.error("Fetching sub admin list Error:", error);
-        throw error;
-    }
+  } catch (error) {
+    console.error("Fetching sub admin list Error:", error);
+    throw error;
+  }
 };
 
 
@@ -38,8 +38,8 @@ export const deleteSubAdmin = async (id: number) => {
   try {
     const response = await https.delete(`SubAdmin/${id}`);
     // console.log("subbb id", id);
-    
-    return response.data; 
+
+    return response.data;
   } catch (error) {
     console.error("Delete SubAdmin Error:", error);
     throw error;

@@ -21,24 +21,27 @@ function CustomDrawerContent() {
 
   const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const logout = async () => {
     await removeToken();
   };
-   const fetchProfile = async () => {
-      try {
-        const userId = await AsyncStorage.getItem("userId");
-  
-        if (!userId) return;
-  
-        const data = await getUserProfile(Number(userId));
-        if(data.profilePictureUrl!=null || data.username !=null || data.handicap)
-       
+  const fetchProfile = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+
+      if (!userId) return;
+
+      const data = await getUserProfile(Number(userId));
+      if (
+        data.profilePictureUrl != null ||
+        data.username != null ||
+        data.handicap
+      )
         setProfile(data);
-      } catch (error) {
-        console.log("Profile error:", error);
-      }
-    };
+    } catch (error) {
+      console.log("Profile error:", error);
+    }
+  };
 
   useEffect(() => {
     const loadRole = async () => {
@@ -63,16 +66,16 @@ const [profile, setProfile] = useState<UserProfile | null>(null);
     >
       {/* Profile Section */}
       <View>
-
-
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
             <Image
-               source={{ uri: profile?.profilePictureUrl || undefined }}
+              source={{ uri: profile?.profilePictureUrl || undefined }}
               style={styles.avatar}
             />
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{role === "admin" ? "Admin" : "User"}</Text>
+              <Text style={styles.badgeText}>
+                {role === "admin" ? "Admin" : "User"}
+              </Text>
             </View>
           </View>
 
@@ -95,24 +98,29 @@ const [profile, setProfile] = useState<UserProfile | null>(null);
                 <Ionicons name="shield-outline" size={26} color="#2e7d32" />
                 <Text style={styles.drawerText}>Admin Profile</Text>
               </TouchableOpacity>
-            </>)}
+            </>
+          )}
           {/* USER PROFILE */}
-            {!isAdmin && (
+          {!isAdmin && (
             <>
-          <TouchableOpacity
-            onPress={() => router.push("/(drawer)/(profile)/userProfile")}
-            style={styles.drawerItem}
-          >
-            <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
-            <Text style={styles.drawerText}>User Profile</Text>
-          </TouchableOpacity>
-</>)}
+              <TouchableOpacity
+                onPress={() => router.push("/(drawer)/(profile)/userProfile")}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="person-circle-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>User Profile</Text>
+              </TouchableOpacity>
+            </>
+          )}
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
-
               <TouchableOpacity
-                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/subAdmins")}
+                onPress={() => router.replace("/(drawer)/(admin)/(subAdmins)")}
                 style={styles.drawerItem}
               >
                 <Ionicons name="people-outline" size={26} color="#2e7d32" />
@@ -120,7 +128,9 @@ const [profile, setProfile] = useState<UserProfile | null>(null);
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/handicapSetup")}
+                onPress={() =>
+                  router.replace("/(drawer)/(admin)/(handicapSetup)")
+                }
                 style={styles.drawerItem}
               >
                 <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
@@ -128,13 +138,25 @@ const [profile, setProfile] = useState<UserProfile | null>(null);
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards")}
+                onPress={() =>
+                  router.replace("/(drawer)/(admin)/(combinedLeaderboards)")
+                }
                 style={styles.drawerItem}
               >
                 <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
                 <Text style={styles.drawerText}>Combined Leaderboards</Text>
               </TouchableOpacity>
-            </>)}
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace("/(drawer)/(admin)/(feedbackInbox)")
+                }
+                style={styles.drawerItem}
+              >
+                <Ionicons name="mail-unread-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Feedback Inbox</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
       {/* Logout */}
@@ -170,7 +192,7 @@ export default function DrawerLayout() {
         },
       }}
     >
-      <Drawer.Screen name="profile" options={{ title: "Profile" }} />
+      {/* <Drawer.Screen name="profile" options={{ title: "Profile" }} /> */}
     </Drawer>
   );
 }

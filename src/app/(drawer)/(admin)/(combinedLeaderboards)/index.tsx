@@ -30,10 +30,34 @@ export default function CombinedLeaderboardsPage() {
 
   const [selectedTournaments, setSelectedTournaments] = useState<any>([]);
   const leaderboardData = [
-{rank:1,name:"rks",tourneys:1,holes:18,gross:78,net:78,points:30},
-{rank:2,name:"kpk1",tourneys:1,holes:18,gross:78,net:74,points:0},
-{rank:3,name:"narender",tourneys:2,holes:18,gross:86,net:86,points:0},
-]
+    {
+      rank: 1,
+      name: "rks",
+      tourneys: 1,
+      holes: 18,
+      gross: 78,
+      net: 78,
+      points: 30,
+    },
+    {
+      rank: 2,
+      name: "kpk1",
+      tourneys: 1,
+      holes: 18,
+      gross: 78,
+      net: 74,
+      points: 0,
+    },
+    {
+      rank: 3,
+      name: "narender",
+      tourneys: 2,
+      holes: 18,
+      gross: 86,
+      net: 86,
+      points: 0,
+    },
+  ];
   const [leaderboard, setLeaderboard] = useState(leaderboardData);
 
   const [selectedPremium, setSelectedPremium] = useState<string | null>(null);
@@ -47,37 +71,36 @@ export default function CombinedLeaderboardsPage() {
     { id: 5, name: "12", date: "3/7/26" },
   ];
 
-
-
-  const toggleTournament = (id : any) => {
+  const toggleTournament = (id: any) => {
     if (selectedTournaments.includes(id)) {
-      setSelectedTournaments(selectedTournaments.filter((item : any) => item !== id));
+      setSelectedTournaments(
+        selectedTournaments.filter((item: any) => item !== id),
+      );
     } else {
       setSelectedTournaments([...selectedTournaments, id]);
     }
   };
 
-
   const PlayerAvatar = ({ name }: any) => {
-  const letter = name.charAt(0).toUpperCase();
+    const letter = name.charAt(0).toUpperCase();
 
-  return (
-    <View
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "#8bc34a",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <ThemedText style={{ color: "white", fontWeight: "700" }}>
-        {letter}
-      </ThemedText>
-    </View>
-  );
-};
+    return (
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: "#8bc34a",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ThemedText style={{ color: "white", fontWeight: "700" }}>
+          {letter}
+        </ThemedText>
+      </View>
+    );
+  };
   return (
     <>
       <ThemedView
@@ -121,13 +144,11 @@ export default function CombinedLeaderboardsPage() {
               onPress={() => setModalVisible(true)}
               className="border border-[#8bc34a] rounded-xl py-3 items-center"
             >
-              <Text className="font-semibold text-lg text-[#8bc34a]">
-                Select Tournaments
-              </Text>
+              <ThemedText>Select Tournaments</ThemedText>
             </Pressable>
             <HStack className="flex-wrap gap-2 mt-3">
               {selectedTournaments.map((id: any) => {
-                const t = tournaments.find((t:any) => t.id === id);
+                const t = tournaments.find((t: any) => t.id === id);
 
                 return (
                   <Pressable
@@ -145,142 +166,121 @@ export default function CombinedLeaderboardsPage() {
               })}
             </HStack>
 
-       <VStack className="gap-3 mt-5">
-  {leaderboard.map((player: any, index: any) => (
-    <Box
-      key={index}
-      className="p-4 rounded-xl border border-neutral-200"
-    >
-      <HStack className="justify-between items-center">
-        <VStack>
-          <ThemedText
-            style={{
-              fontWeight: "700",
-              fontSize: 16,
-            }}
-          >
-            #{player.rank} {player.name}
-          </ThemedText>
+            <VStack className="gap-3 mt-5">
+              {leaderboard.map((player: any, index: any) => (
+                <Box
+                  key={index}
+                  className="p-4 rounded-xl border border-neutral-200"
+                >
+                  <HStack className="justify-between items-center">
+                    <VStack>
+                      <ThemedText
+                        style={{
+                          fontWeight: "700",
+                          fontSize: 16,
+                        }}
+                      >
+                        #{player.rank} {player.name}
+                      </ThemedText>
 
-          <ThemedText
-            style={{
-              fontSize: 12,
-              opacity: 0.6,
-            }}
-          >
-            Tourneys: {player.tourneys}
-          </ThemedText>
-        </VStack>
+                      <ThemedText
+                        style={{
+                          fontSize: 12,
+                          opacity: 0.6,
+                        }}
+                      >
+                        Tourneys: {player.tourneys}
+                      </ThemedText>
+                    </VStack>
 
-        <ThemedText
-          style={{
-            color: "#8bc34a",
-            fontWeight: "700",
-            fontSize: 18,
-          }}
-        >
-          Total Points: {player.points}
-        </ThemedText>
-      </HStack>
+                    <ThemedText
+                      style={{
+                        color: "#8bc34a",
+                        fontWeight: "700",
+                        fontSize: 18,
+                      }}
+                    >
+                      Total Points: {player.points}
+                    </ThemedText>
+                  </HStack>
 
-      <HStack className="justify-between mt-3">
-        <ThemedText style={{ fontSize: 14 }}>
-          Gross: {player.gross}
-        </ThemedText>
+                  <HStack className="justify-between mt-3">
+                    <ThemedText style={{ fontSize: 14 }}>
+                      Gross: {player.gross}
+                    </ThemedText>
 
-        <ThemedText style={{ fontSize: 14 }}>
-          Net: {player.net}
-        </ThemedText>
+                    <ThemedText style={{ fontSize: 14 }}>
+                      Net: {player.net}
+                    </ThemedText>
 
-        <ThemedText style={{ fontSize: 14 }}>
-          Holes: {player.holes}
-        </ThemedText>
-      </HStack>
-    </Box>
-  ))}
-</VStack>
-    
-
-
-
-
+                    <ThemedText style={{ fontSize: 14 }}>
+                      Holes: {player.holes}
+                    </ThemedText>
+                  </HStack>
+                </Box>
+              ))}
+            </VStack>
           </VStack>
         </ScrollView>
       </ThemedView>
 
-     <Modal
-animationType="slide"
-transparent
-visible={modalVisible}
-onRequestClose={()=>setModalVisible(false)}
->
+      <Modal
+        animationType="slide"
+        transparent
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <HStack className="justify-between items-center mb-4">
+              <Text style={{ fontSize: 18, fontWeight: "700" }}>
+                Select Tournaments
+              </Text>
 
-<View style={styles.overlay}>
+              <Pressable onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={22} />
+              </Pressable>
+            </HStack>
 
-<View style={styles.modalContainer}>
+            <ScrollView>
+              {tournaments.map((tournament) => (
+                <Pressable
+                  key={tournament.id}
+                  onPress={() => toggleTournament(tournament.id)}
+                  className="flex-row justify-between items-center py-3"
+                >
+                  <VStack>
+                    <Text className="font-semibold text-xl">
+                      {tournament.name}
+                    </Text>
 
-<HStack className="justify-between items-center mb-4">
+                    <Text className="text-md opacity-60">
+                      {tournament.date}
+                    </Text>
+                  </VStack>
 
-<Text style={{fontSize:18,fontWeight:"700"}}>
-Select Tournaments
-</Text>
+                  <Ionicons
+                    name={
+                      selectedTournaments.includes(tournament.id)
+                        ? "checkbox"
+                        : "square-outline"
+                    }
+                    size={22}
+                    color="#8bc34a"
+                  />
+                </Pressable>
+              ))}
+            </ScrollView>
 
-<Pressable onPress={()=>setModalVisible(false)}>
-<Ionicons name="close" size={22}/>
-</Pressable>
-
-</HStack>
-
-<ScrollView>
-
-{tournaments.map((tournament)=>(
-<Pressable
-key={tournament.id}
-onPress={()=>toggleTournament(tournament.id)}
-className="flex-row justify-between items-center py-3"
->
-
-<VStack>
-
-<ThemedText className="font-semibold">
-{tournament.name}
-</ThemedText>
-
-<ThemedText className="text-xs opacity-60">
-{tournament.date}
-</ThemedText>
-
-</VStack>
-
-<Ionicons
-name={
-selectedTournaments.includes(tournament.id)
-?"checkbox"
-:"square-outline"
-}
-size={22}
-color="#8bc34a"
-/>
-
-</Pressable>
-))}
-
-</ScrollView>
-
-<Pressable
-className="bg-[#8bc34a] py-3 rounded-lg items-center mt-4"
-onPress={()=>setModalVisible(false)}
->
-
-<Text className="text-white text-lg font-semibold">
-Apply
-</Text>
-
-</Pressable>
-
-</View>
-</View>
-</Modal>
+            <Pressable
+              className="bg-[#8bc34a] py-3 rounded-lg items-center mt-4"
+              onPress={() => setModalVisible(false)}
+            >
+              <Text className="text-white text-lg font-semibold">Apply</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

@@ -22,7 +22,7 @@ import { Text } from "@/components/text";
 import { ThemedView } from "@/components/themed-view";
 import { TextInput } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { getTeeBox } from "@/api/courses";
+import { getTeeBox } from "@/api/admin/courses";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teeBoxSchema } from "@/schema/adminSchemas";

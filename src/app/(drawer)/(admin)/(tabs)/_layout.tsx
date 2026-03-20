@@ -133,18 +133,12 @@ export default function AdminTabLayout() {
         }}
       />
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="playerStatistics"
         options={{
           href: null,
         }}
-      />
-      <Tabs.Screen
-        name="combinedLeaderboards/index"
-        options={{
-          href: null,
-        }}
-      />
+      /> */}
     </Tabs>
   );
 }

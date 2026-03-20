@@ -69,14 +69,14 @@ export default function PlayerHandicapSetup() {
   };
 
   return (
-    <ThemedView
+    <SafeAreaView
   style={{
     flex: 1,
   }}
 >
   <Watermark />
 
-  <VStack className="flex-1 px-4">
+  <VStack className="flex-1 p-4">
 
     {/* HEADER (FIXED) */}
     <HStack className="items-center justify-between mb-4">
@@ -107,7 +107,7 @@ export default function PlayerHandicapSetup() {
           paddingHorizontal: 12,
           paddingVertical: 6,
           borderRadius: 12,
-          backgroundColor: "rgba(139,195,74,0.15)",
+          // backgroundColor: "rgba(139,195,74,0.15)",
         }}
       >
         <Ionicons name="people-outline" size={16} color="#8bc34a" />
@@ -134,9 +134,9 @@ export default function PlayerHandicapSetup() {
             key={player.id}
             className="p-4 rounded-2xl mb-3"
             style={{
-              backgroundColor: isDark
-                ? "rgba(30,30,30,0.75)"
-                : "rgba(255,255,255,0.75)",
+              // backgroundColor: isDark
+              //   ? "rgba(30,30,30,0.75)"
+              //   : "rgba(255,255,255,0.75)",
               borderWidth: 1,
               borderColor: "#E5E7EB",
               shadowColor: "#000",
@@ -238,6 +238,6 @@ export default function PlayerHandicapSetup() {
     </ScrollView>
 
   </VStack>
-</ThemedView>
+</SafeAreaView>
   );
 }
