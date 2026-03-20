@@ -134,7 +134,7 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                                 </Box>
                                 <VStack>
                                     <Text
-                                        className="font-semibold text-sm"
+                                        className="font-bold text-2xl"
                                         style={{ color: isDark ? "#fff" : "#111" }}
                                     >
                                         {card.playerName}
@@ -296,24 +296,49 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                                     </Text>
                                 </Pressable> */}
                                 <Pressable
+                                    onPressIn={() => handleLike(card.id)}
+                                    android_ripple={{ color: "#ccc", borderless: true }}
+                                    hitSlop={10}
                                     className="p-2 rounded-full flex-row items-center"
-                                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB" }}
+                                    style={{
+                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB",
+                                    }}
                                 >
                                     <Ionicons
                                         name={card.isLiked ? "heart" : "heart-outline"}
                                         size={20}
                                         color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"}
                                     />
-                                <Text
-                                    className="text-sm font-semibold ml-1.5"
-                                    style={{ color: isDark ? "#fff" : "#6b7280" }}
-                                >
-                                    {card.likes}
-                                </Text>
+                                    <Text
+                                        className="text-sm font-semibold ml-1.5"
+                                        style={{ color: isDark ? "#fff" : "#6b7280" }}
+                                    >
+                                        {card.likes}
+                                    </Text>
                                 </Pressable>
                             </HStack>
 
                             <HStack space="md" className="items-center">
+
+                                <Pressable
+                                    className="p-2 rounded-full flex-row items-center"
+                                    style={{
+                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB",
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="people-outline"
+                                        size={18}
+                                        color={isDark ? "#fff" : "#6b7280"}
+                                    />
+
+                                    <Text
+                                        className="ml-1.5 text-sm font-semibold"
+                                        style={{ color: isDark ? "#fff" : "#6b7280" }}
+                                    >
+                                        Activity
+                                    </Text>
+                                </Pressable>
                                 <Button
                                     size="sm"
                                     className="rounded-full px-6 h-10 shadow-sm"

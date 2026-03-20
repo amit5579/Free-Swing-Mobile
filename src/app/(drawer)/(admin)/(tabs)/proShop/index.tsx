@@ -1,95 +1,40 @@
-import React from "react";
-import { useColorScheme, Image } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import React, { useState, useEffect } from "react";
+import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Button } from "@/components/button";
-import { Text } from "@/components/text";
+import { ThemedText } from "@/components/themed-text";
 
 import { Ionicons } from "@expo/vector-icons";
-
 import Watermark from "@/components/watermark";
-import { router } from "expo-router";
-
-const products = [
-  {
-    id: "1",
-    name: "Caps with magnetic marker",
-    description: "Mixed brand golf caps",
-    price: "₹1,150.00",
-    image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=200",
-  },
-  {
-    id: "2",
-    name: "T-Shirt Sea Blue",
-    description: "Polyester lycra sports wear",
-    price: "₹1,150.00",
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200",
-  },
-  {
-    id: "3",
-    name: "Golf Glove",
-    description: "Premium leather glove",
-    price: "₹3,456.00",
-    image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=200",
-  },
-  {
-    id: "4",
-    name: "Golf Balls Pack",
-    description: "Professional distance balls",
-    price: "₹2,250.00",
-    image: "https://images.unsplash.com/photo-1592919505780-303950717480?w=200",
-  },
-  {
-    id: "5",
-    name: "Golf Polo Shirt",
-    description: "Breathable sports polo",
-    price: "₹1,950.00",
-    image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=200",
-  },
-  {
-    id: "6",
-    name: "Golf Shoes",
-    description: "Anti-slip professional shoes",
-    price: "₹5,850.00",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200",
-  },
-  {
-    id: "7",
-    name: "Golf Bag",
-    description: "Lightweight carry bag",
-    price: "₹8,400.00",
-    image: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=200",
-  },
-  {
-    id: "8",
-    name: "Golf Tee Set",
-    description: "Durable plastic tees",
-    price: "₹450.00",
-    image: "https://images.unsplash.com/photo-1592919505780-303950717480?w=200",
-  },
-  {
-    id: "9",
-    name: "Golf Cap Classic",
-    description: "Adjustable sports cap",
-    price: "₹950.00",
-    image: "https://images.unsplash.com/photo-1588854337221-4cf9fa96059c?w=200",
-  },
-  {
-    id: "10",
-    name: "Golf Training Mat",
-    description: "Indoor practice mat",
-    price: "₹4,250.00",
-    image: "https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=200",
-  },
-];
+import { getProducts, ProductApi } from "@/api/shop";
 
 export default function ProShop() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const [products, setProducts] = useState<ProductApi[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Fetch products error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -100,137 +45,173 @@ export default function ProShop() {
     >
       <Watermark />
 
-      <VStack className="flex-1 px-4">
-
-        {/* HEADER (FIXED) */}
-        <HStack className="mb-4 items-center justify-between">
+      <VStack className="flex-1">
+        {/* HEADER */}
+        <HStack style={{ marginBottom: 24, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
           <VStack>
-            <Text
+            <ThemedText
               style={{
                 fontSize: 24,
-                lineHeight: 30,
-                fontWeight: "700",
+                fontWeight: "800",
                 color: "#8bc34a",
               }}
             >
-              Manage Products
-            </Text>
+              Pro Shop
+            </ThemedText>
+            <ThemedText style={{ fontSize: 12, color: '#999', fontWeight: '600' }}>
+              Manage Inventory
+            </ThemedText>
           </VStack>
 
-          <Button
-            size="sm"
+          <TouchableOpacity
             onPress={() =>
               router.push("/(drawer)/(admin)/(tabs)/proShop/addProduct")
             }
-            className="bg-[#8bc34a] rounded-lg px-4 flex-row items-center"
+            style={{
+              backgroundColor: '#8bc34a',
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: '#8bc34a',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 4
+            }}
           >
-            <Ionicons name="add" size={16} color="#fff" />
-            <Text className="text-white font-semibold ml-1">
-              Add Product
-            </Text>
-          </Button>
+            <Ionicons name="add-circle-outline" size={18} color="#fff" />
+            <ThemedText style={{ color: 'white', fontWeight: '800', marginLeft: 6, fontSize: 14 }}>
+              Add Item
+            </ThemedText>
+          </TouchableOpacity>
         </HStack>
 
-        {/* PRODUCT LIST (SCROLLABLE) */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
-          <VStack space="md">
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <ActivityIndicator size="large" color="#8bc34a" />
+            <ThemedText style={{ marginTop: 12, color: "#8bc34a" }}>Loading shop...</ThemedText>
+          </View>
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
+          >
+            <VStack style={{ gap: 16 }}>
+              {products.map((item) => (
+                <Box
+                  key={item.id}
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(30,30,30,0.85)"
+                      : "rgba(255,255,255,0.85)",
+                    borderRadius: 20,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(139,195,74,0.2)",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: isDark ? 0.3 : 0.08,
+                    shadowRadius: 10,
+                    elevation: 3,
+                  }}
+                >
+                  <HStack style={{ gap: 16, alignItems: 'center' }}>
+                    {/* IMAGE */}
+                    <Box style={{ 
+                      width: 80, 
+                      height: 80, 
+                      backgroundColor: '#f9f9f9', 
+                      borderRadius: 12, 
+                      overflow: 'hidden',
+                      borderWidth: 1,
+                      borderColor: '#eee'
+                    }}>
+                      <Image
+                        source={{ uri: `https://kolve18freeswing.com${item.imageUrl}` }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                        }}
+                        resizeMode="contain"
+                      />
+                    </Box>
 
-            {products.map((item) => (
-              <Box
-                key={item.id}
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(30,30,30,0.75)"
-                    : "rgba(255,255,255,0.75)",
-                  borderRadius: 14,
-                  padding: 14,
-                  borderWidth: 1,
-                  borderColor: isDark ? "#2c2c2e" : "#e5e7eb",
-                }}
-              >
-                <HStack space="md" className="items-center">
+                    {/* INFO */}
+                    <VStack style={{ flex: 1 }}>
+                      <ThemedText
+                        style={{
+                          fontWeight: "800",
+                          fontSize: 16,
+                        }}
+                      >
+                        {item.name}
+                      </ThemedText>
 
-                  {/* IMAGE */}
-                  <Image
-                    source={{ uri: item.image }}
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 8,
-                    }}
-                  />
+                      <ThemedText
+                        numberOfLines={1}
+                        style={{
+                          fontSize: 12,
+                          color: '#888',
+                          marginTop: 2
+                        }}
+                      >
+                        {item.description}
+                      </ThemedText>
 
-                  {/* INFO */}
-                  <VStack className="flex-1">
+                      <ThemedText
+                        style={{
+                          color: "#8bc34a",
+                          fontWeight: "900",
+                          fontSize: 18,
+                          marginTop: 6,
+                        }}
+                      >
+                        ₹{item.price.toLocaleString()}
+                      </ThemedText>
+                    </VStack>
 
-                    <Text
-                      style={{
-                        fontWeight: "600",
-                        fontSize: 16,
-                        color: isDark ? "#fff" : "#000",
-                      }}
-                    >
-                      {item.name}
-                    </Text>
+                    {/* ACTIONS */}
+                    <VStack style={{ gap: 8 }}>
+                      <TouchableOpacity
+                        style={{
+                          width: 36,
+                          height: 36,
+                          backgroundColor: "rgba(34,197,94,0.1)",
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: "rgba(34,197,94,0.2)",
+                        }}
+                        onPress={() => console.log("Edit", item.id)}
+                      >
+                        <Ionicons name="create-outline" size={18} color="#22C55E" />
+                      </TouchableOpacity>
 
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: isDark ? "#9ca3af" : "#6b7280",
-                      }}
-                    >
-                      {item.description}
-                    </Text>
-
-                    <Text
-                      style={{
-                        color: "#8bc34a",
-                        fontWeight: "700",
-                        marginTop: 4,
-                      }}
-                    >
-                      {item.price}
-                    </Text>
-
-                  </VStack>
-
-                  {/* ACTIONS */}
-                  <VStack space="xs">
-
-                    <Button
-                      size="sm"
-                      style={{
-                        backgroundColor: "#22c55e",
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                      }}
-                    >
-                      <Ionicons name="create-outline" size={16} color="#fff" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      style={{
-                        backgroundColor: "#ef4444",
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                      }}
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#fff" />
-                    </Button>
-
-                  </VStack>
-
-                </HStack>
-              </Box>
-            ))}
-
-          </VStack>
-        </ScrollView>
-
+                      <TouchableOpacity
+                        style={{
+                          width: 36,
+                          height: 36,
+                          backgroundColor: "rgba(239,68,68,0.1)",
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: "rgba(239,68,68,0.2)",
+                        }}
+                        onPress={() => console.log("Delete", item.id)}
+                      >
+                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                      </TouchableOpacity>
+                    </VStack>
+                  </HStack>
+                </Box>
+              ))}
+            </VStack>
+          </ScrollView>
+        )}
       </VStack>
     </SafeAreaView>
   );

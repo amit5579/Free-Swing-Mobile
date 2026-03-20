@@ -71,9 +71,9 @@ export default function DashboardScreen() {
       if (!userId) return;
 
       const data = await getUserProfile(Number(userId));
-      if(data.profilePictureUrl!=null || data.username !=null || data.handicap)
-     
-      setProfile(data);
+      if (data.profilePictureUrl != null || data.username != null || data.handicap)
+
+        setProfile(data);
     } catch (error) {
       console.log("Profile error:", error);
     }
@@ -88,8 +88,8 @@ export default function DashboardScreen() {
           id: item.roundRefId?.toString() || Math.random().toString(),
           playerName: item.playerName || "Unknown",
           date: item.date || "",
-          course: item.courseName || "",
-          tee: item.teeBoxName || "",
+          course: item.courseName,
+          tee: item.teeBoxName,
           holes: item.holesPlayed || 0,
           grossScore: item.grossScore || 0,
           grossDiff: item.scoreToPar || 0,
@@ -113,28 +113,28 @@ export default function DashboardScreen() {
   };
 
   const handleLike = async (id: string) => {
-  try {
-    setCards((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
+    try {
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
               ...c,
               isLiked: !c.isLiked,
               likes: c.isLiked ? c.likes - 1 : c.likes + 1,
             }
-          : c
-      )
-    );
+            : c
+        )
+      );
 
-    await likeFeedApi(id);
+      await likeFeedApi(id);
 
-    // OPTIONAL: sync with backend
-    // fetchFeed();
+      // OPTIONAL: sync with backend
+      // fetchFeed();
 
-  } catch (error) {
-    console.error("Like toggle error:", error);
-  }
-};
+    } catch (error) {
+      console.error("Like toggle error:", error);
+    }
+  };
 
   return (
     <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
@@ -345,7 +345,7 @@ export default function DashboardScreen() {
 
             {activeTab === "progress" && (
               <InProgressTab
-                playerId={2}
+                playerId={profile?.id || 0}
                 onDelete={() => { }}
                 onResume={() => { }}
               />
@@ -353,7 +353,7 @@ export default function DashboardScreen() {
 
             {activeTab === "history" && (
               <HistoryTab
-                playerId={2}
+                playerId={profile?.id || 0}
                 onViewGame={(id) => console.log("View game", id)}
               />
             )}
