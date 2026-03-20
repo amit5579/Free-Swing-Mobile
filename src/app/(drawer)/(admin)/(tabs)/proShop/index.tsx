@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View } from "react-native";
+import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -11,13 +11,13 @@ import { ThemedText } from "@/components/themed-text";
 
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
-import { getProducts, ProductApi } from "@/api/shop";
+import { getProducts, deleteProduct, Product } from "@/api/adminAPI/proShop";
 
 export default function ProShop() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const [products, setProducts] = useState<ProductApi[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +35,26 @@ export default function ProShop() {
       setLoading(false);
     }
   };
+
+  const handleDelete = async (id: number) => {
+    Alert.alert("Delete Product", "Are you sure you want to delete this product?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteProduct(id);
+            Alert.alert("Success", "Product deleted successfully");
+            fetchProducts();
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete product");
+          }
+        },
+      },
+    ]);
+  };
+
 
   return (
     <SafeAreaView
@@ -96,115 +116,135 @@ export default function ProShop() {
         ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingBottom: 150, paddingHorizontal: 16 }}
           >
-            <VStack style={{ gap: 16 }}>
+            <VStack style={{ gap: 20 }}>
               {products.map((item) => (
                 <Box
                   key={item.id}
                   style={{
-                    backgroundColor: isDark
-                      ? "rgba(30,30,30,0.85)"
-                      : "rgba(255,255,255,0.85)",
-                    borderRadius: 20,
-                    padding: 16,
+                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
+                    borderRadius: 24,
+                    padding: 12,
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(139,195,74,0.2)",
+                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+                    borderLeftWidth: 6,
+                    borderLeftColor: "#8BC34A",
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: isDark ? 0.3 : 0.08,
+                    shadowOpacity: isDark ? 0.3 : 0.05,
                     shadowRadius: 10,
                     elevation: 3,
                   }}
                 >
-                  <HStack style={{ gap: 16, alignItems: 'center' }}>
-                    {/* IMAGE */}
+                  <HStack space="md" className="items-center">
+                    {/* PRODUCT IMAGE */}
                     <Box style={{ 
-                      width: 80, 
-                      height: 80, 
-                      backgroundColor: '#f9f9f9', 
-                      borderRadius: 12, 
+                      width: 90, 
+                      height: 90, 
+                      backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                      borderRadius: 18, 
                       overflow: 'hidden',
-                      borderWidth: 1,
-                      borderColor: '#eee'
+                      borderWidth: 2,
+                      borderColor: "#8BC34A",
                     }}>
                       <Image
                         source={{ uri: `https://kolve18freeswing.com${item.imageUrl}` }}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                        }}
-                        resizeMode="contain"
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
                       />
                     </Box>
 
-                    {/* INFO */}
+                    {/* PRODUCT CONTENT */}
                     <VStack style={{ flex: 1 }}>
-                      <ThemedText
-                        style={{
-                          fontWeight: "800",
-                          fontSize: 16,
-                        }}
-                      >
-                        {item.name}
-                      </ThemedText>
+                      <HStack className="justify-between items-start">
+                        <ThemedText
+                          numberOfLines={1}
+                          style={{
+                            fontWeight: "900",
+                            fontSize: 16,
+                            letterSpacing: -0.5,
+                            flex: 1
+                          }}
+                        >
+                          {item.name}
+                        </ThemedText>
+                        
+                        <Box style={{ 
+                          backgroundColor: 'rgba(139,195,74,0.1)', 
+                          paddingHorizontal: 8, 
+                          paddingVertical: 2, 
+                          borderRadius: 6 
+                        }}>
+                          <ThemedText style={{ color: '#8bc34a', fontSize: 9, fontWeight: '800' }}>
+                            STOCK
+                          </ThemedText>
+                        </Box>
+                      </HStack>
 
                       <ThemedText
-                        numberOfLines={1}
+                        numberOfLines={2}
                         style={{
-                          fontSize: 12,
-                          color: '#888',
-                          marginTop: 2
+                          fontSize: 11,
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          marginTop: 2,
+                          lineHeight: 15
                         }}
                       >
-                        {item.description}
+                        {item.description || "No description provided"}
                       </ThemedText>
 
-                      <ThemedText
-                        style={{
-                          color: "#8bc34a",
-                          fontWeight: "900",
-                          fontSize: 18,
-                          marginTop: 6,
-                        }}
-                      >
-                        ₹{item.price.toLocaleString()}
-                      </ThemedText>
-                    </VStack>
+                      <HStack className="items-center justify-between mt-3">
+                        <ThemedText
+                          style={{
+                            color: "#8bc34a",
+                            fontWeight: "900",
+                            fontSize: 18,
+                          }}
+                        >
+                          ₹{item.price.toLocaleString()}
+                        </ThemedText>
 
-                    {/* ACTIONS */}
-                    <VStack style={{ gap: 8 }}>
-                      <TouchableOpacity
-                        style={{
-                          width: 36,
-                          height: 36,
-                          backgroundColor: "rgba(34,197,94,0.1)",
-                          borderRadius: 10,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderWidth: 1,
-                          borderColor: "rgba(34,197,94,0.2)",
-                        }}
-                        onPress={() => console.log("Edit", item.id)}
-                      >
-                        <Ionicons name="create-outline" size={18} color="#22C55E" />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={{
-                          width: 36,
-                          height: 36,
-                          backgroundColor: "rgba(239,68,68,0.1)",
-                          borderRadius: 10,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderWidth: 1,
-                          borderColor: "rgba(239,68,68,0.2)",
-                        }}
-                        onPress={() => console.log("Delete", item.id)}
-                      >
-                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                      </TouchableOpacity>
+                        {/* ACTIONS */}
+                        <HStack space="sm">
+                          <TouchableOpacity
+                            onPress={() => router.push({
+                              pathname: "/(drawer)/(admin)/(tabs)/proShop/addProduct",
+                              params: {
+                                id: item.id,
+                                name: item.name,
+                                price: item.price.toString(),
+                                description: item.description,
+                                imageUrl: item.imageUrl
+                              }
+                            })}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Ionicons name="create-outline" size={16} color="#8bc34a" />
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            onPress={() => handleDelete(item.id)}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              backgroundColor: isDark ? "rgba(239,68,68,0.1)" : "#fee2e2",
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                          </TouchableOpacity>
+                        </HStack>
+                      </HStack>
                     </VStack>
                   </HStack>
                 </Box>

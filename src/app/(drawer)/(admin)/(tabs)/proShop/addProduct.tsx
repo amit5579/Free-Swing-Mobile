@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { useColorScheme, TextInput, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { useColorScheme, TextInput, Image, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView } from "react-native-gesture-handler";
+import * as ImagePicker from "expo-image-picker";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -12,15 +14,86 @@ import { Text } from "@/components/text";
 import { Ionicons } from "@expo/vector-icons";
 
 import Watermark from "@/components/watermark";
+import { addProduct, updateProduct } from "@/api/adminAPI/proShop";
 
 export default function AddProduct() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const params = useLocalSearchParams();
+  const isEdit = !!params.id;
 
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [name, setName] = useState((params.name as string) || "");
+  const [price, setPrice] = useState((params.price as string) || "");
+  const [description, setDescription] = useState((params.description as string) || "");
+  const [image, setImage] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert("Permission Denied", "Permission required to access gallery");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0]);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!name || !price) {
+      Alert.alert("Error", "Please fill in all required fields (Name and Price)");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("Name", name);
+      formData.append("Price", price);
+      formData.append("Description", description);
+
+      if (image) {
+        formData.append("ProductImage", {
+          uri: image.uri,
+          name: image.fileName || "product.jpg",
+          type: image.mimeType || "image/jpeg",
+        } as any);
+      }
+
+      if (isEdit) {
+        await updateProduct(Number(params.id), formData);
+        Alert.alert("Success", "Product updated successfully", [
+          { text: "OK", onPress: () => router.back() }
+        ]);
+      } else {
+        await addProduct(formData);
+        Alert.alert("Success", "Product added successfully", [
+          { text: "OK", onPress: () => router.back() }
+        ]);
+      }
+    } catch (error) {
+      console.error("Save Product Error:", error);
+      Alert.alert("Error", `Failed to ${isEdit ? 'update' : 'add'} product. Please try again.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get image preview URI
+  const getImageUri = () => {
+    if (image?.uri) return image.uri;
+    if (params.imageUrl) return `https://kolve18freeswing.com${params.imageUrl}`;
+    return null;
+  };
 
   return (
     <SafeAreaView
@@ -31,31 +104,58 @@ export default function AddProduct() {
     >
       <Watermark />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack className="px-4 pb-32">
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 150 }}
+      >
+        <VStack className="px-4">
 
           {/* HEADER */}
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-              color: "#8bc34a",
-              marginBottom: 16,
-            }}
-          >
-            Add Product
-          </Text>
+          <HStack style={{ marginVertical: 20, alignItems: 'center' }}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={{ 
+                marginRight: 12,
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
+                padding: 8,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#eee'
+              }}
+            >
+              <Ionicons name="arrow-back" size={20} color={isDark ? "#fff" : "#000"} />
+            </TouchableOpacity>
+            <VStack>
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "800",
+                  color: "#8bc34a",
+                }}
+              >
+                {isEdit ? "Edit Item" : "New Item"}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#999', fontWeight: '600' }}>
+                {isEdit ? "Modify product details" : "Add product to inventory"}
+              </Text>
+            </VStack>
+          </HStack>
 
           {/* FORM CARD */}
           <Box
             style={{
               backgroundColor: isDark
-                    ? "rgba(30,30,30,0.75)"
-                    : "rgba(255,255,255,0.75)",
-              padding: 20,
-              borderRadius: 20,
+                    ? "rgba(40,40,40,0.6)"
+                    : "rgba(255,255,255,0.9)",
+              padding: 24,
+              borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#8bc34a",
+              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: isDark ? 0.3 : 0.05,
+              shadowRadius: 20,
+              elevation: 4,
             }}
           >
             <VStack space="lg">
@@ -72,7 +172,8 @@ export default function AddProduct() {
                   Product Image
                 </Text>
 
-                <Box
+                <TouchableOpacity
+                  onPress={pickImage}
                   style={{
                     alignItems: "center",
                     justifyContent: "center",
@@ -80,34 +181,41 @@ export default function AddProduct() {
                     borderStyle: "dashed",
                     borderColor: isDark ? "#444" : "#d1d5db",
                     borderRadius: 12,
-                    padding: 24,
+                    padding: 12,
+                    minHeight: 280,
                   }}
                 >
 
-                  {image ? (
+                  {getImageUri() ? (
                     <Image
-                      source={{ uri: image }}
+                      source={{ uri: getImageUri() }}
                       style={{
-                        width: 120,
-                        height: 120,
+                        width: '100%',
+                        height: 250,
                         borderRadius: 10,
                       }}
+                      resizeMode="contain"
                     />
                   ) : (
-                    <Ionicons
-                      name="image-outline"
-                      size={40}
-                      color={isDark ? "#aaa" : "#9E9E9E"}
-                    />
+                    <VStack style={{ alignItems: 'center' }}>
+                      <Ionicons
+                        name="image-outline"
+                        size={60}
+                        color={isDark ? "#aaa" : "#9E9E9E"}
+                      />
+                      <Text style={{ marginTop: 12, color: isDark ? "#aaa" : "#888", fontWeight: "600" }}>
+                        Click to select product image
+                      </Text>
+                    </VStack>
                   )}
 
-                  <Button className="bg-[#8bc34a] rounded-lg mt-4 px-5">
-                    <Text className="text-white font-semibold">
-                      Upload Image
+                  <Box className="bg-[#8bc34a] rounded-lg mt-4 px-8 py-3">
+                    <Text className="text-white font-bold">
+                      {getImageUri() ? "Change Product Photo" : "Upload Product Photo"}
                     </Text>
-                  </Button>
+                  </Box>
 
-                </Box>
+                </TouchableOpacity>
               </VStack>
 
               {/* PRODUCT NAME */}
@@ -226,21 +334,31 @@ export default function AddProduct() {
 
                 <Button
                   variant="outline"
+                  onPress={() => router.back()}
                   style={{
                     borderColor: isDark ? "#555" : "#ccc",
                     paddingHorizontal: 20,
                     marginRight: 10,
                   }}
+                  disabled={loading}
                 >
                   <Text style={{ color: isDark ? "#fff" : "#000" }}>
                     Cancel
                   </Text>
                 </Button>
 
-                <Button className="bg-[#8bc34a] px-6">
-                  <Text className="text-white font-semibold">
-                    Add Product
-                  </Text>
+                <Button
+                  className="bg-[#8bc34a] px-6"
+                  onPress={handleSave}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white font-semibold">
+                      {isEdit ? "Update Product" : "Add Product"}
+                    </Text>
+                  )}
                 </Button>
 
               </HStack>
@@ -253,3 +371,4 @@ export default function AddProduct() {
     </SafeAreaView>
   );
 }
+
