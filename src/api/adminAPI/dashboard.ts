@@ -26,6 +26,7 @@ export const getUserById = async (id: number): Promise<UserApi | null> => {
 };
 
 
+
 export type TeeBox = {
   teeBoxId: number;
   courseId: number;
@@ -98,6 +99,7 @@ export const getPlayers = async (): Promise<PlayerApi[]> => {
 };
 
 
+
 export type UpdateApi = {
   id: number;
   content: string | null;
@@ -117,7 +119,6 @@ export type Update = {
   author: string;
   date: string;
 };
-
 
 export const getUpdates = async (): Promise<UpdateApi[]> => {
   try {
@@ -173,7 +174,6 @@ export type FeedItem = {
   authenticatedBy: string | null;
   canAuthenticate: boolean;
 };
-
 
 export const getFeed = async (): Promise<FeedApi[]> => {
   try {
@@ -273,5 +273,3 @@ export const getScorecardDetails = async (
 };
 
 
-// Fix User Pro Shop UI + Integration
-// 

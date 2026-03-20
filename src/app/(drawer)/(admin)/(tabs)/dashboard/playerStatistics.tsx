@@ -26,7 +26,7 @@ const PlayerCard = ({ player, isDark, isExpanded, onToggle }: { player: PlayerAp
   return (
     <Box
       style={{
-        backgroundColor: isDark ? "rgba(26,26,26,0.85)" : "rgba(255,255,255,0.85)",
+        backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
         borderRadius: 20,
         borderLeftWidth: 6,
         borderLeftColor: player.isBlocked ? "#EF4444" : "#8BC34A",

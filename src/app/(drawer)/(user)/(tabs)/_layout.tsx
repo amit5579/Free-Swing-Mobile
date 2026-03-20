@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
 import React from "react";
 import { Image, TouchableOpacity, useColorScheme, View, Text, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

@@ -6,6 +6,7 @@ import { Box } from "@/components/box";
 import { Ionicons } from "@expo/vector-icons";
 import { HStack } from "@/components/hstack";
 import PlayerStatistics from "./playerStatistics";
+import GameFeed, { GameFeedContent } from "./gameFeed";
 import Watermark from "@/components/watermark";
 import { getPlayers, getCourses, PlayerApi } from "@/api/adminAPI/dashboard";
 
@@ -33,6 +34,7 @@ export default function AdminDashboard() {
       let best = '-';
       if (players.length > 0) {
         const handicaps = players
+          .filter(p => !p.isBlocked && (p.totalRounds > 0 || p.handicapIndex !== null))
           .map(p => {
             const val = p.handicapIndex !== null ? p.handicapIndex : (p.calculatedHandicap ?? p.handicap);
             return typeof val === 'string' ? parseFloat(val) : val;
@@ -71,14 +73,17 @@ export default function AdminDashboard() {
       {/* Header + Tabs */}
       <VStack className="px-4 bg-transparent">
         <VStack className="mb-6">
-          <Text className="text-3xl font-bold text-gray-900">Dashboard Overview</Text>
-          <Text className="text-lg font-medium text-gray-700">
+          <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Dashboard Overview</Text>
+          <Text className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
             Manage your golf league's players, courses, and tournaments.
           </Text>
         </VStack>
 
         {/* Tab Buttons */}
-        <HStack className="rounded-full p-1 mb-6 bg-gray-200">
+        <HStack 
+          className="rounded-full p-1 mb-6"
+          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
+        >
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
             return (
@@ -91,10 +96,10 @@ export default function AdminDashboard() {
                 <Ionicons
                   name={tab.icon as any}
                   size={16}
-                  color={active ? "#fff" : "#6b7280"}
+                  color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
                   className="mr-1"
                 />
-                <Text className={`text-sm font-medium ${active ? "text-white" : "text-gray-600"}`}>
+                <Text className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}>
                   {tab.label}
                 </Text>
               </Pressable>
@@ -118,14 +123,20 @@ export default function AdminDashboard() {
             ) : (
               <VStack style={{ gap: 16, marginBottom: 16 }}>
                 <HStack style={{ gap: 12 }}>
-                  <Box className="flex-1 bg-white rounded-xl border border-gray-200 p-5 min-h-[160px]">
+                  <Box 
+                    className="flex-1 rounded-xl border p-5 min-h-[160px]"
+                    style={{ 
+                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
+                      borderColor: isDark ? "#333" : "#E5E7EB"
+                    }}
+                  >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
                       <Ionicons name="people-outline" size={22} color="#8BC34A" />
                     </Box>
                     <VStack className="flex-1 justify-between">
                       <VStack>
-                        <Text className="text-3xl font-bold text-gray-900">{stats.players}</Text>
-                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Players</Text>
+                        <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.players}</Text>
+                        <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Players</Text>
                       </VStack>
                       <Pressable
                         className="bg-gray-100 py-2 rounded-lg items-center mt-2"
@@ -136,14 +147,20 @@ export default function AdminDashboard() {
                     </VStack>
                   </Box>
 
-                  <Box className="flex-1 bg-white rounded-xl border border-gray-200 p-5 min-h-[160px]">
+                   <Box 
+                    className="flex-1 rounded-xl border p-5 min-h-[160px]"
+                    style={{ 
+                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
+                      borderColor: isDark ? "#333" : "#E5E7EB"
+                    }}
+                  >
                     <Box className="absolute top-3 right-3 bg-blue-100 p-2 rounded-full">
                       <Ionicons name="flag-outline" size={22} color="#06B6D4" />
                     </Box>
                     <VStack className="flex-1 justify-between">
                       <VStack>
-                        <Text className="text-3xl font-bold text-gray-900">{stats.courses}</Text>
-                        <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Courses</Text>
+                        <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
+                        <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Courses</Text>
                       </VStack>
                       <Pressable className="bg-gray-100 py-2 rounded-lg items-center mt-2">
                         <Text className="text-[10px] font-bold text-[#0288D1]">VENUES</Text>
@@ -152,19 +169,29 @@ export default function AdminDashboard() {
                   </Box>
                 </HStack>
 
-                <Box className="bg-white rounded-xl border border-gray-200 p-5 min-h-[160px]">
+                <Box 
+                  className="rounded-xl border p-5 min-h-[160px]"
+                  style={{ 
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.85)",
+                    borderColor: isDark ? "#333" : "#E5E7EB"
+                  }}
+                >
                   <Box className="absolute top-3 right-3 bg-yellow-100 p-2 rounded-full">
                     <Ionicons name="trending-down-outline" size={22} color="#FBBF24" />
                   </Box>
                   <VStack className="flex-1 justify-between">
                     <VStack>
-                      <Text className="text-3xl font-bold text-gray-900">{stats.bestHandicap}</Text>
-                      <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">Top Handicaps</Text>
+                      <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
+                      <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top Handicaps</Text>
                     </VStack>
                     <Pressable className="bg-yellow-50 py-2 rounded-lg items-center mt-2 border border-yellow-100">
                       <Text className="text-[10px] font-bold text-[#B08900]">TRACKED</Text>
                     </Pressable>
                   </VStack>
+                </Box>
+                
+                <Box className="mt-4">
+                  <GameFeedContent />
                 </Box>
               </VStack>
             )}

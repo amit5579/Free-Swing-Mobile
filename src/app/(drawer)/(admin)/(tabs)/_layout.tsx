@@ -8,7 +8,7 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
