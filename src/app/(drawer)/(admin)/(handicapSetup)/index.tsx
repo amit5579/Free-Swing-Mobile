@@ -5,7 +5,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ActivityIndicator } from "react-native";
-import { getUsers, User } from "@/api/adminAPI/handicapSetup";
+import { getUsers, User } from "@/api/admin/handicapSetup";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
@@ -241,7 +241,6 @@ export default function PlayerHandicapSetup() {
                 </Box>
               ))}
             </VStack>
-          )}
         </ScrollView>
 
   </VStack>

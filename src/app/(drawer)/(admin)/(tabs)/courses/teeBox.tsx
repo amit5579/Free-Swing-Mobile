@@ -34,7 +34,6 @@ export default function teeBoxPage() {
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [editingCourse, setEditingCourse] = useState<any>(null);
@@ -498,7 +497,7 @@ function TeeCardAdmin({
 
       {/*setup holes button */}
       <Pressable
-        onPress={() => routePage.push("/courses/holes")}
+        onPress={() => routePage.push(`/courses/holes?teeBoxId=${tee.teeBoxId}`)}
         className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
         style={({ pressed }) => ({
           backgroundColor: pressed ? "#8bc34a" : "transparent",

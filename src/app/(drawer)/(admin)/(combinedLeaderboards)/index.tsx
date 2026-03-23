@@ -21,6 +21,7 @@ import { Text } from "@/components/text";
 import { TextInput } from "react-native";
 import { ThemedView } from "@/components/themed-view";
 import { Dropdown } from "react-native-element-dropdown";
+import { SafeAreaView } from "react-native-safe-area-context";
 export default function CombinedLeaderboardsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -103,8 +104,7 @@ export default function CombinedLeaderboardsPage() {
   };
   return (
     <>
-      <ThemedView
-        style={{
+      <SafeAreaView        style={{
           flex: 1,
         }}
       >
@@ -222,7 +222,7 @@ export default function CombinedLeaderboardsPage() {
             </VStack>
           </VStack>
         </ScrollView>
-      </ThemedView>
+      </SafeAreaView>
 
       <Modal
         animationType="slide"

@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFeed, FeedApi } from "@/api/adminAPI/dashboard";
+import { getFeed, FeedApi } from "@/api/admin/dashboard";
 import { likeFeedApi } from "@/api/dashboard";
 import Watermark from "@/components/watermark";
 import { Button, ButtonText } from "@/components/button";

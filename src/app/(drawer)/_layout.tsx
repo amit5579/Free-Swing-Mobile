@@ -131,7 +131,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(tabs)/subAdmins");
+                    router.replace("/(drawer)/(admin)/(subAdmins)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -145,7 +145,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(tabs)/handicapSetup");
+                    router.replace("/(drawer)/(admin)/(handicapSetup)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -159,7 +159,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards");
+                    router.replace("/(drawer)/(admin)/(combinedLeaderboards)");
                   });
                 }}
                 style={styles.drawerItem}
