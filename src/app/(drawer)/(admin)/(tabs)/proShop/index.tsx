@@ -139,7 +139,7 @@ export default function ProShop() {
                     </Box>
 
                     {/* INFO */}
-                    <VStack style={{ flex: 1 }}>
+                    <Box style={{ flex: 1 }}>
                       <ThemedText
                         style={{
                           fontWeight: "800",
@@ -170,7 +170,7 @@ export default function ProShop() {
                       >
                         ₹{item.price.toLocaleString()}
                       </ThemedText>
-                    </VStack>
+                    </Box>
 
                     {/* ACTIONS */}
                     <VStack style={{ gap: 8 }}>
