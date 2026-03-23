@@ -339,7 +339,6 @@ function CourseCardAdmin({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   function routeTeeBox(courseId: string) {
-    console.log(courseId);
     routePage.push(`/courses/teeBox?courseId=${courseId}`);
   }
 

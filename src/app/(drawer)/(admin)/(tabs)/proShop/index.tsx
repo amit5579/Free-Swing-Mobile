@@ -11,7 +11,7 @@ import { ThemedText } from "@/components/themed-text";
 
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
-import { getProducts, deleteProduct, Product } from "@/api/adminAPI/proShop";
+import { getProducts, deleteProduct, Product } from "@/api/admin/proShop";
 
 export default function ProShop() {
   const colorScheme = useColorScheme();

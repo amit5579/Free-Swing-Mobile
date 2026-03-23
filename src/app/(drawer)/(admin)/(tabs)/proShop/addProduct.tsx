@@ -14,7 +14,7 @@ import { Text } from "@/components/text";
 import { Ionicons } from "@expo/vector-icons";
 
 import Watermark from "@/components/watermark";
-import { addProduct, updateProduct } from "@/api/adminAPI/proShop";
+import { addProduct, updateProduct } from "@/api/admin/proShop";
 
 export default function AddProduct() {
   const colorScheme = useColorScheme();
@@ -371,4 +371,4 @@ export default function AddProduct() {
     </SafeAreaView>
   );
 }
-
+
