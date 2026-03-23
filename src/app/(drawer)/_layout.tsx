@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
 
-function CustomDrawerContent() {
+function CustomDrawerContent({ navigation }: any) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
@@ -92,7 +92,13 @@ function CustomDrawerContent() {
           {isAdmin && (
             <>
               <TouchableOpacity
-                onPress={() => router.push("/(drawer)/(profile)/adminProfile")}
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(profile)/adminProfile");
+                  });
+                }}
                 style={styles.drawerItem}
               >
                 <Ionicons name="shield-outline" size={26} color="#2e7d32" />
@@ -103,24 +109,31 @@ function CustomDrawerContent() {
           {/* USER PROFILE */}
           {!isAdmin && (
             <>
-              <TouchableOpacity
-                onPress={() => router.push("/(drawer)/(profile)/userProfile")}
-                style={styles.drawerItem}
-              >
-                <Ionicons
-                  name="person-circle-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>User Profile</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.closeDrawer();
+              requestAnimationFrame(() => {
+                router.push("/(drawer)/(profile)/userProfile");
+              });
+            }}
+            style={styles.drawerItem}
+          >
+            <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+            <Text style={styles.drawerText}>User Profile</Text>
+          </TouchableOpacity>
+</>)}
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
               <TouchableOpacity
-                onPress={() => router.replace("/(drawer)/(admin)/(subAdmins)")}
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.replace("/(drawer)/(admin)/(tabs)/subAdmins");
+                  });
+                }}
                 style={styles.drawerItem}
               >
                 <Ionicons name="people-outline" size={26} color="#2e7d32" />
@@ -128,9 +141,13 @@ function CustomDrawerContent() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() =>
-                  router.replace("/(drawer)/(admin)/(handicapSetup)")
-                }
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.replace("/(drawer)/(admin)/(tabs)/handicapSetup");
+                  });
+                }}
                 style={styles.drawerItem}
               >
                 <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
@@ -138,9 +155,13 @@ function CustomDrawerContent() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() =>
-                  router.replace("/(drawer)/(admin)/(combinedLeaderboards)")
-                }
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.replace("/(drawer)/(admin)/(tabs)/combinedLeaderboards");
+                  });
+                }}
                 style={styles.drawerItem}
               >
                 <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
@@ -182,10 +203,11 @@ export default function DrawerLayout() {
 
   return (
     <Drawer
-      drawerContent={() => <CustomDrawerContent />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerPosition: "right",
+        drawerType: "front",
         drawerStyle: {
           width: 300,
           backgroundColor: isDark ? "#121212" : "#e8f5e9",
