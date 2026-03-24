@@ -141,17 +141,22 @@ export default function AllMembersPage() {
                     key={member.id}
                     style={{
                       backgroundColor: isDark
-                        ? "rgba(26,26,26,0.85)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "rgba(26, 26, 26, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
                       borderRadius: 20,
                       borderLeftWidth: 6,
                       borderLeftColor: member.isBlocked ? "#EF4444" : "#8BC34A",
+                      borderTopWidth: isDark ? 1.5 : 0,
+                      borderRightWidth: isDark ? 1.5 : 0,
+                      borderBottomWidth: isDark ? 1.5 : 0,
+                      borderColor: isDark ? (member.isBlocked ? "#EF4444" : "#8BC34A") : "transparent",
                       padding: 16,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: isDark ? 0.3 : 0.08,
                       shadowRadius: 10,
                       elevation: 4,
+                      overflow: "hidden",
                     }}
                   >
                     {/* MEMBER HEADER */}
@@ -240,7 +245,7 @@ export default function AllMembersPage() {
                                 : "chevron-down"
                             }
                             size={20}
-                            color={isDark ? "#555" : "#CCC"}
+                            color={member.isBlocked ? "#EF4444" : "#8BC34A"}
                           />
                         </HStack>
                       </HStack>

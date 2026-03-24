@@ -111,7 +111,7 @@ export default function AddProduct() {
         <VStack className="px-4">
 
           {/* HEADER */}
-          <HStack style={{ marginVertical: 20, alignItems: 'center' }}>
+          <HStack style={{ marginBottom: 10, alignItems: 'center' }}>
             <TouchableOpacity 
               onPress={() => router.back()} 
               style={{ 

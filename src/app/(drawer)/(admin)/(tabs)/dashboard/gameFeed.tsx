@@ -42,38 +42,49 @@ export type Scorecard = {
 const diffLabel = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 const diffColor = (n: number) => (n < 0 ? "#ef4444" : "#10b981");
 
-const FeedCard = ({ 
-  card, 
-  isDark, 
-  isExpanded, 
-  onToggle, 
-  handleLike, 
-  handleViewScorecard 
-}: { 
-  card: Scorecard; 
-  isDark: boolean; 
-  isExpanded: boolean; 
+const FeedCard = ({
+  card,
+  isDark,
+  isExpanded,
+  onToggle,
+  handleLike,
+  handleViewScorecard
+}: {
+  card: Scorecard;
+  isDark: boolean;
+  isExpanded: boolean;
   onToggle: () => void;
   handleLike: (id: string) => void;
   handleViewScorecard: (id: string) => void;
 }) => {
   return (
     <Box
-      className="rounded-3xl border overflow-hidden mb-4 shadow-sm"
+      className="mb-4"
       style={{
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.08,
         shadowRadius: 10,
-        elevation: 2,
-        backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-        borderColor: isDark ? "#8bc34a" : "#F3F3F3",
+        elevation: 4,
+        backgroundColor: isDark
+          ? "rgba(26,26,26,0.4)"
+          : "rgba(255,255,255,0.35)",
         borderLeftWidth: 6,
         borderLeftColor: "#8BC34A",
+        borderTopWidth: isDark ? 1.5 : 1.0,
+        borderRightWidth: isDark ? 1.5 : 0,
+        borderBottomWidth: isDark ? 1.5 : 0,
+        borderColor: isDark ? "#8BC34A" : "transparent",
+        borderRadius: 20,
+        overflow: "hidden",
       }}
     >
       {/* CARD HEADER (Toggle Expand/Collapse) */}
-      <Pressable onPress={onToggle} className="px-4 pt-4 pb-3">
+      <Pressable 
+        onPress={onToggle} 
+        className="px-4 pt-4 pb-3"
+        style={{ borderRadius: 20 }}
+      >
         <HStack className="justify-between items-center">
           <HStack space="sm" className="items-center flex-1">
             <Box
@@ -121,26 +132,41 @@ const FeedCard = ({
             </VStack>
           </HStack>
 
-          <HStack space="xs" className="items-center">
+          <HStack space="sm" className="items-center">
+            {card.isTournament && (
+              <Badge
+                size="sm"
+                className="rounded-full px-2 py-0.5"
+                style={{
+                  backgroundColor: isDark ? "#F59E0B" : "#FBBF24",
+                }}
+              >
+                <BadgeText
+                  className="text-white font-bold text-[10px]"
+                >
+                  Tournament
+                </BadgeText>
+              </Badge>
+            )}
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={20}
-              color={isDark ? "#8BC34A" : "#666"}
-              style={{ marginLeft: 8 }}
+              color="#8BC34A"
+              style={{ marginLeft: 4 }}
             />
           </HStack>
         </HStack>
-        
+
         {/* Course & Holes info always visible in header row or just below */}
         {!isExpanded && (
           <HStack space="sm" className="items-center mt-2 flex-wrap">
-             <HStack space="xs" className="items-center">
-                <Ionicons name="flag-outline" size={11} color={isDark ? "#aaa" : "#9ca3af"} />
-                <Text className="text-xs" style={{ color: isDark ? "#ccc" : "#6b7280" }}>{card.courseName}</Text>
-             </HStack>
-             <Badge size="sm" className="rounded-full px-2 py-0.5" style={{ backgroundColor: isDark ? "#374151" : "#111827" }}>
-                <BadgeText className="text-white font-semibold text-[10px]">{card.holes} Holes</BadgeText>
-             </Badge>
+            <HStack space="xs" className="items-center">
+              <Ionicons name="flag-outline" size={11} color={isDark ? "#aaa" : "#9ca3af"} />
+              <Text className="text-xs" style={{ color: isDark ? "#ccc" : "#6b7280" }}>{card.courseName}</Text>
+            </HStack>
+            <Badge size="sm" className="rounded-full px-2 py-0.5" style={{ backgroundColor: isDark ? "#374151" : "#111827" }}>
+              <BadgeText className="text-white font-semibold text-[10px]">{card.holes} Holes</BadgeText>
+            </Badge>
           </HStack>
         )}
       </Pressable>
@@ -150,104 +176,88 @@ const FeedCard = ({
         <VStack style={{ marginTop: 0 }}>
           <Divider style={{ marginBottom: 16, backgroundColor: isDark ? "#333" : "#F0F0F0" }} />
           <VStack space="xs" className="px-4 pb-2">
-             <HStack space="xs" className="items-center flex-wrap">
-                <Ionicons
-                    name="flag-outline"
-                    size={11}
-                    color={isDark ? "#aaa" : "#9ca3af"}
-                />
+            <HStack space="xs" className="items-center flex-wrap">
+              <Ionicons
+                name="flag-outline"
+                size={11}
+                color={isDark ? "#aaa" : "#9ca3af"}
+              />
+              <Text
+                className="text-xs"
+                style={{ color: isDark ? "#ccc" : "#6b7280" }}
+              >
+                {card.courseName}
+              </Text>
+              <Box
+                className="rounded px-1.5 py-0.5"
+                style={{
+                  backgroundColor: isDark ? "#333" : "#DBEAFE",
+                }}
+              >
                 <Text
-                    className="text-xs"
-                    style={{ color: isDark ? "#ccc" : "#6b7280" }}
+                  className="text-[10px] font-bold"
+                  style={{ color: isDark ? "#fff" : "#1E3A8A" }}
                 >
-                    {card.courseName}
+                  {card.teeBoxName}
                 </Text>
-                <Box
-                    className="rounded px-1.5 py-0.5"
-                    style={{
-                      backgroundColor: isDark ? "#333" : "#DBEAFE",
-                    }}
-                >
-                    <Text
-                      className="text-[10px] font-bold"
-                      style={{ color: isDark ? "#fff" : "#1E3A8A" }}
-                    >
-                      {card.teeBoxName}
-                    </Text>
-                </Box>
-                {card.isTournament && (
+              </Box>
                 <Badge
                   size="sm"
                   className="rounded-full px-3 py-1"
                   style={{
-                    backgroundColor: isDark ? "#F59E0B" : "#FBBF24",
+                    backgroundColor: isDark ? "#374151" : "#111827",
                   }}
                 >
-                  <BadgeText
-                    className="text-white font-bold text-xs"
-                    style={{ color: "#fff" }}
-                  >
-                    Tournament
+                  <BadgeText className="text-white font-semibold text-xs">
+                    {card.holes} Holes
                   </BadgeText>
                 </Badge>
-              )}
-              <Badge
-                size="sm"
-                className="rounded-full px-3 py-1"
-                style={{
-                  backgroundColor: isDark ? "#374151" : "#111827",
-                }}
-              >
-                <BadgeText className="text-white font-semibold text-xs">
-                  {card.holes} Holes
-                </BadgeText>
-              </Badge>
-             </HStack>
+            </HStack>
           </VStack>
 
           {/* Stats Block (Gross & To Par) */}
           <HStack space="sm" className="mx-4 mb-4">
-             <Box
-                className="flex-1 rounded-2xl py-6 items-center border"
-                style={{
-                  borderColor: isDark ? "#8bc34a" : "#F3F3F3",
-                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.5)" : "rgba(249, 250, 251, 0.7)",
-                }}
+            <Box
+              className="flex-1 rounded-2xl py-6 items-center border"
+              style={{
+                borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+              }}
+            >
+              <Text
+                className="text-[10px] uppercase font-bold tracking-widest mb-1"
+                style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
               >
-                <Text
-                  className="text-[10px] uppercase font-bold tracking-widest mb-1"
-                  style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
-                >
-                  Gross
-                </Text>
-                <Text
-                  className="text-4xl font-black tracking-tighter"
-                  style={{ color: isDark ? "#fff" : "#111" }}
-                >
-                  {card.grossScore}
-                </Text>
-              </Box>
+                Gross
+              </Text>
+              <Text
+                className="text-4xl font-black tracking-tighter"
+                style={{ color: isDark ? "#fff" : "#111" }}
+              >
+                {card.grossScore}
+              </Text>
+            </Box>
 
-              <Box
-                className="flex-1 rounded-2xl py-6 items-center border"
-                style={{
-                  borderColor: isDark ? "#8bc34a" : "#F3F3F3",
-                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.5)" : "rgba(249, 250, 251, 0.7)",
-                }}
+            <Box
+              className="flex-1 rounded-2xl py-6 items-center border"
+              style={{
+                borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+              }}
+            >
+              <Text
+                className="text-[10px] uppercase font-bold tracking-widest mb-1"
+                style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
               >
-                <Text
-                  className="text-[10px] uppercase font-bold tracking-widest mb-1"
-                  style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
-                >
-                  To Par
-                </Text>
-                <Text
-                  style={{ color: diffColor(card.grossDiff) }}
-                  className="text-4xl font-black tracking-tighter"
-                >
-                  {diffLabel(card.grossDiff)}
-                </Text>
-              </Box>
+                To Par
+              </Text>
+              <Text
+                style={{ color: diffColor(card.grossDiff) }}
+                className="text-4xl font-black tracking-tighter"
+              >
+                {diffLabel(card.grossDiff)}
+              </Text>
+            </Box>
           </HStack>
 
           {/* NET / POINTS */}
@@ -260,8 +270,8 @@ const FeedCard = ({
                 key={s.label}
                 className="flex-1 rounded-xl items-center py-3 border"
                 style={{
-                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.5)" : "rgba(249, 250, 251, 0.7)",
-                  borderColor: isDark ? "#8bc34a" : "#E5E7EB",
+                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                  borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                 }}
               >
                 <Text
@@ -314,7 +324,7 @@ const FeedCard = ({
                   {card.likes}
                 </Text>
               </Pressable>
-              
+
               {card.isAuthenticated && (
                 <HStack space="xs" className="items-center ml-2">
                   <Ionicons name="shield-checkmark" size={16} color="#8BC34A" />
@@ -354,26 +364,26 @@ const FeedCard = ({
               </Button>
 
               {card.canAuthenticate && !card.isAuthenticated && (
-                 <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full px-4 h-9 border"
-                    style={{
-                        borderColor: isDark ? "#fff" : "#8BC34A",
-                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
-                    }}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full px-4 h-9 border"
+                  style={{
+                    borderColor: isDark ? "#fff" : "#8BC34A",
+                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
+                  }}
                 >
-                    <Ionicons
-                        name="shield-checkmark-outline"
-                        size={13}
-                        color={isDark ? "#fff" : "#8BC34A"}
-                    />
-                    <ButtonText
-                        className="text-xs font-extrabold ml-1"
-                        style={{ color: isDark ? "#fff" : "#8BC34A" }}
-                    >
-                        Auth
-                    </ButtonText>
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={13}
+                    color={isDark ? "#fff" : "#8BC34A"}
+                  />
+                  <ButtonText
+                    className="text-xs font-extrabold ml-1"
+                    style={{ color: isDark ? "#fff" : "#8BC34A" }}
+                  >
+                    Auth
+                  </ButtonText>
                 </Button>
               )}
             </HStack>
@@ -420,10 +430,10 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
           canAuthenticate: item.canAuthenticate,
         }));
         setCards(mappedCards);
-        
+
         // Auto-expand first card
         if (mappedCards.length > 0) {
-           setExpandedId(mappedCards[0].id);
+          setExpandedId(mappedCards[0].id);
         }
       }
     } catch (error) {
@@ -439,10 +449,10 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
         prev.map((c) =>
           c.id === id
             ? {
-                ...c,
-                isLiked: !c.isLiked,
-                likes: c.isLiked ? c.likes - 1 : c.likes + 1,
-              }
+              ...c,
+              isLiked: !c.isLiked,
+              likes: c.isLiked ? c.likes - 1 : c.likes + 1,
+            }
             : c
         )
       );
@@ -521,7 +531,7 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
 
       {/* Cards List */}
       {cards.map((card) => (
-        <FeedCard 
+        <FeedCard
           key={card.id}
           card={card}
           isDark={isDark}

@@ -2,6 +2,7 @@ import { getScorecardDetails, ScorecardHole } from "@/api/dashboard";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { Skeleton } from "@/components/Skeleton";
 
 type Props = {
     handicap: number;
@@ -45,8 +46,32 @@ const ScoreCard: React.FC<Props> = ({ handicap }) => {
         arr.reduce((t, h) => t + h.score, 0);
     const sumNet = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + h.netScore, 0);
+    if (loading) {
+        return (
+            <ScrollView className="flex-1 bg-white px-4 py-4 mt-8">
+                <Skeleton width={200} height={28} style={{ marginBottom: 4 }} />
+                <Skeleton width={120} height={20} style={{ marginBottom: 16 }} />
 
-    if (loading) return <ActivityIndicator className="mt-12" size="large" />;
+                <View className="flex-row bg-gray-200 py-2 mb-2">
+                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                        <View key={i} className="flex-1 items-center">
+                            <Skeleton width={20} height={14} />
+                        </View>
+                    ))}
+                </View>
+
+                {[...Array(9)].map((_, i) => (
+                    <View key={i} className="flex-row py-3 mb-2" style={{ borderBottomWidth: 1, borderColor: "#e5e7eb" }}>
+                        {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                            <View key={j} className="flex-1 items-center">
+                                <Skeleton width={20} height={16} borderRadius={4} />
+                            </View>
+                        ))}
+                    </View>
+                ))}
+            </ScrollView>
+        );
+    }
     if (error)
         return <Text className="mt-12 text-center text-red-500">{error}</Text>;
 
