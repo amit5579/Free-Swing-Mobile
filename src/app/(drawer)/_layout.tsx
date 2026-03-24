@@ -223,6 +223,38 @@ function CustomDrawerContent({ navigation }: any) {
             <Text style={styles.drawerText}>Contact Admin</Text>
           </TouchableOpacity>
 </>)}
+  <>
+    {/* User Profile */}
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => {
+        navigation.closeDrawer();
+        requestAnimationFrame(() => {
+          router.push("/(drawer)/(profile)/userProfile");
+        });
+      }}
+      style={styles.drawerItem}
+    >
+      <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+      <Text style={styles.drawerText}>User Profile</Text>
+    </TouchableOpacity>
+
+    {/* R & A Rules */}
+    <TouchableOpacity
+  activeOpacity={0.7}
+  onPress={() => {
+    navigation.closeDrawer();
+    requestAnimationFrame(() => {
+      Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+    });
+  }}
+  style={styles.drawerItem}
+>
+  <Ionicons name="book-outline" size={26} color="#2e7d32" />
+  <Text style={styles.drawerText}>R & A Rules</Text>
+</TouchableOpacity>
+  </>
+)}
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
