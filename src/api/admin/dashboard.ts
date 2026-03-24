@@ -271,5 +271,3 @@ export const getScorecardDetails = async (
     return [];
   }
 };
-
-

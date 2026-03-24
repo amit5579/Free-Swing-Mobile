@@ -40,11 +40,15 @@ const HistoryCard = ({
     <Box
       style={{
         backgroundColor: isDark
-          ? "rgba(26,26,26,0.85)"
-          : "rgba(255,255,255,0.85)",
+          ? "rgba(26,26,26,0.4)"
+          : "rgba(255,255,255,0.35)",
         borderRadius: 20,
         borderLeftWidth: 6,
         borderLeftColor: "#8BC34A",
+        borderTopWidth: isDark ? 1.5 : 0,
+        borderRightWidth: isDark ? 1.5 : 0,
+        borderBottomWidth: isDark ? 1.5 : 0,
+        borderColor: isDark ? "#8BC34A" : "transparent",
         padding: 16,
         marginBottom: 16,
         shadowColor: "#000",
@@ -52,6 +56,7 @@ const HistoryCard = ({
         shadowOpacity: isDark ? 0.3 : 0.08,
         shadowRadius: 10,
         elevation: 4,
+        overflow: "hidden",
       }}
     >
       {/* HEADER - Tap to Toggle */}
@@ -114,7 +119,7 @@ const HistoryCard = ({
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={20}
-              color={isDark ? "#555" : "#CCC"}
+              color="#8BC34A"
             />
           </HStack>
         </HStack>
@@ -139,9 +144,7 @@ const HistoryCard = ({
               padding: 12,
               marginBottom: 16,
               borderWidth: 1,
-              borderColor: isDark
-                ? "rgba(255,255,255,0.08)"
-                : "rgba(0,0,0,0.05)",
+              borderColor: isDark ? "#8BC34A" : "#E5E7EB",
             }}
           >
             <HStack className="justify-between items-center">

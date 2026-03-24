@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   useColorScheme,
   Pressable,
@@ -6,8 +6,11 @@ import {
   View,
   ScrollView,
   ActivityIndicator,
+  BackHandler,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect, router } from "expo-router";
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +35,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (activeTab !== "overview") {
+          setActiveTab("overview");
+          return true;
+        } else {
+          router.replace("/(auth)/login");
+          return true;
+        }
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => backHandler.remove();
+    }, [activeTab])
+  );
 
   const fetchStats = async () => {
     try {
@@ -87,14 +111,27 @@ export default function AdminDashboard() {
       {/* Header + Tabs */}
       <VStack className="px-4 bg-transparent">
         <VStack className="mb-6">
-          <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Dashboard Overview</Text>
-          <Text className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-            Manage your golf league's players, courses, and tournaments.
-          </Text>
+          <HStack className="items-center">
+            <VStack style={{ flex: 1 }}>
+              <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                Dashboard Overview
+              </Text>
+              <Text className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                Manage your golf league's players, courses, and tournaments.
+              </Text>
+            </VStack>
+            <VStack className="items-end justify-center">
+              <Text 
+                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded ${isDark ? "text-gray-400 bg-white/5" : "text-gray-500 bg-gray-100"}`}
+              >
+                Admin
+              </Text>
+            </VStack>
+          </HStack>
         </VStack>
 
         {/* Tab Buttons */}
-        <HStack 
+        <HStack
           className="rounded-full p-1 mb-6"
           style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
         >
@@ -140,11 +177,12 @@ export default function AdminDashboard() {
             ) : (
               <VStack style={{ gap: 16, marginBottom: 16 }}>
                 <HStack style={{ gap: 12 }}>
-                  <Box 
-                    className="flex-1 rounded-xl border p-5 min-h-[160px]"
-                    style={{ 
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-                      borderColor: isDark ? "#333" : "#E5E7EB"
+                  <Box
+                    className="flex-1 rounded-xl p-5 min-h-[160px]"
+                    style={{
+                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                      borderColor: "#8BC34A",
+                      borderWidth: 1.5,
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -160,8 +198,13 @@ export default function AdminDashboard() {
                         <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Players</Text>
                       </VStack>
                       <Pressable
-                        className="bg-gray-100 py-2 rounded-lg items-center mt-2"
+                        className="py-2 rounded-lg items-center mt-2"
                         onPress={() => setActiveTab("statistics")}
+                        style={{ 
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          borderColor: "rgba(46, 125, 50, 0.4)",
+                          borderWidth: 1.0,
+                        }}
                       >
                         <Text className="text-[10px] font-bold text-[#2E7D32]">
                           MEMBERS
@@ -170,11 +213,12 @@ export default function AdminDashboard() {
                     </VStack>
                   </Box>
 
-                   <Box 
-                    className="flex-1 rounded-xl border p-5 min-h-[160px]"
-                    style={{ 
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-                      borderColor: isDark ? "#333" : "#E5E7EB"
+                  <Box
+                    className="flex-1 rounded-xl p-5 min-h-[160px]"
+                    style={{
+                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                      borderColor: "#8BC34A",
+                      borderWidth: 1.5,
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-blue-100 p-2 rounded-full">
@@ -185,7 +229,14 @@ export default function AdminDashboard() {
                         <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
                         <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Courses</Text>
                       </VStack>
-                      <Pressable className="bg-gray-100 py-2 rounded-lg items-center mt-2">
+                      <Pressable 
+                        className="py-2 rounded-lg items-center mt-2"
+                        style={{ 
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          borderColor: "rgba(2, 136, 209, 0.4)",
+                          borderWidth: 1.0,
+                        }}
+                      >
                         <Text className="text-[10px] font-bold text-[#0288D1]">
                           VENUES
                         </Text>
@@ -194,11 +245,12 @@ export default function AdminDashboard() {
                   </Box>
                 </HStack>
 
-                <Box 
-                  className="rounded-xl border p-5 min-h-[160px]"
-                  style={{ 
-                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.85)",
-                    borderColor: isDark ? "#333" : "#E5E7EB"
+                <Box
+                  className="rounded-xl p-5 min-h-[160px]"
+                  style={{
+                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                    borderColor: "#8BC34A",
+                    borderWidth: 1.5,
                   }}
                 >
                   <Box className="absolute top-3 right-3 bg-yellow-100 p-2 rounded-full">
@@ -213,14 +265,21 @@ export default function AdminDashboard() {
                       <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
                       <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top Handicaps</Text>
                     </VStack>
-                    <Pressable className="bg-yellow-50 py-2 rounded-lg items-center mt-2 border border-yellow-100">
+                    <Pressable 
+                      className="py-2 rounded-lg items-center mt-2"
+                      style={{ 
+                        backgroundColor: "rgba(254, 252, 232, 0.2)",
+                        borderColor: "rgba(176, 137, 0, 0.4)",
+                        borderWidth: 1.0,
+                      }}
+                    >
                       <Text className="text-[10px] font-bold text-[#B08900]">
                         TRACKED
                       </Text>
                     </Pressable>
                   </VStack>
                 </Box>
-                
+
                 <Box className="mt-4">
                   <GameFeedContent />
                 </Box>
