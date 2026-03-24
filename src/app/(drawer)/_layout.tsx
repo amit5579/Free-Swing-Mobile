@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { Linking } from "react-native";
 
 function CustomDrawerContent({ navigation }: any) {
   const scheme = useColorScheme();
@@ -22,6 +23,7 @@ function CustomDrawerContent({ navigation }: any) {
   const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [imageError, setImageError] = useState(false);
   const logout = async () => {
     await removeToken();
   };
@@ -68,20 +70,44 @@ function CustomDrawerContent({ navigation }: any) {
       <View>
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
-            <Image
-              source={{ uri: profile?.profilePictureUrl || undefined }}
-              style={styles.avatar}
-            />
+            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+              <Image
+                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                style={styles.avatar}
+                onError={() => setImageError(true)}
+              />
+            ) : profile?.username && profile.username.trim() !== "" ? (
+              <View style={[styles.avatar, { 
+                backgroundColor: isDark ? "#333" : "#C5E1A5",
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor: "#8BC34A"
+              }]}>
+                <Text style={{ 
+                  color: isDark ? "#fff" : "#2E7D32", 
+                  fontSize: 32, 
+                  fontWeight: "bold" 
+                }}>
+                  {profile.username.trim()[0].toUpperCase()}
+                </Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100" }}
+                style={styles.avatar}
+              />
+            )}
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
-                {role === "admin" ? "Admin" : "User"}
+                {isAdmin ? "Admin" : "User"}
               </Text>
             </View>
           </View>
 
           <Text style={styles.userName}>{profile?.username}</Text>
           <Text style={styles.handicap}>
-            {role === "admin" ? "Administrator" : "Handicap: 5"}
+            {isAdmin ? "Administrator" : `Handicap: ${profile?.handicap || "0"}`}
           </Text>
         </View>
 
@@ -165,6 +191,38 @@ function CustomDrawerContent({ navigation }: any) {
             <Text style={styles.drawerText}>Contact Admin</Text>
           </TouchableOpacity>
 </>)}
+  <>
+    {/* User Profile */}
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => {
+        navigation.closeDrawer();
+        requestAnimationFrame(() => {
+          router.push("/(drawer)/(profile)/userProfile");
+        });
+      }}
+      style={styles.drawerItem}
+    >
+      <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+      <Text style={styles.drawerText}>User Profile</Text>
+    </TouchableOpacity>
+
+    {/* R & A Rules */}
+    <TouchableOpacity
+  activeOpacity={0.7}
+  onPress={() => {
+    navigation.closeDrawer();
+    requestAnimationFrame(() => {
+      Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+    });
+  }}
+  style={styles.drawerItem}
+>
+  <Ionicons name="book-outline" size={26} color="#2e7d32" />
+  <Text style={styles.drawerText}>R & A Rules</Text>
+</TouchableOpacity>
+  </>
+)}
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
@@ -173,7 +231,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(subAdmins)");
+                    router.push("/(drawer)/(admin)/(subAdmins)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -187,7 +245,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(handicapSetup)");
+                    router.push("/(drawer)/(admin)/(handicapSetup)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -201,7 +259,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.replace("/(drawer)/(admin)/(combinedLeaderboards)");
+                    router.push("/(drawer)/(admin)/(combinedLeaderboards)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -211,7 +269,7 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>
-                  router.replace("/(drawer)/(admin)/(feedbackInbox)")
+                  router.push("/(drawer)/(admin)/(feedbackInbox)")
                 }
                 style={styles.drawerItem}
               >

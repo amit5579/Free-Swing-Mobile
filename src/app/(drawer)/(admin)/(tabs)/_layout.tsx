@@ -1,16 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   TouchableOpacity,
   useColorScheme,
   View,
   StyleSheet,
+  Text,
 } from "react-native";
 import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserProfile, UserProfile } from "@/api/dashboard";
 
 import { Colors } from "@/constants/theme";
 
@@ -20,6 +23,25 @@ export default function AdminTabLayout() {
 
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) return;
+        const data = await getUserProfile(Number(userId));
+        if (data.profilePictureUrl != null || data.username != null) {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.log("Profile error:", error);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   return (
     <Tabs
@@ -36,12 +58,26 @@ export default function AdminTabLayout() {
         headerRight: () => (
           <TouchableOpacity
             onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-            style={{ marginRight: 30, borderRadius: 20, overflow: "hidden" }}
+            style={{ marginRight: 20, borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
           >
-            <Image
-              source={{ uri: "https://i.pravatar.cc/100" }}
-              style={{ width: 42, height: 42, borderRadius: 21 }}
-            />
+            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+              <Image
+                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                style={{ width: 42, height: 42, borderRadius: 21 }}
+                onError={() => setImageError(true)}
+              />
+            ) : profile?.username && profile.username.trim() !== "" ? (
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
+                <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
+                  {profile.username.trim()[0].toUpperCase()}
+                </Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100" }}
+                style={{ width: 42, height: 42, borderRadius: 21 }}
+              />
+            )}
           </TouchableOpacity>
         ),
         tabBarActiveTintColor: "#8bc34a",

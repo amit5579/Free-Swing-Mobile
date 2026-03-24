@@ -30,11 +30,154 @@ export type Product = {
   name: string;
   price: number;
   description: string;
-  image: { uri: string };
+  images: { uri: string }[];
 };
 
 type CartItem = Product & {
   quantity: number;
+};
+
+const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const [cardWidth, setCardWidth] = useState(160);
+
+  const displayImages = product.images.slice(0, 3);
+
+  const handleScroll = (event: any) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = event.nativeEvent.contentOffset.x / slideSize;
+    if (!isNaN(index)) {
+      setActiveIndex(Math.round(index));
+    }
+  };
+
+  return (
+    <Box
+      onLayout={(e) => setCardWidth(e.nativeEvent.layout.width)}
+      style={{
+        width: "48%",
+        marginBottom: 20,
+        backgroundColor: isDark ? "rgba(22,22,24,0.6)" : "rgba(255,255,255,0.7)",
+        borderRadius: 20,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: "rgba(139,195,74,0.3)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.2 : 0.05,
+        shadowRadius: 8,
+      }}
+    >
+      <Box style={{ width: "100%", height: 160, backgroundColor: isDark ? "#222" : "#f5f5f5" }}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {displayImages.map((img, idx) => (
+            <View key={idx} style={{ width: cardWidth, height: 160 }}>
+              <Image
+                source={img}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+              />
+            </View>
+          ))}
+        </ScrollView>
+        {/* <Box
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            backgroundColor: "rgba(139,195,74,0.9)",
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 8,
+          }}
+        >
+          <ThemedText style={{ color: "white", fontSize: 10, fontWeight: "800" }}>
+            NEW
+          </ThemedText>
+        </Box> */}
+
+        {/* Pagination Dots */}
+        <HStack
+          style={{
+            position: "absolute",
+            bottom: 8,
+            alignSelf: "center",
+            gap: 6,
+          }}
+        >
+          {displayImages.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor:
+                  i === activeIndex ? "#ffffff" : "rgba(255,255,255,0.4)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.5,
+                shadowRadius: 1,
+              }}
+            />
+          ))}
+        </HStack>
+      </Box>
+
+      <VStack style={{ padding: 12 }}>
+        <ThemedText style={{ fontSize: 13, fontWeight: "700" }} numberOfLines={1}>
+          {product.name}
+        </ThemedText>
+
+        <ThemedText
+          style={{
+            color: "#8BC34A",
+            fontWeight: "900",
+            fontSize: 16,
+            marginVertical: 4,
+          }}
+        >
+          ₹{product.price.toLocaleString()}
+        </ThemedText>
+
+        <ThemedText
+          style={{ fontSize: 10, color: "#999", marginBottom: 12 }}
+          numberOfLines={1}
+        >
+          {product.description}
+        </ThemedText>
+
+        <TouchableOpacity
+          onPress={onAdd}
+          style={{
+            backgroundColor: "transparent",
+            height: 36,
+            borderRadius: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#8BC34A",
+          }}
+        >
+          <Ionicons name="cart-outline" size={16} color="#8BC34A" />
+          <ThemedText
+            style={{ color: "#8BC34A", fontSize: 11, fontWeight: "800", marginLeft: 6 }}
+          >
+            Add to Cart
+          </ThemedText>
+        </TouchableOpacity>
+      </VStack>
+    </Box>
+  );
 };
 
 export default function ShopScreen() {
@@ -69,9 +212,9 @@ export default function ShopScreen() {
         name: item.name,
         price: item.price,
         description: item.description,
-        image: {
-          uri: `https://kolve18freeswing.com${item.imageUrl}`,
-        },
+        images: item.imageUrl
+          ? item.imageUrl.split(',').map(url => ({ uri: `https://kolve18freeswing.com${url.trim()}` }))
+          : [{ uri: `https://kolve18freeswing.com/placeholder.png` }],
       }));
 
       setProducts(formatted);
@@ -192,7 +335,8 @@ export default function ShopScreen() {
         <ThemedText className="text-xs text-gray-500">
           Browse and purchase official gear and equipment.
         </ThemedText>
-      </VStack>      {/* Products */}
+      </VStack>
+      {/* Products */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -206,83 +350,11 @@ export default function ShopScreen() {
         ) : (
           <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
             {products.map((product) => (
-              <Box
+              <ProductCard
                 key={product.id}
-                style={{
-                  width: '48%',
-                  marginBottom: 20,
-                  backgroundColor: 'rgba(255,255,255,0.85)',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  borderWidth: 1,
-                  borderColor: 'rgba(139,195,74,0.3)',
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 15,
-                  elevation: 5
-                }}
-              >
-                <Box style={{ width: '100%', height: 160, backgroundColor: '#f9f9f9' }}>
-                  <Image
-                    source={product.image}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="contain"
-                  />
-                  <Box style={{ 
-                    position: 'absolute', 
-                    top: 10, 
-                    right: 10, 
-                    backgroundColor: 'rgba(139,195,74,0.9)', 
-                    paddingHorizontal: 8, 
-                    paddingVertical: 4, 
-                    borderRadius: 8 
-                  }}>
-                    <ThemedText style={{ color: 'white', fontSize: 10, fontWeight: '800' }}>
-                      NEW
-                    </ThemedText>
-                  </Box>
-                </Box>
- 
-                <VStack style={{ padding: 12 }}>
-                  <ThemedText style={{ fontSize: 13, fontWeight: "700" }} numberOfLines={1}>
-                    {product.name}
-                  </ThemedText>
- 
-                  <ThemedText style={{ color: "#8BC34A", fontWeight: "900", fontSize: 16, marginVertical: 4 }}>
-                    ₹{product.price.toLocaleString()}
-                  </ThemedText>
- 
-                  <ThemedText
-                    style={{ fontSize: 10, color: '#999', marginBottom: 12 }}
-                    numberOfLines={1}
-                  >
-                    {product.description}
-                  </ThemedText>
- 
-                  <TouchableOpacity
-                    onPress={() => addToCart(product)}
-                    style={{
-                      backgroundColor: '#8BC34A',
-                      height: 36,
-                      borderRadius: 12,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      shadowColor: '#8BC34A',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 4,
-                      elevation: 2
-                    }}
-                  >
-                    <Ionicons name="cart-outline" size={16} color="white" />
-                    <ThemedText style={{ color: 'white', fontSize: 11, fontWeight: '800', marginLeft: 6 }}>
-                      Add to Cart
-                    </ThemedText>
-                  </TouchableOpacity>
-                </VStack>
-              </Box>
+                product={product}
+                onAdd={() => addToCart(product)}
+              />
             ))}
           </HStack>
         )}
@@ -329,8 +401,8 @@ export default function ShopScreen() {
                     flexDirection: 'row',
                     paddingVertical: 16,
                     borderBottomWidth: 1,
-                    borderBottomColor: '#f0f0f0',
-                    alignItems: 'center'
+                    borderBottomColor: "#f0f0f0",
+                    alignItems: "center",
                   }}
                 >
                   {/* Left: Image */}
@@ -338,15 +410,15 @@ export default function ShopScreen() {
                     style={{
                       width: 64,
                       height: 64,
-                      backgroundColor: '#f9f9f9',
+                      backgroundColor: "#f9f9f9",
                       borderRadius: 12,
-                      overflow: 'hidden',
+                      overflow: "hidden",
                       borderWidth: 1,
-                      borderColor: '#eee'
+                      borderColor: "#eee",
                     }}
                   >
                     <Image
-                      source={item.image}
+                      source={item.images[0]}
                       style={{ width: "100%", height: "100%" }}
                       contentFit="contain"
                     />
@@ -354,7 +426,10 @@ export default function ShopScreen() {
 
                   {/* Mid-Left: Name & Price */}
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }} numberOfLines={1}>
+                    <ThemedText
+                      style={{ fontWeight: "bold", fontSize: 14 }}
+                      numberOfLines={1}
+                    >
                       {item.name}
                     </ThemedText>
                     <ThemedText style={{ color: '#8BC34A', fontWeight: 'bold', fontSize: 12 }}>
