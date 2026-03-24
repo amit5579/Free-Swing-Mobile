@@ -359,7 +359,6 @@ export default function PlayerHandicapSetup() {
                 </Box>
               ))}
             </VStack>
-          )}
         </ScrollView>
 
       </VStack>

@@ -166,7 +166,7 @@ const router = useRouter();
               // backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e8f5e9",
             }}
           >
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+                <Ionicons name="arrow-back" size={24} color="#8bc34a" />
           </TouchableOpacity>
 
           <ThemedText

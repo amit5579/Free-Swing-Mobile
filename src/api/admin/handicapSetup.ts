@@ -1,7 +1,7 @@
 import https from "../https";
 
 export type User = {
-  id: number;
+  id: string;
   username: string;
   email: string;
   mobileNumber: string;

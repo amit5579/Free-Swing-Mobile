@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
 import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { getAdminProfile, uploadProfileImage } from "@/api/profile";
+import { getProfile, uploadProfileImage } from "@/api/profile";
 import { Image } from "expo-image";
 
 export default function AdminProfile() {
@@ -66,10 +66,9 @@ export default function AdminProfile() {
     try {
       setPageLoading(true);
 
-      const adminProfile = await getAdminProfile();
+      const adminProfile = await getProfile();
 
       setAdminProfile(adminProfile);
-      console.log("adminProfile", adminProfile);
     } catch (error) {
       console.error("Failed to fetch admin profile", error);
     } finally {
