@@ -1,4 +1,5 @@
 import https from "../https";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const getTournaments = async () => {
     try {
@@ -11,6 +12,23 @@ export const getTournaments = async () => {
         throw error;
     }
 };
+
+
+// get all tournaments for user- Tournament/player/{userId}
+
+export const getAllTournaments = async () => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.get(`/Tournament/player/${userId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching all tournaments Error:", error);
+        throw error;
+    }
+}
 
 
 // Create Tournament Tournament
@@ -120,10 +138,61 @@ export const getTournamentHistory = async (tournamentId: number) => {
     }
 };
 
+// Get tournament history by user id and tournament id - scorecard/history/2/14
+
+export const getTournamentHistoryByUserId = async (tournamentId: number) => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.get(`scorecard/my-tournament-history/${tournamentId}/${userId}`);
+        // console.log("Fetching tournament history list:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching tournament history Error:", error);
+        throw error;
+    }
+};
+
+
+
 
 // get scorecard of player: scorecard/details/1936
 
 export const getScorecardDetails = async (scorecardId: number) => {
+    try {
+        const response = await https.get(`scorecard/details/${scorecardId}`);
+        // console.log("Fetching scorecard details:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching scorecard details Error:", error);
+        throw error;
+    }
+};
+
+// get handicap by user id and tournament id - scorecard/handicap/2/2
+
+export const getHandicap = async (tournamentId: number) => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.get(`scorecard/handicap/${userId}/${tournamentId}`);
+        // console.log("Fetching handicap:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching handicap Error:", error);
+        throw error;
+    }
+};
+
+
+// get scorecard by id - scorecard/details/1
+
+export const getScorecardById = async (scorecardId: number) => {
     try {
         const response = await https.get(`scorecard/details/${scorecardId}`);
         // console.log("Fetching scorecard details:", response.data);
@@ -158,6 +227,38 @@ export const getTeeboxDetails = async (holeId: number) => {
         return response.data;
     } catch (error) {
         console.error("Fetching teebox details Error:", error);
+        throw error;
+    }
+};
+
+
+// get list of members : User/list
+
+export const getMembersList = async () => {
+    try {
+        const response = await https.get(`User/list`);
+        // console.log("Fetching members list:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching members list Error:", error);
+        throw error;
+    }
+};
+
+
+// Add users to the tournament : post Tournament/join payload : tournamentId: 3, userId: 7
+
+export const addUsersToTournament = async (tournamentId: number) => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.post(`Tournament/join`, { tournamentId, userId });
+        // console.log("Added users to tournament:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Added users to tournament Error:", error);
         throw error;
     }
 };

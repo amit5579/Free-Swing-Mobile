@@ -1,0 +1,367 @@
+import React, { useEffect, useState } from "react";
+import { StyleSheet } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+
+import { Box } from "@/components/box";
+import { VStack } from "@/components/vstack";
+import { Ionicons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
+
+import { ThemedText } from "@/components/themed-text";
+import Watermark from "@/components/watermark";
+
+import { HStack } from "@/components/hstack";
+import { useRouter } from "expo-router";
+import { Modal, Pressable, useColorScheme, View } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+import { getCourse } from "@/api/admin/courses";
+import { Divider } from "@/components/divider";
+
+export default function StartNewRoundPage() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const routePage = useRouter();
+
+  const [courseList, setCourseList] = useState<any>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchCourses = async () => {
+    try {
+      const ccs = await getCourse();
+      setCourseList(ccs);
+    } catch (error) {
+      throw console.log("Error fetching courses", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const RenderHeader = () => {
+    return (
+      <>
+        <HStack
+          className="px-3 pt-5 items-center"
+          style={{ justifyContent: "space-between" }}
+        >
+          {/* LEFT: Back button */}
+          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+            <Ionicons
+              name="arrow-back-outline"
+              size={22}
+              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* CENTER: Title */}
+          <ThemedText
+            style={{
+              flex: 1,
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+              lineHeight: 30,
+            }}
+          >
+            Start new round
+          </ThemedText>
+
+          {/* RIGHT: Add Button */}
+          <View style={{ width: 40 }} />
+        </HStack>
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: 16,
+            fontWeight: "400",
+            lineHeight: 30,
+          }}
+        >
+          Select a course to begin your round.
+        </ThemedText>
+      </>
+    );
+  };
+  return (
+    <>
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+      >
+        {/* HEADER */}
+        <RenderHeader />
+        <Watermark />
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <VStack className="px-4 pt-6 pb-20">
+            <VStack className="gap-4">
+              {courseList.map((course: any) => (
+                <CourseCard
+                  key={course.courseId}
+                  course={course}
+                  isDark={isDark}
+                  //   onPress={() => routePage.push("/newRound/scoreCard")}
+                />
+              ))}
+            </VStack>
+          </VStack>{" "}
+        </ScrollView>
+      </SafeAreaView>
+    </>
+  );
+}
+
+/* ---------- COURSE CARD ---------- */
+function CourseCard({ course, isDark }: any) {
+  const routePage = useRouter();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  function routeTeeBox(courseId: string) {
+    routePage.push(`/courses/teeBox?courseId=${courseId}`);
+  }
+
+  return (
+    <>
+      <Box
+        className="rounded-2xl p-5 relative"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+        }}
+      >
+        {/* Free Badge */}
+        <Box
+          className="absolute top-3 right-3 px-3 py-1 rounded-full"
+          style={{
+            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+          }}
+        >
+          <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+            {course.isPremium === false ? "Free" : "Premium"}
+          </ThemedText>
+        </Box>
+
+        {/* Flag */}
+        <HStack className="mb-3">
+          <Svg width={28} height={28} viewBox="0 0 448 512">
+            <Path
+              fill="#8bc34a"
+              d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V480c0 17.7 14.3 32 32 32s32-14.3 32-32V358.4l62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30V65.1c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4V32z"
+            />
+          </Svg>
+        </HStack>
+
+        {/* Course Name */}
+        <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+          {course.name}
+          {/* {courseList.name} */}
+        </ThemedText>
+
+        {/* Location */}
+        <HStack className="items-center mt-2">
+          <Ionicons name="location-outline" size={18} color="#ef4444" />
+          <ThemedText
+            style={{
+              marginLeft: 6,
+              fontSize: 14,
+              opacity: 0.7,
+            }}
+          >
+            {course.location}
+            {/* course location */}
+          </ThemedText>
+        </HStack>
+
+        <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
+
+        <Pressable
+        //   onPress={() =>
+        //     }
+          className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? "#8bc34a" : "transparent",
+          })}
+        >
+          {({ pressed }) => (
+            <>
+              <Ionicons
+                name={pressed ? "apps" : "apps-outline"}
+                size={18}
+                color={pressed ? "white" : "#8bc34a"}
+              />
+              <ThemedText
+                style={{
+                  color: pressed ? "white" : "#8bc34a",
+                  fontWeight: "600",
+                }}
+              >
+                Select Tee Box
+              </ThemedText>
+            </>
+          )}
+        </Pressable>
+
+
+       
+      </Box>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={deleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            {/* FORM */}
+            <VStack className="gap-3">
+              <ThemedText
+                style={{ fontSize: 16, fontWeight: "700", textAlign: "center" }}
+              >
+                Delete Course
+              </ThemedText>
+              <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+                Are you sure you want to delete this course?
+              </ThemedText>
+            </VStack>
+
+            {/* Buttons */}
+            <HStack className="justify-end mt-6 gap-3">
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  setDeleteModalVisible(false);
+                  //   onDelete(course.courseId);
+                }}
+                style={styles.createButton}
+              >
+                <ThemedText style={{ color: "white", fontWeight: "600" }}>
+                  Yes, I'm sure
+                </ThemedText>
+              </Pressable>
+            </HStack>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  createButton: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 7,
+  },
+
+  deleteButton: {
+    backgroundColor: "#ef4444",
+    padding: 3,
+    borderRadius: 7,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+
+  modalContainer: {
+    width: "90%",
+    backgroundColor: "white",
+    borderRadius: 14,
+    padding: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#818589",
+    borderRadius: 10,
+    padding: 14,
+    // marginBottom: 9,
+    fontSize: 16,
+  },
+  selectBox: {
+    borderWidth: 1,
+    borderColor: "#8bc34a",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 14,
+  },
+
+  handicapCard: {
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 6,
+  },
+
+  cancelButton: {
+    backgroundColor: "#6b7280",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+
+  startButton: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 1,
+  },
+});

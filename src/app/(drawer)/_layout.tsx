@@ -122,6 +122,48 @@ function CustomDrawerContent({ navigation }: any) {
             <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
             <Text style={styles.drawerText}>User Profile</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.closeDrawer();
+              requestAnimationFrame(() => {
+                router.push("/(drawer)/(user)/(startNewRound)");
+              });
+            }}
+            style={styles.drawerItem}
+          >
+            <Ionicons name="caret-forward-circle-outline" size={26} color="#2e7d32" />
+            <Text style={styles.drawerText}>Start New Round</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.closeDrawer();
+              requestAnimationFrame(() => {
+                router.push("/(drawer)/(user)/(teeTimeBooking)");
+              });
+            }}
+            style={styles.drawerItem}
+          >
+            <Ionicons name="calendar-number-outline" size={26} color="#2e7d32" />
+            <Text style={styles.drawerText}>Tee Time Booking</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.closeDrawer();
+              requestAnimationFrame(() => {
+                router.push("/(drawer)/(user)/(contactAdmin)");
+              });
+            }}
+            style={styles.drawerItem}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={26} color="#2e7d32" />
+            <Text style={styles.drawerText}>Contact Admin</Text>
+          </TouchableOpacity>
 </>)}
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (

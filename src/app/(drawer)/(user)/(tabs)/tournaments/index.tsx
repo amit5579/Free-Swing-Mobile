@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Pressable,
@@ -22,6 +22,11 @@ import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
 import { Dropdown } from "react-native-element-dropdown";
 import { useRouter } from "expo-router";
+import {
+  getAllTournaments,
+  getTournamentHistoryByUserId,
+} from "@/api/admin/tournaments";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const tournaments = [
   {
@@ -76,9 +81,8 @@ const playersData = [
 ];
 
 export default function TournamentsScreen() {
+  const routePage = useRouter();
 
-      const routePage = useRouter();
-  
   const [isModalVisible, setModalVisible] = useState(false);
   const [isMinor, setIsMinor] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -93,6 +97,45 @@ export default function TournamentsScreen() {
   const [scoringValue, setScoringValue] = useState(null);
   const [playersValue, setPlayersValue] = useState(null);
 
+  const [tournaments, setTournaments] = useState<any>([]);
+  const [userId, setUserId] = useState<any>("");
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      // hour: "numeric",
+      // minute: "2-digit",
+      // second: "",
+      // hour12: true,
+    });
+  };
+
+  const fetchTournaments = async () => {
+    try {
+      const response = await getAllTournaments();
+      // const hData = await getTournamentHistoryByUserId(response.tournamentId);
+      // console.log("hData", hData);
+      // console.log("yyyyyyy",response);
+
+      setTournaments(response);
+    } catch (error) {
+      console.error("Fetching tournaments Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem("userId");      
+      setUserId(id);
+    };
+
+    getUserId();
+    fetchTournaments();
+  }, []);
+  //  const userId = AsyncStorage.getItem("userId");
+  // console.log("uuuuuuuuu",userId, "type:", typeof(userId));
 
   return (
     <>
@@ -126,8 +169,8 @@ export default function TournamentsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.list}
           >
-            {tournaments.map((tournament) => (
-              <Box key={tournament.id} style={styles.card}>
+            {tournaments.map((tournament: any) => (
+              <Box key={tournament.tournamentId} style={styles.card}>
                 <ThemedText style={styles.title}>{tournament.name}</ThemedText>
 
                 <ThemedText style={styles.description}>
@@ -142,7 +185,9 @@ export default function TournamentsScreen() {
                       Start
                     </ThemedText>
 
-                    <ThemedText>{tournament.start}</ThemedText>
+                    <ThemedText>
+                      {formatDateTime(tournament.startDate)}
+                    </ThemedText>
                   </VStack>
 
                   <VStack>
@@ -150,13 +195,20 @@ export default function TournamentsScreen() {
                       End
                     </ThemedText>
 
-                    <ThemedText>{tournament.end}</ThemedText>
+                    <ThemedText>
+                      {formatDateTime(tournament.endDate)}
+                    </ThemedText>
                   </VStack>
                 </HStack>
                 {/* Leaderboard */}
-                <Pressable 
-                onPress={() => routePage.push("/tournaments/leaderboardUser")}
-                className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg">
+                <Pressable
+                  onPress={() =>
+                    routePage.push(
+                      `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}`,
+                    )
+                  }
+                  className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg"
+                >
                   <Ionicons
                     name="stats-chart-outline"
                     size={23}
@@ -169,9 +221,10 @@ export default function TournamentsScreen() {
                 </Pressable>
 
                 {/* History */}
-                <Pressable 
-                onPress={() => routePage.push("/tournaments/scoreCardUser")}
-                className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg">
+                <Pressable
+                  onPress={() => routePage.push(`/tournaments/scoreCardUser?tournamentId=${tournament.tournamentId}`)}
+                  className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"
+                >
                   <Ionicons name="time-outline" size={23} color="#06b6d4" />
 
                   <ThemedText style={styles.outlineButtonText}>
@@ -179,8 +232,22 @@ export default function TournamentsScreen() {
                   </ThemedText>
                 </Pressable>
 
+                {/* Manage button */}
+                {userId === String(tournament.creatorId) && (
+                  <Pressable
+                  onPress={() => routePage.push(`/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`)}
+                  className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg">
+                    <Ionicons name="create-outline" size={23} color="#0d6efd" />
+                    <ThemedText style={styles.outlineButtonText3}>
+                      Manage
+                    </ThemedText>
+                  </Pressable>
+                )}
+
                 {/* Play Button */}
-                {tournament.playable && (
+                {tournament.isPlayed ? (
+                  ""
+                ) : (
                   <Pressable
                     onPress={() => setModalVisible(true)}
                     className="flex-row justify-center items-center gap-2  bg-[#8bc34a] p-2 rounded-lg"
@@ -421,9 +488,7 @@ export default function TournamentsScreen() {
                   Create Mini Tournament
                 </ThemedText>
 
-                <Pressable
-                onPress={() => setTModalVisible(false)}
-                 >
+                <Pressable onPress={() => setTModalVisible(false)}>
                   <Ionicons name="close" size={22} />
                 </Pressable>
               </HStack>
@@ -555,13 +620,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 9,
   },
 
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.one,
-    paddingBottom: BottomTabInset + Spacing.two,
+    // paddingBottom: BottomTabInset + Spacing.two,
     maxWidth: MaxContentWidth,
   },
   createButton: {
@@ -635,6 +700,10 @@ const styles = StyleSheet.create({
   outlineButtonText2: {
     fontWeight: "500",
     color: "#f59e0b",
+  },
+  outlineButtonText3: {
+    fontWeight: "500",
+    color: "#0d6efd",
   },
 
   playText: {

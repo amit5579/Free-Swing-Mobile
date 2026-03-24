@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Mail, ChartBar, Flag, UserIcon, BookA } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { Pressable, ScrollView, useColorScheme, View } from "react-native";
+import { Modal, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { HStack } from "@/components/hstack";
@@ -17,16 +17,35 @@ import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { getProfile, uploadProfileImage } from "@/api/profile";
 import { Image } from "expo-image";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { passwordSchema } from "@/schema/adminSchemas";
 
 export default function AdminProfile() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+
+  const {
+      control,
+      handleSubmit,
+      formState: { errors },
+      reset,
+    } = useForm({
+      resolver: zodResolver(passwordSchema),
+      defaultValues: {
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      },
+    });
+
   const [pageLoading, setPageLoading] = useState(true);
 
   const [uploading, setUploading] = useState(false);
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const [image, setImage] = useState<string | null>(null);
+  const [passwordModal, setPasswordModal] = useState(false);
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -80,6 +99,11 @@ export default function AdminProfile() {
     fetchAdminProfile();
   }, []);
 
+   const onSubmit = (data: any) => {
+    console.log("Validated Data:", data);
+
+    // call API here
+  };
   return (
     <>
       <SafeAreaView
@@ -223,8 +247,219 @@ export default function AdminProfile() {
                 <Divider />
               </VStack>
             </Box>
+             <VStack space="md" className="mt-6">
+            {/* Change Password */}
+            <Pressable
+              onPress={() => setPasswordModal(true)}
+              style={{
+                backgroundColor: "#8BC34A",
+                padding: 14,
+                borderRadius: 12,
+                alignItems: "center",
+              }}
+            >
+              <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+                Change Password
+              </ThemedText>
+            </Pressable>
+
+          </VStack>
           </ScrollView>
         </ThemedView>
+        {/* Change Password Modal */}
+              <Modal
+                animationType="slide"
+                transparent
+                visible={passwordModal}
+                onRequestClose={() => setPasswordModal(false)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    padding: 16,
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: isDark ? "#111" : "#fff",
+                      borderRadius: 16,
+                      padding: 18,
+                    }}
+                  >
+                    {/* HEADER */}
+                    <HStack
+                      style={{
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+                        Change Password
+                      </ThemedText>
+        
+                      <Pressable onPress={() => setPasswordModal(false)}>
+                        <Ionicons
+                          name="close"
+                          size={22}
+                          color={isDark ? "#fff" : "#000"}
+                        />
+                      </Pressable>
+                    </HStack>
+        
+                    {/* SUBTEXT */}
+                    <ThemedText
+                      style={{
+                        fontSize: 13,
+                        opacity: 0.6,
+                        marginBottom: 14,
+                      }}
+                    >
+                      Enter your current and new password
+                    </ThemedText>
+        
+                    {/* INPUTS */}
+                    <VStack space="md">
+                      {/* CURRENT PASSWORD */}
+                      <Controller
+                        control={control}
+                        name="currentPassword"
+                        render={({ field: { onChange, value } }) => (
+                          <View>
+                            <TextInput
+                              placeholder="Current Password"
+                              value={value}
+                              onChangeText={onChange}
+                              secureTextEntry
+                              placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                              style={{
+                                borderWidth: 1,
+                                borderColor: errors.currentPassword ? "red" : "#e5e5e5",
+                                borderRadius: 10,
+                                padding: 12,
+                                color: isDark ? "#fff" : "#000",
+                              }}
+                            />
+        
+                            {errors.currentPassword && (
+                              <Text
+                                style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                              >
+                                *{errors.currentPassword.message}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      />
+        
+                      {/* NEW PASSWORD */}
+                      <Controller
+                        control={control}
+                        name="newPassword"
+                        render={({ field: { onChange, value } }) => (
+                          <View>
+                            <TextInput
+                              placeholder="New Password"
+                              value={value}
+                              onChangeText={onChange}
+                              secureTextEntry
+                              placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                              style={{
+                                borderWidth: 1,
+                                borderColor: errors.newPassword ? "red" : "#e5e5e5",
+                                borderRadius: 10,
+                                padding: 12,
+                                color: isDark ? "#fff" : "#000",
+                              }}
+                            />
+        
+                            {errors.newPassword && (
+                              <Text
+                                style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                              >
+                                *{errors.newPassword.message}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      />
+        
+                      {/* CONFIRM PASSWORD */}
+                      <Controller
+                        control={control}
+                        name="confirmPassword"
+                        render={({ field: { onChange, value } }) => (
+                          <View>
+                            <TextInput
+                              placeholder="Confirm Password"
+                              value={value}
+                              onChangeText={onChange}
+                              secureTextEntry
+                              placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                              style={{
+                                borderWidth: 1,
+                                borderColor: errors.confirmPassword ? "red" : "#e5e5e5",
+                                borderRadius: 10,
+                                padding: 12,
+                                color: isDark ? "#fff" : "#000",
+                              }}
+                            />
+        
+                            {errors.confirmPassword && (
+                              <Text
+                                style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                              >
+                                *{errors.confirmPassword.message}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      />
+                    </VStack>
+        
+                    {/* BUTTONS */}
+                    <HStack
+                      style={{
+                        marginTop: 18,
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      {/* CANCEL */}
+                      <Pressable
+                        onPress={() => setPasswordModal(false)}
+                        style={{
+                          flex: 1,
+                          padding: 12,
+                          borderRadius: 10,
+                          borderWidth: 1,
+                          borderColor: "#d1d5db",
+                          alignItems: "center",
+                          marginRight: 8,
+                        }}
+                      >
+                        <ThemedText style={{ fontWeight: "600" }}>Cancel</ThemedText>
+                      </Pressable>
+        
+                      {/* SUBMIT */}
+                      <Pressable
+                        onPress={handleSubmit(onSubmit)}
+                        style={{
+                          flex: 1,
+                          padding: 12,
+                          borderRadius: 10,
+                          backgroundColor: "#8BC34A",
+                          alignItems: "center",
+                          marginLeft: 8,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>Update</Text>
+                      </Pressable>
+                    </HStack>
+                  </View>
+                </View>
+              </Modal>
       </SafeAreaView>
     </>
   );

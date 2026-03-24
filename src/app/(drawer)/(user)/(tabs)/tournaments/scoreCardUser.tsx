@@ -1,9 +1,5 @@
-import React from "react";
-import {
-  StyleSheet,
-  ScrollView,
-
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, ScrollView, Pressable, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -11,8 +7,276 @@ import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
 import { HStack } from "@/components/hstack";
 import Watermark from "@/components/watermark";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useColorScheme } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  getHandicap,
+  getScorecardDetails,
+  getTournamentHistoryByUserId,
+} from "@/api/admin/tournaments";
 
 export default function ScoreCardUser() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const routePage = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const [handicap, setHandicap] = useState(null);
+
+  const [history, setTournamentHistory] = useState<any[]>([]); //contains  "isExcluded": true "scorecardId": 361,
+  const [scorecardDetails, setScorecardDetails] = useState<any[]>([]);
+
+  const { tournamentId } = useLocalSearchParams();
+
+  const fetchScoreCard = async () => {
+    try {
+      setLoading(true);
+      const hcp = await getHandicap(Number(tournamentId));
+      // console.log("Handicap:", hcp);
+
+      const sht = await getTournamentHistoryByUserId(Number(tournamentId));
+      // console.log("Tournament History:", sht);
+
+      const scorecardId = Array.isArray(sht)
+        ? sht[0]?.scorecardId
+        : sht?.scorecardId;
+
+      if (scorecardId) {
+        const scd = await getScorecardDetails(scorecardId);
+        // console.log("Scorecard Details:", scd);
+        setScorecardDetails(scd);
+      } else {
+        console.warn("No scorecardId found in history results");
+      }
+
+      setHandicap(hcp);
+      setTournamentHistory(Array.isArray(sht) ? sht : [sht].filter(Boolean));
+    } catch (error) {
+      console.log("Error fetching scorecard details apis:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchScoreCard();
+  }, []);
+
+  const RenderHeader = () => {
+    return (
+      <>
+        <HStack
+          className="px-3 pt-5 items-center"
+          style={{ justifyContent: "space-between" }}
+        >
+          {/* LEFT: Back button */}
+          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+            <Ionicons
+              name="arrow-back-outline"
+              size={22}
+              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* CENTER: Title */}
+          <ThemedText
+            style={{
+              flex: 1,
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+              lineHeight: 30,
+            }}
+          >
+            Scorecard User
+          </ThemedText>
+
+          {/* RIGHT: Add Button */}
+          <View style={{ width: 40 }} />
+        </HStack>
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: 16,
+            fontWeight: "400",
+            lineHeight: 30,
+          }}
+        >
+          (Net Score Exclude Par 3)
+        </ThemedText>
+      </>
+    );
+  };
+
+  const renderRow = (item: any) => {
+  // ✅ ADD HERE
+  const type = getScoreType(item.score, item.par);
+  const styleConfig = getScoreStyle(type);
+
+  return (
+    <HStack key={item.holeNumber} style={styles.row}>
+      <View style={styles.cell}>
+        <ThemedText>{item.holeNumber}</ThemedText>
+      </View>
+
+      <View style={styles.cell}>
+        <ThemedText>{item.handicap}</ThemedText>
+      </View>
+
+      <View style={styles.cell}>
+        <ThemedText>{item.yardage}</ThemedText>
+      </View>
+
+      <View style={styles.cell}>
+        <ThemedText>{item.par}</ThemedText>
+      </View>
+
+      {/* ✅ SCORE UI */}
+      <View style={styles.cell}>
+        <View
+          style={[
+            styles.scoreBox,
+            styleConfig.shape === "circle" && styles.circle,
+            styleConfig.shape === "square" && styles.square,
+            {
+              borderColor: styleConfig.borderColor,
+              borderStyle: styleConfig.dashed ? "dashed" : "solid",
+            },
+          ]}
+        >
+          <ThemedText style={{ fontWeight: "700" }}>
+            {item.score}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.cell}>
+        <ThemedText>{item.netScore}</ThemedText>
+      </View>
+    </HStack>
+  );
+};
+
+  const renderTotals = (label: string, data: any[]) => {
+    const t = calculateTotals(data);
+
+    return (
+      <HStack style={[styles.row, { backgroundColor: "#f1f5f9" }]}>
+        <View style={styles.cell}>
+          <ThemedText style={{ fontWeight: "700" }}>{label}</ThemedText>
+        </View>
+
+        <View style={styles.cell} />
+        <View style={styles.cell}>
+          <ThemedText>{t.yardage}</ThemedText>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{t.par}</ThemedText>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{t.score}</ThemedText>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{t.net}</ThemedText>
+        </View>
+      </HStack>
+    );
+  };
+
+  const front9 = scorecardDetails?.slice(0, 9) || [];
+  const back9 = scorecardDetails?.slice(9, 18) || [];
+
+  const getScoreColor = (score: number, par: number) => {
+    if (score < par) return "#22c55e"; // green
+    if (score === par) return "#eab308"; // yellow
+    return "#3b82f6"; // blue
+  };
+
+  const calculateTotals = (data: any[]) => {
+    return data.reduce(
+      (acc, item) => {
+        acc.yardage += item.yardage;
+        acc.par += item.par;
+        acc.score += item.score;
+        acc.net += item.netScore;
+        return acc;
+      },
+      { yardage: 0, par: 0, score: 0, net: 0 },
+    );
+  };
+
+  const legendData = [
+    { label: "Hole-in-One", border: "#facc15", type: "circle", text: "" },
+    { label: "Albatross", border: "#0f766e", type: "circle", text: "" },
+    { label: "Eagle", border: "#166534", type: "circle", text: "" },
+    { label: "Birdie", border: "#16a34a", type: "circle", text: "2" },
+    {
+      label: "Par",
+      border: "#9ca3af",
+      type: "square",
+      text: "9",
+      dashed: true,
+    },
+    { label: "Bogey", border: "#ef4444", type: "square", text: "6" },
+    { label: "Double Bogey", border: "#dc2626", type: "square", text: "1" },
+    { label: "Triple Bogey", border: "#7c3aed", type: "square", text: "" },
+    { label: "Quadruple Bogey+", border: "#000", type: "square", text: "" },
+  ];
+
+const getScoreType = (score: number, par: number) => {
+  const diff = score - par;
+
+  if (score === 1) return "hole-in-one";
+  if (diff <= -3) return "albatross";
+  if (diff === -2) return "eagle";
+  if (diff === -1) return "birdie";
+  if (diff === 0) return "par";
+  if (diff === 1) return "bogey";
+  if (diff === 2) return "double";
+  if (diff === 3) return "triple";
+  return "quad";
+};
+
+const getScoreStyle = (type: string) => {
+  switch (type) {
+    case "hole-in-one":
+      return { borderColor: "#facc15", shape: "circle" };
+
+    case "albatross":
+      return { borderColor: "#0f766e", shape: "circle" };
+
+    case "eagle":
+      return { borderColor: "#166534", shape: "circle" };
+
+    case "birdie":
+      return { borderColor: "#16a34a", shape: "circle" };
+
+    case "par":
+      return {
+        borderColor: "#9ca3af",
+        shape: "square",
+        dashed: true,
+      };
+
+    case "bogey":
+      return { borderColor: "#ef4444", shape: "square" };
+
+    case "double":
+      return { borderColor: "#dc2626", shape: "square" };
+
+    case "triple":
+      return { borderColor: "#7c3aed", shape: "square" };
+
+    default:
+      return { borderColor: "#000", shape: "square" };
+  }
+};
+
+
   return (
     <>
       <ThemedView style={styles.container}>
@@ -20,21 +284,57 @@ export default function ScoreCardUser() {
           <Watermark />
 
           {/* Header */}
-          <HStack className="justify-between items-center mt-3">
-            <ThemedText
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-              }}
-            >
-              Scorecard User
-            </ThemedText>
-          </HStack>
+          <RenderHeader />
+          <ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View>
+                {/* Header */}
+                <HStack style={styles.tableHeader}>
+                  {["Hole", "HCP", "Yds", "Par", "Score", "Net"].map((h) => (
+                    <View key={h} style={styles.cell}>
+                      <ThemedText style={styles.headerText}>{h}</ThemedText>
+                    </View>
+                  ))}
+                </HStack>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.list}
-          ></ScrollView>
+                {/* Front 9 */}
+                {front9.map(renderRow)}
+                {renderTotals("Front 9", front9)}
+
+                {/* Back 9 */}
+                {back9.map(renderRow)}
+                {renderTotals("Back 9", back9)}
+
+                {/* Grand Total */}
+                {renderTotals("Total", scorecardDetails || [])}
+              </View>
+            </ScrollView>
+            <ThemedView style={styles.legendRow}>
+              {legendData.map((item, index) => (
+                <ThemedView key={index} style={styles.legendItem}>
+                  <ThemedView
+                    style={[
+                      styles.icon,
+                      item.type === "circle" && styles.circle,
+                      item.type === "square" && styles.square,
+                      {
+                        borderColor: item.border,
+                        borderStyle: item.dashed ? "dashed" : "solid",
+                      },
+                    ]}
+                  >
+                    {item.text ? (
+                      <ThemedText style={styles.iconText}>
+                        {item.text}
+                      </ThemedText>
+                    ) : null}
+                  </ThemedView>
+
+                  <ThemedText style={styles.label}>{item.label}</ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          </ScrollView>
         </ThemedView>
       </ThemedView>
     </>
@@ -51,7 +351,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.one,
-    paddingBottom: BottomTabInset + Spacing.two,
+    // paddingBottom: BottomTabInset + Spacing.one,
     maxWidth: MaxContentWidth,
   },
   createButton: {
@@ -63,5 +363,95 @@ const styles = StyleSheet.create({
   list: {
     paddingTop: Spacing.four,
     gap: Spacing.four,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#e5e7eb",
+    paddingVertical: 10,
+  },
+
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingVertical: 10,
+  },
+
+  cell: {
+    width: 70,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  headerText: {
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  // scoreCircle: {
+  //   width: 28,
+  //   height: 28,
+  //   borderRadius: 14,
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  // },
+  legendContainer: {
+    marginTop: 20,
+  },
+
+  legendTitle: {
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  legendRow: {
+    marginTop: 20,
+    padding: 15,
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  // container: {
+  //   marginTop: 20,
+  //   padding: 14,
+  //   borderRadius: 12,
+  // },
+
+  legendItem: {
+    width: "25%", // 4 items per row
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  icon: {
+    width: 28,
+    height: 28,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
+  circle: {
+    borderRadius: 20,
+  },
+
+  square: {
+    borderRadius: 4,
+  },
+
+  iconText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  label: {
+    fontSize: 11,
+    textAlign: "center",
+  },
+  scoreBox: {
+    width: 28,
+    height: 28,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
