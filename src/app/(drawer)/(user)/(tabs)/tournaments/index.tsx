@@ -6,7 +6,6 @@ import {
   Modal,
   View,
   Text,
-  Button,
   TextInput,
 } from "react-native";
 
@@ -14,7 +13,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
-import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { HStack } from "@/components/hstack";
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
@@ -23,62 +22,15 @@ import { VStack } from "@/components/vstack";
 import { Dropdown } from "react-native-element-dropdown";
 import { useRouter } from "expo-router";
 import {
+  createMiniTournament,
   getAllTournaments,
-  getTournamentHistoryByUserId,
 } from "@/api/admin/tournaments";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const tournaments = [
-  {
-    id: 1,
-    name: "test tour 1",
-    start: "Feb 24, 2026",
-    end: "Feb 26, 2026",
-    description: "No description",
-    playable: true,
-  },
-  {
-    id: 2,
-    name: "budies play",
-    start: "Feb 26, 2026",
-    end: "Feb 26, 2026",
-    description: "No description",
-  },
-  {
-    id: 3,
-    name: "bmw",
-    start: "Mar 11, 2026",
-    end: "Mar 12, 2026",
-    description: "No description",
-    playable: true,
-  },
-];
-
-const courseData = [
-  { label: "Pebble Beach", value: "1" },
-  { label: "Augusta National", value: "2" },
-  { label: "St Andrews", value: "3" },
-  { label: "Royal Melbourne", value: "4" },
-];
-const teeBoxData = [
-  { label: "White Tee", value: "1" },
-  { label: "Blue Tee", value: "2" },
-  { label: "Black Tee", value: "3" },
-  { label: "Gold Tee", value: "4" },
-];
-
-const scoringData = [
-  { label: "Standard (Gross/Net)", value: "1" },
-  { label: "Stableford", value: "2" },
-  { label: "Match Play", value: "3" },
-];
-
-const playersData = [
-  { label: "4 Players", value: "4" },
-  { label: "8 Players", value: "8" },
-  { label: "12 Players", value: "12" },
-  { label: "16 Players", value: "16" },
-];
+import { getCourse } from "@/api/admin/courses";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { tournamentSchema } from "@/schema/adminSchemas";
+import { userTournamentSchema } from "@/schema/userSchemas";
 
 export default function TournamentsScreen() {
   const routePage = useRouter();
@@ -92,13 +44,31 @@ export default function TournamentsScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [tModalVisible, setTModalVisible] = useState(false);
-  const [courseValue, setCourseValue] = useState(null);
-  const [teeBoxValue, setTeeBoxValue] = useState(null);
-  const [scoringValue, setScoringValue] = useState(null);
-  const [playersValue, setPlayersValue] = useState(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   const [tournaments, setTournaments] = useState<any>([]);
   const [userId, setUserId] = useState<any>("");
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(userTournamentSchema),
+    defaultValues: {
+      name: "",
+      courseId: 0,
+      scoringType: "",
+      teeBox: 0,
+      startDate: null,
+      endDate: null,
+      maxPlayers: 0,
+      description: "",
+    },
+  });
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
@@ -115,19 +85,23 @@ export default function TournamentsScreen() {
   const fetchTournaments = async () => {
     try {
       const response = await getAllTournaments();
+      const gc = await getCourse();
       // const hData = await getTournamentHistoryByUserId(response.tournamentId);
       // console.log("hData", hData);
       // console.log("yyyyyyy",response);
 
       setTournaments(response);
+      setCourses(gc);
     } catch (error) {
       console.error("Fetching tournaments Error:", error);
     }
   };
 
   useEffect(() => {
+    // console.log(courses);
+
     const getUserId = async () => {
-      const id = await AsyncStorage.getItem("userId");      
+      const id = await AsyncStorage.getItem("userId");
       setUserId(id);
     };
 
@@ -136,6 +110,43 @@ export default function TournamentsScreen() {
   }, []);
   //  const userId = AsyncStorage.getItem("userId");
   // console.log("uuuuuuuuu",userId, "type:", typeof(userId));
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split("T")[0];
+  };
+
+  const onSubmit = (data: any) => {
+    console.log("FORM DATA:", data);
+
+    const tournamentData = {
+      description: "",
+      endDate: formatDate(data.endDate),
+      maxPlayers: data.maxPlayers,
+
+      name: data.name,
+      scoringType: data.scoringType,
+      startDate: formatDate(data.startDate),
+      teeBoxId: data.teeBox,
+
+      courseId: data.courseId,
+    };
+
+    // console.log("FINAL PAYLOAD:", tournamentData);
+
+    createMiniTournament(
+      tournamentData.courseId,
+      tournamentData.description,
+      tournamentData.endDate,
+      tournamentData.maxPlayers,
+      tournamentData.name,
+      tournamentData.scoringType,
+      tournamentData.startDate,
+      tournamentData.teeBoxId,
+    );
+    fetchTournaments();
+    reset();
+    setModalVisible(false);
+  };
 
   return (
     <>
@@ -222,7 +233,11 @@ export default function TournamentsScreen() {
 
                 {/* History */}
                 <Pressable
-                  onPress={() => routePage.push(`/tournaments/scoreCardUser?tournamentId=${tournament.tournamentId}`)}
+                  onPress={() =>
+                    routePage.push(
+                      `/tournaments/scoreCardUser?tournamentId=${tournament.tournamentId}`,
+                    )
+                  }
                   className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"
                 >
                   <Ionicons name="time-outline" size={23} color="#06b6d4" />
@@ -235,8 +250,13 @@ export default function TournamentsScreen() {
                 {/* Manage button */}
                 {userId === String(tournament.creatorId) && (
                   <Pressable
-                  onPress={() => routePage.push(`/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`)}
-                  className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg">
+                    onPress={() =>
+                      routePage.push(
+                        `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`,
+                      )
+                    }
+                    className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg"
+                  >
                     <Ionicons name="create-outline" size={23} color="#0d6efd" />
                     <ThemedText style={styles.outlineButtonText3}>
                       Manage
@@ -488,98 +508,248 @@ export default function TournamentsScreen() {
                   Create Mini Tournament
                 </ThemedText>
 
-                <Pressable onPress={() => setTModalVisible(false)}>
+                <Pressable onPress={() => {
+                  reset();
+                  setTModalVisible(false)}}>
                   <Ionicons name="close" size={22} />
                 </Pressable>
               </HStack>
               {/* TOURNAMENT NAME */}
               <Text style={styles.label}>Tournament Name</Text>
-              <TextInput placeholder="e.g. Weekend Cup" style={styles.input} />
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    placeholder="Enter Tournament Name"
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+              {errors.name && (
+                <Text style={{ color: "red" }}>*{errors.name.message}</Text>
+              )}
 
               {/* DATE ROW */}
               <HStack style={styles.row}>
                 <VStack style={{ flex: 1 }}>
                   <Text style={styles.label}>Start Date</Text>
 
-                  <Pressable
-                    style={styles.input}
-                    onPress={() => setShowStartPicker(true)}
-                  >
-                    <Text>{startDate.toDateString()}</Text>
-                  </Pressable>
+                  <Controller
+                    control={control}
+                    name="startDate"
+                    render={({ field: { onChange, value } }) => (
+                      <>
+                        <Pressable
+                          onPress={() => setShowStartPicker(true)}
+                          style={styles.input}
+                        >
+                          <Text>
+                            {value
+                              ? value?.toDateString()
+                              : "Select start Date"}
+                          </Text>
+                        </Pressable>
+
+                        {showStartPicker && (
+                          <DateTimePicker
+                            value={value || new Date()}
+                            mode="date"
+                            maximumDate={watch("endDate") || undefined} // ✅ restrict
+                            onChange={(e, selectedDate) => {
+                              setShowStartPicker(false);
+                              if (selectedDate) onChange(selectedDate);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  />
+                  {errors.startDate && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.startDate.message}
+                    </Text>
+                  )}
                 </VStack>
 
                 <VStack style={{ flex: 1 }}>
                   <Text style={styles.label}>End Date</Text>
 
-                  <Pressable
-                    style={styles.input}
-                    onPress={() => setShowEndPicker(true)}
-                  >
-                    <Text>{endDate.toDateString()}</Text>
-                  </Pressable>
+                  <Controller
+                    control={control}
+                    name="endDate"
+                    render={({ field: { onChange, value } }) => (
+                      <>
+                        <Pressable
+                          onPress={() => setShowEndPicker(true)}
+                          style={styles.input}
+                        >
+                          <Text>
+                            {value ? value?.toDateString() : "Select End Date"}
+                          </Text>
+                        </Pressable>
+
+                        {showEndPicker && (
+                          <DateTimePicker
+                            value={value || new Date()}
+                            mode="date"
+                            minimumDate={watch("startDate") || new Date()} // ✅ restrict
+                            onChange={(e, selectedDate) => {
+                              setShowEndPicker(false);
+                              if (selectedDate) onChange(selectedDate);
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  />
+                  {errors.endDate && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.endDate.message}
+                    </Text>
+                  )}
                 </VStack>
               </HStack>
 
               {/* COURSE */}
               <Text style={styles.label}>Course</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholder="Select Course"
-                data={courseData}
-                labelField="label"
-                valueField="courseValue"
-                value={courseValue}
-                onChange={(item) => setCourseValue(item.value)}
+              <Controller
+                control={control}
+                name="courseId"
+                render={({ field: { onChange, value } }) => (
+                  <Dropdown
+                    style={styles.dropdown}
+                    placeholder="Select Course"
+                    data={
+                      courses?.map((item: any) => {
+                        return {
+                          label: item.name,
+                          value: item.courseId,
+                        };
+                      }) || []
+                    }
+                    labelField="label"
+                    valueField="value"
+                    value={value}
+                    onChange={(item) => {
+                      onChange(item.value);
+                      setSelectedCourse(item.value);
+                    }}
+                  />
+                )}
               />
+              {errors.courseId && (
+                <Text style={{ color: "red" }}>*{errors.courseId.message}</Text>
+              )}
 
               {/* TEE BOX */}
               <Text style={styles.label}>Tee Box</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholder="Select Tee Box"
-                data={teeBoxData}
-                labelField="label"
-                valueField="value"
-                value={teeBoxValue}
-                onChange={(item) => setTeeBoxValue(item.value)}
+
+              <Controller
+                control={control}
+                name="teeBox"
+                render={({ field: { onChange, value } }) => (
+                  <Dropdown
+                    style={styles.dropdown}
+                    placeholder="Select Tee Box"
+                    data={
+                      courses
+                        .find((c: any) => c.courseId === selectedCourse)
+                        ?.teeBoxes?.map((item: any) => {
+                          return {
+                            label: item.name,
+                            value: item.teeBoxId,
+                          };
+                        }) || []
+                    }
+                    labelField="label"
+                    valueField="value"
+                    value={value}
+                    onChange={(item) => {
+                      onChange(Number(item.value));
+                    }}
+                  />
+                )}
               />
+              {errors.teeBox && (
+                <Text style={{ color: "red" }}>*{errors.teeBox.message}</Text>
+              )}
 
               {/* SCORING TYPE */}
               <Text style={styles.label}>Scoring Type</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholder="Select Scoring Type"
-                data={scoringData}
-                labelField="label"
-                valueField="value"
-                value={scoringValue}
-                onChange={(item) => setScoringValue(item.value)}
+              <Controller
+                control={control}
+                name="scoringType"
+                render={({ field: { onChange, value } }) => (
+                  <Dropdown
+                    style={styles.dropdown}
+                    placeholder="Select Scoring Type"
+                    data={[
+                      { label: "Standard (Gross/Net)", value: "1" },
+                      { label: "Stableford", value: "2" },
+                      { label: "Excluded(practice)", value: "3" },
+                      { label: "DP Gross / Net", value: "4" },
+                      { label: "DP Stableford", value: "5" },
+                    ]}
+                    labelField="label"
+                    valueField="value"
+                    value={value}
+                    onChange={(item) => onChange(item.value)}
+                  />
+                )}
               />
-
+              {errors.scoringType && (
+                <Text style={{ color: "red" }}>
+                  *{errors.scoringType.message}
+                </Text>
+              )}
               {/* MAX PLAYERS */}
               <Text style={styles.label}>Max Players</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholder="Select Max Players"
-                data={playersData}
-                labelField="label"
-                valueField="value"
-                value={playersValue}
-                onChange={(item) => setPlayersValue(item.value)}
+
+              <Controller
+                control={control}
+                name="maxPlayers"
+                render={({ field: { onChange, value } }) => (
+                  <Dropdown
+                    style={styles.dropdown}
+                    placeholder="Select Max Players"
+                    data={[
+                      { label: "4 Players", value: 4 },
+                      { label: "8 Players", value: 8 },
+                      { label: "16 Players", value: 16 },
+                    ]}
+                    labelField="label"
+                    valueField="value"
+                    value={value}
+                    onChange={(item) => onChange(item.value)}
+                  />
+                )}
               />
+              {errors.maxPlayers && (
+                <Text style={{ color: "red" }}>
+                  *{errors.maxPlayers.message}
+                </Text>
+              )}
             </ScrollView>
 
             {/* BUTTONS */}
             <HStack style={styles.buttonRow}>
               <Pressable
                 style={styles.cancelBtn}
-                onPress={() => setTModalVisible(false)}
+                onPress={() => {
+                  reset();
+                  setTModalVisible(false);
+                }}
               >
                 <Text>Cancel</Text>
               </Pressable>
 
-              <Pressable style={styles.createBtn}>
+              <Pressable
+                onPress={handleSubmit(onSubmit)}
+                style={styles.createBtn}
+              >
                 <Text style={{ color: "#fff" }}>Create Tournament</Text>
               </Pressable>
             </HStack>

@@ -160,26 +160,42 @@ function CourseCard({ course, isDark }: any) {
           {/* {courseList.name} */}
         </ThemedText>
 
-        {/* Location */}
-        <HStack className="items-center mt-2">
-          <Ionicons name="location-outline" size={18} color="#ef4444" />
-          <ThemedText
-            style={{
-              marginLeft: 6,
-              fontSize: 14,
-              opacity: 0.7,
-            }}
-          >
-            {course.location}
-            {/* course location */}
-          </ThemedText>
+        <HStack className="justify-between">
+          {/* Location */}
+          <HStack className="items-center mt-2">
+            <Ionicons name="location-outline" size={18} color="#ef4444" />
+            <ThemedText
+              style={{
+                marginLeft: 6,
+                fontSize: 14,
+                opacity: 0.7,
+              }}
+            >
+              {course.location}
+              {/* course location */}
+            </ThemedText>
+          </HStack>
+
+          {/* Tee Boxes */}
+          <HStack className="items-center mt-2">
+            <Ionicons name="cube-outline" size={18} color="blue" />
+            <ThemedText
+              style={{
+                marginLeft: 6,
+                fontSize: 14,
+                opacity: 0.7,
+              }}
+            >
+              {course.teeBoxes.length} Tee Boxes
+            </ThemedText>
+          </HStack>
         </HStack>
 
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
         <Pressable
-        //   onPress={() =>
-        //     }
+          //   onPress={() =>
+          //     }
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
             backgroundColor: pressed ? "#8bc34a" : "transparent",
@@ -203,9 +219,6 @@ function CourseCard({ course, isDark }: any) {
             </>
           )}
         </Pressable>
-
-
-       
       </Box>
 
       <Modal

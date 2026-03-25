@@ -44,6 +44,28 @@ export const createTournament = async (tournamentData: any) => {
     }
 };
 
+// Create Tournament Tournament courseId: 10 creatorId: 2 description: "" endDate: "2026-03-26" maxPlayers: 16 name: "New hem test" scoringType: "double-peoria-net" startDate: "2026-03-25" teeBoxId: 26
+
+export const createMiniTournament = async (courseId: number, description: string, endDate: string, maxPlayers: number, name: string, scoringType: string, startDate: string, teeBoxId: number) => {
+    try {
+
+        const creatorId = await AsyncStorage.getItem("userId");
+        if (!creatorId) {
+            throw new Error("creatorId not found in storage");
+        }
+
+        const response = await https.post(`Tournament`, { courseId, creatorId, description, endDate, maxPlayers, name, scoringType, startDate, teeBoxId });
+        // console.log("Created Tournament:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Create Tournament Error:", error);
+        throw error;
+    }
+};
+
+
+
+
 // Update Tournament Tournament/16
 
 export const updateTournament = async (tournamentId: number, tournamentData: any) => {
