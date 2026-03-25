@@ -106,7 +106,11 @@ const PlayerScorecard = () => {
     { label: "Quadruple Bogey+", border: "#000", type: "square", text: "" },
   ];
   // 🔥 REUSABLE ROW
-  const renderRow = (item: any) => (
+ const renderRow = (item: any) => {
+  const type = getScoreType(item.score, item.par);
+  const styleConfig = getScoreStyle(type);
+
+  return (
     <View
       key={item.hole}
       style={[styles.row, { borderBottomColor: isDark ? "#333" : "#ddd" }]}
@@ -115,15 +119,67 @@ const PlayerScorecard = () => {
       <ThemedText style={styles.cell}>{item.yards}</ThemedText>
       <ThemedText style={styles.cell}>{item.par}</ThemedText>
 
+      {/* ✅ UPDATED SCORE */}
       <View style={styles.scoreCell}>
-        <ThemedText>{item.score}</ThemedText>
+        <View
+          style={[
+            styles.scoreBox,
+            styleConfig.shape === "circle" && styles.circle,
+            styleConfig.shape === "square" && styles.square,
+            {
+              borderColor: styleConfig.borderColor,
+              borderStyle: styleConfig.dashed ? "dashed" : "solid",
+            },
+          ]}
+        >
+          <ThemedText style={{ fontWeight: "700" }}>
+            {item.score}
+          </ThemedText>
+        </View>
       </View>
 
       <ThemedText style={styles.cell}>{item.net}</ThemedText>
       <ThemedText style={styles.cell}>{item.pts}</ThemedText>
     </View>
   );
+};
 
+  const getScoreType = (score:number, par:number) => {
+  const diff = score - par;
+
+  if (score === 1) return "hole-in-one";
+  if (diff <= -3) return "albatross";
+  if (diff === -2) return "eagle";
+  if (diff === -1) return "birdie";
+  if (diff === 0) return "par";
+  if (diff === 1) return "bogey";
+  if (diff === 2) return "double";
+  if (diff === 3) return "triple";
+  return "quad";
+};
+
+const getScoreStyle = (type:string) => {
+  switch (type) {
+    case "hole-in-one":
+      return { borderColor: "#facc15", shape: "circle" };
+    case "albatross":
+      return { borderColor: "#0f766e", shape: "circle" };
+    case "eagle":
+      return { borderColor: "#166534", shape: "circle" };
+    case "birdie":
+      return { borderColor: "#16a34a", shape: "circle" };
+    case "par":
+      return { borderColor: "#9ca3af", shape: "square", dashed: true };
+    case "bogey":
+      return { borderColor: "#ef4444", shape: "square" };
+    case "double":
+      return { borderColor: "#dc2626", shape: "square" };
+    case "triple":
+      return { borderColor: "#7c3aed", shape: "square" };
+    default:
+      return { borderColor: "#000", shape: "square" };
+  }
+};
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* HEADER */}
@@ -323,4 +379,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
   },
+  scoreBox: {
+  width: 28,
+  height: 28,
+  borderWidth: 2,
+  alignItems: "center",
+  justifyContent: "center",
+},
 });
