@@ -16,11 +16,8 @@ import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
 import { Modal, Pressable, useColorScheme, View } from "react-native";
 
-import { Divider } from "@/components/divider";
 import { Text } from "@/components/text";
-import { TextInput } from "react-native";
-import { ThemedView } from "@/components/themed-view";
-import { Dropdown } from "react-native-element-dropdown";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function CombinedLeaderboardsPage() {
   const colorScheme = useColorScheme();

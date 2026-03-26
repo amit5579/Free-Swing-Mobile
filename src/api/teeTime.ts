@@ -3,7 +3,22 @@ import https from "./https";
 
 // get teetimeslots TeeTime/slots/2?date=2026-03-25&tee=1 qparams : date 2026-03-25 tee 1
 
-export const getTeeTimeSlots = async (date: string, tee: number) => {
+// getCourses - course?onlyWithSubAdmin=true
+
+export const getSubAdminCourses = async () => {
+    try {
+        const response = await https.get(`course?onlyWithSubAdmin=true`);
+        // console.log("fffff",response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching sub admin courses Error:", error);
+        throw error;
+    }
+};
+
+// get tee time and seats - TeeTime/slots/2?date=2026-03-26&tee=1
+
+export const getTeeTimeSeats = async (date: string, tee: number) => {
     try {
 
         const userId = await AsyncStorage.getItem("userId");
@@ -36,19 +51,32 @@ export const getBookingStatus = async (date: string) => {
 
 // book seat - TeeTime/book payload - courseId: 2, date: "2026-03-25", timeSlot: "06:00", seatNumber: 1, tee: 1
 
-export const bookSeat = async (courseId: number, date: string, timeSlot: string, seatNumber: number, tee: number) => {
+export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
     try {
         const response = await https.post(`TeeTime/book`, {
             courseId,
             date,
-            timeSlot,
             seatNumber,
-            tee
+            tee,
+            timeSlot
         });
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
         console.error("Booking seat Error:", error);
+        throw error;
+    }
+};
+
+// cancel seat booking - TeeTime/cancel/46
+
+export const cancelSeatBooking = async (bookingId: number) => {
+    try {
+        const response = await https.delete(`TeeTime/cancel/${bookingId}`);
+        // console.log("fffff",response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Canceling seat booking Error:", error);
         throw error;
     }
 };
