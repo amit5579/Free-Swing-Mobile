@@ -129,14 +129,50 @@ export default function AllMembersPage() {
     }));
   };
 
-  const MemberCardSkelton = ({ isExpanded, isDark }: { isExpanded?: boolean; isDark: boolean }) => {
+  const MemberCardSkeleton = ({ isExpanded, isDark }: { isExpanded?: boolean; isDark: boolean }) => {
     return (
-      <View style={{ marginBottom: 16 }}>
-        <Skeleton isDark={isDark} width={"100%"} height={80} />
+      <View
+        style={{
+          backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+          borderRadius: 20,
+          borderLeftWidth: 6,
+          borderLeftColor: isDark ? "#333" : "#e5e7eb",
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <HStack className="items-center justify-between">
+          <HStack className="items-center" style={{ flex: 1 }}>
+            {/* Avatar skeleton */}
+            <Skeleton isDark={isDark} width={48} height={48} borderRadius={24} style={{ marginRight: 12 }} />
+            <VStack space="xs" style={{ gap: 4 }}>
+              <Skeleton isDark={isDark} width={100} height={18} />
+              <Skeleton isDark={isDark} width={70} height={12} />
+            </VStack>
+          </HStack>
+          {/* Badge & arrow skeleton */}
+          <HStack className="items-center">
+            <Skeleton isDark={isDark} width={60} height={22} borderRadius={12} style={{ marginRight: 8 }} />
+            <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+          </HStack>
+        </HStack>
+
         {isExpanded && (
-          <View style={{ marginTop: 10 }}>
-            <Skeleton isDark={isDark} width={"100%"} height={120} />
-          </View>
+          <VStack style={{ marginTop: 20 }}>
+            <View style={{ height: 1.5, backgroundColor: isDark ? "#333" : "#f0f0f0", marginBottom: 16 }} />
+            <HStack style={{ flexWrap: "wrap", gap: 16 }}>
+              {[1, 2, 3, 4].map((i) => (
+                <VStack key={i} style={{ width: "47%" }}>
+                  <Skeleton isDark={isDark} width={50} height={10} style={{ marginBottom: 4 }} />
+                  <Skeleton isDark={isDark} width={"80%"} height={14} />
+                </VStack>
+              ))}
+            </HStack>
+            <HStack style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}>
+                <Skeleton isDark={isDark} width={80} height={36} borderRadius={12} />
+                <Skeleton isDark={isDark} width={80} height={36} borderRadius={12} />
+            </HStack>
+          </VStack>
         )}
       </View>
     );
@@ -158,12 +194,15 @@ export default function AllMembersPage() {
             <Skeleton isDark={isDark} width={120} height={24} />
             <Skeleton isDark={isDark} width={100} height={32} borderRadius={12} />
           </HStack>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <MemberCardSkelton
-              key={i}
-              isExpanded={i === 1}
-              isDark={isDark}
-            />))}
+          <VStack className="px-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <MemberCardSkeleton
+                key={i}
+                isExpanded={i === 1}
+                isDark={isDark}
+              />
+            ))}
+          </VStack>
         </View>
       ) : (
         <>
@@ -224,13 +263,13 @@ export default function AllMembersPage() {
                     key={member.id}
                     style={{
                       backgroundColor: isDark
-                        ? "rgba(26, 26, 26, 0.4)"
-                        : "rgba(255, 255, 255, 0.35)",
+                        ? "rgba(26, 26, 26, 0.6)"
+                        : "rgba(255, 255, 255, 0.8)",
                       borderRadius: 20,
                       borderLeftWidth: 6,
                       borderLeftColor: !member.isApproved
-                        ? "#8BC34A"
-                        : (member.isBlocked ? "#EF4444" : "#8BC34A"),
+                        ? "#8BC34A" // Pending: Light Green
+                        : (member.isBlocked ? "#EF4444" : "#8BC34A"), // Blocked: Red, Active: Light Green
                       borderTopWidth: isDark ? 1.5 : 0,
                       borderRightWidth: isDark ? 1.5 : 0,
                       borderBottomWidth: isDark ? 1.5 : 0,
@@ -259,7 +298,7 @@ export default function AllMembersPage() {
                                 ? "#8BC34A"
                                 : (!member.isBlocked ? "#8BC34A" : "#EF4444"),
                               backgroundColor: !member.isApproved
-                                ? "rgba(255,179,0,0.1)"
+                                ? "rgba(139,195,74,0.1)"
                                 : (!member.isBlocked ? "rgba(139,195,74,0.1)" : "rgba(239,68,68,0.1)"),
                               marginRight: 12,
                             }}
@@ -306,10 +345,10 @@ export default function AllMembersPage() {
                           <Box
                             style={{
                               backgroundColor: !member.isApproved
-                                ? "rgba(255,179,0,0.1)"
-                                : (!member.isBlocked ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)"),
+                                ? "rgba(139,195,74,0.15)"
+                                : (!member.isBlocked ? "rgba(139,195,74,0.15)" : "rgba(239,68,68,0.15)"),
                               paddingHorizontal: 10,
-                              paddingVertical: 5,
+                              paddingVertical: 4,
                               borderRadius: 12,
                               marginRight: 8,
                             }}
@@ -318,9 +357,10 @@ export default function AllMembersPage() {
                               style={{
                                 color: !member.isApproved
                                   ? "#8BC34A"
-                                  : (!member.isBlocked ? "#22C55E" : "#EF4444"),
-                                fontSize: 11,
-                                fontWeight: "800",
+                                  : (!member.isBlocked ? "#8BC34A" : "#EF4444"),
+                                fontSize: 10,
+                                fontWeight: "900",
+                                letterSpacing: 0.5,
                               }}
                             >
                               {!member.isApproved ? "PENDING" : (!member.isBlocked ? "ACTIVE" : "BLOCKED")}
@@ -364,7 +404,7 @@ export default function AllMembersPage() {
                               <Ionicons
                                 name="mail-outline"
                                 size={14}
-                                color={!member.isApproved ? "#8BC34A" : "#8BC34A"}
+                                color={isDark ? "#8BC34A" : "#2e7d32"}
                               />
                               <ThemedText
                                 style={{
@@ -394,7 +434,7 @@ export default function AllMembersPage() {
                               <Ionicons
                                 name="call-outline"
                                 size={14}
-                                color={!member.isApproved ? "#8BC34A" : "#8BC34A"}
+                                color={isDark ? "#8BC34A" : "#2e7d32"}
                               />
                               <ThemedText
                                 style={{
@@ -423,7 +463,7 @@ export default function AllMembersPage() {
                               <Ionicons
                                 name="people-outline"
                                 size={14}
-                                color={!member.isApproved ? "#8BC34A" : "#8BC34A"}
+                                color={isDark ? "#8BC34A" : "#2e7d32"}
                               />
                               <ThemedText
                                 style={{

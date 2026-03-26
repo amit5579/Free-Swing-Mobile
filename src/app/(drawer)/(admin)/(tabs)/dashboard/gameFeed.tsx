@@ -62,27 +62,49 @@ const FeedCard = ({
   handleVerifyCard: (id: string, playerName: string) => void;
 }) => {
   return (
+    // <Box
+    //   className="mb-4"
+    //   style={{
+    //     shadowColor: "#000",
+    //     shadowOffset: { width: 0, height: 4 },
+    //     shadowOpacity: isDark ? 0.3 : 0.08,
+    //     shadowRadius: 10,
+    //     elevation: 4,
+    //     backgroundColor: isDark
+    //       ? "rgba(26,26,26,0.4)"
+    //       : "rgba(255,255,255,0.35)",
+    //     borderLeftWidth: 6,
+    //     borderLeftColor: "#8BC34A",
+    //     borderTopWidth: isDark ? 1.5 : 1.0,
+    //     borderRightWidth: isDark ? 1.5 : 0,
+    //     borderBottomWidth: isDark ? 1.5 : 0,
+    //     borderColor: isDark ? "#8BC34A" : "transparent",
+    //     borderRadius: 20,
+    //     overflow: "hidden",
+    //   }}
+    // >
+
     <Box
-      className="mb-4"
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.08,
-        shadowRadius: 10,
-        elevation: 4,
-        backgroundColor: isDark
-          ? "rgba(26,26,26,0.4)"
-          : "rgba(255,255,255,0.35)",
-        borderLeftWidth: 6,
-        borderLeftColor: "#8BC34A",
-        borderTopWidth: isDark ? 1.5 : 1.0,
-        borderRightWidth: isDark ? 1.5 : 0,
-        borderBottomWidth: isDark ? 1.5 : 0,
-        borderColor: isDark ? "#8BC34A" : "transparent",
-        borderRadius: 20,
-        overflow: "hidden",
-      }}
-    >
+  className="mb-4"
+  style={{
+    shadowColor: "#8BC34A",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: isDark ? 0.4 : 0.15,
+    shadowRadius: 14,
+    elevation: 8,
+    backgroundColor: isDark
+      ? "rgba(26,26,26,0.6)"
+      : "rgba(255,255,255,0.6)",
+    borderLeftWidth: 6,
+    borderLeftColor: "#8BC34A",
+    borderTopWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+    borderRadius: 22,
+    overflow: "hidden",
+  }}
+>
       {/* CARD HEADER (Toggle Expand/Collapse) */}
       <Pressable
         onPress={onToggle}
@@ -222,7 +244,7 @@ const FeedCard = ({
           {/* Stats Block (Gross & To Par) */}
           <HStack space="sm" className="mx-4 mb-4">
             <Box
-              className="flex-1 rounded-2xl py-6 items-center border"
+              className="flex-1 rounded-2xl py-6 items-center"
               style={{
                 borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                 backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
