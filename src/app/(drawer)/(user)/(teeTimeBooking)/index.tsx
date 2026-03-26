@@ -23,6 +23,7 @@ import {
   getSubAdminCourses,
   getTeeTimeSeats,
 } from "@/api/teeTime";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function TeeTimeBookingPage() {
   const colorScheme = useColorScheme();
@@ -335,6 +336,112 @@ export default function TeeTimeBookingPage() {
     );
   };
 
+  const DateSectionSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <ThemedView
+        style={{
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.1)"
+            : "rgba(229, 231, 235, 0.6)",
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+        }}
+        className="mb-6 rounded-xl"
+      >
+        <Skeleton
+          isDark={isDark}
+          height={16}
+          width="40%"
+          style={{ alignSelf: "center", marginBottom: 12 }}
+        />
+
+        {/* Date tabs */}
+        <HStack style={{ justifyContent: "space-between" }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              isDark={isDark}
+              height={36}
+              width="22%"
+              borderRadius={10}
+            />
+          ))}
+        </HStack>
+
+        {/* Dropdown + button */}
+        <HStack style={{ marginTop: 12 }}>
+          <Skeleton
+            isDark={isDark}
+            height={40}
+            width="75%"
+            borderRadius={8}
+            style={{ marginRight: 10 }}
+          />
+          <Skeleton isDark={isDark} height={40} width={40} borderRadius={10} />
+        </HStack>
+      </ThemedView>
+    );
+  };
+
+  const TeeRowSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        style={{
+          marginBottom: 16,
+          borderRadius: 14,
+          padding: 14,
+          borderWidth: 1,
+          borderColor: isDark ? "#1e293b" : "#ffffff",
+        }}
+      >
+        {/* Header */}
+        <HStack style={{ justifyContent: "space-between", marginBottom: 12 }}>
+          <Skeleton isDark={isDark} height={16} width="30%" />
+          <Skeleton isDark={isDark} height={12} width="20%" />
+        </HStack>
+
+        {/* Seats Grid (4 per row × 2 rows) */}
+        <HStack style={{ flexWrap: "wrap", justifyContent: "space-between" }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              isDark={isDark}
+              height={60}
+              width="23%"
+              borderRadius={10}
+              style={{ marginBottom: 10 }}
+            />
+          ))}
+        </HStack>
+      </Box>
+    );
+  };
+
+  const TeeTabsSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <HStack
+        className="rounded-full p-1 mb-6"
+        style={{
+          paddingVertical: 10,
+          borderRadius: 999,
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.1)"
+            : "rgba(229, 231, 235, 0.6)",
+        }}
+      >
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Skeleton
+            key={i}
+            isDark={isDark}
+            height={40}
+            width="48%"
+            borderRadius={999}
+            style={{ marginHorizontal: 4 }}
+          />
+        ))}
+      </HStack>
+    );
+  };
   return (
     <>
       <SafeAreaView
@@ -505,20 +612,34 @@ export default function TeeTimeBookingPage() {
             </HStack>
 
             <Box>
-              {teeData?.slots?.map((slot: any, index: any) => (
-                <TeeRow key={slot.time} slot={slot} />
-              ))}
+              {loading ? (
+                <>
+                  <DateSectionSkeleton isDark={isDark} />
+                  <TeeTabsSkeleton isDark={isDark} />
 
-              {teeData?.slots?.length === 0 && (
-                <Text
-                  style={{
-                    textAlign: "center",
-                    marginTop: 40,
-                    color: isDark ? "#94a3b8" : "#6b7280",
-                  }}
-                >
-                  No slots available
-                </Text>
+                  {/* Multiple fake cards */}
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <TeeRowSkeleton key={i} isDark={isDark} />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {teeData?.slots?.map((slot: any) => (
+                    <TeeRow key={slot.time} slot={slot} />
+                  ))}
+
+                  {teeData?.slots?.length === 0 && (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        marginTop: 40,
+                        color: isDark ? "#94a3b8" : "#6b7280",
+                      }}
+                    >
+                      No slots available
+                    </Text>
+                  )}
+                </>
               )}
             </Box>
           </VStack>
