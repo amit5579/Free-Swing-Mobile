@@ -1,19 +1,23 @@
 import React, { useState, useCallback } from "react";
 import { Pressable, useColorScheme, TextInput, RefreshControl } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { useFocusEffect } from "@react-navigation/native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Divider } from "@/components/divider";
-import { Avatar, AvatarImage, AvatarFallbackText } from "@/components/avatar";
+import { Avatar, AvatarImage } from "@/components/avatar";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { Ionicons } from "@expo/vector-icons";
 import { getUsers, User } from "@/api/admin/handicapSetup";
+import { Skeleton } from "@/components/Skeleton";
+import { useFocusEffect } from "expo-router";
+
 
 export default function PlayerHandicapSetup() {
   const colorScheme = useColorScheme();
@@ -200,11 +204,13 @@ export default function PlayerHandicapSetup() {
           }
         >
           {loading ? (
-            <VStack className="items-center justify-center py-20">
-              <ActivityIndicator size="large" color="#8bc34a" />
-              <ThemedText style={{ marginTop: 12, opacity: 0.6 }}>Loading Players...</ThemedText>
+            <VStack space="md" className="pb-20">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <HandicapSkeleton key={i} isExpanded={i === 1} />
+              ))}
             </VStack>
           ) : (
+
             <VStack space="md" className="pb-20">
               {filteredPlayers.map((player) => (
                 <Box
@@ -359,9 +365,52 @@ export default function PlayerHandicapSetup() {
                 </Box>
               ))}
             </VStack>
-        </ScrollView>
-
+          )}
+          </ScrollView>
       </VStack>
     </SafeAreaView>
   );
 }
+
+const HandicapSkeleton = ({ isExpanded = false }: { isExpanded?: boolean }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <Box
+      className="p-4 rounded-2xl mb-3"
+      style={{
+        backgroundColor: isDark ? "rgba(26,26,26,0.85)" : "rgba(255,255,255,0.85)",
+        borderRadius: 20,
+        borderLeftWidth: 6,
+        borderLeftColor: "#8BC34A",
+        padding: 16,
+      }}
+    >
+      <HStack className="items-center justify-between">
+        <HStack className="items-center">
+          <Skeleton isDark={isDark} width={45} height={45} borderRadius={24} style={{ marginRight: 10 }} />
+          <Skeleton isDark={isDark} width={120} height={20} />
+        </HStack>
+        <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+      </HStack>
+
+      {isExpanded && (
+        <VStack style={{ marginTop: 20 }}>
+          <Box style={{ height: 1, backgroundColor: isDark ? "#333" : "#F0F0F0", marginBottom: 16 }} />
+          <VStack space="md">
+            {[1, 2, 3, 4].map(i => (
+              <HStack key={i} className="items-center justify-between">
+                <HStack className="items-center">
+                  <Skeleton isDark={isDark} width={16} height={16} borderRadius={8} />
+                  <Skeleton isDark={isDark} width={100} height={14} style={{ marginLeft: 10 }} />
+                </HStack>
+                <Skeleton isDark={isDark} width={80} height={14} />
+              </HStack>
+            ))}
+          </VStack>
+        </VStack>
+      )}
+    </Box>
+  );
+};

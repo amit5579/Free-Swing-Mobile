@@ -7,18 +7,20 @@ import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   useColorScheme,
   View,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFeed, FeedApi } from "@/api/admin/dashboard";
+import { getFeed, FeedApi, verifyScoreApi } from "@/api/admin/dashboard";
 import { likeFeedApi } from "@/api/dashboard";
 import Watermark from "@/components/watermark";
 import { Button, ButtonText } from "@/components/button";
 import { useRouter } from "expo-router";
+import { Skeleton } from "@/components/Skeleton";
+
 
 export type Scorecard = {
   id: string;
@@ -48,7 +50,8 @@ const FeedCard = ({
   isExpanded,
   onToggle,
   handleLike,
-  handleViewScorecard
+  handleViewScorecard,
+  handleVerifyCard,
 }: {
   card: Scorecard;
   isDark: boolean;
@@ -56,6 +59,7 @@ const FeedCard = ({
   onToggle: () => void;
   handleLike: (id: string) => void;
   handleViewScorecard: (id: string) => void;
+  handleVerifyCard: (id: string, playerName: string) => void;
 }) => {
   return (
     <Box
@@ -80,8 +84,8 @@ const FeedCard = ({
       }}
     >
       {/* CARD HEADER (Toggle Expand/Collapse) */}
-      <Pressable 
-        onPress={onToggle} 
+      <Pressable
+        onPress={onToggle}
         className="px-4 pt-4 pb-3"
         style={{ borderRadius: 20 }}
       >
@@ -201,17 +205,17 @@ const FeedCard = ({
                   {card.teeBoxName}
                 </Text>
               </Box>
-                <Badge
-                  size="sm"
-                  className="rounded-full px-3 py-1"
-                  style={{
-                    backgroundColor: isDark ? "#374151" : "#111827",
-                  }}
-                >
-                  <BadgeText className="text-white font-semibold text-xs">
-                    {card.holes} Holes
-                  </BadgeText>
-                </Badge>
+              <Badge
+                size="sm"
+                className="rounded-full px-3 py-1"
+                style={{
+                  backgroundColor: isDark ? "#374151" : "#111827",
+                }}
+              >
+                <BadgeText className="text-white font-semibold text-xs">
+                  {card.holes} Holes
+                </BadgeText>
+              </Badge>
             </HStack>
           </VStack>
 
@@ -291,6 +295,15 @@ const FeedCard = ({
               </Box>
             ))}
           </HStack>
+
+          {card.isAuthenticated && card.authenticatedBy && (
+            <HStack space="xs" className="mx-4 mb-3 items-center justify-center py-2 rounded-xl border border-green-200" style={{ backgroundColor: isDark ? "rgba(76, 175, 80, 0.15)" : "#E8F5E9" }}>
+              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+              <Text className="text-xs font-bold" style={{ color: isDark ? "#81C784" : "#2E7D32" }}>
+                Verified by {card.authenticatedBy}
+              </Text>
+            </HStack>
+          )}
 
           <Divider
             className="bg-outline-100"
@@ -372,6 +385,7 @@ const FeedCard = ({
                     borderColor: isDark ? "#fff" : "#8BC34A",
                     backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
                   }}
+                  onPress={() => handleVerifyCard(card.id, card.playerName)}
                 >
                   <Ionicons
                     name="shield-checkmark-outline"
@@ -393,6 +407,52 @@ const FeedCard = ({
     </Box>
   );
 };
+
+const FeedCardSkeleton = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <Box
+      className="mb-4"
+      style={{
+        backgroundColor: isDark ? "rgba(26,26,26,0.4)" : "rgba(255,255,255,0.35)",
+        borderLeftWidth: 6,
+        borderLeftColor: "#8BC34A",
+        borderTopWidth: isDark ? 1.5 : 1.0,
+        borderColor: isDark ? "#8BC34A" : "transparent",
+        borderRadius: 20,
+        overflow: "hidden",
+        padding: 16,
+      }}
+    >
+      <HStack space="sm" className="items-center mb-4">
+        <Skeleton isDark={isDark} width={45} height={45} borderRadius={24} />
+        <VStack style={{ flex: 1 }}>
+          <Skeleton isDark={isDark} width="60%" height={20} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width="40%" height={12} />
+        </VStack>
+      </HStack>
+
+      <HStack space="sm" style={{ marginBottom: 12 }}>
+        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)" }}>
+          <Skeleton isDark={isDark} width="30%" height={10} style={{ marginBottom: 8 }} />
+          <Skeleton isDark={isDark} width="60%" height={32} />
+        </Box>
+        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)" }}>
+          <Skeleton isDark={isDark} width="30%" height={10} style={{ marginBottom: 8 }} />
+          <Skeleton isDark={isDark} width="60%" height={32} />
+        </Box>
+      </HStack>
+
+      <HStack space="sm" className="justify-between items-center">
+        <Skeleton isDark={isDark} width={80} height={32} borderRadius={16} />
+        <Skeleton isDark={isDark} width={80} height={32} borderRadius={16} />
+      </HStack>
+    </Box>
+  );
+};
+
 
 export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }) {
   const [cards, setCards] = useState<Scorecard[]>([]);
@@ -462,10 +522,43 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
     }
   };
 
+  const handleVerifyCard = (id: string, playerName: string) => {
+    Alert.alert(
+      "Verify Score",
+      `Are you sure you want to verify this score for ${playerName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Verify",
+          onPress: async () => {
+            try {
+              // Optimistic UI update
+              setCards((prev) =>
+                prev.map((c) =>
+                  c.id === id
+                    ? {
+                      ...c,
+                      isAuthenticated: true,
+                      canAuthenticate: false,
+                      authenticatedBy: "rks (rks)",
+                    }
+                    : c
+                )
+              );
+              await verifyScoreApi(id);
+            } catch (error) {
+              console.error("verify score error:", error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleViewScorecard = (scorecardId: string) => {
     router.push({
-      pathname: "/(drawer)/(admin)/(tabs)/dashboard/scorecardDetails",
-      params: { scorecardId },
+      pathname: "/(drawer)/scoreCard/resume/[id]" as any,
+      params: { id: scorecardId, handicap: 0 },
     });
   };
 
@@ -475,12 +568,17 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
 
   if (loading) {
     return (
-      <Box className="items-center justify-center py-10">
-        <ActivityIndicator size="large" color="#8BC34A" />
-        <Text className="mt-2 text-gray-500">Loading feed...</Text>
-      </Box>
+      <VStack space="md">
+        {!hideHeader && (
+          <Skeleton isDark={isDark} width="50%" height={36} style={{ marginBottom: 16 }} />
+        )}
+        {[1, 2, 3].map((i) => (
+          <FeedCardSkeleton key={i} />
+        ))}
+      </VStack>
     );
   }
+
 
   return (
     <VStack space="md">
@@ -539,6 +637,7 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
           onToggle={() => toggleCard(card.id)}
           handleLike={handleLike}
           handleViewScorecard={handleViewScorecard}
+          handleVerifyCard={handleVerifyCard}
         />
       ))}
     </VStack>

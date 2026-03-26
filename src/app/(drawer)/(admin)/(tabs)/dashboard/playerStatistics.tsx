@@ -3,7 +3,6 @@ import {
   View,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   useColorScheme,
   Pressable,
 } from "react-native";
@@ -16,6 +15,8 @@ import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { Divider } from "@/components/divider";
 import { Ionicons } from "@expo/vector-icons";
+import { Skeleton } from "@/components/Skeleton";
+
 
 const PlayerCard = ({
   player,
@@ -262,6 +263,54 @@ const PlayerCard = ({
   );
 };
 
+const PlayerCardSkeleton = ({ isExpanded = false }: { isExpanded?: boolean }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <Box
+      style={{
+        backgroundColor: isDark ? "rgba(26,26,26,0.4)" : "rgba(255,255,255,0.35)",
+        borderRadius: 20,
+        borderLeftWidth: 6,
+        borderLeftColor: "#8BC34A",
+        padding: 16,
+        marginBottom: 16,
+        borderColor: isDark ? "#8BC34A" : "transparent",
+        borderTopWidth: isDark ? 1.5 : 0,
+      }}
+    >
+      <HStack className="items-center">
+        <Skeleton isDark={isDark} width={45} height={45} borderRadius={24} style={{ marginRight: 12 }} />
+        <VStack style={{ flex: 1 }}>
+          <Skeleton isDark={isDark} width="60%" height={20} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width="40%" height={12} />
+        </VStack>
+        <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+      </HStack>
+
+      {isExpanded && (
+        <VStack style={{ marginTop: 20 }}>
+          <Box style={{ height: 1, backgroundColor: isDark ? "#333" : "#F0F0F0", marginBottom: 16 }} />
+          <HStack style={{ flexWrap: "wrap", gap: 16 }}>
+             {[1,2,3,4].map(i => (
+                <VStack key={i} style={{ width: "47%" }}>
+                  <Skeleton isDark={isDark} width={60} height={10} style={{ marginBottom: 4 }} />
+                  <Skeleton isDark={isDark} width={40} height={15} />
+                </VStack>
+             ))}
+          </HStack>
+          <HStack style={{ marginTop: 24, justifyContent: "flex-end" }}>
+              <Skeleton isDark={isDark} width={100} height={36} borderRadius={12} />
+          </HStack>
+        </VStack>
+      )}
+    </Box>
+  );
+};
+
+
+
 interface PlayerStatisticsProps {
   players: PlayerApi[];
   loading: boolean;
@@ -291,21 +340,15 @@ export default function PlayerStatistics({
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: isDark ? "#000" : "#f2f2f2",
-        }}
-      >
-        <ActivityIndicator size="large" color="#8BC34A" />
-        <ThemedText style={{ marginTop: 12, color: "#8BC34A" }}>
-          Loading statistics...
-        </ThemedText>
+      <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2", paddingHorizontal: 16, paddingTop: 10 }}>
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <PlayerCardSkeleton key={i} isExpanded={i === 1} />
+        ))}
       </View>
+
     );
   }
+
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
