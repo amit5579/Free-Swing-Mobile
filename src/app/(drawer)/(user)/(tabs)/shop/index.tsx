@@ -6,7 +6,9 @@ import { ThemedView } from "@/components/themed-view";
 import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+
 import {
   Modal,
   ScrollView,
@@ -14,7 +16,6 @@ import {
   Linking,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 import { Image } from "expo-image";
@@ -24,6 +25,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { getProducts, ProductApi } from "@/api/shop";
+import { Skeleton } from "@/components/Skeleton";
 
 export type Product = {
   id: string;
@@ -180,6 +182,37 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
   );
 };
 
+const ProductCardSkeleton = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <Box
+      style={{
+        width: "48%",
+        marginBottom: 20,
+        backgroundColor: isDark ? "rgba(22,22,24,0.6)" : "rgba(255,255,255,0.7)",
+        borderRadius: 20,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: "rgba(139,195,74,0.3)",
+      }}
+    >
+      <Box style={{ width: "100%", height: 160, backgroundColor: isDark ? "#222" : "#f5f5f5" }}>
+        <Skeleton isDark={isDark} width="100%" height={160} borderRadius={0} />
+      </Box>
+
+      <VStack style={{ padding: 12 }}>
+        <Skeleton isDark={isDark} width="80%" height={16} style={{ marginBottom: 8 }} />
+        <Skeleton isDark={isDark} width="40%" height={20} style={{ marginBottom: 8 }} />
+        <Skeleton isDark={isDark} width="100%" height={12} style={{ marginBottom: 12 }} />
+        <Skeleton isDark={isDark} width="100%" height={36} borderRadius={12} />
+      </VStack>
+    </Box>
+  );
+};
+
+
 export default function ShopScreen() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -192,9 +225,12 @@ export default function ShopScreen() {
     transform: [{ translateX: cartTranslateX.value }],
   }));
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [])
+  );
+
 
   useEffect(() => {
     cartTranslateX.value = withSpring(cart.length > 0 ? 0 : 200, {
@@ -207,7 +243,10 @@ export default function ShopScreen() {
     try {
       const data: ProductApi[] = await getProducts();
 
-      const formatted = data.map((item) => ({
+      // Sort products by id descending to show newest on top
+      const sortedData = [...data].sort((a, b) => b.id - a.id);
+
+      const formatted = sortedData.map((item) => ({
         id: item.id.toString(),
         name: item.name,
         price: item.price,
@@ -343,11 +382,13 @@ export default function ShopScreen() {
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: 50 }}>
-            <ActivityIndicator size="large" color="#8BC34A" />
-            <ThemedText style={{ marginTop: 12, color: "#8BC34A" }}>Loading products...</ThemedText>
-          </View>
+          <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </HStack>
         ) : (
+
           <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
             {products.map((product) => (
               <ProductCard

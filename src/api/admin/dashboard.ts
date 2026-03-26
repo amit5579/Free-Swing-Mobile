@@ -1,5 +1,3 @@
-// import https from "./https";
-
 import https from "../https";
 
 export type UserApi = {
@@ -269,5 +267,15 @@ export const getScorecardDetails = async (
   } catch (error) {
     console.error("Scorecard Details API Error:", error);
     return [];
+  }
+};
+
+export const verifyScoreApi = async (id: string | number) => {
+  try {
+    const response = await https.post(`/scorecard/authenticate/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error verifying score ${id}:`, error);
+    throw error;
   }
 };

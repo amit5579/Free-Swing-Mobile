@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View, Alert } from "react-native";
+import { useColorScheme, Image, TouchableOpacity, ScrollView, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Button } from "@/components/button";
 import { ThemedText } from "@/components/themed-text";
-
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
 import { getProducts } from "@/api/shop";
 import { deleteProduct, Product } from "@/api/admin/proShop";
-// import { getProducts, deleteProduct, Product } from "@/api/adminAPI/proShop";
+import { Skeleton } from "@/components/Skeleton";
+
 
 export default function ProShop() {
   const colorScheme = useColorScheme();
@@ -22,15 +22,20 @@ export default function ProShop() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [])
+  );
+
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const data = await getProducts();
-      setProducts(data);
+      // Sort products by id descending to show newest on top
+      const sortedData = [...data].sort((a, b) => b.id - a.id);
+      setProducts(sortedData);
     } catch (error) {
       console.error("Fetch products error:", error);
     } finally {
@@ -111,10 +116,16 @@ export default function ProShop() {
         </HStack>
 
         {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color="#8bc34a" />
-            <ThemedText style={{ marginTop: 12, color: "#8bc34a" }}>Loading shop...</ThemedText>
-          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 150, paddingHorizontal: 16 }}
+          >
+            <VStack style={{ gap: 20 }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <ProductSkeleton key={i} />
+              ))}
+            </VStack>
+          </ScrollView>
         ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -258,3 +269,42 @@ export default function ProShop() {
     </SafeAreaView>
   );
 }
+
+const ProductSkeleton = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <Box
+      style={{
+        backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
+        borderRadius: 24,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: isDark ? "rgba(255,115,0,0.08)" : "rgba(139,195,74,0.15)",
+        borderLeftWidth: 6,
+        borderLeftColor: "#8BC34A",
+        minHeight: 114,
+      }}
+    >
+      <HStack space="md" className="items-center">
+        <Skeleton isDark={isDark} width={90} height={90} borderRadius={18} />
+        <VStack style={{ flex: 1 }}>
+          <HStack className="justify-between items-start">
+            <Skeleton isDark={isDark} width="60%" height={20} style={{ marginBottom: 4 }} />
+            <Skeleton isDark={isDark} width={40} height={14} borderRadius={6} />
+          </HStack>
+          <Skeleton isDark={isDark} width="80%" height={12} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width="40%" height={12} />
+          <HStack className="items-center justify-between mt-3">
+            <Skeleton isDark={isDark} width={60} height={24} />
+            <HStack space="sm">
+              <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
+              <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
+            </HStack>
+          </HStack>
+        </VStack>
+      </HStack>
+    </Box>
+  );
+};

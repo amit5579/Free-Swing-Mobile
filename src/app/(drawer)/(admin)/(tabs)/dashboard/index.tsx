@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   useColorScheme,
   Pressable,
   Text,
   View,
   ScrollView,
-  ActivityIndicator,
   BackHandler,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, router } from "expo-router";
+
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +20,8 @@ import PlayerStatistics from "./playerStatistics";
 import GameFeed, { GameFeedContent } from "./gameFeed";
 import Watermark from "@/components/watermark";
 import { getPlayers, getCourses, PlayerApi } from "@/api/admin/dashboard";
+import { Skeleton } from "@/components/Skeleton";
+
 
 export default function AdminDashboard() {
   const colorScheme = useColorScheme();
@@ -31,6 +34,9 @@ export default function AdminDashboard() {
   });
   const [players, setPlayers] = useState<PlayerApi[]>([]);
   const [loading, setLoading] = useState(true);
+  const { width: screenWidth } = useWindowDimensions();
+  const horizontalScrollRef = useRef<ScrollView>(null);
+
 
   useEffect(() => {
     fetchStats();
@@ -38,9 +44,10 @@ export default function AdminDashboard() {
 
   useFocusEffect(
     useCallback(() => {
+      fetchStats();
       const onBackPress = () => {
         if (activeTab !== "overview") {
-          setActiveTab("overview");
+          handleTabChange("overview");
           return true;
         } else {
           router.replace("/(auth)/login");
@@ -56,6 +63,23 @@ export default function AdminDashboard() {
       return () => backHandler.remove();
     }, [activeTab])
   );
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    const index = tabs.findIndex(t => t.key === key);
+    if (index !== -1) {
+      horizontalScrollRef.current?.scrollTo({ x: index * screenWidth, animated: true });
+    }
+  };
+
+  const onScroll = (event: any) => {
+    const x = event.nativeEvent.contentOffset.x;
+    const index = Math.round(x / screenWidth);
+    if (tabs[index] && tabs[index].key !== activeTab) {
+      setActiveTab(tabs[index].key);
+    }
+  };
+
 
   const fetchStats = async () => {
     try {
@@ -121,10 +145,8 @@ export default function AdminDashboard() {
               </Text>
             </VStack>
             <VStack className="items-end justify-center">
-              <Text 
-                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded ${isDark ? "text-gray-400 bg-white/5" : "text-gray-500 bg-gray-100"}`}
-              >
-                Admin
+              <Text className="text-xs font-semibold uppercase px-3 py-1 rounded-full bg-yellow-400 text-black">
+                ADMIN
               </Text>
             </VStack>
           </HStack>
@@ -140,8 +162,9 @@ export default function AdminDashboard() {
             return (
               <Pressable
                 key={tab.key}
-                onPress={() => setActiveTab(tab.key)}
+                onPress={() => handleTabChange(tab.key)}
                 className="flex-1 px-4 py-2 rounded-full flex-row items-center justify-center"
+
                 style={active ? { backgroundColor: "#8BC34A" } : {}}
               >
                 <Ionicons
@@ -159,9 +182,18 @@ export default function AdminDashboard() {
         </HStack>
       </VStack>
 
-      {/* Tab Content */}
-      <View style={{ flex: 1 }}>
-        {activeTab === "overview" && (
+      <ScrollView
+        ref={horizontalScrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        scrollEnabled={true}
+        style={{ flex: 1 }}
+      >
+
+        <View style={{ width: screenWidth }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
@@ -170,11 +202,45 @@ export default function AdminDashboard() {
             }}
           >
             {loading ? (
-              <View className="flex-1 items-center justify-center pt-10">
-                <ActivityIndicator size="large" color="#8BC34A" />
-                <Text className="mt-2 text-gray-500">Loading metrics...</Text>
-              </View>
+              <VStack style={{ gap: 16, marginBottom: 16 }}>
+                <HStack style={{ gap: 12 }}>
+                  <Box className="flex-1 rounded-xl p-5 min-h-[160px]" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", borderColor: "#8BC34A", borderWidth: 1.5 }}>
+                    <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ position: 'absolute', top: 12, right: 12 }} />
+                    <VStack className="flex-1 justify-between">
+                      <VStack>
+                        <Skeleton isDark={isDark} width={60} height={36} style={{ marginBottom: 8 }} />
+                        <Skeleton isDark={isDark} width={100} height={12} />
+                      </VStack>
+                      <Skeleton isDark={isDark} width="100%" height={32} borderRadius={8} />
+                    </VStack>
+                  </Box>
+                  <Box className="flex-1 rounded-xl p-5 min-h-[160px]" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", borderColor: "#8BC34A", borderWidth: 1.5 }}>
+                    <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ position: 'absolute', top: 12, right: 12 }} />
+                    <VStack className="flex-1 justify-between">
+                      <VStack>
+                        <Skeleton isDark={isDark} width={60} height={36} style={{ marginBottom: 8 }} />
+                        <Skeleton isDark={isDark} width={100} height={12} />
+                      </VStack>
+                      <Skeleton isDark={isDark} width="100%" height={32} borderRadius={8} />
+                    </VStack>
+                  </Box>
+                </HStack>
+                <Box className="rounded-xl p-5 min-h-[160px]" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", borderColor: "#8BC34A", borderWidth: 1.5 }}>
+                  <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ position: 'absolute', top: 12, right: 12 }} />
+                  <VStack className="flex-1 justify-between">
+                    <VStack>
+                      <Skeleton isDark={isDark} width={60} height={36} style={{ marginBottom: 8 }} />
+                      <Skeleton isDark={isDark} width={100} height={12} />
+                    </VStack>
+                    <Skeleton isDark={isDark} width="100%" height={32} borderRadius={8} />
+                  </VStack>
+                </Box>
+                <Box className="mt-4">
+                  <GameFeedContent />
+                </Box>
+              </VStack>
             ) : (
+
               <VStack style={{ gap: 16, marginBottom: 16 }}>
                 <HStack style={{ gap: 12 }}>
                   <Box
@@ -199,8 +265,8 @@ export default function AdminDashboard() {
                       </VStack>
                       <Pressable
                         className="py-2 rounded-lg items-center mt-2"
-                        onPress={() => setActiveTab("statistics")}
-                        style={{ 
+                        onPress={() => handleTabChange("statistics")}
+                        style={{
                           backgroundColor: "rgba(255, 255, 255, 0.2)",
                           borderColor: "rgba(46, 125, 50, 0.4)",
                           borderWidth: 1.0,
@@ -229,9 +295,9 @@ export default function AdminDashboard() {
                         <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
                         <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Courses</Text>
                       </VStack>
-                      <Pressable 
+                      <Pressable
                         className="py-2 rounded-lg items-center mt-2"
-                        style={{ 
+                        style={{
                           backgroundColor: "rgba(255, 255, 255, 0.2)",
                           borderColor: "rgba(2, 136, 209, 0.4)",
                           borderWidth: 1.0,
@@ -265,9 +331,9 @@ export default function AdminDashboard() {
                       <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
                       <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top Handicaps</Text>
                     </VStack>
-                    <Pressable 
+                    <Pressable
                       className="py-2 rounded-lg items-center mt-2"
-                      style={{ 
+                      style={{
                         backgroundColor: "rgba(254, 252, 232, 0.2)",
                         borderColor: "rgba(176, 137, 0, 0.4)",
                         borderWidth: 1.0,
@@ -286,12 +352,13 @@ export default function AdminDashboard() {
               </VStack>
             )}
           </ScrollView>
-        )}
+        </View>
 
-        {activeTab === "statistics" && (
+        <View style={{ width: screenWidth }}>
           <PlayerStatistics players={players} loading={loading} />
-        )}
-      </View>
+        </View>
+      </ScrollView>
+
     </SafeAreaView>
   );
 }

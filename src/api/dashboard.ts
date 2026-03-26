@@ -215,10 +215,10 @@ export type ScorecardHole = {
   yardage: number;
   teeBoxId: number;
   courseId: number;
-  score: number;
-  netScore: number;
+  score: number | null;
+  netScore: number | null;
   roundNumber: number;
-  stablefordPoints: number;
+  stablefordPoints: number | null;
   isCompleted: boolean;
   isDQ: boolean;
   tournamentId?: number;
@@ -228,7 +228,7 @@ export type ScorecardHole = {
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
   try {
     console.log("scorecardid",scorecardId);
-    const response = await https.get(`/scorecard/details/${scorecardId}`);
+    const response = await https.get(`scorecard/details/${scorecardId}`);
     return response.data as ScorecardHole[];
   } catch (error) {
     console.error("Failed to fetch scorecard details:", error);

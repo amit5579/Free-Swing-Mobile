@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
@@ -11,33 +11,46 @@ import {
     TouchableOpacity,
     View,
     ImageBackground,
-    Modal
+    Modal,
+    Keyboard,
 } from "react-native";
-import { Keyboard } from "react-native";
-import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+    signupSchema,
+    SignupFormData,
+} from "@/schema/authSchemas";
+
+// ─── Helper: Error Text ───────────────────────────────────────────────────────
+const ErrorText = ({ message }: { message?: any }) =>
+    message ? (
+        <Text style={{ color: "#ef4444", fontSize: 12, marginBottom: 10, marginTop: 2 }}>
+            {message.toString()}
+        </Text>
+    ) : null;
+
+// ─── Shared input style ───────────────────────────────────────────────────────
+const inputStyle = (hasError: boolean) => ({
+    borderWidth: 1,
+    borderColor: hasError ? "#ef4444" : "rgba(0,0,0,0.1)",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 50,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: "#000",
+    marginBottom: hasError ? 2 : 16,
+});
 
 export default function SignupScreen() {
     const router = useRouter();
 
-    const [userType, setUserType] = useState("beginner");
-
     const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-    // Form fields
-    const [name, setName] = useState("");
-    const [dob, setDob] = useState("");
-    const [mobile, setMobile] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [course, setCourse] = useState("");
-    const [hcp, setHcp] = useState("");
-    const [hIndex, setHIndex] = useState("");
-    const [slope, setSlope] = useState("");
-    const [rating, setRating] = useState("");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [courseModal, setCourseModal] = useState(false);
+
+    const bgImage = require("/assets/golf-bgg.jpg");
 
     const courses = [
         "Pebble Beach",
@@ -46,8 +59,59 @@ export default function SignupScreen() {
         "Royal Melbourne",
     ];
 
+    // ── Form setup ──────────────────────────────────────────────────────────
+    const {
+        control,
+        handleSubmit,
+        setValue,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm<SignupFormData>({
+        resolver: zodResolver(signupSchema),
+        defaultValues: {
+            userType: "beginner",
+            name: "",
+            dob: "",
+            mobile: "",
+            email: "",
+            password: "",
+        },
+    });
 
-    // Format date to dd-mm-yyyy
+    const userType = watch("userType");
+
+    // Reset form when user type changes
+    const handleUserTypeChange = (type: "beginner" | "experienced") => {
+        if (type === "experienced") {
+            reset({
+                userType: "experienced",
+                name: "",
+                dob: "",
+                mobile: "",
+                email: "",
+                password: "",
+                course: "",
+                hcp: "",
+                hIndex: "",
+                slope: "",
+                rating: "",
+            });
+        } else {
+            reset({
+                userType: "beginner",
+                name: "",
+                dob: "",
+                mobile: "",
+                email: "",
+                password: "",
+            });
+        }
+        setSelectedDate(new Date());
+        setShowDatePicker(false);
+    };
+
+    // ── Date helpers ─────────────────────────────────────────────────────────
     const formatDate = (date: Date) => {
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -55,7 +119,6 @@ export default function SignupScreen() {
         return `${day}-${month}-${year}`;
     };
 
-    // Handle date change with 18+ restriction
     const onDateChange = (event: any, date?: Date) => {
         setShowDatePicker(false);
         if (date) {
@@ -70,111 +133,90 @@ export default function SignupScreen() {
                 return;
             }
             setSelectedDate(date);
-            setDob(formatDate(date));
+            setValue("dob", formatDate(date), { shouldValidate: true } as any);
         }
     };
 
-    // Reset form fields when switching user type
-    const resetForm = () => {
-        setName("");
-        setDob("");
-        setMobile("");
-        setEmail("");
-        setPassword("");
-        setCourse("");
-        setHcp("");
-        setHIndex("");
-        setSlope("");
-        setRating("");
-        setSelectedDate(new Date());
-        setShowDatePicker(false);
-    };
-
-    const handleUserTypeChange = (type: string) => {
-        setUserType(type);
-        resetForm();
-    };
-
-    const bgImage = require("/assets/golf-bgg.jpg");
-
-    const handleSignup = async () => {
-  try {
-    console.log("🟢 Signup started");
-
-    const payload = {
-      Username: name,
-      Email: email,
-      Password: password,
-      MobileNumber: mobile,
-      DateOfBirth: dob ? new Date(selectedDate).toISOString().split("T")[0] : null,
-      HomeCourse: course || null,
-      Handicap: hcp || null,
-      HandicapIndex: hIndex || null,
-      Slope: slope || null,
-      Rating: rating || null,
-    };
-
-    console.log("📦 Payload:", payload);
-
-    const response = await fetch(
-      "https://kolve18freeswing.com/api/Auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    console.log("📡 Status:", response.status);
-
-    const data = await response.json();
-
-    console.log("📩 API Response:", data);
-
-    if (!response.ok) {
-      alert(data.message || "Signup failed");
-      return;
-    }
-
-    alert("Signup successful ✅");
-
-    // router.replace("/login");
-    router.replace({
-  pathname: "/login",
-  params: { email: email, password: password },
-});
-
-  } catch (error) {
-    console.log("❌ Signup error:", error);
-  }
-};
-
+    // ── Keyboard listeners ───────────────────────────────────────────────────
     useEffect(() => {
-        const showListener = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
-        const hideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
-
+        const showListener = Keyboard.addListener("keyboardDidShow", () =>
+            setKeyboardVisible(true)
+        );
+        const hideListener = Keyboard.addListener("keyboardDidHide", () =>
+            setKeyboardVisible(false)
+        );
         return () => {
             showListener.remove();
             hideListener.remove();
         };
     }, []);
 
+    // ── Submit ───────────────────────────────────────────────────────────────
+    const onSubmit = async (data: any) => {
+        try {
+            console.log("🟢 Signup started");
+
+            const payload = {
+                Username: data.name,
+                Email: data.email,
+                Password: data.password,
+                MobileNumber: data.mobile,
+                DateOfBirth: data.dob
+                    ? new Date(selectedDate).toISOString().split("T")[0]
+                    : null,
+                HomeCourse: data.course || null,
+                Handicap: data.hcp || null,
+                HandicapIndex: data.hIndex || null,
+                Slope: data.slope || null,
+                Rating: data.rating || null,
+            };
+
+            console.log("📦 Payload:", payload);
+
+            const response = await fetch(
+                "https://kolve18freeswing.com/api/Auth/register",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            console.log("📡 Status:", response.status);
+            const result = await response.json();
+            console.log("📩 API Response:", result);
+
+            if (!response.ok) {
+                alert(result.message || "Signup failed");
+                return;
+            }
+
+            alert("Signup successful ✅");
+            router.replace({
+                pathname: "/login",
+                params: { email: data.email, password: data.password },
+            } as any);
+        } catch (error) {
+            console.log("❌ Signup error:", error);
+        }
+    };
+
+    const hasError = (name: string) => !!(errors as any)[name];
+    const getErrorMessage = (name: string) => (errors as any)[name]?.message;
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-            <ImageBackground
-                source={bgImage}
-                style={{ flex: 1 }}
-                resizeMode="cover"
-            >
-                <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-                    keyboardShouldPersistTaps="handled">
-
+            <ImageBackground source={bgImage} style={{ flex: 1 }} resizeMode="cover">
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Header */}
                     <View style={{ alignItems: "center", marginTop: 40, marginBottom: 40 }}>
                         <Text style={{ color: "#2e7d32", fontSize: 32, fontWeight: "bold" }}>
@@ -196,41 +238,47 @@ export default function SignupScreen() {
                             shadowOffset: { width: 0, height: 6 },
                             shadowOpacity: 0.15,
                             shadowRadius: 12,
-                            // height: 550,
                             height: keyboardVisible ? undefined : 550,
                         }}
                     >
-
-                        {/* User Type */}
+                        {/* User Type Toggle */}
                         <View style={{ flexDirection: "row", marginBottom: 20 }}>
                             <TouchableOpacity
-                                onPress={() => setUserType("beginner")}
+                                onPress={() => handleUserTypeChange("beginner")}
                                 style={{
                                     flex: 1,
                                     padding: 12,
                                     borderRadius: 10,
                                     marginRight: 5,
-                                    backgroundColor: userType === "beginner" ? "#8bc34a" : "#e5e5e5",
+                                    backgroundColor:
+                                        userType === "beginner" ? "#8bc34a" : "#e5e5e5",
                                     alignItems: "center",
                                 }}
                             >
-                                <Text style={{ color: userType === "beginner" ? "#fff" : "#000" }}>
+                                <Text
+                                    style={{ color: userType === "beginner" ? "#fff" : "#000" }}
+                                >
                                     Beginner
                                 </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                onPress={() => setUserType("experienced")}
+                                onPress={() => handleUserTypeChange("experienced")}
                                 style={{
                                     flex: 1,
                                     padding: 12,
                                     borderRadius: 10,
                                     marginLeft: 5,
-                                    backgroundColor: userType === "experienced" ? "#8bc34a" : "#e5e5e5",
+                                    backgroundColor:
+                                        userType === "experienced" ? "#8bc34a" : "#e5e5e5",
                                     alignItems: "center",
                                 }}
                             >
-                                <Text style={{ color: userType === "experienced" ? "#fff" : "#000" }}>
+                                <Text
+                                    style={{
+                                        color: userType === "experienced" ? "#fff" : "#000",
+                                    }}
+                                >
                                     Experienced
                                 </Text>
                             </TouchableOpacity>
@@ -246,72 +294,86 @@ export default function SignupScreen() {
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Name
                             </Text>
-                            <TextInput
-                                placeholder="Enter your name"
-                                placeholderTextColor="rgba(0,0,0,0.4)"
-                                value={name}
-                                onChangeText={setName}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    paddingHorizontal: 16,
-                                    height: 50,
-                                    backgroundColor: "rgba(255,255,255,0.9)",
-                                    color: "#000",
-                                }}
+                            <Controller
+                                control={control}
+                                name="name"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        placeholder="Enter your name"
+                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        style={inputStyle(hasError("name"))}
+                                    />
+                                )}
                             />
-                            {/* DOB with clear button */}
+                            <ErrorText message={getErrorMessage("name")} />
+
+                            {/* Date of Birth */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Date of Birth
                             </Text>
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    backgroundColor: "rgba(255,255,255,0.9)",
-                                    height: 50,
-                                    paddingHorizontal: 16,
-                                }}
-                            >
-                                <TouchableOpacity
-                                    onPress={() => setShowDatePicker(true)}
-                                    style={{ flex: 1 }}
-                                >
-                                    <Text style={{ color: dob ? "#000" : "rgba(0,0,0,0.4)" }}>
-                                        {dob || "dd-mm-yyyy"}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                {/* Clear button */}
-                                {dob ? (
-                                    <TouchableOpacity
-                                        onPress={() => setDob("")}
+                            <Controller
+                                control={control}
+                                name="dob"
+                                render={({ field: { value } }) => (
+                                    <View
                                         style={{
-                                            marginLeft: 10,
-                                            width: 24,
-                                            height: 24,
-                                            borderRadius: 12,
-                                            backgroundColor: "#e5e5e5",
-                                            justifyContent: "center",
+                                            flexDirection: "row",
                                             alignItems: "center",
+                                            borderWidth: 1,
+                                            borderColor: hasError("dob")
+                                                ? "#ef4444"
+                                                : "rgba(0,0,0,0.1)",
+                                            borderRadius: 14,
+                                            backgroundColor: "rgba(255,255,255,0.9)",
+                                            height: 50,
+                                            paddingHorizontal: 16,
+                                            marginBottom: hasError("dob") ? 2 : 16,
                                         }}
                                     >
-                                        <Ionicons name="close" size={16} color="red" />
-                                    </TouchableOpacity>
-                                ) : (
-                                    // Calendar icon if no DOB selected
-                                    <Ionicons
-                                        name="calendar"
-                                        size={20}
-                                        color="rgba(0,0,0,0.4)"
-                                        onPress={() => setShowDatePicker(true)}
-                                    />
+                                        <TouchableOpacity
+                                            onPress={() => setShowDatePicker(true)}
+                                            style={{ flex: 1 }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    color: value ? "#000" : "rgba(0,0,0,0.4)",
+                                                }}
+                                            >
+                                                {value || "dd-mm-yyyy"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        {value ? (
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    setValue("dob", "", { shouldValidate: true } as any)
+                                                }
+                                                style={{
+                                                    marginLeft: 10,
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: 12,
+                                                    backgroundColor: "#e5e5e5",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <Ionicons name="close" size={16} color="red" />
+                                            </TouchableOpacity>
+                                        ) : (
+                                            <Ionicons
+                                                name="calendar"
+                                                size={20}
+                                                color="rgba(0,0,0,0.4)"
+                                                onPress={() => setShowDatePicker(true)}
+                                            />
+                                        )}
+                                    </View>
                                 )}
-                            </View>
+                            />
+                            <ErrorText message={getErrorMessage("dob")} />
 
                             {showDatePicker && (
                                 <DateTimePicker
@@ -327,192 +389,234 @@ export default function SignupScreen() {
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Mobile Number
                             </Text>
-                            <TextInput
-                                placeholder="Enter your mobile number"
-                                placeholderTextColor="rgba(0,0,0,0.4)"
-                                value={mobile}
-                                onChangeText={setMobile}
-                                keyboardType="phone-pad"
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    paddingHorizontal: 16,
-                                    height: 50,
-                                    backgroundColor: "rgba(255,255,255,0.9)", // glass-style background
-                                    color: "#000",
-                                }}
+                            <Controller
+                                control={control}
+                                name="mobile"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        placeholder="Enter your mobile number"
+                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        keyboardType="phone-pad"
+                                        style={inputStyle(hasError("mobile"))}
+                                    />
+                                )}
                             />
+                            <ErrorText message={getErrorMessage("mobile")} />
 
                             {/* Email */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Email
                             </Text>
-                            <TextInput
-                                placeholder="Enter your email"
-                                placeholderTextColor="rgba(0,0,0,0.4)"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    paddingHorizontal: 16,
-                                    height: 50,
-                                    marginBottom: 20,
-                                    backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
-                                    color: "#000",
-                                }}
+                            <Controller
+                                control={control}
+                                name="email"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        placeholder="Enter your email"
+                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        style={inputStyle(hasError("email"))}
+                                    />
+                                )}
                             />
+                            <ErrorText message={getErrorMessage("email")} />
 
-                            {/* Experienced Fields */}
+                            {/* Experienced-only fields */}
                             {userType === "experienced" && (
                                 <>
-                                    {/* Home Course Dropdown */}
-                                    <TouchableOpacity
-                                        onPress={() => setCourseModal(true)}
+                                    {/* Home Course */}
+                                    <Text
                                         style={{
-                                            borderWidth: 1,
-                                            borderColor: "rgba(0,0,0,0.1)",
-                                            borderRadius: 14,
-                                            paddingHorizontal: 16,
-                                            height: 50,
-                                            width: "100%",
-                                            marginBottom: 20,
-                                            backgroundColor: "rgba(255,255,255,0.9)",
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
+                                            fontWeight: "600",
+                                            marginBottom: 6,
+                                            color: "#374151",
                                         }}
                                     >
-                                        <Text style={{ color: course ? "#000" : "rgba(0,0,0,0.4)" }}>
-                                            {course || "Select Home Course"}
-                                        </Text>
-                                        <Ionicons name="chevron-down" size={20} color="rgba(0,0,0,0.4)" />
-                                    </TouchableOpacity>
+                                        Home Course
+                                    </Text>
+                                    <Controller
+                                        control={control}
+                                        name={"course" as any}
+                                        render={({ field: { value } }) => (
+                                            <TouchableOpacity
+                                                onPress={() => setCourseModal(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: hasError("course")
+                                                        ? "#ef4444"
+                                                        : "rgba(0,0,0,0.1)",
+                                                    borderRadius: 14,
+                                                    paddingHorizontal: 16,
+                                                    height: 50,
+                                                    width: "100%",
+                                                    marginBottom: hasError("course") ? 2 : 16,
+                                                    backgroundColor: "rgba(255,255,255,0.9)",
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between",
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: value ? "#000" : "rgba(0,0,0,0.4)",
+                                                    }}
+                                                >
+                                                    {value || "Select Home Course"}
+                                                </Text>
+                                                <Ionicons
+                                                    name="chevron-down"
+                                                    size={20}
+                                                    color="rgba(0,0,0,0.4)"
+                                                />
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                    <ErrorText message={getErrorMessage("course")} />
 
-                                    <View
-                                        style={{ flexDirection: "row", justifyContent: "space-between" }}
-                                    >
-                                        <TextInput
-                                            placeholder="Hcp"
-                                            value={hcp}
-                                            onChangeText={setHcp}
-                                            keyboardType="numeric"
-                                            // style={{
-                                            //     borderWidth: 1,
-                                            //     borderColor: "#d1d5db",
-                                            //     borderRadius: 6,
-                                            //     padding: 12,
-                                            //     width: "48%",
-                                            //     marginBottom: 16,
-                                            // }}
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: "rgba(0,0,0,0.1)",
-                                                borderRadius: 14,
-                                                paddingHorizontal: 16,
-                                                height: 50,
-                                                width: "48%",
-                                                marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
-                                                color: "#000",
-                                            }}
-                                        />
-                                        <TextInput
-                                            placeholder="H.Index"
-                                            value={hIndex}
-                                            onChangeText={setHIndex}
-                                            keyboardType="numeric"
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: "rgba(0,0,0,0.1)",
-                                                borderRadius: 14,
-                                                paddingHorizontal: 16,
-                                                height: 50,
-                                                width: "48%",
-                                                marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
-                                                color: "#000",
-                                            }}
-                                        />
+                                    {/* Hcp & H.Index */}
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <View style={{ width: "48%" }}>
+                                            <Controller
+                                                control={control}
+                                                name={"hcp" as any}
+                                                render={({ field: { onChange, onBlur, value } }) => (
+                                                    <TextInput
+                                                        placeholder="Hcp"
+                                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                                        value={value}
+                                                        onChangeText={onChange}
+                                                        onBlur={onBlur}
+                                                        keyboardType="numeric"
+                                                        style={{
+                                                            ...inputStyle(hasError("hcp")),
+                                                            width: "100%",
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                            <ErrorText message={getErrorMessage("hcp")} />
+                                        </View>
+                                        <View style={{ width: "48%" }}>
+                                            <Controller
+                                                control={control}
+                                                name={"hIndex" as any}
+                                                render={({ field: { onChange, onBlur, value } }) => (
+                                                    <TextInput
+                                                        placeholder="H.Index"
+                                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                                        value={value}
+                                                        onChangeText={onChange}
+                                                        onBlur={onBlur}
+                                                        keyboardType="numeric"
+                                                        style={{
+                                                            ...inputStyle(hasError("hIndex")),
+                                                            width: "100%",
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                            <ErrorText message={getErrorMessage("hIndex")} />
+                                        </View>
                                     </View>
 
-                                    <View
-                                        style={{ flexDirection: "row", justifyContent: "space-between" }}
-                                    >
-                                        <TextInput
-                                            placeholder="Slope"
-                                            value={slope}
-                                            onChangeText={setSlope}
-                                            keyboardType="numeric"
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: "rgba(0,0,0,0.1)",
-                                                borderRadius: 14,
-                                                paddingHorizontal: 16,
-                                                height: 50,
-                                                width: "48%",
-                                                marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
-                                                color: "#000",
-                                            }}
-                                        />
-                                        <TextInput
-                                            placeholder="Rating"
-                                            value={rating}
-                                            onChangeText={setRating}
-                                            keyboardType="numeric"
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: "rgba(0,0,0,0.1)",
-                                                borderRadius: 14,
-                                                paddingHorizontal: 16,
-                                                height: 50,
-                                                width: "48%",
-                                                marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
-                                                color: "#000",
-                                            }}
-                                        />
+                                    {/* Slope & Rating */}
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <View style={{ width: "48%" }}>
+                                            <Controller
+                                                control={control}
+                                                name={"slope" as any}
+                                                render={({ field: { onChange, onBlur, value } }) => (
+                                                    <TextInput
+                                                        placeholder="Slope"
+                                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                                        value={value}
+                                                        onChangeText={onChange}
+                                                        onBlur={onBlur}
+                                                        keyboardType="numeric"
+                                                        style={{
+                                                            ...inputStyle(hasError("slope")),
+                                                            width: "100%",
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                            <ErrorText message={getErrorMessage("slope")} />
+                                        </View>
+                                        <View style={{ width: "48%" }}>
+                                            <Controller
+                                                control={control}
+                                                name={"rating" as any}
+                                                render={({ field: { onChange, onBlur, value } }) => (
+                                                    <TextInput
+                                                        placeholder="Rating"
+                                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                                        value={value}
+                                                        onChangeText={onChange}
+                                                        onBlur={onBlur}
+                                                        keyboardType="numeric"
+                                                        style={{
+                                                            ...inputStyle(hasError("rating")),
+                                                            width: "100%",
+                                                        }}
+                                                    />
+                                                )}
+                                            />
+                                            <ErrorText message={getErrorMessage("rating")} />
+                                        </View>
                                     </View>
                                 </>
                             )}
+
                             {/* Password */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Password
                             </Text>
-                            <View
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    paddingHorizontal: 16,
-                                    height: 50,
-                                    marginBottom: 24,
-                                    backgroundColor: "rgba(255,255,255,0.9)",
-                                }}
-                            >
-                                <TextInput
-                                    placeholder="Enter your password"
-                                    placeholderTextColor="rgba(0,0,0,0.4)"
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry={!showPassword}
-                                    style={{ flex: 1, height: "100%", color: "#000" }}
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Ionicons
-                                        name={showPassword ? "eye" : "eye-off"}
-                                        size={22}
-                                        color="#374151"
-                                    />
-                                </TouchableOpacity>
-                            </View>
+                            <Controller
+                                control={control}
+                                name="password"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <View
+                                        style={{
+                                            borderWidth: 1,
+                                            borderColor: hasError("password")
+                                                ? "#ef4444"
+                                                : "rgba(0,0,0,0.1)",
+                                            borderRadius: 14,
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            paddingHorizontal: 16,
+                                            height: 50,
+                                            marginBottom: hasError("password") ? 2 : 24,
+                                            backgroundColor: "rgba(255,255,255,0.9)",
+                                        }}
+                                    >
+                                        <TextInput
+                                            placeholder="Enter your password"
+                                            placeholderTextColor="rgba(0,0,0,0.4)"
+                                            value={value}
+                                            onChangeText={onChange}
+                                            onBlur={onBlur}
+                                            secureTextEntry={!showPassword}
+                                            style={{ flex: 1, height: "100%", color: "#000" }}
+                                        />
+                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                            <Ionicons
+                                                name={showPassword ? "eye" : "eye-off"}
+                                                size={22}
+                                                color="#374151"
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            />
+                            <ErrorText message={getErrorMessage("password")} />
                         </ScrollView>
 
                         {/* Signup Button */}
@@ -524,14 +628,14 @@ export default function SignupScreen() {
                                 alignItems: "center",
                                 marginTop: 10,
                             }}
-                            onPress={handleSignup}
+                            onPress={handleSubmit(onSubmit)}
                         >
                             <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
                                 Sign Up
                             </Text>
                         </TouchableOpacity>
 
-                        {/* Login */}
+                        {/* Login link */}
                         <Text style={{ textAlign: "center", marginTop: 15 }}>
                             Already have an account?{" "}
                             <Text
@@ -541,7 +645,6 @@ export default function SignupScreen() {
                                 Login
                             </Text>
                         </Text>
-
                     </View>
                 </ScrollView>
             </ImageBackground>
@@ -568,7 +671,7 @@ export default function SignupScreen() {
                                 key={i}
                                 style={{ padding: 15 }}
                                 onPress={() => {
-                                    setCourse(item);
+                                    setValue("course" as any, item, { shouldValidate: true });
                                     setCourseModal(false);
                                 }}
                             >
@@ -585,25 +688,3 @@ export default function SignupScreen() {
         </KeyboardAvoidingView>
     );
 }
-
-const input = {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 50,
-    marginBottom: 16,
-    backgroundColor: "rgba(255,255,255,0.9)",
-};
-
-const passwordInput = {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    height: 50,
-    marginBottom: 16,
-    backgroundColor: "rgba(255,255,255,0.9)",
-};
