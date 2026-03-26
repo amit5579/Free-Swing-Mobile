@@ -17,6 +17,7 @@ import { Modal, Pressable, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getCourse } from "@/api/admin/courses";
 import { Divider } from "@/components/divider";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
@@ -25,13 +26,17 @@ export default function StartNewRoundPage() {
 
   const [courseList, setCourseList] = useState<any>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchCourses = async () => {
     try {
+      setLoading(true);
       const ccs = await getCourse();
       setCourseList(ccs);
     } catch (error) {
       throw console.log("Error fetching courses", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,6 +89,64 @@ export default function StartNewRoundPage() {
       </>
     );
   };
+
+  const CourseCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        className="rounded-2xl p-5 relative"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          marginBottom: 12,
+        }}
+      >
+        {/* Badge */}
+        <Skeleton
+          isDark={isDark}
+          height={20}
+          width={60}
+          borderRadius={20}
+          style={{ position: "absolute", top: 12, right: 12 }}
+        />
+
+        {/* Icon */}
+        <Skeleton
+          isDark={isDark}
+          height={28}
+          width={28}
+          borderRadius={6}
+          style={{ marginBottom: 12 }}
+        />
+
+        {/* Title */}
+        <Skeleton
+          isDark={isDark}
+          height={18}
+          width="60%"
+          style={{ marginBottom: 10 }}
+        />
+
+        {/* Row */}
+        <HStack className="justify-between">
+          <Skeleton isDark={isDark} height={14} width="40%" />
+          <Skeleton isDark={isDark} height={14} width="30%" />
+        </HStack>
+
+        {/* Divider */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+            marginVertical: 12,
+          }}
+        />
+
+        {/* Button */}
+        <Skeleton isDark={isDark} height={36} borderRadius={10} />
+      </Box>
+    );
+  };
+
   return (
     <>
       <SafeAreaView
@@ -91,23 +154,36 @@ export default function StartNewRoundPage() {
           flex: 1,
         }}
       >
-        {/* HEADER */}
-        <RenderHeader />
+
+        {/* Header */}
+       
+          <RenderHeader />
+
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
-              {courseList.map((course: any) => (
-                <CourseCard
-                  key={course.courseId}
-                  course={course}
-                  isDark={isDark}
-                  //   onPress={() => routePage.push("/newRound/scoreCard")}
-                />
-              ))}
+              {loading ? (
+                <>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <CourseCardSkeleton key={i} isDark={isDark} />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {courseList.map((course: any) => (
+                    <CourseCard
+                      key={course.courseId}
+                      course={course}
+                      isDark={isDark}
+                      //   onPress={() => routePage.push("/newRound/scoreCard")}
+                    />
+                  ))}
+                </>
+              )}
             </VStack>
-          </VStack>{" "}
+          </VStack>
         </ScrollView>
       </SafeAreaView>
     </>

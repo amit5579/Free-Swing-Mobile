@@ -36,12 +36,13 @@ import { Controller } from "react-hook-form";
 import { getCourse } from "@/api/admin/courses";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function subAdminsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-const router = useRouter();
+  const router = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -148,6 +149,78 @@ const router = useRouter();
     }
   }, [editingAdmin, isEditMode]);
 
+  const SubAdminCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        className="rounded-2xl p-4"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          marginBottom: 12,
+        }}
+      >
+        <VStack className="gap-2">
+          {/* Name */}
+          <Skeleton isDark={isDark} height={16} width="50%" />
+
+          {/* Email */}
+          <Skeleton isDark={isDark} height={12} width="70%" />
+
+          {/* Mobile */}
+          <Skeleton isDark={isDark} height={12} width="60%" />
+
+          {/* Courses */}
+          <Skeleton
+            isDark={isDark}
+            height={12}
+            width="30%"
+            style={{ marginTop: 6 }}
+          />
+
+          <HStack style={{ flexWrap: "wrap", marginTop: 6 }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                isDark={isDark}
+                height={20}
+                width={60}
+                borderRadius={6}
+                style={{ marginRight: 6, marginBottom: 6 }}
+              />
+            ))}
+          </HStack>
+
+          {/* Players */}
+          <HStack style={{ marginTop: 6 }}>
+            <Skeleton isDark={isDark} height={12} width={60} />
+            <Skeleton
+              isDark={isDark}
+              height={20}
+              width={30}
+              borderRadius={6}
+              style={{ marginLeft: 8 }}
+            />
+          </HStack>
+
+          {/* Divider */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: isDark ? "#262626" : "#e5e5e5",
+              marginVertical: 8,
+            }}
+          />
+
+          {/* Actions */}
+          <HStack style={{ justifyContent: "space-between" }}>
+            <Skeleton isDark={isDark} height={14} width={50} />
+            <Skeleton isDark={isDark} height={14} width={50} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
+
   return (
     <>
       <SafeAreaView
@@ -161,12 +234,14 @@ const router = useRouter();
         <HStack className="justify-between items-center px-4 my-3">
           <TouchableOpacity
             onPress={() => router.back()}
-            style={{
-              // borderRadius: 12,
-              // backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e8f5e9",
-            }}
+            style={
+              {
+                // borderRadius: 12,
+                // backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e8f5e9",
+              }
+            }
           >
-                <Ionicons name="arrow-back" size={24} color="#8bc34a" />
+            <Ionicons name="arrow-back" size={24} color="#8bc34a" />
           </TouchableOpacity>
 
           <ThemedText
@@ -199,17 +274,27 @@ const router = useRouter();
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">
-            {subAdminList.map((sbadmin: any) => (
-              <SubAdminCard
-                key={sbadmin.id}
-                sbadmin={sbadmin}
-                isDark={isDark}
-                setModalVisible={setModalVisible}
-                setIsEditMode={setIsEditMode}
-                setEditingAdmin={setEditingAdmin}
-                // setDeleteModalVisible={setDeleteModalVisible}
-              />
-            ))}
+            {pageLoading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <SubAdminCardSkeleton key={i} isDark={isDark} />
+                ))}
+              </>
+            ) : (
+              <>
+                {subAdminList.map((sbadmin: any) => (
+                  <SubAdminCard
+                    key={sbadmin.id}
+                    sbadmin={sbadmin}
+                    isDark={isDark}
+                    setModalVisible={setModalVisible}
+                    setIsEditMode={setIsEditMode}
+                    setEditingAdmin={setEditingAdmin}
+                    // setDeleteModalVisible={setDeleteModalVisible}
+                  />
+                ))}
+              </>
+            )}
           </VStack>
         </ScrollView>
       </SafeAreaView>

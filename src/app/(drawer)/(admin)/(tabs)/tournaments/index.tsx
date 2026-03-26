@@ -34,11 +34,12 @@ import { getCourse } from "@/api/admin/courses";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { tournamentSchema } from "@/schema/adminSchemas";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
+const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   // const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   // const [selectedTeeColor, setSelectedTeeColor] = useState<string | null>(null);
@@ -125,6 +126,8 @@ export default function adminTournamentsPage() {
 
   const fetchTournaments = async () => {
     try {
+          setLoading(true);
+
       const data = await getTournaments();
       const courseData = await getCourse();
 
@@ -141,7 +144,9 @@ export default function adminTournamentsPage() {
       // console.log("Formatted Courses:", formattedCourses);
     } catch (error) {
       console.error("Error fetching tournaments:", error);
-    }
+    }finally {
+    setLoading(false);
+  }
   };
 
   useEffect(() => {
@@ -165,6 +170,73 @@ export default function adminTournamentsPage() {
       endDate: editingCourse.endDate ? new Date(editingCourse.endDate) : null,
     });
   }, [isEditMode, editingCourse, courses, scoringTypes]);
+
+const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+  return (
+    <Box
+      style={{
+        borderWidth: 1,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        borderColor: isDark ? "#262626" : "#e5e5e5",
+      }}
+    >
+      {/* HEADER */}
+      <HStack style={{ justifyContent: "space-between" }}>
+        <View style={{ flex: 1 }}>
+          <Skeleton isDark={isDark} height={16} width="60%" />
+          <Skeleton
+            isDark={isDark}
+            height={12}
+            width="40%"
+            style={{ marginTop: 6 }}
+          />
+        </View>
+
+        <Skeleton isDark={isDark} height={20} width={20} />
+      </HStack>
+
+      {/* DATES */}
+      <HStack style={{ justifyContent: "space-between", marginTop: 12 }}>
+        <VStack>
+          <Skeleton isDark={isDark} height={10} width={40} />
+          <Skeleton
+            isDark={isDark}
+            height={12}
+            width={80}
+            style={{ marginTop: 4 }}
+          />
+        </VStack>
+
+        <VStack>
+          <Skeleton isDark={isDark} height={10} width={40} />
+          <Skeleton
+            isDark={isDark}
+            height={12}
+            width={80}
+            style={{ marginTop: 4 }}
+          />
+        </VStack>
+      </HStack>
+
+      {/* ACTIONS */}
+      <HStack
+        style={{
+          justifyContent: "space-around",
+          marginTop: 16,
+          borderTopWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          paddingTop: 10,
+        }}
+      >
+        <Skeleton isDark={isDark} height={14} width={50} />
+        <Skeleton isDark={isDark} height={14} width={60} />
+      </HStack>
+    </Box>
+  );
+};
+
 
   return (
     <>
@@ -212,7 +284,14 @@ export default function adminTournamentsPage() {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">
-            {tournaments.map((tournament: any) => (
+{loading ? (
+  <>
+    {Array.from({ length: 4 }).map((_, i) => (
+      <TournamentCardSkeleton key={i} isDark={isDark} />
+    ))}
+  </>
+) : (
+  <> {tournaments.map((tournament: any) => (
               <TournamentCard
                 key={tournament.tournamentId}
                 tournament={tournament}
@@ -222,7 +301,9 @@ export default function adminTournamentsPage() {
                 setModalVisible={setModalVisible}
                 isDark={isDark}
               />
-            ))}
+            ))}</>)}
+
+           
           </VStack>
         </ScrollView>
       </ThemedView>

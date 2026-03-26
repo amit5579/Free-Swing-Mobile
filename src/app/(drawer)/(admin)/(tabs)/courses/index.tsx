@@ -27,10 +27,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createCourse, deleteCourse } from "@/api/admin/courses";
 import { getCourse } from "@/api/admin/courses";
 import { courseSchema } from "@/schema/adminSchemas";
-export default function adminTournamentPage() {
+import { Skeleton } from "@/components/Skeleton";
+export default function adminCoursePage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+
+  const [loading, setLoading] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -56,11 +59,15 @@ export default function adminTournamentPage() {
 
   const fetchCourse = async () => {
     try {
+      setLoading(true);
+
       const response = await getCourse();
       setCourseList(response);
       // console.log("courseList: ", courseList);
     } catch (error) {
       console.error("Failed to fetch course list", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,6 +126,71 @@ export default function adminTournamentPage() {
   useEffect(() => {
     fetchCourse();
   }, []);
+
+  const CourseCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        className="rounded-2xl p-5"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          marginBottom: 12,
+        }}
+      >
+        {/* Badge */}
+        <Skeleton
+          isDark={isDark}
+          height={20}
+          width={60}
+          borderRadius={20}
+          style={{ position: "absolute", top: 12, right: 12 }}
+        />
+
+        {/* Icon */}
+        <Skeleton
+          isDark={isDark}
+          height={28}
+          width={28}
+          borderRadius={6}
+          style={{ marginBottom: 12 }}
+        />
+
+        {/* Title */}
+        <Skeleton
+          isDark={isDark}
+          height={18}
+          width="60%"
+          style={{ marginBottom: 10 }}
+        />
+
+        {/* Location */}
+        <Skeleton isDark={isDark} height={14} width="70%" />
+
+        {/* Button */}
+        <Skeleton
+          isDark={isDark}
+          height={36}
+          borderRadius={10}
+          style={{ marginTop: 12 }}
+        />
+
+        {/* Divider */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+            marginVertical: 12,
+          }}
+        />
+
+        {/* Actions */}
+        <HStack style={{ justifyContent: "space-between" }}>
+          <Skeleton isDark={isDark} height={14} width={50} />
+          <Skeleton isDark={isDark} height={14} width={50} />
+        </HStack>
+      </Box>
+    );
+  };
 
   return (
     <>
@@ -181,17 +253,27 @@ export default function adminTournamentPage() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
-              {courseList.map((course: any) => (
-                <CourseCardAdmin
-                  key={course.courseId}
-                  course={course}
-                  isDark={isDark}
-                  setIsEditMode={setIsEditMode}
-                  setEditingCourse={setEditingCourse}
-                  onDelete={onDelete}
-                  openModal={() => setModalVisible(true)}
-                />
-              ))}
+              {loading ? (
+                <>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <CourseCardSkeleton key={i} isDark={isDark} />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {courseList.map((course: any) => (
+                    <CourseCardAdmin
+                      key={course.courseId}
+                      course={course}
+                      isDark={isDark}
+                      setIsEditMode={setIsEditMode}
+                      setEditingCourse={setEditingCourse}
+                      onDelete={onDelete}
+                      openModal={() => setModalVisible(true)}
+                    />
+                  ))}
+                </>
+              )}
             </VStack>
           </VStack>
         </ScrollView>

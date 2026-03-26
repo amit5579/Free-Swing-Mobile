@@ -19,6 +19,7 @@ import { useEffect as useReactEffect } from "react";
 import { getHolesByTeeBox, updateHoles } from "@/api/admin/courses";
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function EditHolesPage() {
   const colorScheme = useColorScheme();
@@ -28,7 +29,7 @@ export default function EditHolesPage() {
   const routePage = useRouter();
 
   const [holes, setHoles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // ✅ FETCH DATA
   const fetchHoles = async () => {
@@ -84,6 +85,51 @@ export default function EditHolesPage() {
     setHoles(updated);
   };
 
+
+  const HoleCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+  return (
+    <Box
+      className="p-4 rounded-xl"
+      style={{
+        borderWidth: 1,
+        borderColor: isDark ? "#262626" : "#e5e5e5",
+        marginBottom: 12,
+      }}
+    >
+      <VStack>
+        {/* Title */}
+        <Skeleton
+          isDark={isDark}
+          height={14}
+          width="30%"
+          style={{ marginBottom: 10 }}
+        />
+
+        {/* Inputs Row */}
+        <HStack style={{ justifyContent: "space-between" }}>
+          {[1, 2, 3].map((_, i) => (
+            <View key={i} style={{ width: "30%" }}>
+              {/* Label */}
+              <Skeleton
+                isDark={isDark}
+                height={10}
+                width="60%"
+                style={{ marginBottom: 6 }}
+              />
+
+              {/* Input Box */}
+              <Skeleton
+                isDark={isDark}
+                height={36}
+                borderRadius={8}
+              />
+            </View>
+          ))}
+        </HStack>
+      </VStack>
+    </Box>
+  );
+};
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* HEADER */}
@@ -120,11 +166,14 @@ export default function EditHolesPage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       >
-        {loading ? (
-          <ActivityIndicator size="large" color="#8BC34A" />
-        ) : (
-          <VStack space="md">
-            {holes.map((hole, index) => (
+       {loading ? (
+    <>
+      {Array.from({ length: 9 }).map((_, i) => (
+        <HoleCardSkeleton key={i} isDark={isDark} />
+      ))}
+    </>
+  ) : (
+     <>{holes.map((hole, index) => (
               <Box
                 key={hole.holeId}
                 className="p-4 rounded-xl border border-neutral-200"
@@ -216,7 +265,8 @@ export default function EditHolesPage() {
                   </HStack>
                 </VStack>
               </Box>
-            ))}
+            ))}</>)}
+            
 
             {/* SAVE BUTTON */}
             <Pressable
@@ -233,8 +283,6 @@ export default function EditHolesPage() {
                 Save Changes
               </Text>
             </Pressable>
-          </VStack>
-        )}
       </ScrollView>
     </ThemedView>
   );

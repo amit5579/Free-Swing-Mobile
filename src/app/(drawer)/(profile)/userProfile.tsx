@@ -36,6 +36,7 @@ import ViewShot from "react-native-view-shot";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useRef } from "react";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function UserProfile() {
   const colorScheme = useColorScheme();
@@ -149,29 +150,142 @@ export default function UserProfile() {
     fetchUserProfile();
   }, []);
 
+  const ProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+        <VStack className="items-center">
+          {/* Avatar */}
+          <Skeleton
+            isDark={isDark}
+            height={90}
+            width={90}
+            borderRadius={999}
+            style={{ marginBottom: 14 }}
+          />
+
+          {/* Name */}
+          <Skeleton
+            isDark={isDark}
+            height={20}
+            width="40%"
+            style={{ marginBottom: 10 }}
+          />
+
+          {/* Role badge */}
+          <Skeleton isDark={isDark} height={30} width="30%" borderRadius={20} />
+        </VStack>
+      </Box>
+    );
+  };
+
+  const StatsSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <HStack className="justify-between mb-6">
+        {[1, 2].map((_, i) => (
+          <Box key={i} className="flex-1 mx-1 p-4 rounded-xl bg-white/10">
+            <VStack className="items-center">
+              <Skeleton
+                isDark={isDark}
+                height={20}
+                width={20}
+                style={{ marginBottom: 8 }}
+              />
+              <Skeleton
+                isDark={isDark}
+                height={18}
+                width="40%"
+                style={{ marginBottom: 6 }}
+              />
+              <Skeleton isDark={isDark} height={12} width="60%" />
+            </VStack>
+          </Box>
+        ))}
+      </HStack>
+    );
+  };
+
+  const DetailsSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
+        <VStack space="lg">
+          {[1, 2].map((_, i) => (
+            <View key={i}>
+              <HStack className="items-center gap-3">
+                <Skeleton isDark={isDark} height={20} width={20} />
+                <VStack>
+                  <Skeleton
+                    isDark={isDark}
+                    height={10}
+                    width="30%"
+                    style={{ marginBottom: 6 }}
+                  />
+                  <Skeleton isDark={isDark} height={14} width="60%" />
+                </VStack>
+              </HStack>
+
+              {i === 0 && <Divider style={{ marginVertical: 12 }} />}
+            </View>
+          ))}
+        </VStack>
+      </Box>
+    );
+  };
+
+  const ButtonsSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <VStack space="md" className="mt-6">
+        <Skeleton isDark={isDark} height={48} borderRadius={12} />
+        <Skeleton isDark={isDark} height={48} borderRadius={12} />
+      </VStack>
+    );
+  };
   return (
     <>
       <ThemedView className="flex-1 pt-16 px-5">
         <Watermark />
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* ================= HEADER ================= */}
-          <HStack className="items-center mb-6">
-            <Pressable onPress={() => router.back()}>
-              <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
-            </Pressable>
+          {pageLoading ? (
+            <>
+              {/* HEADER */}
+              <HStack className="items-center mb-6">
+                <Skeleton isDark={isDark} height={24} width={24} />
+                <Skeleton
+                  isDark={isDark}
+                  height={20}
+                  width="30%"
+                  style={{ marginLeft: 12 }}
+                />
+              </HStack>
 
-            <ThemedText
-              style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}
-            >
-              Profile
-            </ThemedText>
-          </HStack>
+              <ProfileCardSkeleton isDark={isDark} />
+              <StatsSkeleton isDark={isDark} />
+              <DetailsSkeleton isDark={isDark} />
+              <ButtonsSkeleton isDark={isDark} />
+            </>
+          ) : (
+            <>
+              {/* ================= HEADER ================= */}
+              <HStack className="items-center mb-6">
+                <Pressable onPress={() => router.back()}>
+                  <Ionicons
+                    name="arrow-back-outline"
+                    size={24}
+                    color="#8BC34A"
+                  />
+                </Pressable>
 
-          {/* ================= PROFILE CARD ================= */}
-          <Box className="rounded-3xl p-6 mb-6 bg-white/5">
-            <VStack className="items-center">
-              {/* Avatar */}
-              {/* <View
+                <ThemedText
+                  style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}
+                >
+                  Profile
+                </ThemedText>
+              </HStack>
+
+              {/* ================= PROFILE CARD ================= */}
+              <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+                <VStack className="items-center">
+                  {/* Avatar */}
+                  {/* <View
                   style={{
                     borderWidth: 3,
                     borderColor: "#8bc34a",
@@ -185,189 +299,195 @@ export default function UserProfile() {
                   </Avatar>
                 </View> */}
 
-              <Pressable onPress={pickImage}>
-                <View
-                  style={{
-                    borderWidth: 3,
-                    borderColor: "#8bc34a",
-                    borderRadius: 999,
-                    padding: 3,
-                    marginBottom: 14,
-                    position: "relative",
-                  }}
-                >
-                  <Avatar size="xl">
-                    {image || userProfile?.profilePictureUrl ? (
-                      <Image
-                        source={{
-                          uri: image || userProfile?.profilePictureUrl,
-                        }}
-                        style={{
-                          width: 90,
-                          height: 90,
-                          borderRadius: 45,
-                          padding: 3,
-                        }}
-                      />
-                    ) : (
-                      <UserIcon size={38} color="#8bc34a" />
-                    )}
-                  </Avatar>
-
-                  {/* CAMERA ICON OVERLAY */}
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      backgroundColor: "#8bc34a",
-                      borderRadius: 20,
-                      padding: 6,
-                    }}
-                  >
-                    <Ionicons name="camera" size={14} color="white" />
-                  </View>
-
-                  {/* LOADING OVERLAY */}
-                  {uploading && (
+                  <Pressable onPress={pickImage}>
                     <View
                       style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: "rgba(0,0,0,0.5)",
+                        borderWidth: 3,
+                        borderColor: "#8bc34a",
                         borderRadius: 999,
-                        alignItems: "center",
-                        justifyContent: "center",
+                        padding: 3,
+                        marginBottom: 14,
+                        position: "relative",
                       }}
                     >
-                      <Ionicons
-                        name="cloud-upload-outline"
-                        size={22}
-                        color="white"
-                      />
+                      <Avatar size="xl">
+                        {image || userProfile?.profilePictureUrl ? (
+                          <Image
+                            source={{
+                              uri: image || userProfile?.profilePictureUrl,
+                            }}
+                            style={{
+                              width: 90,
+                              height: 90,
+                              borderRadius: 45,
+                              padding: 3,
+                            }}
+                          />
+                        ) : (
+                          <UserIcon size={38} color="#8bc34a" />
+                        )}
+                      </Avatar>
+
+                      {/* CAMERA ICON OVERLAY */}
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          backgroundColor: "#8bc34a",
+                          borderRadius: 20,
+                          padding: 6,
+                        }}
+                      >
+                        <Ionicons name="camera" size={14} color="white" />
+                      </View>
+
+                      {/* LOADING OVERLAY */}
+                      {uploading && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "rgba(0,0,0,0.5)",
+                            borderRadius: 999,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Ionicons
+                            name="cloud-upload-outline"
+                            size={22}
+                            color="white"
+                          />
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
-              </Pressable>
+                  </Pressable>
 
-              {/* Name */}
-              <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>
-                {userProfile?.username}
-              </ThemedText>
+                  {/* Name */}
+                  <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>
+                    {userProfile?.username}
+                  </ThemedText>
 
-              {/* Role */}
-              <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
-                <ThemedText style={{ fontSize: 14 }}>
-                  {userProfile?.role}
-                </ThemedText>
+                  {/* Role */}
+                  <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
+                    <ThemedText style={{ fontSize: 14 }}>
+                      {userProfile?.role}
+                    </ThemedText>
+                  </Box>
+                </VStack>
               </Box>
-            </VStack>
-          </Box>
 
-          {/* ================= STATS ================= */}
-          <HStack className="justify-between mb-6">
-            <Box className="flex-1 mr-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
-              <VStack className="items-center">
-                <ChartBar size={22} color="#8bc34a" />
+              {/* ================= STATS ================= */}
+              <HStack className="justify-between mb-6">
+                <Box className="flex-1 mr-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
+                  <VStack className="items-center">
+                    <ChartBar size={22} color="#8bc34a" />
 
-                <ThemedText
-                  style={{ fontSize: 18, fontWeight: "700", marginTop: 4 }}
-                >
-                  {userProfile?.handicapIndex}
-                </ThemedText>
+                    <ThemedText
+                      style={{ fontSize: 18, fontWeight: "700", marginTop: 4 }}
+                    >
+                      {userProfile?.handicapIndex}
+                    </ThemedText>
 
-                <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                  Handicap Index
-                </ThemedText>
-              </VStack>
-            </Box>
+                    <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                      Handicap Index
+                    </ThemedText>
+                  </VStack>
+                </Box>
 
-            <Box className="flex-1 ml-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
-              <VStack className="items-center">
-                <Flag size={22} color="#8bc34a" />
+                <Box className="flex-1 ml-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
+                  <VStack className="items-center">
+                    <Flag size={22} color="#8bc34a" />
 
-                <ThemedText
-                  style={{ fontSize: 18, fontWeight: "700", marginTop: 4 }}
-                >
-                  {userProfile?.handicap}
-                </ThemedText>
+                    <ThemedText
+                      style={{ fontSize: 18, fontWeight: "700", marginTop: 4 }}
+                    >
+                      {userProfile?.handicap}
+                    </ThemedText>
 
-                <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                  Handicap
-                </ThemedText>
-              </VStack>
-            </Box>
-          </HStack>
-
-          {/* ================= DETAILS ================= */}
-          <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
-            <VStack space="lg">
-              <HStack className="items-center gap-3">
-                <Mail size={20} color="#8bc34a" />
-                <VStack>
-                  <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                    Email
-                  </ThemedText>
-
-                  <ThemedText>{userProfile?.email}</ThemedText>
-                </VStack>
+                    <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                      Handicap
+                    </ThemedText>
+                  </VStack>
+                </Box>
               </HStack>
 
-              <Divider />
+              {/* ================= DETAILS ================= */}
+              <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
+                <VStack space="lg">
+                  <HStack className="items-center gap-3">
+                    <Mail size={20} color="#8bc34a" />
+                    <VStack>
+                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                        Email
+                      </ThemedText>
 
-              <HStack className="items-center gap-3">
-                <BookA size={20} color="#8bc34a" />
-                <VStack>
-                  <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                    Account Status
-                  </ThemedText>
-                  {userProfile?.isBlocked === false ? (
-                    <ThemedText style={{ color: "#8bc34a", fontWeight: "600" }}>
-                      Active
-                    </ThemedText>
-                  ) : (
-                    <ThemedText style={{ color: "E81515", fontWeight: "600" }}>
-                      Inactive
-                    </ThemedText>
-                  )}
+                      <ThemedText>{userProfile?.email}</ThemedText>
+                    </VStack>
+                  </HStack>
+
+                  <Divider />
+
+                  <HStack className="items-center gap-3">
+                    <BookA size={20} color="#8bc34a" />
+                    <VStack>
+                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                        Account Status
+                      </ThemedText>
+                      {userProfile?.isBlocked === false ? (
+                        <ThemedText
+                          style={{ color: "#8bc34a", fontWeight: "600" }}
+                        >
+                          Active
+                        </ThemedText>
+                      ) : (
+                        <ThemedText
+                          style={{ color: "E81515", fontWeight: "600" }}
+                        >
+                          Inactive
+                        </ThemedText>
+                      )}
+                    </VStack>
+                  </HStack>
                 </VStack>
-              </HStack>
-            </VStack>
-          </Box>
+              </Box>
 
-          <VStack space="md" className="mt-6">
-            {/* Change Password */}
-            <Pressable
-              onPress={() => setPasswordModal(true)}
-              style={{
-                backgroundColor: "#8BC34A",
-                padding: 14,
-                borderRadius: 12,
-                alignItems: "center",
-              }}
-            >
-              <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                Change Password
-              </ThemedText>
-            </Pressable>
+              <VStack space="md" className="mt-6">
+                {/* Change Password */}
+                <Pressable
+                  onPress={() => setPasswordModal(true)}
+                  style={{
+                    backgroundColor: "#8BC34A",
+                    padding: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+                    Change Password
+                  </ThemedText>
+                </Pressable>
 
-            {/* Handicap Certificate */}
-            <Pressable
-              onPress={() => setCertificateModal(true)}
-              style={{
-                borderWidth: 1,
-                borderColor: "#8BC34A",
-                padding: 14,
-                borderRadius: 12,
-                alignItems: "center",
-              }}
-            >
-              <ThemedText style={{ fontWeight: "600", color: "#8BC34A" }}>
-                Handicap Certificate
-              </ThemedText>
-            </Pressable>
-          </VStack>
+                {/* Handicap Certificate */}
+                <Pressable
+                  onPress={() => setCertificateModal(true)}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                    padding: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={{ fontWeight: "600", color: "#8BC34A" }}>
+                    Handicap Certificate
+                  </ThemedText>
+                </Pressable>
+              </VStack>
+            </>
+          )}
         </ScrollView>
       </ThemedView>
 
