@@ -15,13 +15,15 @@ import {
   getScorecardDetails,
   getTournamentHistoryByUserId,
 } from "@/api/admin/tournaments";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function ScoreCardUser() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const [handicap, setHandicap] = useState(null);
 
   const [history, setTournamentHistory] = useState<any[]>([]); //contains  "isExcluded": true "scorecardId": 361,
@@ -110,53 +112,51 @@ export default function ScoreCardUser() {
   };
 
   const renderRow = (item: any) => {
-  // ✅ ADD HERE
-  const type = getScoreType(item.score, item.par);
-  const styleConfig = getScoreStyle(type);
+    // ✅ ADD HERE
+    const type = getScoreType(item.score, item.par);
+    const styleConfig = getScoreStyle(type);
 
-  return (
-    <HStack key={item.holeNumber} style={styles.row}>
-      <View style={styles.cell}>
-        <ThemedText>{item.holeNumber}</ThemedText>
-      </View>
-
-      <View style={styles.cell}>
-        <ThemedText>{item.handicap}</ThemedText>
-      </View>
-
-      <View style={styles.cell}>
-        <ThemedText>{item.yardage}</ThemedText>
-      </View>
-
-      <View style={styles.cell}>
-        <ThemedText>{item.par}</ThemedText>
-      </View>
-
-      {/* ✅ SCORE UI */}
-      <View style={styles.cell}>
-        <View
-          style={[
-            styles.scoreBox,
-            styleConfig.shape === "circle" && styles.circle,
-            styleConfig.shape === "square" && styles.square,
-            {
-              borderColor: styleConfig.borderColor,
-              borderStyle: styleConfig.dashed ? "dashed" : "solid",
-            },
-          ]}
-        >
-          <ThemedText style={{ fontWeight: "700" }}>
-            {item.score}
-          </ThemedText>
+    return (
+      <HStack key={item.holeNumber} style={styles.row}>
+        <View style={styles.cell}>
+          <ThemedText>{item.holeNumber}</ThemedText>
         </View>
-      </View>
 
-      <View style={styles.cell}>
-        <ThemedText>{item.netScore}</ThemedText>
-      </View>
-    </HStack>
-  );
-};
+        <View style={styles.cell}>
+          <ThemedText>{item.handicap}</ThemedText>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{item.yardage}</ThemedText>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{item.par}</ThemedText>
+        </View>
+
+        {/* ✅ SCORE UI */}
+        <View style={styles.cell}>
+          <View
+            style={[
+              styles.scoreBox,
+              styleConfig.shape === "circle" && styles.circle,
+              styleConfig.shape === "square" && styles.square,
+              {
+                borderColor: styleConfig.borderColor,
+                borderStyle: styleConfig.dashed ? "dashed" : "solid",
+              },
+            ]}
+          >
+            <ThemedText style={{ fontWeight: "700" }}>{item.score}</ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.cell}>
+          <ThemedText>{item.netScore}</ThemedText>
+        </View>
+      </HStack>
+    );
+  };
 
   const renderTotals = (label: string, data: any[]) => {
     const t = calculateTotals(data);
@@ -227,55 +227,70 @@ export default function ScoreCardUser() {
     { label: "Quadruple Bogey+", border: "#000", type: "square", text: "" },
   ];
 
-const getScoreType = (score: number, par: number) => {
-  const diff = score - par;
+  const getScoreType = (score: number, par: number) => {
+    const diff = score - par;
 
-  if (score === 1) return "hole-in-one";
-  if (diff <= -3) return "albatross";
-  if (diff === -2) return "eagle";
-  if (diff === -1) return "birdie";
-  if (diff === 0) return "par";
-  if (diff === 1) return "bogey";
-  if (diff === 2) return "double";
-  if (diff === 3) return "triple";
-  return "quad";
-};
+    if (score === 1) return "hole-in-one";
+    if (diff <= -3) return "albatross";
+    if (diff === -2) return "eagle";
+    if (diff === -1) return "birdie";
+    if (diff === 0) return "par";
+    if (diff === 1) return "bogey";
+    if (diff === 2) return "double";
+    if (diff === 3) return "triple";
+    return "quad";
+  };
 
-const getScoreStyle = (type: string) => {
-  switch (type) {
-    case "hole-in-one":
-      return { borderColor: "#facc15", shape: "circle" };
+  const getScoreStyle = (type: string) => {
+    switch (type) {
+      case "hole-in-one":
+        return { borderColor: "#facc15", shape: "circle" };
 
-    case "albatross":
-      return { borderColor: "#0f766e", shape: "circle" };
+      case "albatross":
+        return { borderColor: "#0f766e", shape: "circle" };
 
-    case "eagle":
-      return { borderColor: "#166534", shape: "circle" };
+      case "eagle":
+        return { borderColor: "#166534", shape: "circle" };
 
-    case "birdie":
-      return { borderColor: "#16a34a", shape: "circle" };
+      case "birdie":
+        return { borderColor: "#16a34a", shape: "circle" };
 
-    case "par":
-      return {
-        borderColor: "#9ca3af",
-        shape: "square",
-        dashed: true,
-      };
+      case "par":
+        return {
+          borderColor: "#9ca3af",
+          shape: "square",
+          dashed: true,
+        };
 
-    case "bogey":
-      return { borderColor: "#ef4444", shape: "square" };
+      case "bogey":
+        return { borderColor: "#ef4444", shape: "square" };
 
-    case "double":
-      return { borderColor: "#dc2626", shape: "square" };
+      case "double":
+        return { borderColor: "#dc2626", shape: "square" };
 
-    case "triple":
-      return { borderColor: "#7c3aed", shape: "square" };
+      case "triple":
+        return { borderColor: "#7c3aed", shape: "square" };
 
-    default:
-      return { borderColor: "#000", shape: "square" };
-  }
-};
+      default:
+        return { borderColor: "#000", shape: "square" };
+    }
+  };
 
+  const ScoreRowSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <HStack style={styles.row}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <View key={i} style={styles.cell}>
+            <Skeleton isDark={isDark} height={14} width={30} borderRadius={6} />
+          </View>
+        ))}
+      </HStack>
+    );
+  };
+
+  const ScoreCircleSkeleton = ({ isDark }: { isDark: boolean }) => (
+    <Skeleton isDark={isDark} height={28} width={28} borderRadius={14} />
+  );
 
   return (
     <>
@@ -296,15 +311,30 @@ const getScoreStyle = (type: string) => {
                     </View>
                   ))}
                 </HStack>
+                {loading ? (
+                  <>
+                    {/* Front 9 Skeleton */}
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <ScoreRowSkeleton key={`f-${i}`} isDark={isDark} />
+                    ))}
 
-                {/* Front 9 */}
-                {front9.map(renderRow)}
-                {renderTotals("Front 9", front9)}
+                    {/* Back 9 Skeleton */}
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <ScoreRowSkeleton key={`b-${i}`} isDark={isDark} />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {/* REAL DATA */}
+                    {front9.map(renderRow)}
+                    {renderTotals("Front 9", front9)}
 
-                {/* Back 9 */}
-                {back9.map(renderRow)}
-                {renderTotals("Back 9", back9)}
+                    {back9.map(renderRow)}
+                    {renderTotals("Back 9", back9)}
 
+                    {renderTotals("Total", scorecardDetails || [])}
+                  </>
+                )}
                 {/* Grand Total */}
                 {renderTotals("Total", scorecardDetails || [])}
               </View>

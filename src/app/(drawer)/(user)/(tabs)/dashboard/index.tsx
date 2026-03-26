@@ -3,7 +3,7 @@ import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -13,18 +13,19 @@ import {
   Dimensions,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { ThemedView } from "@/components/themed-view";
 
 import { HistoryTab } from "./tabs/HistoryTab";
 import { InProgressTab } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/gameFeed";
-import { getFeedApi, likeFeedApi, getScoreStats, ScoreStats, getUserProfile, UserProfile, getInProgressGames, getScoreHistory, InProgressApiItem } from "@/api/dashboard";
+import { getFeedApi, likeFeedApi } from "@/api/dashboard";
+import { getScoreStats, ScoreStats } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/dashboard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Watermark from "@/components/watermark";
 import { Skeleton } from "@/components/Skeleton";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -42,40 +43,17 @@ export default function DashboardScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { width: screenWidth } = useWindowDimensions();
-  const horizontalScrollRef = useRef<ScrollView>(null);
-
   const tabs = [
     { key: "overview", label: "Overview", icon: "grid-outline" },
-    { key: "progress", label: "In Progress", icon: "time-outline" },
-    { key: "history", label: "History", icon: "calendar-outline" },
+    { key: "progress", label: "In Progress", icon: "hourglass-outline" },
+    { key: "history", label: "Game History", icon: "time-outline" },
   ];
 
-  const handleTabChange = (key: string) => {
-    setActiveTab(key);
-    const index = tabs.findIndex(t => t.key === key);
-    if (index !== -1) {
-      horizontalScrollRef.current?.scrollTo({ x: index * screenWidth, animated: true });
-    }
-  };
-
-  const onMomentumScrollEnd = (event: any) => {
-    const x = event.nativeEvent.contentOffset.x;
-    const index = Math.round(x / screenWidth);
-    if (tabs[index]) {
-      setActiveTab(tabs[index].key);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      fetchFeed();
-      fetchStats();
-      fetchProfile();
-    }, [])
-  );
-
+  useEffect(() => {
+    fetchFeed();
+    fetchStats();
+    fetchProfile(); // 👈 ADD THIS
+  }, []);
 
   const fetchStats = async () => {
     try {
@@ -125,8 +103,6 @@ export default function DashboardScreen() {
           likes: item.likeCount || 0,
           isLiked: item.isLikedByMe || false,
           isTournament: !!item.isTournament,
-          isAuthenticated: item.isAuthenticated || false,
-          authenticatedBy: item.authenticatedBy || null,
         }));
         setCards(mappedCards);
       } else {
@@ -171,148 +147,149 @@ export default function DashboardScreen() {
       {/* Fixed header + tabs */}
       <View
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 4,
+          padding: 16,
           backgroundColor: isDark ? "#161618" : "#f2f2f2",
           zIndex: 10,
         }}
       >
-        <VStack className="mb-2">
-          <HStack className="items-center">
-            <Text
-              className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
-            >
-              Welcome back{profile?.username ? ", " : ""}
-            </Text>
-            {loading && !profile?.username ? (
-              <Skeleton isDark={isDark} height={28} width={100} style={{ marginLeft: 4 }} />
-            ) : (
-              profile?.username && (
-                <Text className="text-3xl font-bold" style={{ color: "#8BC34A" }}>
-                  {profile.username}
-                </Text>
-              )
-            )}
-            <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-              !
-            </Text>
-          </HStack>
-          <Text
-            className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
-          >
-            Track your progress and manage your games
-          </Text>
-        </VStack>
+        {loading ? (
+          // ✅ HEADER SKELETON
+          <VStack className="mb-4 space-y-3">
+            {/* Welcome text skeleton */}
+            <Skeleton isDark={isDark} height={28} width="60%" />
+            <Skeleton isDark={isDark} height={18} width="80%" />
 
-        <HStack
-          className="rounded-full p-1 justify-between"
-          style={{
-            backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
-            borderWidth: isDark ? 1 : 0,
-            borderColor: isDark ? "#FFFFFF" : "transparent",
-          }}
-        >
-          {tabs.map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <Pressable
-                key={tab.key}
-                onPress={() => handleTabChange(tab.key)}
-                className="px-4 py-2 rounded-full flex-row items-center justify-center"
-                style={{
-                  backgroundColor: active ? "#8BC34A" : "transparent",
-                }}
+            {/* Tabs skeleton */}
+            <HStack
+              className="rounded-full p-2 mt-2"
+              style={{
+                backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+              }}
+            >
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} />
+            </HStack>
+          </VStack>
+        ) : (
+          // ✅ ORIGINAL HEADER
+          <>
+            <VStack className="mb-4">
+              <Text
+                className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
               >
-                <Ionicons
-                  name={tab.icon as any}
-                  size={16}
-                  color={active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280"}
-                />
-                <Text
-                  className="text-sm font-medium ml-1"
-                  style={{ color: active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280" }}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </HStack>
+                Welcome back{profile?.username ? ", " : ""}
+                {profile?.username && (
+                  <Text style={{ color: "#8BC34A" }}>{profile.username}</Text>
+                )}
+                !
+              </Text>
+              <Text
+                className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+              >
+                Track your progress and manage your games
+              </Text>
+            </VStack>
+
+            <HStack
+              className="rounded-full p-1 justify-between"
+              style={{
+                backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+                borderWidth: isDark ? 1 : 0,
+                borderColor: isDark ? "#FFFFFF" : "transparent",
+              }}
+            >
+              {tabs.map((tab) => {
+                const active = activeTab === tab.key;
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => setActiveTab(tab.key)}
+                    className="px-4 py-2 rounded-full flex-row items-center justify-center"
+                    style={{
+                      backgroundColor: active ? "#8BC34A" : "transparent",
+                    }}
+                  >
+                    <Ionicons
+                      name={tab.icon as any}
+                      size={16}
+                      color={active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280"}
+                    />
+                    <Text
+                      className="text-sm font-medium ml-1"
+                      style={{ color: active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280" }}
+                    >
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </HStack>
+          </>
+        )}
       </View>
 
-      <ScrollView
-        ref={horizontalScrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        style={{ flex: 1 }}
-      >
-        {/* PAGE 1: OVERVIEW */}
-        <ScrollView style={{ width: screenWidth }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-          {loading ? (
-            <VStack className="space-y-4">
-              <HStack className="space-x-3 mb-3">
-                <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                  <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                  <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
-                  <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
-                </Box>
-                <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                  <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                  <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
-                  <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
-                </Box>
-              </HStack>
-              <HStack className="space-x-3 mb-3">
-                <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                  <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                  <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
-                  <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
-                </Box>
-                <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                  <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                  <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
-                  <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
-                </Box>
-              </HStack>
-
-              {/* Home Course Skeleton */}
-              <Box className="rounded-xl p-5 mb-3" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1, minHeight: 140 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+        {loading ? (
+          <VStack className="space-y-4">
+            <HStack className="space-x-3 mb-3">
+              <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
                 <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                <Skeleton isDark={isDark} height={14} width="40%" style={{ marginBottom: 8 }} />
-                <Skeleton isDark={isDark} height={20} width="30%" borderRadius={10} />
+                <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
+                <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
               </Box>
+              <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
+                <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
+                <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
+              </Box>
+            </HStack>
+            <HStack className="space-x-3 mb-3">
+              <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
+                <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
+                <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
+              </Box>
+              <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
+                <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
+                <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
+              </Box>
+            </HStack>
 
-              {/* Feed List Skeletons */}
-              {[1, 2].map(i => (
-                <Box key={i} className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
-                  <HStack className="justify-between items-center mb-4">
-                    <HStack space="sm" className="items-center">
-                      <Skeleton isDark={isDark} width={45} height={45} borderRadius={48} />
-                      <VStack space="xs">
-                        <Skeleton isDark={isDark} width={120} height={20} style={{ marginBottom: 4 }} />
-                        <Skeleton isDark={isDark} width={80} height={12} />
-                      </VStack>
-                    </HStack>
-                  </HStack>
-                  <Skeleton isDark={isDark} width="100%" height={100} borderRadius={12} />
-                </Box>
-              ))}
-            </VStack>
-          ) : (
-            <>
-              {/* Overview Stats Cards */}
+            {/* Home Course Skeleton */}
+            <Box className="rounded-xl p-5 mb-3" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1, minHeight: 140 }}>
+              <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
+              <Skeleton isDark={isDark} height={14} width="40%" style={{ marginBottom: 8 }} />
+              <Skeleton isDark={isDark} height={20} width="30%" borderRadius={10} />
+            </Box>
+
+            {/* Feed List Skeleton */}
+            <Box className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
+              <HStack className="justify-between items-center mb-4">
+                <HStack space="sm" className="items-center">
+                  <Skeleton isDark={isDark} width={45} height={45} borderRadius={48} />
+                  <VStack space="xs">
+                    <Skeleton isDark={isDark} width={120} height={20} style={{ marginBottom: 4 }} />
+                    <Skeleton isDark={isDark} width={80} height={12} />
+                  </VStack>
+                </HStack>
+              </HStack>
+            </Box>
+          </VStack>
+        ) : (
+          <>
+            {/* Overview Stats Cards */}
+            {activeTab === "overview" && (
               <VStack className="mt-0 space-y-4">
                 {/* Row 1 */}
                 <HStack className="space-x-3 mb-3">
                   <Box
                     className="flex-1 rounded-xl p-5 relative min-h-[140px] mr-2"
                     style={{
-                      backgroundColor: isDark ? "rgba(26, 26, 26, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                      backgroundColor: isDark ? "#161618" : "#fff",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(139, 195, 74, 0.3)",
+                      borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -335,9 +312,9 @@ export default function DashboardScreen() {
                   <Box
                     className="flex-1 rounded-xl p-5 relative min-h-[140px] ml-2"
                     style={{
-                      backgroundColor: isDark ? "rgba(26, 26, 26, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                      backgroundColor: isDark ? "#161618" : "#fff",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(139, 195, 74, 0.3)",
+                      borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -363,9 +340,9 @@ export default function DashboardScreen() {
                   <Box
                     className="flex-1 rounded-xl p-5 relative min-h-[140px] mr-2"
                     style={{
-                      backgroundColor: isDark ? "rgba(26, 26, 26, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                      backgroundColor: isDark ? "#161618" : "#fff",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(139, 195, 74, 0.3)",
+                      borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -388,9 +365,9 @@ export default function DashboardScreen() {
                   <Box
                     className="flex-1 rounded-xl p-5 relative min-h-[140px] ml-2"
                     style={{
-                      backgroundColor: isDark ? "rgba(26, 26, 26, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                      backgroundColor: isDark ? "#161618" : "#fff",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(139, 195, 74, 0.3)",
+                      borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                     }}
                   >
                     <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -415,9 +392,9 @@ export default function DashboardScreen() {
                 <Box
                   className="rounded-xl p-5 relative min-h-[140px]"
                   style={{
-                    backgroundColor: isDark ? "rgba(26, 26, 26, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                    backgroundColor: isDark ? "#161618" : "#fff",
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(139, 195, 74, 0.3)",
+                    borderColor: isDark ? "#8BC34A" : "#E5E7EB",
                   }}
                 >
                   <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -437,39 +414,34 @@ export default function DashboardScreen() {
                   </VStack>
                 </Box>
               </VStack>
+            )}
+
+            {/* Tabs Content */}
+            <View style={{ display: activeTab === "overview" ? "flex" : "none" }}>
               <OverviewTab cards={cards} handleLike={handleLike} />
-            </>
-          )}
-        </ScrollView>
+            </View>
 
-        {/* PAGE 2: IN PROGRESS */}
-        <ScrollView style={{ width: screenWidth }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-          <InProgressTab
-            activeTab={activeTab}
-            playerId={profile?.id || 0}
-            onDelete={() => { }}
-            onResume={(id) => {
-              router.push({
-                pathname: "/(drawer)/scoreCard/resume/[id]" as any,
-                params: { id: id, handicap: profile?.handicap || 0 }
-              });
-            }}
-          />
-        </ScrollView>
+            <View style={{ display: activeTab === "progress" ? "flex" : "none" }}>
+              <InProgressTab
+                playerId={profile?.id || 0}
+                onDelete={() => { }}
+                onResume={(id) => {
+                  router.push({
+                    pathname: "/(drawer)/(user)/(tabs)/dashboard/tabs/scoreCard/[id]",
+                    params: { id: id, handicap: profile?.handicap || 0 }
+                  });
+                }}
+              />
+            </View>
 
-        {/* PAGE 3: HISTORY */}
-        <ScrollView style={{ width: screenWidth }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-          <HistoryTab
-            activeTab={activeTab}
-            playerId={profile?.id || 0}
-            onViewGame={(id) => {
-              router.push({
-                 pathname: "/(drawer)/scoreCard/resume/[id]" as any,
-                 params: { id: id, handicap: profile?.handicap || 0 }
-              });
-            }}
-          />
-        </ScrollView>
+            <View style={{ display: activeTab === "history" ? "flex" : "none" }}>
+              <HistoryTab
+                playerId={profile?.id || 0}
+                onViewGame={(id) => console.log("View game", id)}
+              />
+            </View>
+          </>
+        )}
       </ScrollView>
     </ThemedView>
   );

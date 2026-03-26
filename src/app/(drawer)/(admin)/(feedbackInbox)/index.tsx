@@ -18,6 +18,7 @@ import { Text } from "@/components/text";
 import { Box } from "@/components/box";
 import { getFeedback, updateFeedback } from "@/api/admin/feedback";
 import { Dropdown } from "react-native-element-dropdown";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function FeedbackInboxPage() {
   const colorScheme = useColorScheme();
@@ -63,15 +64,8 @@ export default function FeedbackInboxPage() {
   const LoadingState = () => {
     return (
       <VStack space="md">
-        {[1, 2, 3].map((_, i) => (
-          <Box key={i} className="p-4 rounded-xl border border-neutral-200">
-            <VStack space="sm">
-              <Box className="h-4 w-3/4 bg-gray-300 rounded" />
-              <Box className="h-3 w-1/2 bg-gray-300 rounded" />
-              <Box className="h-16 w-full bg-gray-200 rounded" />
-              <Box className="h-10 w-full bg-gray-200 rounded" />
-            </VStack>
-          </Box>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <FeedbackCardSkeleton key={i} isDark={isDark} />
         ))}
       </VStack>
     );
@@ -134,6 +128,79 @@ export default function FeedbackInboxPage() {
           />
         ))}
       </VStack>
+    );
+  };
+
+  const FeedbackCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        className="p-4 rounded-xl mb-4"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+        }}
+      >
+        <VStack space="sm">
+          {/* Tags */}
+          <HStack>
+            <Skeleton
+              isDark={isDark}
+              height={20}
+              width={60}
+              borderRadius={10}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={20}
+              width={70}
+              borderRadius={10}
+              style={{ marginLeft: 8 }}
+            />
+          </HStack>
+
+          {/* Title */}
+          <Skeleton isDark={isDark} height={14} width="70%" />
+
+          {/* User info */}
+          <Skeleton isDark={isDark} height={12} width="90%" />
+
+          {/* Dates */}
+          <Skeleton isDark={isDark} height={12} width="60%" />
+          <Skeleton isDark={isDark} height={12} width="60%" />
+
+          {/* Message box */}
+          <Skeleton
+            isDark={isDark}
+            height={60}
+            borderRadius={8}
+            style={{ marginTop: 6 }}
+          />
+
+          {/* Dropdown */}
+          <Skeleton
+            isDark={isDark}
+            height={40}
+            borderRadius={8}
+            style={{ marginTop: 6 }}
+          />
+
+          {/* Textarea */}
+          <Skeleton
+            isDark={isDark}
+            height={80}
+            borderRadius={8}
+            style={{ marginTop: 6 }}
+          />
+
+          {/* Button */}
+          <Skeleton
+            isDark={isDark}
+            height={40}
+            borderRadius={8}
+            style={{ marginTop: 6 }}
+          />
+        </VStack>
+      </Box>
     );
   };
   return (

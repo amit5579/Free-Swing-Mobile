@@ -27,8 +27,6 @@ export type Scorecard = {
     likes: number;
     isLiked?: boolean;
     isTournament: boolean;
-    isAuthenticated: boolean;
-    authenticatedBy: string | null;
 };
 
 const diffLabel = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
@@ -50,19 +48,7 @@ const FeedCard = ({
     const router = useRouter();
 
     const handleViewScorecard = () => {
-        if (card.isAuthenticated) {
-            // Verified scorecard → read-only view
-            router.push({
-                pathname: "/(drawer)/scoreCard/view/[scoreCard]" as any,
-                params: { scoreCard: card.id, handicap: 0 },
-            });
-        } else {
-            // Unverified scorecard → editable resume
-            router.push({
-                pathname: "/(drawer)/scoreCard/resume/[id]" as any,
-                params: { id: card.id, handicap: 0 },
-            });
-        }
+        router.push(`/(drawer)/(user)/(tabs)/dashboard/tabs/scoreCard/${card.id}`);
     };
 
     return (
@@ -223,15 +209,6 @@ const FeedCard = ({
                         ))}
                     </HStack>
 
-                    {/* {card.isAuthenticated && card.authenticatedBy && (
-                        <HStack space="xs" className="mx-4 mb-3 items-center justify-center py-2 rounded-xl border border-green-200" style={{ backgroundColor: isDark ? "rgba(76, 175, 80, 0.15)" : "#E8F5E9" }}>
-                            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                            <Text className="text-xs font-bold" style={{ color: isDark ? "#81C784" : "#2E7D32" }}>
-                                Verified by {card.authenticatedBy}
-                            </Text>
-                        </HStack>
-                    )} */}
-
                     <Divider style={{ backgroundColor: isDark ? "rgba(51,51,51,0.5)" : "rgba(229,231,235,0.5)" }} />
 
                     {/* Footer */}
@@ -241,24 +218,9 @@ const FeedCard = ({
                                 <Ionicons name={card.isLiked ? "heart" : "heart-outline"} size={20} color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"} />
                                 <Text className="text-sm font-semibold ml-1.5" style={{ color: isDark ? "#fff" : "#6b7280" }}>{card.likes}</Text>
                             </Pressable>
-
-                            {card.isAuthenticated && (
-                                <HStack space="xs" className="items-center ml-2">
-                                    <Ionicons name="shield-checkmark" size={16} color="#8BC34A" />
-                                    <Text className="text-xs font-bold text-green-600">Verified</Text>
-                                </HStack>
-                            )}
                         </HStack>
 
                         <HStack space="sm" className="items-center">
-                            <Pressable
-                                className="p-2 rounded-full flex-row items-center"
-                                style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(229,231,235,0.5)" }}
-                            >
-                                <Ionicons name="people-outline" size={18} color={isDark ? "#fff" : "#6b7280"} />
-                                <Text className="ml-1.5 text-sm font-semibold" style={{ color: isDark ? "#fff" : "#6b7280" }}>Activity</Text>
-                            </Pressable>
-
                             <Button size="sm" className="rounded-full px-4 h-9 shadow-sm" style={{ backgroundColor: "#8BC34A" }} onPress={handleViewScorecard}>
                                 <Ionicons name="eye-outline" size={14} color="#fff" />
                                 <ButtonText className="text-white text-xs font-extrabold ml-1.5">View</ButtonText>
@@ -301,7 +263,7 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                 </HStack>
 
                 {cards.length === 0 && (
-                    <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.7)", borderColor: "rgba(139, 195, 74, 0.3)" }}>
+                    <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(30,30,30,0.6)" : "rgba(255,255,255,0.6)", borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.5)" }}>
                         <Text className="text-4xl">⛳</Text>
                         <Text className="font-semibold text-sm mt-3" style={{ color: isDark ? "#aaa" : "#6B7280" }}>No scorecards yet</Text>
                     </Box>

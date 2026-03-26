@@ -25,12 +25,13 @@ import { contactAdminSchema, ContactAdminType } from "@/schema/userSchemas";
 
 import { Dropdown } from "react-native-element-dropdown";
 import { getFeedbackHistory, sendFeedback } from "@/api/admin/feedback";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function ContactAdminPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
-
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
 
   // Dummy feedback history (replace with API)
@@ -57,10 +58,14 @@ export default function ContactAdminPage() {
 
   const fetchFeedback = async () => {
     try {
+      setLoading(true);
+
       const response = await getFeedbackHistory();
       setFeedbacks(response);
     } catch (error) {
       console.error("Error fetching feedback:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,8 +74,7 @@ export default function ContactAdminPage() {
   }, []);
 
   const onSubmit = async (data: ContactAdminType) => {
-
-   await sendFeedback(data.category, data.subject,data.message)
+    await sendFeedback(data.category, data.subject, data.message);
     reset();
     setModalVisible(false);
     fetchFeedback();
@@ -144,6 +148,49 @@ export default function ContactAdminPage() {
     </Box>
   );
 
+  const ContactButtonSkeleton = ({ isDark }: { isDark: boolean }) => (
+    <Skeleton
+      isDark={isDark}
+      height={50}
+      borderRadius={12}
+      style={{ marginBottom: 16 }}
+    />
+  );
+
+  const FeedbackCardSkeleton = ({ isDark }: { isDark: boolean }) => (
+    <Box
+      className="p-4 rounded-2xl mb-3"
+      style={{
+        backgroundColor: isDark
+          ? "rgba(30, 41, 59, 0.5)"
+          : "rgba(241, 245, 249, 0.6)",
+      }}
+    >
+      {/* Header */}
+      <HStack className="justify-between mb-2">
+        <Skeleton isDark={isDark} height={14} width="50%" />
+        <Skeleton isDark={isDark} height={20} width={50} borderRadius={8} />
+      </HStack>
+
+      {/* Date */}
+      <Skeleton isDark={isDark} height={12} width="40%" />
+
+      {/* Message */}
+      <Skeleton
+        isDark={isDark}
+        height={14}
+        width="90%"
+        style={{ marginTop: 8 }}
+      />
+      <Skeleton
+        isDark={isDark}
+        height={14}
+        width="70%"
+        style={{ marginTop: 4 }}
+      />
+    </Box>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <RenderHeader />
@@ -189,66 +236,75 @@ export default function ContactAdminPage() {
               </Box>
             </HStack>
           </VStack>
-
-          {feedbacks.length === 0 ? (
-            <VStack
-              className="items-center justify-center mt-10"
-              style={{
-                paddingVertical: 40,
-                borderRadius: 16,
-                backgroundColor: isDark ? "#020617" : "#f8fafc",
-              }}
-            >
-              {/* ICON */}
-              <View
-                style={{
-                  backgroundColor: isDark ? "#1e293b" : "#e2e8f0",
-                  padding: 14,
-                  borderRadius: 50,
-                  marginBottom: 12,
-                }}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={28}
-                  color={isDark ? "#94a3b8" : "#475569"}
-                />
-              </View>
-
-              {/* TITLE */}
-              <ThemedText
-                style={{
-                  fontSize: 16,
-                  fontWeight: "600",
-                  marginBottom: 4,
-                }}
-              >
-                No Feedback Yet
-              </ThemedText>
-
-              {/* SUBTEXT */}
-              <ThemedText
-                style={{
-                  fontSize: 13,
-                  textAlign: "center",
-                  opacity: 0.7,
-                  paddingHorizontal: 20,
-                }}
-              >
-                You haven’t submitted any feedback yet. Tap on{" "}
-                <ThemedText style={{ fontWeight: "600" }}>
-                  “Send Feedback”
-                </ThemedText>{" "}
-                to get started.
-              </ThemedText>
-            </VStack>
+          {loading ? (
+            <>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <FeedbackCardSkeleton key={i} isDark={isDark} />
+              ))}
+            </>
           ) : (
-            <FlatList
-              data={feedbacks}
-              keyExtractor={(item) => item.id}
-              renderItem={renderFeedbackItem}
-              scrollEnabled={false}
-            />
+            <>
+              {feedbacks.length === 0 ? (
+                <VStack
+                  className="items-center justify-center mt-10"
+                  style={{
+                    paddingVertical: 40,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? "#020617" : "#f8fafc",
+                  }}
+                >
+                  {/* ICON */}
+                  <View
+                    style={{
+                      backgroundColor: isDark ? "#1e293b" : "#e2e8f0",
+                      padding: 14,
+                      borderRadius: 50,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={isDark ? "#94a3b8" : "#475569"}
+                    />
+                  </View>
+
+                  {/* TITLE */}
+                  <ThemedText
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "600",
+                      marginBottom: 4,
+                    }}
+                  >
+                    No Feedback Yet
+                  </ThemedText>
+
+                  {/* SUBTEXT */}
+                  <ThemedText
+                    style={{
+                      fontSize: 13,
+                      textAlign: "center",
+                      opacity: 0.7,
+                      paddingHorizontal: 20,
+                    }}
+                  >
+                    You haven’t submitted any feedback yet. Tap on
+                    <ThemedText style={{ fontWeight: "600" }}>
+                      “Send Feedback”
+                    </ThemedText>
+                    to get started.
+                  </ThemedText>
+                </VStack>
+              ) : (
+                <FlatList
+                  data={feedbacks}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderFeedbackItem}
+                  scrollEnabled={false}
+                />
+              )}
+            </>
           )}
         </VStack>
       </ScrollView>

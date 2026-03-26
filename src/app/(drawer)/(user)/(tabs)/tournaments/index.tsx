@@ -31,6 +31,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { tournamentSchema } from "@/schema/adminSchemas";
 import { userTournamentSchema } from "@/schema/userSchemas";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function TournamentsScreen() {
   const routePage = useRouter();
@@ -50,6 +51,7 @@ export default function TournamentsScreen() {
   const [tournaments, setTournaments] = useState<any>([]);
   const [userId, setUserId] = useState<any>("");
 
+  const [loading, setLoading] = useState(true);
   const {
     control,
     handleSubmit,
@@ -84,6 +86,8 @@ export default function TournamentsScreen() {
 
   const fetchTournaments = async () => {
     try {
+      setLoading(true);
+
       const response = await getAllTournaments();
       const gc = await getCourse();
       // const hData = await getTournamentHistoryByUserId(response.tournamentId);
@@ -94,6 +98,8 @@ export default function TournamentsScreen() {
       setCourses(gc);
     } catch (error) {
       console.error("Fetching tournaments Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,6 +154,74 @@ export default function TournamentsScreen() {
     setModalVisible(false);
   };
 
+  const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        style={{
+          borderRadius: 14,
+          padding: 16,
+          borderWidth: 1,
+          borderColor: "#8bc34a",
+          marginBottom: 12,
+        }}
+      >
+        {/* Title */}
+        <Skeleton isDark={isDark} height={18} width="60%" />
+
+        {/* Description */}
+        <Skeleton
+          isDark={isDark}
+          height={12}
+          width="90%"
+          style={{ marginTop: 6 }}
+        />
+
+        {/* Dates */}
+        <HStack className="justify-between mt-3">
+          <VStack>
+            <Skeleton isDark={isDark} height={10} width={40} />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width={80}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+
+          <VStack>
+            <Skeleton isDark={isDark} height={10} width={40} />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width={80}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+        </HStack>
+
+        {/* Buttons */}
+        <Skeleton
+          isDark={isDark}
+          height={36}
+          borderRadius={10}
+          style={{ marginTop: 12 }}
+        />
+        <Skeleton
+          isDark={isDark}
+          height={36}
+          borderRadius={10}
+          style={{ marginTop: 8 }}
+        />
+        <Skeleton
+          isDark={isDark}
+          height={36}
+          borderRadius={10}
+          style={{ marginTop: 8 }}
+        />
+      </Box>
+    );
+  };
+
   return (
     <>
       <ThemedView style={styles.container}>
@@ -180,105 +254,121 @@ export default function TournamentsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.list}
           >
-            {tournaments.map((tournament: any) => (
-              <Box key={tournament.tournamentId} style={styles.card}>
-                <ThemedText style={styles.title}>{tournament.name}</ThemedText>
-
-                <ThemedText style={styles.description}>
-                  {tournament.description}
-                </ThemedText>
-
-                {/* Dates */}
-
-                <HStack className="justify-between mt-2">
-                  <VStack>
-                    <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                      Start
+            {loading ? (
+              <>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <TournamentCardSkeleton key={i} isDark={false} />
+                ))}
+              </>
+            ) : (
+              <>
+                {tournaments.map((tournament: any) => (
+                  <Box key={tournament.tournamentId} style={styles.card}>
+                    <ThemedText style={styles.title}>
+                      {tournament.name}
                     </ThemedText>
 
-                    <ThemedText>
-                      {formatDateTime(tournament.startDate)}
-                    </ThemedText>
-                  </VStack>
-
-                  <VStack>
-                    <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
-                      End
+                    <ThemedText style={styles.description}>
+                      {tournament.description}
                     </ThemedText>
 
-                    <ThemedText>
-                      {formatDateTime(tournament.endDate)}
-                    </ThemedText>
-                  </VStack>
-                </HStack>
-                {/* Leaderboard */}
-                <Pressable
-                  onPress={() =>
-                    routePage.push(
-                      `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}`,
-                    )
-                  }
-                  className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg"
-                >
-                  <Ionicons
-                    name="stats-chart-outline"
-                    size={23}
-                    color="#f59e0b"
-                  />
+                    {/* Dates */}
 
-                  <ThemedText style={styles.outlineButtonText2}>
-                    View Leaderboard
-                  </ThemedText>
-                </Pressable>
+                    <HStack className="justify-between mt-2">
+                      <VStack>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                          Start
+                        </ThemedText>
 
-                {/* History */}
-                <Pressable
-                  onPress={() =>
-                    routePage.push(
-                      `/tournaments/scoreCardUser?tournamentId=${tournament.tournamentId}`,
-                    )
-                  }
-                  className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"
-                >
-                  <Ionicons name="time-outline" size={23} color="#06b6d4" />
+                        <ThemedText>
+                          {formatDateTime(tournament.startDate)}
+                        </ThemedText>
+                      </VStack>
 
-                  <ThemedText style={styles.outlineButtonText}>
-                    My History
-                  </ThemedText>
-                </Pressable>
+                      <VStack>
+                        <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                          End
+                        </ThemedText>
 
-                {/* Manage button */}
-                {userId === String(tournament.creatorId) && (
-                  <Pressable
-                    onPress={() =>
-                      routePage.push(
-                        `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`,
-                      )
-                    }
-                    className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg"
-                  >
-                    <Ionicons name="create-outline" size={23} color="#0d6efd" />
-                    <ThemedText style={styles.outlineButtonText3}>
-                      Manage
-                    </ThemedText>
-                  </Pressable>
-                )}
+                        <ThemedText>
+                          {formatDateTime(tournament.endDate)}
+                        </ThemedText>
+                      </VStack>
+                    </HStack>
+                    {/* Leaderboard */}
+                    <Pressable
+                      onPress={() =>
+                        routePage.push(
+                          `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}`,
+                        )
+                      }
+                      className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg"
+                    >
+                      <Ionicons
+                        name="stats-chart-outline"
+                        size={23}
+                        color="#f59e0b"
+                      />
 
-                {/* Play Button */}
-                {tournament.isPlayed ? (
-                  ""
-                ) : (
-                  <Pressable
-                    onPress={() => setModalVisible(true)}
-                    className="flex-row justify-center items-center gap-2  bg-[#8bc34a] p-2 rounded-lg"
-                  >
-                    <Ionicons name="play" size={23} color="white" />
+                      <ThemedText style={styles.outlineButtonText2}>
+                        View Leaderboard
+                      </ThemedText>
+                    </Pressable>
 
-                    <ThemedText style={styles.playText}>Play</ThemedText>
-                  </Pressable>
-                )}
-              </Box>
-            ))}
+                    {/* History */}
+                    <Pressable
+                      onPress={() =>
+                        routePage.push(
+                          `/tournaments/scoreCardUser?tournamentId=${tournament.tournamentId}`,
+                        )
+                      }
+                      className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"
+                    >
+                      <Ionicons name="time-outline" size={23} color="#06b6d4" />
+
+                      <ThemedText style={styles.outlineButtonText}>
+                        My History
+                      </ThemedText>
+                    </Pressable>
+
+                    {/* Manage button */}
+                    {userId === String(tournament.creatorId) && (
+                      <Pressable
+                        onPress={() =>
+                          routePage.push(
+                            `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`,
+                          )
+                        }
+                        className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg"
+                      >
+                        <Ionicons
+                          name="create-outline"
+                          size={23}
+                          color="#0d6efd"
+                        />
+                        <ThemedText style={styles.outlineButtonText3}>
+                          Manage
+                        </ThemedText>
+                      </Pressable>
+                    )}
+
+                    {/* Play Button */}
+                    {tournament.isPlayed ? (
+                      ""
+                    ) : (
+                      <Pressable
+                        onPress={() => setModalVisible(true)}
+                        className="flex-row justify-center items-center gap-2  bg-[#8bc34a] p-2 rounded-lg"
+                      >
+                        <Ionicons name="play" size={23} color="white" />
+
+                        <ThemedText style={styles.playText}>Play</ThemedText>
+                      </Pressable>
+                    )}
+                  </Box>
+                ))}
+              </>
+            )}
           </ScrollView>
         </ThemedView>
       </ThemedView>
@@ -508,9 +598,12 @@ export default function TournamentsScreen() {
                   Create Mini Tournament
                 </ThemedText>
 
-                <Pressable onPress={() => {
-                  reset();
-                  setTModalVisible(false)}}>
+                <Pressable
+                  onPress={() => {
+                    reset();
+                    setTModalVisible(false);
+                  }}
+                >
                   <Ionicons name="close" size={22} />
                 </Pressable>
               </HStack>

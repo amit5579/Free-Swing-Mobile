@@ -18,6 +18,7 @@ import Watermark from "@/components/watermark";
 
 import { getLeaderboard, getTeeboxDetails } from "@/api/admin/tournaments";
 import { Ionicons } from "@expo/vector-icons";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function LeaderboardPage() {
   const colorScheme = useColorScheme();
@@ -66,17 +67,41 @@ export default function LeaderboardPage() {
         </Pressable>
 
         {/* CENTER: Title */}
-        <ThemedText
+        <HStack
           style={{
             flex: 1,
-            fontSize: 20,
-            fontWeight: "700",
-            textAlign: "center",
-            lineHeight: 30,
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          Leaderboard: {tournamentName}
-        </ThemedText>
+          <ThemedText
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+            }}
+          >
+            Leaderboard:
+          </ThemedText>
+
+          {loading ? (
+            <Skeleton
+              isDark={isDark}
+              height={18}
+              width={120}
+              style={{ marginLeft: 8 }}
+            />
+          ) : (
+            <ThemedText
+              style={{
+                fontSize: 20,
+                fontWeight: "700",
+                marginLeft: 6,
+              }}
+            >
+              {tournamentName}
+            </ThemedText>
+          )}
+        </HStack>
 
         {/* RIGHT: Add Button */}
         <View style={{ width: 40 }} />
@@ -84,20 +109,88 @@ export default function LeaderboardPage() {
     );
   };
 
-  if (loading) {
+  const LeaderboardCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
-      <ThemedView style={{ flex: 1 }}>
-        {/* Header */}
-        <RenderHeader />
-        <Watermark />
-        <ActivityIndicator size="large" />
-        <ThemedText style={{ marginTop: 10 }}>
-          Loading leaderboard...
-        </ThemedText>
-      </ThemedView>
-    );
-  }
+      <View
+        style={{
+          borderWidth: 1,
+          borderRadius: 14,
+          padding: 12,
+          marginBottom: 12,
+          borderColor: isDark ? "#333" : "#ddd",
+        }}
+      >
+        {/* HEADER */}
+        <HStack style={{ alignItems: "center" }}>
+          <Skeleton isDark={isDark} height={30} width={30} borderRadius={15} />
 
+          <VStack style={{ flex: 1, marginLeft: 10 }}>
+            <Skeleton isDark={isDark} height={14} width="60%" />
+            <Skeleton
+              isDark={isDark}
+              height={10}
+              width="40%"
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+
+          <VStack>
+            <Skeleton isDark={isDark} height={14} width={30} />
+            <Skeleton
+              isDark={isDark}
+              height={10}
+              width={20}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+        </HStack>
+
+        {/* GRID (18 holes feel) */}
+        <View style={{ marginTop: 10 }}>
+          {[1, 2].map((row) => (
+            <HStack key={row} style={{ marginBottom: 8 }}>
+              {Array.from({ length: 9 }).map((_, i) => (
+                <Skeleton
+                  key={i}
+                  isDark={isDark}
+                  height={28}
+                  width={28}
+                  borderRadius={14}
+                  style={{ marginRight: 6 }}
+                />
+              ))}
+            </HStack>
+          ))}
+        </View>
+
+        {/* SUMMARY */}
+        <HStack style={{ marginTop: 12 }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              isDark={isDark}
+              height={14}
+              width="18%"
+              style={{ marginRight: 6 }}
+            />
+          ))}
+        </HStack>
+
+        {/* EXTRA */}
+        <HStack style={{ marginTop: 8 }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              isDark={isDark}
+              height={14}
+              width="30%"
+              style={{ marginRight: 6 }}
+            />
+          ))}
+        </HStack>
+      </View>
+    );
+  };
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
@@ -105,14 +198,24 @@ export default function LeaderboardPage() {
         <Watermark />
 
         <ScrollView contentContainerStyle={{ padding: 12 }}>
-          {leaderboard.map((player) => (
-            <PlayerCard
-              key={player.userId}
-              player={player}
-              holes={holes}
-              isDark={isDark}
-            />
-          ))}
+          {loading ? (
+            <>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <LeaderboardCardSkeleton key={i} isDark={isDark} />
+              ))}
+            </>
+          ) : (
+            <>
+              {leaderboard.map((player) => (
+                <PlayerCard
+                  key={player.userId}
+                  player={player}
+                  holes={holes}
+                  isDark={isDark}
+                />
+              ))}
+            </>
+          )}
         </ScrollView>
       </ThemedView>
     </>
