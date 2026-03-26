@@ -145,10 +145,8 @@ export default function AdminDashboard() {
               </Text>
             </VStack>
             <VStack className="items-end justify-center">
-              <Text 
-                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded ${isDark ? "text-gray-400 bg-white/5" : "text-gray-500 bg-gray-100"}`}
-              >
-                Admin
+              <Text className="text-xs font-semibold uppercase px-3 py-1 rounded-full bg-yellow-400 text-black">
+                ADMIN
               </Text>
             </VStack>
           </HStack>
@@ -268,7 +266,7 @@ export default function AdminDashboard() {
                       <Pressable
                         className="py-2 rounded-lg items-center mt-2"
                         onPress={() => handleTabChange("statistics")}
-                        style={{ 
+                        style={{
                           backgroundColor: "rgba(255, 255, 255, 0.2)",
                           borderColor: "rgba(46, 125, 50, 0.4)",
                           borderWidth: 1.0,
@@ -297,9 +295,9 @@ export default function AdminDashboard() {
                         <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
                         <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Courses</Text>
                       </VStack>
-                      <Pressable 
+                      <Pressable
                         className="py-2 rounded-lg items-center mt-2"
-                        style={{ 
+                        style={{
                           backgroundColor: "rgba(255, 255, 255, 0.2)",
                           borderColor: "rgba(2, 136, 209, 0.4)",
                           borderWidth: 1.0,
@@ -333,9 +331,9 @@ export default function AdminDashboard() {
                       <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
                       <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top Handicaps</Text>
                     </VStack>
-                    <Pressable 
+                    <Pressable
                       className="py-2 rounded-lg items-center mt-2"
-                      style={{ 
+                      style={{
                         backgroundColor: "rgba(254, 252, 232, 0.2)",
                         borderColor: "rgba(176, 137, 0, 0.4)",
                         borderWidth: 1.0,
