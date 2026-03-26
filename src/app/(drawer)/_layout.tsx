@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
-import { getUserProfile, UserProfile, getUpdates } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/dashboard";
 import { Linking } from "react-native";
 
 function CustomDrawerContent({ navigation }: any) {
@@ -24,7 +24,6 @@ function CustomDrawerContent({ navigation }: any) {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageError, setImageError] = useState(false);
-  const [unreadUpdates, setUnreadUpdates] = useState(0);
   const logout = async () => {
     await removeToken();
   };
@@ -46,18 +45,6 @@ function CustomDrawerContent({ navigation }: any) {
     }
   };
 
-  const fetchUnreadCount = async () => {
-    try {
-      const updates = await getUpdates();
-      const stored = await AsyncStorage.getItem("seen_updates");
-      const seenIds = new Set(stored ? JSON.parse(stored) : []);
-      const count = updates.filter(u => !seenIds.has(u.id)).length;
-      setUnreadUpdates(count);
-    } catch (error) {
-      console.log("Unread count error:", error);
-    }
-  };
-
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
@@ -70,11 +57,6 @@ function CustomDrawerContent({ navigation }: any) {
 
     loadRole();
     fetchProfile();
-    fetchUnreadCount();
-
-    // Refresh count when drawer might be visible or at intervals
-    const interval = setInterval(fetchUnreadCount, 30000); // every 30s
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -88,25 +70,39 @@ function CustomDrawerContent({ navigation }: any) {
       <View>
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
-            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+            {profile?.profilePictureUrl &&
+            profile.profilePictureUrl.trim() !== "" &&
+            profile.profilePictureUrl !== "null" &&
+            !imageError ? (
               <Image
-                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                source={{
+                  uri: profile.profilePictureUrl.startsWith("http")
+                    ? profile.profilePictureUrl
+                    : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
+                }}
                 style={styles.avatar}
                 onError={() => setImageError(true)}
               />
             ) : profile?.username && profile.username.trim() !== "" ? (
-              <View style={[styles.avatar, {
-                backgroundColor: isDark ? "#333" : "#C5E1A5",
-                justifyContent: "center",
-                alignItems: "center",
-                borderWidth: 2,
-                borderColor: "#8BC34A"
-              }]}>
-                <Text style={{
-                  color: isDark ? "#fff" : "#2E7D32",
-                  fontSize: 32,
-                  fontWeight: "bold"
-                }}>
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: isDark ? "#333" : "#C5E1A5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 2,
+                    borderColor: "#8BC34A",
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: isDark ? "#fff" : "#2E7D32",
+                    fontSize: 32,
+                    fontWeight: "bold",
+                  }}
+                >
                   {profile.username.trim()[0].toUpperCase()}
                 </Text>
               </View>
@@ -117,15 +113,15 @@ function CustomDrawerContent({ navigation }: any) {
               />
             )}
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {isAdmin ? "Admin" : "User"}
-              </Text>
+              <Text style={styles.badgeText}>{isAdmin ? "Admin" : "User"}</Text>
             </View>
           </View>
 
           <Text style={styles.userName}>{profile?.username}</Text>
           <Text style={styles.handicap}>
-            {isAdmin ? "Administrator" : `Handicap: ${profile?.handicap || "0"}`}
+            {isAdmin
+              ? "Administrator"
+              : `Handicap: ${profile?.handicap || "0"}`}
           </Text>
         </View>
 
@@ -164,31 +160,69 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+                <Ionicons
+                  name="person-circle-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
                 <Text style={styles.drawerText}>User Profile</Text>
               </TouchableOpacity>
 
-              {/* Important Updates */}
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.closeDrawer();
-                  requestAnimationFrame(() => {
-                    router.push("/(drawer)/(user)/(tabs)/dashboard/importantUpdates");
-                  });
-                }}
-                style={styles.drawerItem}
-              >
-                <Ionicons name="megaphone-outline" size={26} color="#2e7d32" />
-                <View className="flex-row items-center flex-1 justify-between">
-                  <Text style={styles.drawerText}>Important Updates</Text>
-                  {unreadUpdates > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadBadgeText}>{unreadUpdates}</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(startNewRound)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="caret-forward-circle-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Start New Round</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(teeTimeBooking)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="calendar-number-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Tee Time Booking</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(contactAdmin)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Contact Admin</Text>
+                </TouchableOpacity>
+              </>
 
               {/* R & A Rules */}
               <TouchableOpacity
@@ -196,7 +230,9 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+                    Linking.openURL(
+                      "https://www.randa.org/quiz/level/quiz-beginner",
+                    );
                   });
                 }}
                 style={styles.drawerItem}
@@ -206,6 +242,7 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
             </>
           )}
+
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
@@ -251,12 +288,14 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>Combined Leaderboards</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() =>
-                  router.push("/(drawer)/(admin)/(feedbackInbox)")
-                }
+                onPress={() => router.push("/(drawer)/(admin)/(feedbackInbox)")}
                 style={styles.drawerItem}
               >
-                <Ionicons name="mail-unread-outline" size={26} color="#2e7d32" />
+                <Ionicons
+                  name="mail-unread-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
                 <Text style={styles.drawerText}>Feedback Inbox</Text>
               </TouchableOpacity>
             </>
@@ -370,23 +409,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",
-  },
-  unreadBadge: {
-    backgroundColor: "#FF3B30",
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 6,
-    marginLeft: 10,
-    borderWidth: 1.5,
-    borderColor: "#fff",
-  },
-  unreadBadgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
   },
   logoutContainer: {
     marginBottom: 20,

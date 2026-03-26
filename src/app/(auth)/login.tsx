@@ -8,51 +8,51 @@ import {
   View,
   Platform,
   ImageBackground,
+  Dimensions,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "@/context/AuthContext";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, LoginFormData } from "@/schema/authSchemas";
+
+const { width } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { email: emailParam, password: passwordParam } = useLocalSearchParams<{
-    email?: string;
-    password?: string;
-  }>();
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const bgImage = require("/assets/golf-bgg.jpg");
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: emailParam || "",
-      password: passwordParam || "",
-    },
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
+  const handleLogin = async () => {
     try {
       setLoading(true);
-      const loggedUser = await login(data.email, data.password);
 
-      if (!loggedUser) throw new Error("Invalid credentials");
+      console.log("🟢 Login button pressed");
+      console.log("📧 Email entered:", email);
+      console.log("🔑 Password entered:", password);
+
+      const loggedUser = await login(email, password);
+
+      console.log("📦 Login function returned:", loggedUser);
+
+      if (!loggedUser) {
+        console.log("❌ Login returned null");
+        throw new Error("Invalid credentials");
+      }
+
+      console.log("✅ User role:", loggedUser.role);
 
       if (loggedUser.role === "Player") {
         router.replace("/(drawer)/(user)/(tabs)/dashboard");
       } else {
         router.replace("/(drawer)/(admin)/(tabs)/dashboard");
       }
+
     } catch (error) {
       console.log("🚨 HANDLE LOGIN ERROR:", error);
       alert("Login failed. Please check your credentials.");
@@ -105,40 +105,24 @@ export default function LoginScreen() {
             >
               Email
             </Text>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  placeholder="Enter your email"
-                  placeholderTextColor="rgba(0,0,0,0.4)"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: errors.email
-                      ? "#ef4444"
-                      : "rgba(0,0,0,0.1)",
-                    borderRadius: 14,
-                    paddingHorizontal: 16,
-                    height: 50,
-                    marginBottom: errors.email ? 4 : 20,
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                    color: "#000",
-                  }}
-                />
-              )}
+            <TextInput
+              placeholder="Enter your email"
+              placeholderTextColor="rgba(0,0,0,0.4)"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={{
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.1)",
+                borderRadius: 14,
+                paddingHorizontal: 16,
+                height: 50,
+                marginBottom: 20,
+                backgroundColor: "rgba(255,255,255,0.9)",
+                color: "#000",
+              }}
             />
-            {errors.email && (
-              <Text
-                style={{ color: "#ef4444", fontSize: 12, marginBottom: 14 }}
-              >
-                {errors.email.message}
-              </Text>
-            )}
 
             {/* Password */}
             <Text
@@ -146,53 +130,39 @@ export default function LoginScreen() {
             >
               Password
             </Text>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View
-                  style={{
-                    borderWidth: 1,
-                    borderColor: errors.password
-                      ? "#ef4444"
-                      : "rgba(0,0,0,0.1)",
-                    borderRadius: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    height: 50,
-                    marginBottom: errors.password ? 4 : 24,
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                  }}
-                >
-                  <TextInput
-                    placeholder="Enter your password"
-                    placeholderTextColor="rgba(0,0,0,0.4)"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secureTextEntry={!showPassword}
-                    style={{ flex: 1, height: "100%", color: "#000" }}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye" : "eye-off"}
-                      size={22}
-                      color="#374151"
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
-            />
-            {errors.password && (
-              <Text
-                style={{ color: "#ef4444", fontSize: 12, marginBottom: 16 }}
+
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.1)",
+                borderRadius: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                height: 50,
+                marginBottom: 24,
+                backgroundColor: "rgba(255,255,255,0.9)",
+              }}
+            >
+              <TextInput
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(0,0,0,0.4)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                style={{ flex: 1, height: "100%", color: "#000" }}
+              />
+
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
               >
-                {errors.password.message}
-              </Text>
-            )}
+                <Ionicons
+                  name={showPassword ? "eye" : "eye-off"}
+                  size={22}
+                  color="#374151"
+                />
+              </TouchableOpacity>
+            </View>
 
             {/* Remember / Forgot */}
             <View
@@ -225,7 +195,7 @@ export default function LoginScreen() {
                 elevation: 4,
                 opacity: loading ? 0.7 : 1,
               }}
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleLogin}
             >
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 17 }}>
                 {loading ? "Logging in..." : "Login"}

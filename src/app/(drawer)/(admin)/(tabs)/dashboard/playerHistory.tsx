@@ -260,11 +260,12 @@ const HistoryCard = ({
               }}
               onPress={() =>
                 router.push({
-                  pathname: "/(drawer)/scoreCard/view/[scoreCard]" as any,
+                  pathname:
+                    "/(drawer)/(admin)/(tabs)/dashboard/scorecardDetails",
                   params: {
-                    scoreCard: item.scorecardId.toString(),
-                    username: username,
+                    scorecardId: item.scorecardId.toString(),
                     courseName: item.courseName,
+                    username: username,
                   },
                 })
               }
