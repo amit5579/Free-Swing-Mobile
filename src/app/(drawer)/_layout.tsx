@@ -88,9 +88,16 @@ function CustomDrawerContent({ navigation }: any) {
       <View>
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
-            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+            {profile?.profilePictureUrl &&
+            profile.profilePictureUrl.trim() !== "" &&
+            profile.profilePictureUrl !== "null" &&
+            !imageError ? (
               <Image
-                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                source={{
+                  uri: profile.profilePictureUrl.startsWith("http")
+                    ? profile.profilePictureUrl
+                    : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
+                }}
                 style={styles.avatar}
                 onError={() => setImageError(true)}
               />
@@ -107,6 +114,25 @@ function CustomDrawerContent({ navigation }: any) {
                   fontSize: 32,
                   fontWeight: "bold"
                 }}>
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: isDark ? "#333" : "#C5E1A5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 2,
+                    borderColor: "#8BC34A",
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: isDark ? "#fff" : "#2E7D32",
+                    fontSize: 32,
+                    fontWeight: "bold",
+                  }}
+                >
                   {profile.username.trim()[0].toUpperCase()}
                 </Text>
               </View>
@@ -117,15 +143,15 @@ function CustomDrawerContent({ navigation }: any) {
               />
             )}
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {isAdmin ? "Admin" : "User"}
-              </Text>
+              <Text style={styles.badgeText}>{isAdmin ? "Admin" : "User"}</Text>
             </View>
           </View>
 
           <Text style={styles.userName}>{profile?.username}</Text>
           <Text style={styles.handicap}>
-            {isAdmin ? "Administrator" : `Handicap: ${profile?.handicap || "0"}`}
+            {isAdmin
+              ? "Administrator"
+              : `Handicap: ${profile?.handicap || "0"}`}
           </Text>
         </View>
 
@@ -169,12 +195,80 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
 
               {/* Important Updates */}
+                <Ionicons
+                  name="person-circle-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>User Profile</Text>
+              </TouchableOpacity>
+
+              <>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(startNewRound)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="caret-forward-circle-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Start New Round</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(teeTimeBooking)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="calendar-number-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Tee Time Booking</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(user)/(contactAdmin)");
+                    });
+                  }}
+                  style={styles.drawerItem}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={26}
+                    color="#2e7d32"
+                  />
+                  <Text style={styles.drawerText}>Contact Admin</Text>
+                </TouchableOpacity>
+              </>
+
+              {/* R & A Rules */}
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
                     router.push("/(drawer)/(user)/(tabs)/dashboard/importantUpdates");
+                    Linking.openURL(
+                      "https://www.randa.org/quiz/level/quiz-beginner",
+                    );
                   });
                 }}
                 style={styles.drawerItem}
@@ -206,6 +300,12 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
             </>
           )}
+                <Ionicons name="book-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>R & A Rules</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
           {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
@@ -251,12 +351,14 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>Combined Leaderboards</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() =>
-                  router.push("/(drawer)/(admin)/(feedbackInbox)")
-                }
+                onPress={() => router.push("/(drawer)/(admin)/(feedbackInbox)")}
                 style={styles.drawerItem}
               >
-                <Ionicons name="mail-unread-outline" size={26} color="#2e7d32" />
+                <Ionicons
+                  name="mail-unread-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
                 <Text style={styles.drawerText}>Feedback Inbox</Text>
               </TouchableOpacity>
             </>

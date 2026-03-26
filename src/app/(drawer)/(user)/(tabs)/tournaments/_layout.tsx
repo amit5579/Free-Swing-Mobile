@@ -6,15 +6,18 @@ export default function tournamentsLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
         name="leaderboardUser"
-        options={{
-          title: "Leaderboard",
-        }}
+       options={{ headerShown: false }}
       />
       <Stack.Screen
         name="scoreCardUser"
-        options={{
-          title: "Scorecard",
-        }}
+               options={{ headerShown: false }}
+
+      />
+
+      <Stack.Screen
+        name="manageTournament"
+               options={{ headerShown: false }}
+
       />
     </Stack>
     

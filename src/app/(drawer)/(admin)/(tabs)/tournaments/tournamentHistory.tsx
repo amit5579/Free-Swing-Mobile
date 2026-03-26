@@ -12,19 +12,21 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
-import { getTournamentHistory } from "@/api/admin/tournaments";
+import { getTournamentHistory, getTournamentHistoryByUserId } from "@/api/admin/tournaments";
 
 export default function tournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
-  const { tournamentId, tournamentName } = useLocalSearchParams();
+  const { tournamentId } = useLocalSearchParams();
 
   const [history, setHistory] = useState<any>([]);
 
   const fetchHistory = async () => {
     try {
       const data = await getTournamentHistory(Number(tournamentId));
+      const hData = await getTournamentHistoryByUserId(Number(tournamentId));
+      console.log("hData", hData);
       setHistory(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -64,7 +66,7 @@ export default function tournamentHistory() {
             lineHeight: 30,
           }}
         >
-          Game History: {tournamentName}
+          Scorecard (Net Score Include Par 3)
         </ThemedText>
 
         {/* RIGHT: Add Button */}
