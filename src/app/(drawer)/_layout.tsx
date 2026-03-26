@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getUserProfile, UserProfile, getUpdates } from "@/api/dashboard";
 import { Linking } from "react-native";
 
 function CustomDrawerContent({ navigation }: any) {
@@ -24,6 +24,7 @@ function CustomDrawerContent({ navigation }: any) {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [unreadUpdates, setUnreadUpdates] = useState(0);
   const logout = async () => {
     await removeToken();
   };
@@ -45,6 +46,18 @@ function CustomDrawerContent({ navigation }: any) {
     }
   };
 
+  const fetchUnreadCount = async () => {
+    try {
+      const updates = await getUpdates();
+      const stored = await AsyncStorage.getItem("seen_updates");
+      const seenIds = new Set(stored ? JSON.parse(stored) : []);
+      const count = updates.filter(u => !seenIds.has(u.id)).length;
+      setUnreadUpdates(count);
+    } catch (error) {
+      console.log("Unread count error:", error);
+    }
+  };
+
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
@@ -57,6 +70,11 @@ function CustomDrawerContent({ navigation }: any) {
 
     loadRole();
     fetchProfile();
+    fetchUnreadCount();
+
+    // Refresh count when drawer might be visible or at intervals
+    const interval = setInterval(fetchUnreadCount, 30000); // every 30s
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -84,6 +102,18 @@ function CustomDrawerContent({ navigation }: any) {
                 onError={() => setImageError(true)}
               />
             ) : profile?.username && profile.username.trim() !== "" ? (
+              <View style={[styles.avatar, {
+                backgroundColor: isDark ? "#333" : "#C5E1A5",
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor: "#8BC34A"
+              }]}>
+                <Text style={{
+                  color: isDark ? "#fff" : "#2E7D32",
+                  fontSize: 32,
+                  fontWeight: "bold"
+                }}>
               <View
                 style={[
                   styles.avatar,
@@ -160,6 +190,11 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
+                <Ionicons name="person-circle-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>User Profile</Text>
+              </TouchableOpacity>
+
+              {/* Important Updates */}
                 <Ionicons
                   name="person-circle-outline"
                   size={26}
@@ -230,6 +265,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(tabs)/dashboard/importantUpdates");
                     Linking.openURL(
                       "https://www.randa.org/quiz/level/quiz-beginner",
                     );
@@ -237,6 +273,33 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
+                <Ionicons name="megaphone-outline" size={26} color="#2e7d32" />
+                <View className="flex-row items-center flex-1 justify-between">
+                  <Text style={styles.drawerText}>Important Updates</Text>
+                  {unreadUpdates > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadBadgeText}>{unreadUpdates}</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              {/* R & A Rules */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="book-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>R & A Rules</Text>
+              </TouchableOpacity>
+            </>
+          )}
                 <Ionicons name="book-outline" size={26} color="#2e7d32" />
                 <Text style={styles.drawerText}>R & A Rules</Text>
               </TouchableOpacity>
@@ -409,6 +472,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  unreadBadge: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    marginLeft: 10,
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  unreadBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   logoutContainer: {
     marginBottom: 20,
