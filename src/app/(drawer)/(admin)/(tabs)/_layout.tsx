@@ -155,19 +155,6 @@ export default function AdminTabLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="subAdmins"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="handicapSetup"
-        options={{
-          href: null,
-        }}
-      />
 
       {/* <Tabs.Screen
         name="playerStatistics"

@@ -1,16 +1,14 @@
-import React, { useState } from "react";
-import { StyleSheet } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import { Skeleton } from "@/components/Skeleton";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import Svg, { Path } from "react-native-svg";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
-//               onPress={() => routePage.push("/newRound/scoreCard")}
-//     const routePage = useRouter();
 
 import { HStack } from "@/components/hstack";
 import { Modal, Pressable, View } from "react-native";
@@ -18,206 +16,282 @@ import { Modal, Pressable, View } from "react-native";
 import { Text } from "@/components/text";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { getTournaments } from "@/api/admin/tournaments";
+import { getCombinedLeaderboard } from "@/api/combinedLeaderboard";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Tournament = {
+  tournamentId: number;
+  name: string;
+  startDate: string;
+  course: { name: string };
+};
+
+type LeaderboardEntry = {
+  rank?: number;
+  userId: number;
+  playerName: string;
+  grossScore: number;
+  netScore: number;
+  points: number;
+  holesPlayed: number;
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function CombinedLeaderboardsPage() {
- 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const routePage = useRouter();
 
+  // Tournament picker modal
   const [modalVisible, setModalVisible] = useState(false);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [loadingTournaments, setLoadingTournaments] = useState(false);
 
-  const [selectedTournaments, setSelectedTournaments] = useState<any>([]);
-  const leaderboardData = [
-    {
-      rank: 1,
-      name: "rks",
-      tourneys: 1,
-      holes: 18,
-      gross: 78,
-      net: 78,
-      points: 30,
-    },
-    {
-      rank: 2,
-      name: "kpk1",
-      tourneys: 1,
-      holes: 18,
-      gross: 78,
-      net: 74,
-      points: 0,
-    },
-    {
-      rank: 3,
-      name: "narender",
-      tourneys: 2,
-      holes: 18,
-      gross: 86,
-      net: 86,
-      points: 0,
-    },
-  ];
-  const [leaderboard, setLeaderboard] = useState(leaderboardData);
+  // Selected tournament IDs for combined leaderboard
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const [selectedPremium, setSelectedPremium] = useState<string | null>(null);
-  const [scoringMode, setScoringMode] = useState("netInclude");
+  // Combined leaderboard result
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
-  const tournaments = [
-    { id: 1, name: "mandi summer", date: "3/13/26" },
-    { id: 2, name: "bmw", date: "3/11/26" },
-    { id: 3, name: "w12", date: "3/10/26" },
-    { id: 4, name: "test", date: "3/9/26" },
-    { id: 5, name: "12", date: "3/7/26" },
-  ];
+  // ─── Fetch tournament list ──────────────────────────────────────────────────
 
-  const toggleTournament = (id: any) => {
-    if (selectedTournaments.includes(id)) {
-      setSelectedTournaments(
-        selectedTournaments.filter((item: any) => item !== id),
+  const fetchTournaments = useCallback(async () => {
+    setLoadingTournaments(true);
+    try {
+      const data = await getTournaments();
+      console.log("[CombinedLeaderboards] tournaments:", data?.length);
+      setTournaments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("[CombinedLeaderboards] fetchTournaments error:", error);
+      setTournaments([]);
+    } finally {
+      setLoadingTournaments(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTournaments();
+  }, [fetchTournaments]);
+
+  // ─── Toggle selection ───────────────────────────────────────────────────────
+
+  const toggleSelection = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  // ─── Generate combined leaderboard ─────────────────────────────────────────
+
+  const generateLeaderboard = async () => {
+    if (selectedIds.length === 0) return;
+    setModalVisible(false);
+    setLoadingLeaderboard(true);
+    setHasGenerated(true);
+
+    try {
+      // Fetch leaderboard for each selected tournament and merge
+      const results = await Promise.all(
+        selectedIds.map((id) => getCombinedLeaderboard(id)),
       );
-    } else {
-      setSelectedTournaments([...selectedTournaments, id]);
+
+      // Flatten and aggregate by userId
+      const merged: Record<number, LeaderboardEntry> = {};
+      for (const result of results) {
+        const entries: any[] = Array.isArray(result) ? result : [];
+        for (const entry of entries) {
+          const uid = entry.userId ?? entry.playerId;
+          if (uid == null) continue;
+          if (merged[uid]) {
+            merged[uid].grossScore += entry.grossScore ?? entry.gross ?? 0;
+            merged[uid].netScore += entry.netScore ?? entry.net ?? 0;
+            merged[uid].points += entry.points ?? 0;
+            merged[uid].holesPlayed += entry.holesPlayed ?? entry.holes ?? 0;
+          } else {
+            merged[uid] = {
+              userId: uid,
+              playerName: entry.playerName ?? entry.name ?? "Unknown",
+              grossScore: entry.grossScore ?? entry.gross ?? 0,
+              netScore: entry.netScore ?? entry.net ?? 0,
+              points: entry.points ?? 0,
+              holesPlayed: entry.holesPlayed ?? entry.holes ?? 0,
+            };
+          }
+        }
+      }
+
+      // Sort by points desc
+      const sorted = Object.values(merged).sort((a, b) => b.points - a.points);
+      console.log("[CombinedLeaderboards] merged entries:", sorted.length);
+      setLeaderboard(sorted);
+    } catch (error) {
+      console.error("[CombinedLeaderboards] generateLeaderboard error:", error);
+      setLeaderboard([]);
+    } finally {
+      setLoadingLeaderboard(false);
     }
   };
 
-  const PlayerAvatar = ({ name }: any) => {
-    const letter = name.charAt(0).toUpperCase();
+  // ─── Helpers ────────────────────────────────────────────────────────────────
 
-    return (
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: "#8bc34a",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <ThemedText style={{ color: "white", fontWeight: "700" }}>
-          {letter}
-        </ThemedText>
-      </View>
-    );
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
   };
+
+  const selectedTournamentNames = tournaments
+    .filter((t) => selectedIds.includes(t.tournamentId))
+    .map((t) => t.name);
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <>
-      <SafeAreaView        style={{
-          flex: 1,
-        }}
-      >
+      <SafeAreaView style={{ flex: 1 }}>
         {/* HEADER */}
-        <VStack className="my-3">
-          <HStack className="justify-center items-center">
-            {/* CENTER: Title */}
-            <ThemedText
+        <VStack className="my-3 px-4">
+          <HStack className="items-center justify-between">
+            <Pressable onPress={() => routePage.back()} hitSlop={10}>
+              <Ionicons name="arrow-back" size={24} color="#8bc34a" />
+            </Pressable>
+
+            <Text
               style={{
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: "700",
-                textAlign: "center",
-                lineHeight: 30,
+                color: isDark ? "white" : "black",
               }}
             >
               Combined Leaderboards
-            </ThemedText>
+            </Text>
+
+            <View style={{ width: 24 }} />
           </HStack>
 
           <ThemedText
             style={{
-              fontSize: 15,
+              fontSize: 14,
               opacity: 0.6,
-              marginTop: 9,
+              marginTop: 6,
               textAlign: "center",
-              lineHeight: 20,
             }}
           >
             Aggregate scores across multiple tournaments
           </ThemedText>
         </VStack>
+
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          <VStack className="px-4 pt-5 pb-20">
+          <VStack className="px-4 pt-4 pb-20">
+            {/* Select button */}
             <Pressable
               onPress={() => setModalVisible(true)}
-              className="border border-[#8bc34a] rounded-xl py-3 items-center"
+              style={[styles.selectButton, { borderColor: "#8bc34a" }]}
             >
-              <ThemedText>Select Tournaments</ThemedText>
+              <Ionicons
+                name="trophy-outline"
+                size={16}
+                color="#8bc34a"
+                style={{ marginRight: 6 }}
+              />
+              <Text style={{ color: "#8bc34a", fontWeight: "600" }}>
+                Select Tournaments ({selectedIds.length} selected)
+              </Text>
             </Pressable>
-            <HStack className="flex-wrap gap-2 mt-3">
-              {selectedTournaments.map((id: any) => {
-                const t = tournaments.find((t: any) => t.id === id);
 
-                return (
-                  <Pressable
-                    key={id}
-                    onPress={() => toggleTournament(id)}
-                    className="bg-[#8bc34a] p-3 rounded-full flex-row items-center gap-1"
+            {/* Selected tournament chips */}
+            {selectedTournamentNames.length > 0 && (
+              <HStack className="flex-wrap gap-2 mt-3">
+                {selectedTournamentNames.map((name, i) => (
+                  <View key={i} style={styles.chip}>
+                    <Text style={styles.chipText}>{name}</Text>
+                  </View>
+                ))}
+              </HStack>
+            )}
+
+            {/* Generate button */}
+            {selectedIds.length > 0 && (
+              <Pressable
+                style={[
+                  styles.generateButton,
+                  loadingLeaderboard && { opacity: 0.6 },
+                ]}
+                onPress={generateLeaderboard}
+                disabled={loadingLeaderboard}
+              >
+                {loadingLeaderboard ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.generateButtonText}>
+                    Generate Combined Leaderboard
+                  </Text>
+                )}
+              </Pressable>
+            )}
+
+            {/* Loading state — skeleton cards */}
+            {loadingLeaderboard && (
+              <View style={{ marginTop: 16 }}>
+                {[1, 2, 3, 4].map((i) => (
+                  <LeaderboardCardSkeleton key={i} isDark={isDark} />
+                ))}
+              </View>
+            )}
+
+            {/* Empty state */}
+            {!loadingLeaderboard &&
+              hasGenerated &&
+              leaderboard.length === 0 && (
+                <VStack className="items-center mt-10">
+                  <Ionicons
+                    name="bar-chart-outline"
+                    size={40}
+                    color="#9ca3af"
+                  />
+                  <Text
+                    style={{
+                      color: isDark ? "#aaa" : "#6b7280",
+                      marginTop: 10,
+                    }}
                   >
-                    <Text className="text-white text-md font-semibold">
-                      {t?.name}
-                    </Text>
+                    No data found for selected tournaments
+                  </Text>
+                </VStack>
+              )}
 
-                    <Ionicons name="close" size={17} color="white" />
-                  </Pressable>
-                );
-              })}
-            </HStack>
-
-            <VStack className="gap-3 mt-5">
-              {leaderboard.map((player: any, index: any) => (
-                <Box
-                  key={index}
-                  className="p-4 rounded-xl border border-neutral-200"
-                >
-                  <HStack className="justify-between items-center">
-                    <VStack>
-                      <ThemedText
-                        style={{
-                          fontWeight: "700",
-                          fontSize: 16,
-                        }}
-                      >
-                        #{player.rank} {player.name}
-                      </ThemedText>
-
-                      <ThemedText
-                        style={{
-                          fontSize: 12,
-                          opacity: 0.6,
-                        }}
-                      >
-                        Tourneys: {player.tourneys}
-                      </ThemedText>
-                    </VStack>
-
-                    <ThemedText
-                      style={{
-                        color: "#8bc34a",
-                        fontWeight: "700",
-                        fontSize: 18,
-                      }}
-                    >
-                      Total Points: {player.points}
-                    </ThemedText>
-                  </HStack>
-
-                  <HStack className="justify-between mt-3">
-                    <ThemedText style={{ fontSize: 14 }}>
-                      Gross: {player.gross}
-                    </ThemedText>
-
-                    <ThemedText style={{ fontSize: 14 }}>
-                      Net: {player.net}
-                    </ThemedText>
-
-                    <ThemedText style={{ fontSize: 14 }}>
-                      Holes: {player.holes}
-                    </ThemedText>
-                  </HStack>
-                </Box>
-              ))}
-            </VStack>
+            {/* Leaderboard rows */}
+            {!loadingLeaderboard && leaderboard.length > 0 && (
+              <View style={{ marginTop: 16 }}>
+                {leaderboard.map((entry, index) => (
+                  <CombinedPlayerCard
+                    key={entry.userId}
+                    entry={entry}
+                    rank={index + 1}
+                    isDark={isDark}
+                  />
+                ))}
+              </View>
+            )}
           </VStack>
         </ScrollView>
       </SafeAreaView>
 
+      {/* Tournament picker modal */}
       <Modal
         animationType="slide"
         transparent
@@ -225,52 +299,149 @@ export default function CombinedLeaderboardsPage() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#1e1e1e" : "white" },
+            ]}
+          >
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 18, fontWeight: "700" }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "700",
+                  color: isDark ? "white" : "black",
+                }}
+              >
                 Select Tournaments
               </Text>
-
-              <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} />
+              <Pressable onPress={() => setModalVisible(false)} hitSlop={10}>
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
               </Pressable>
             </HStack>
 
-            <ScrollView>
-              {tournaments.map((tournament) => (
-                <Pressable
-                  key={tournament.id}
-                  onPress={() => toggleTournament(tournament.id)}
-                  className="flex-row justify-between items-center py-3"
-                >
-                  <VStack>
-                    <Text className="font-semibold text-xl">
-                      {tournament.name}
-                    </Text>
+            {loadingTournaments ? (
+              <View style={{ paddingVertical: 8 }}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TournamentRowSkeleton key={i} isDark={isDark} />
+                ))}
+              </View>
+            ) : tournaments.length === 0 ? (
+              <VStack className="items-center py-8">
+                <Ionicons name="trophy-outline" size={32} color="#9ca3af" />
+                <Text style={{ color: "#9ca3af", marginTop: 8 }}>
+                  No tournaments found
+                </Text>
+              </VStack>
+            ) : (
+              <ScrollView
+                style={{ maxHeight: 400 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {tournaments.map((tournament) => {
+                  const isSelected = selectedIds.includes(
+                    tournament.tournamentId,
+                  );
+                  return (
+                    <Pressable
+                      key={tournament.tournamentId}
+                      onPress={() => toggleSelection(tournament.tournamentId)}
+                      style={[
+                        styles.tournamentRow,
+                        isSelected && {
+                          backgroundColor: isDark
+                            ? "rgba(139,195,74,0.15)"
+                            : "rgba(139,195,74,0.1)",
+                        },
+                        { borderBottomColor: isDark ? "#333" : "#f0f0f0" },
+                      ]}
+                    >
+                      <VStack style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontWeight: "700",
+                            fontSize: 15,
+                            color: isSelected
+                              ? "#8bc34a"
+                              : isDark
+                                ? "white"
+                                : "black",
+                          }}
+                        >
+                          # {tournament.tournamentId}
+                        </Text>
+                        <HStack className="items-center gap-2">
+                          <Text
+                            style={{
+                              fontWeight: "700",
+                              fontSize: 15,
+                              color: isSelected
+                                ? "#8bc34a"
+                                : isDark
+                                  ? "white"
+                                  : "black",
+                            }}
+                          >
+                            {tournament.name}
+                          </Text>
+                        </HStack>
 
-                    <Text className="text-md opacity-60">
-                      {tournament.date}
-                    </Text>
-                  </VStack>
+                        <HStack className="gap-3 mt-1">
+                          <HStack className="items-center gap-1">
+                            <Ionicons
+                              name="location-outline"
+                              size={12}
+                              color="#9ca3af"
+                            />
+                            <Text style={{ fontSize: 12, color: "#9ca3af" }}>
+                              {tournament.course?.name ?? "—"}
+                            </Text>
+                          </HStack>
+                          <HStack className="items-center gap-1">
+                            <Ionicons
+                              name="calendar-outline"
+                              size={12}
+                              color="#9ca3af"
+                            />
+                            <Text style={{ fontSize: 12, color: "#9ca3af" }}>
+                              {formatDate(tournament.startDate)}
+                            </Text>
+                          </HStack>
+                        </HStack>
+                      </VStack>
 
-                  <Ionicons
-                    name={
-                      selectedTournaments.includes(tournament.id)
-                        ? "checkbox"
-                        : "square-outline"
-                    }
-                    size={22}
-                    color="#8bc34a"
-                  />
-                </Pressable>
-              ))}
-            </ScrollView>
+                      {/* Checkbox */}
+                      <View
+                        style={[
+                          styles.checkbox,
+                          isSelected && styles.checkboxSelected,
+                        ]}
+                      >
+                        {isSelected && (
+                          <Ionicons name="checkmark" size={13} color="#fff" />
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
 
             <Pressable
-              className="bg-[#8bc34a] py-3 rounded-lg items-center mt-4"
-              onPress={() => setModalVisible(false)}
+              style={[
+                styles.applyButton,
+                selectedIds.length === 0 && { opacity: 0.5 },
+              ]}
+              onPress={generateLeaderboard}
+              disabled={selectedIds.length === 0}
             >
-              <Text className="text-white text-lg font-semibold">Apply</Text>
+              <Text style={styles.applyButtonText}>
+                Generate ({selectedIds.length} selected)
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -279,96 +450,263 @@ export default function CombinedLeaderboardsPage() {
   );
 }
 
-/* ---------- COURSE CARD ---------- */
+// ─── Combined Player Card ─────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  centeredView: {
-    flex: 1,
+function CombinedPlayerCard({
+  entry,
+  rank,
+  isDark,
+}: {
+  entry: any;
+  rank: number;
+  isDark: boolean;
+}) {
+  const rankColor =
+    rank === 1
+      ? "#FFD700"
+      : rank === 2
+        ? "#C0C0C0"
+        : rank === 3
+          ? "#CD7F32"
+          : "#84cc16";
+
+  return (
+    <View
+      style={[
+        cardStyles.card,
+        { borderColor: rank <= 3 ? rankColor : isDark ? "#333" : "#ddd" },
+      ]}
+    >
+      {/* HEADER */}
+      <HStack style={cardStyles.header}>
+        <View style={[cardStyles.rank, { backgroundColor: rankColor }]}>
+          <ThemedText style={{ fontWeight: "700", fontSize: 13, color: "#fff" }}>
+            {rank}
+          </ThemedText>
+        </View>
+
+        <VStack style={{ flex: 1 }}>
+          <ThemedText style={cardStyles.name}>{entry.playerName}</ThemedText>
+          <ThemedText style={cardStyles.sub}>
+            {entry.holesPlayed} holes played
+          </ThemedText>
+        </VStack>
+
+        <VStack style={{ alignItems: "flex-end" }}>
+          <ThemedText style={cardStyles.points}>{entry.points}</ThemedText>
+          <ThemedText style={cardStyles.sub}>PTS</ThemedText>
+        </VStack>
+      </HStack>
+
+      {/* SUMMARY STATS */}
+      <HStack style={cardStyles.summary}>
+        <CombinedStat label="GROSS" value={entry.grossScore} />
+        <CombinedStat label="NET" value={entry.netScore} />
+        <CombinedStat label="PTS" value={entry.points} />
+        <CombinedStat label="HOLES" value={entry.holesPlayed} />
+      </HStack>
+    </View>
+  );
+}
+
+function CombinedStat({ label, value }: { label: string; value: any }) {
+  return (
+    <VStack style={cardStyles.stat}>
+      <ThemedText style={cardStyles.statValue}>{value ?? "-"}</ThemedText>
+      <ThemedText style={cardStyles.statLabel}>{label}</ThemedText>
+    </VStack>
+  );
+}
+
+// ─── Skeleton: Leaderboard Card ───────────────────────────────────────────────
+
+function LeaderboardCardSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderRadius: 14,
+        padding: 12,
+        marginBottom: 12,
+        borderColor: isDark ? "#333" : "#ddd",
+      }}
+    >
+      {/* Header row: rank circle + name + pts */}
+      <HStack style={{ alignItems: "center" }}>
+        <Skeleton isDark={isDark} height={32} width={32} borderRadius={16} style={{ marginRight: 10 }} />
+        <VStack style={{ flex: 1, gap: 6 }}>
+          <Skeleton isDark={isDark} height={14} width="55%" />
+          <Skeleton isDark={isDark} height={11} width="35%" />
+        </VStack>
+        <VStack style={{ alignItems: "flex-end", gap: 4 }}>
+          <Skeleton isDark={isDark} height={16} width={36} />
+          <Skeleton isDark={isDark} height={10} width={24} />
+        </VStack>
+      </HStack>
+
+      {/* Stats row: GROSS | NET | PTS | HOLES */}
+      <HStack style={{ marginTop: 14, justifyContent: "space-between" }}>
+        {[1, 2, 3, 4].map((i) => (
+          <VStack key={i} style={{ alignItems: "center", flex: 1, gap: 4 }}>
+            <Skeleton isDark={isDark} height={16} width={32} />
+            <Skeleton isDark={isDark} height={10} width={28} />
+          </VStack>
+        ))}
+      </HStack>
+    </View>
+  );
+}
+
+// ─── Skeleton: Tournament Row ─────────────────────────────────────────────────
+
+function TournamentRowSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <HStack
+      style={{
+        alignItems: "center",
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#333" : "#f0f0f0",
+        gap: 10,
+      }}
+    >
+      <VStack style={{ flex: 1, gap: 6 }}>
+        <Skeleton isDark={isDark} height={14} width="50%" />
+        <HStack style={{ gap: 12 }}>
+          <Skeleton isDark={isDark} height={11} width="30%" />
+          <Skeleton isDark={isDark} height={11} width="30%" />
+        </HStack>
+      </VStack>
+      <Skeleton isDark={isDark} height={22} width={22} borderRadius={6} />
+    </HStack>
+  );
+}
+
+const cardStyles = StyleSheet.create({
+  card: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+  },
+  header: {
+    alignItems: "center",
+  },
+  rank: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
   },
-  createButton: {
-    backgroundColor: "#8bc34a",
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 7,
+  name: {
+    fontSize: 16,
+    fontWeight: "700",
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
+  sub: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+  points: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#16a34a",
+  },
+  summary: {
+    marginTop: 12,
+    justifyContent: "space-between",
+  },
+  stat: {
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    flex: 1,
   },
-  button: {
+  statValue: {
+    fontWeight: "700",
+  },
+  statLabel: {
+    fontSize: 11,
+    opacity: 0.6,
+  },
+});
+
+
+
+const styles = StyleSheet.create({
+  selectButton: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chip: {
+    backgroundColor: "#8bc34a",
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 20,
-    padding: 10,
-    elevation: 2,
   },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
-  },
-  buttonClose: {
-    backgroundColor: "#2196F3",
-  },
-  textStyle: {
+  chipText: {
     color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: "600",
+    fontSize: 13,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: "center",
+  generateButton: {
+    backgroundColor: "#8bc34a",
+    marginTop: 14,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  generateButtonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 15,
   },
   overlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
-
   modalContainer: {
-    width: "90%",
-    backgroundColor: "white",
-    borderRadius: 14,
+    width: "92%",
+    borderRadius: 18,
     padding: 20,
+    maxHeight: "80%",
   },
-
-  selectBox: {
-    borderWidth: 1,
+  tournamentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
     borderColor: "#8bc34a",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
   },
-
-  handicapCard: {
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 6,
-  },
-
-  cancelButton: {
-    backgroundColor: "#6b7280",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-
-  startButton: {
+  checkboxSelected: {
     backgroundColor: "#8bc34a",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+  },
+  applyButton: {
+    backgroundColor: "#8bc34a",
+    marginTop: 16,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  applyButtonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

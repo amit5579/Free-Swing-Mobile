@@ -26,11 +26,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 const login = async (email: string, password: string): Promise<UserType | null> => {
   try {
-    console.log("1️⃣ LOGIN FUNCTION STARTED");
-    console.log("2️⃣ Email:", email);
-    console.log("3️⃣ Password:", password);
+    // console.log("1️⃣ LOGIN FUNCTION STARTED");
+    // console.log("2️⃣ Email:", email);
+    // console.log("3️⃣ Password:", password);
 
-    console.log("4️⃣ Sending API request...");
+    // console.log("4️⃣ Sending API request...");
 
     const response = await fetch("https://kolve18freeswing.com/api/Auth/login", {
       method: "POST",
@@ -44,21 +44,21 @@ const login = async (email: string, password: string): Promise<UserType | null> 
       }),
     });
 
-    console.log("5️⃣ API request sent");
-    console.log("6️⃣ Response status:", response.status);
+    // console.log("5️⃣ API request sent");
+    // console.log("6️⃣ Response status:", response.status);
 
     const text = await response.text();
-    console.log("7️⃣ Raw API response:", text);
+    // console.log("7️⃣ Raw API response:", text);
 
     const data = JSON.parse(text);
-    console.log("8️⃣ Parsed JSON:", data);
+    // console.log("8️⃣ Parsed JSON:", data);
 
     if (!data.token) {
       console.log("9️⃣ Token not found in response");
       return null;
     }
 
-    console.log("🔟 Token received:", data.token);
+    // console.log("🔟 Token received:", data.token);
 
     const userData: UserType = {
       id: data.id,
@@ -67,16 +67,16 @@ const login = async (email: string, password: string): Promise<UserType | null> 
       token: data.token,
     };
 
-    console.log("1️⃣1️⃣ User data created:", userData);
+    // console.log("1️⃣1️⃣ User data created:", userData);
 
-    console.log("1️⃣2️⃣ Saving user in context...");
+    // console.log("1️⃣2️⃣ Saving user in context...");
     setUser(userData);
 
-    console.log("1️⃣3️⃣ Saving token in AsyncStorage...");
+    // console.log("1️⃣3️⃣ Saving token in AsyncStorage...");
     await AsyncStorage.setItem("token", data.token);
     await AsyncStorage.setItem("userId", data.id.toString());
     await AsyncStorage.setItem("role",data.role);
-    console.log("1️⃣4️⃣ Login successful");
+    // console.log("1️⃣4️⃣ Login successful");
 
     return userData;
 

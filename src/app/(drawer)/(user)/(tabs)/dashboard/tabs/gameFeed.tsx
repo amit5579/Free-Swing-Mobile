@@ -352,3 +352,5 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
         </SafeAreaView>
     );
 }
+
+export default OverviewTab;

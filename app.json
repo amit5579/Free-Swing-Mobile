@@ -1,28 +1,26 @@
 {
   "expo": {
-    "name": "freeswing-app",
-    "slug": "freeswing-app",
+    "name": "freeswing",
+    "slug": "freeswing",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/FreeSwing.png",
-    "scheme": "freeswingapp",
+    "scheme": "freeswing",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/FreeSwing.png"
-    },
+    "ios": {},
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "foregroundImage": "./assets/FreeSwing.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.freeswing.app"
+      "package": "com.kolves18freeswing.freeswing"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/FreeSwing.png"
     },
     "plugins": [
       "expo-router",
@@ -31,7 +29,7 @@
         {
           "backgroundColor": "#208AEF",
           "android": {
-            "image": "./assets/images/splash-icon.png",
+            "image": "./assets/FreeSwing.png",
             "imageWidth": 76
           }
         }
@@ -43,6 +41,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c558d4f9-a896-4489-9c71-9caad58eb32c"
+      }
+    },
+    "owner": "kolves18freeswing"
   }
 }
