@@ -104,6 +104,7 @@ export type UpdateApi = {
   id: number;
   content: string | null;
   mediaUrl: string | null;
+  linkUrl: string | null;
   type: "text" | "image" | string;
   authorId: number;
   authorName: string;
@@ -127,6 +128,30 @@ export const getUpdates = async (): Promise<UpdateApi[]> => {
   } catch (error) {
     console.error("Get Updates API Error:", error);
     return [];
+  }
+};
+
+export const addUpdate = async (formData: FormData): Promise<any> => {
+  try {
+    const response = await https.post("/Updates", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Adding Update Error:", error);
+    throw error;
+  }
+};
+
+export const deleteUpdate = async (id: number): Promise<any> => {
+  try {
+    const response = await https.delete(`/Updates/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Deleting Update Error:", error);
+    throw error;
   }
 };
 
