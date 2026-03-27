@@ -287,6 +287,20 @@ function CustomDrawerContent({ navigation }: any) {
                 />
                 <Text style={styles.drawerText}>Feedback Inbox</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                  router.push("/(drawer)/(admin)/(importantUpdate)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="notifications-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Important Updates</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>

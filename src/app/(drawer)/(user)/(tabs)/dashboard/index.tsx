@@ -103,6 +103,9 @@ export default function DashboardScreen() {
           likes: item.likeCount || 0,
           isLiked: item.isLikedByMe || false,
           isTournament: !!item.isTournament,
+          isAuthenticated: item.isAuthenticated || false,
+          authenticatedBy: item.authenticatedBy || null,
+          profileImage: item.playerAvatar,
         }));
         setCards(mappedCards);
       } else {
@@ -153,7 +156,6 @@ export default function DashboardScreen() {
         }}
       >
         {loading ? (
-          // ✅ HEADER SKELETON
           <VStack className="mb-4 space-y-3">
             {/* Welcome text skeleton */}
             <Skeleton isDark={isDark} height={28} width="60%" />
@@ -172,7 +174,6 @@ export default function DashboardScreen() {
             </HStack>
           </VStack>
         ) : (
-          // ✅ ORIGINAL HEADER
           <>
             <VStack className="mb-4">
               <Text

@@ -29,6 +29,7 @@ const PlayerCard = ({
   onToggle: () => void;
 }) => {
   const router = useRouter();
+  const [imageError, setImageError] = useState(false);
 
   const handleViewHistory = () => {
     router.push({
@@ -78,7 +79,14 @@ const PlayerCard = ({
                 marginRight: 12,
               }}
             >
-              {!player.profilePictureUrl ? (
+              {player.profilePictureUrl && player.profilePictureUrl.trim() !== "" && player.profilePictureUrl !== "null" && !imageError ? (
+                <AvatarImage
+                  source={{
+                    uri: player.profilePictureUrl.startsWith('http') ? player.profilePictureUrl : `https://kolve18freeswing.com${player.profilePictureUrl}`,
+                  }}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
                 <ThemedText
                   style={{
                     fontWeight: "800",
@@ -87,12 +95,6 @@ const PlayerCard = ({
                 >
                   {player.username.charAt(0).toUpperCase()}
                 </ThemedText>
-              ) : (
-                <AvatarImage
-                  source={{
-                    uri: `https://kolve18freeswing.com${player.profilePictureUrl}`,
-                  }}
-                />
               )}
             </Avatar>
             <VStack>
