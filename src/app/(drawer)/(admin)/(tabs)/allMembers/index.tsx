@@ -516,15 +516,42 @@ export default function AllMembersPage() {
                           ) : (
                             <TouchableOpacity
                               style={{
-                                marginLeft: 6,
-                                fontSize: 13,
-                                fontWeight: "800",
-                                color: member.isBlocked ? "#22C55E" : "#EF4444",
+                                paddingHorizontal: 20,
+                                paddingVertical: 10,
+                                borderRadius: 12,
+                                backgroundColor: member.isBlocked
+                                  ? "rgba(34,197,94,0.1)"
+                                  : "rgba(239,68,68,0.15)",
+                                borderWidth: 1,
+                                borderColor: member.isBlocked
+                                  ? "rgba(34,197,94,0.2)"
+                                  : "rgba(239,68,68,0.2)",
+                                flexDirection: "row",
+                                alignItems: "center",
                               }}
+                              onPress={() => handleToggleBlock(member.id)}
                             >
-                              {member.isBlocked ? "Unblock" : "Block Member"}
-                            </ThemedText>
-                          </TouchableOpacity>
+                              <Ionicons
+                                name={
+                                  member.isBlocked
+                                    ? "checkmark-circle-outline"
+                                    : "ban-outline"
+                                }
+                                size={16}
+                                color={member.isBlocked ? "#22C55E" : "#EF4444"}
+                              />
+                              <ThemedText
+                                style={{
+                                  marginLeft: 6,
+                                  fontSize: 13,
+                                  fontWeight: "800",
+                                  color: member.isBlocked ? "#22C55E" : "#EF4444",
+                                }}
+                              >
+                                {member.isBlocked ? "Unblock" : "Block Member"}
+                              </ThemedText>
+                            </TouchableOpacity>
+                          )}
                         </HStack>
                       </VStack>
                     )}

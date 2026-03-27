@@ -451,6 +451,7 @@ const FeedCard = ({
                     borderColor: isDark ? "#fff" : "#8BC34A",
                     backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
                   }}
+                  onPress={() => handleVerifyCard(card.id, card.playerName)}
                 >
                   <ButtonText className={`${isDark ? "text-white" : "text-green-600"} text-xs font-extrabold`}>Verify Score</ButtonText>
                 </Button>
