@@ -155,32 +155,44 @@ export default function DashboardScreen() {
           zIndex: 10,
         }}
       >
-        <VStack className="mb-2">
-          <HStack className="items-center">
-            <Text
-              className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+        {loading ? (
+          // ✅ HEADER SKELETON
+          <VStack className="mb-4 space-y-3">
+            {/* Welcome text skeleton */}
+            <Skeleton isDark={isDark} height={28} width="60%" />
+            <Skeleton isDark={isDark} height={18} width="80%" />
+
+            {/* Tabs skeleton */}
+            <HStack
+              className="rounded-full p-2 mt-2"
+              style={{
+                backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+              }}
             >
-              Welcome back{profile?.username ? ", " : ""}
-            </Text>
-            {loading && !profile?.username ? (
-              <Skeleton isDark={isDark} height={28} width={100} style={{ marginLeft: 4 }} />
-            ) : (
-              profile?.username && (
-                <Text className="text-3xl font-bold" style={{ color: "#8BC34A" }}>
-                  {profile.username} !
-                </Text>
-              )
-            )}
-            {/* <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-              !
-            </Text> */}
-          </HStack>
-          <Text
-            className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
-          >
-            Track your progress and manage your games
-          </Text>
-        </VStack>
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
+              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} />
+            </HStack>
+          </VStack>
+        ) : (
+          // ✅ ORIGINAL HEADER
+          <>
+            <VStack className="mb-4">
+              <Text
+                className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+              >
+                Welcome back{profile?.username ? ", " : ""}
+                {profile?.username && (
+                  <Text style={{ color: "#8BC34A" }}>{profile.username}</Text>
+                )}
+                !
+              </Text>
+              <Text
+                className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+              >
+                Track your progress and manage your games
+              </Text>
+            </VStack>
 
             <HStack
               className="rounded-full p-1 justify-between"
