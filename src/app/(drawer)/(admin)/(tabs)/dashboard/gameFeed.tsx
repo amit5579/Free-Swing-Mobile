@@ -646,10 +646,11 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
 
   if (loading) {
     return (
-      <Box className="items-center justify-center py-10">
-        <ActivityIndicator size="large" color="#8BC34A" />
-        <Text className="mt-2 text-gray-500">Loading feed...</Text>
-      </Box>
+      <VStack space="md" className="py-2">
+        <FeedCardSkeleton />
+        <FeedCardSkeleton />
+        <FeedCardSkeleton />
+      </VStack>
     );
   }
 

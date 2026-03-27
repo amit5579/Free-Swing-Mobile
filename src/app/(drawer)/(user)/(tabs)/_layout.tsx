@@ -49,10 +49,26 @@ export default function TabLayout() {
           />
         ),
         headerRight: () => (
-          <TouchableOpacity
-            onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-            style={{ marginRight: 20, borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, gap: 12 }}>
+            <TouchableOpacity
+              // onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
+              style={{
+                width: 38,
+                height: 38,
+                // borderRadius: 19,
+                // backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "rgba(139,195,74,0.12)",
+                // borderWidth: 1,
+                borderColor: "#8BC34A",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
+              style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
+            >
             {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
               <Image
                 source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
@@ -72,6 +88,7 @@ export default function TabLayout() {
               />
             )}
           </TouchableOpacity>
+          </View>
         ),
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
