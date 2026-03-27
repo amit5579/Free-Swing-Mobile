@@ -38,6 +38,7 @@ export default function ManageImportantUpdates() {
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>({});
+  const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
 
   // Form states
   const [content, setContent] = useState("");
@@ -272,34 +273,43 @@ export default function ManageImportantUpdates() {
                     </Text>
                   )}
 
-                  {update.mediaUrl ? (
-                    <Image
-                      source={{
-                        uri:
-                          !imgErrorMap[update.id]
-                            ? update.mediaUrl.startsWith("http")
-                              ? update.mediaUrl
-                              : `https://kolve18freeswing.com${update.mediaUrl}`
-                            : "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
-                      }}
-                      style={{ width: "100%", height: 200, borderRadius: 20 }}
-                      resizeMode="cover"
-                      onError={() =>
-                        setImgErrorMap((prev) => ({
-                          ...prev,
-                          [update.id]: true,
-                        }))
-                      }
-                    />
-                  ) : (
-                    <Image
-                      source={{
-                        uri: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
-                      }}
-                      style={{ width: "100%", height: 200, borderRadius: 20 }}
-                      resizeMode="cover"
-                    />
-                  )}
+                  <View style={{ width: "100%", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", justifyContent: "center", alignItems: "center" }}>
+                    {imgLoadingMap[update.id] !== false && (
+                      <ActivityIndicator size="large" color="#8BC34A" style={{ position: "absolute" }} />
+                    )}
+                    {update.mediaUrl ? (
+                      <Image
+                        source={{
+                          uri:
+                            !imgErrorMap[update.id]
+                              ? update.mediaUrl.startsWith("http")
+                                ? update.mediaUrl
+                                : `https://kolve18freeswing.com${update.mediaUrl}`
+                              : "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
+                        }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                        onLoadStart={() => setImgLoadingMap(prev => ({...prev, [update.id]: true}))}
+                        onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [update.id]: false}))}
+                        onError={() =>
+                          setImgErrorMap((prev) => ({
+                            ...prev,
+                            [update.id]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Image
+                        source={{
+                          uri: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
+                        }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                        onLoadStart={() => setImgLoadingMap(prev => ({...prev, [update.id]: true}))}
+                        onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [update.id]: false}))}
+                      />
+                    )}
+                  </View>
 
                   {(update as any).linkUrl && (
                     <TouchableOpacity

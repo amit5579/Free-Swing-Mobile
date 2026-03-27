@@ -119,7 +119,7 @@ const FeedCard = ({
                                 />
                             ) : (
                                 <Text style={{ color: isDark ? "#fff" : "#111", fontWeight: "bold", fontSize: 18 }}>
-                                    {card.playerName?.charAt(0).toUpperCase()}
+                                    {card.playerName ? card.playerName.charAt(0).toUpperCase() : "?"}
                                 </Text>
                             )}
                         </Box>
@@ -201,7 +201,7 @@ const FeedCard = ({
 
                     <HStack className="px-4 py-4 justify-between items-center" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.3)" : "rgba(249, 250, 251, 0.3)" }}>
                         <HStack space="lg" className="items-center">
-                            <Pressable onPressIn={() => handleLike(card.id)} hitSlop={10} className="p-2 rounded-full flex-row items-center" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(229,231,235,0.5)" }}>
+                            <Pressable onPress={() => handleLike(card.id)} hitSlop={10} className="p-2 rounded-full flex-row items-center" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(229,231,235,0.5)" }}>
                                 <Ionicons name={card.isLiked ? "heart" : "heart-outline"} size={20} color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"} />
                                 <Text className="text-sm font-semibold ml-1.5" style={{ color: isDark ? "#fff" : "#6b7280" }}>{card.likes}</Text>
                             </Pressable>
@@ -337,7 +337,7 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                                                 {user.profilePictureUrl && user.profilePictureUrl !== "null" ? (
                                                     <Image source={{ uri: user.profilePictureUrl.startsWith('http') ? user.profilePictureUrl : `https://kolve18freeswing.com${user.profilePictureUrl}` }} style={{ width: "100%", height: "100%" }} />
                                                 ) : (
-                                                    <Text style={{ color: "#fff", fontWeight: "bold" }}>{user.username.charAt(0).toUpperCase()}</Text>
+                                                    <Text style={{ color: "#fff", fontWeight: "bold" }}>{user.username ? user.username.charAt(0).toUpperCase() : "?"}</Text>
                                                 )}
                                             </Box>
                                             <Text className="ml-3 font-bold text-lg" style={{ color: isDark ? "#fff" : "#111" }}>{user.username}</Text>
