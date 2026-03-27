@@ -17,6 +17,10 @@ export type UserListApi = {
   profilePictureUrl: string | null;
   invitedBySubAdminId: number | null;
   invitedBySubAdminName: string | null;
+  dateOfBirth: string | null;
+  homeCourse: string | null;
+  slope: number | null;
+  rating: number | null;
 };
 
 export type User = {

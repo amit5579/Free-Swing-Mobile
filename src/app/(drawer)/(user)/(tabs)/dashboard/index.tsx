@@ -127,6 +127,7 @@ export default function DashboardScreen() {
           isTournament: !!item.isTournament,
           isAuthenticated: item.isAuthenticated || false,
           authenticatedBy: item.authenticatedBy || null,
+          profileImage: item.playerAvatar,
         }));
         setCards(mappedCards);
       } else {
@@ -190,13 +191,13 @@ export default function DashboardScreen() {
             ) : (
               profile?.username && (
                 <Text className="text-3xl font-bold" style={{ color: "#8BC34A" }}>
-                  {profile.username}
+                  {profile.username} !
                 </Text>
               )
             )}
-            <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+            {/* <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
               !
-            </Text>
+            </Text> */}
           </HStack>
           <Text
             className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}

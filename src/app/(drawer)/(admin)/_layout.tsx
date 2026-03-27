@@ -40,6 +40,7 @@ export default function AdminRootLayout() {
             <Stack.Screen name="(combinedLeaderboards)" options={{ headerShown: false }} />
             <Stack.Screen name="(handicapSetup)" options={{ headerShown: false }} />
             <Stack.Screen name="(subAdmins)" options={{ headerShown: false }} />
+            <Stack.Screen name="(importantUpdate)" options={{ headerShown: false }} />
         </Stack>
     );
 }
