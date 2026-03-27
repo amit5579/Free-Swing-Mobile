@@ -41,6 +41,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c558d4f9-a896-4489-9c71-9caad58eb32c"
+      }
+    },
+    "owner": "kolves18freeswing"
   }
 }
