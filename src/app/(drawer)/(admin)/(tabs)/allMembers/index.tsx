@@ -9,7 +9,6 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -25,6 +24,7 @@ import Watermark from "@/components/watermark";
 import { UserIcon } from "lucide-react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { getUsers, UserListApi } from "@/api/admin/allMembers";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function AllMembersPage() {
   const colorScheme = useColorScheme();
@@ -38,7 +38,56 @@ export default function AllMembersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+  const handleApprove = async (id: number) => {
+    try {
+      setLoading(true);
+      await approveUser(id);
+      Alert.alert("Success", "Member approved successfully");
+      fetchUsers();
+    } catch (error) {
+      Alert.alert("Error", "Failed to approve member");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleDeny = async (id: number) => {
+    Alert.alert(
+      "Deny Member",
+      "Are you sure you want to deny this member? This will remove their request.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Deny",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await denyUser(id);
+              Alert.alert("Success", "Member denied successfully");
+              fetchUsers();
+            } catch (error) {
+              Alert.alert("Error", "Failed to deny member");
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleToggleBlock = async (id: number) => {
+    try {
+      setLoading(true);
+      await toggleBlockUser(id);
+      fetchUsers();
+    } catch (error) {
+      Alert.alert("Error", "Failed to update member status");
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -174,7 +223,7 @@ export default function AllMembersPage() {
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 14,
-                  backgroundColor: "rgba(139,195,74,0.15)", 
+                  backgroundColor: "rgba(139,195,74,0.15)",
                 }}
               >
                 <Ionicons name="people-outline" size={16} color="#8BC34A" />
@@ -579,3 +628,15 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+function approveUser(id: number) {
+  throw new Error("Function not implemented.");
+}
+
+function denyUser(id: number) {
+  throw new Error("Function not implemented.");
+}
+
+function toggleBlockUser(id: number) {
+  throw new Error("Function not implemented.");
+}
+
