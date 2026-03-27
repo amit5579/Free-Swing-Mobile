@@ -266,3 +266,5 @@ export function InProgressTab({
     </VStack>
   );
 }
+
+export default InProgressTab;

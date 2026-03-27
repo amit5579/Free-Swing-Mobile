@@ -32,20 +32,20 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      console.log("🟢 Login button pressed");
-      console.log("📧 Email entered:", email);
-      console.log("🔑 Password entered:", password);
+      // console.log("🟢 Login button pressed");
+      // console.log("📧 Email entered:", email);
+      // console.log("🔑 Password entered:", password);
 
       const loggedUser = await login(email, password);
 
-      console.log("📦 Login function returned:", loggedUser);
+      // console.log("📦 Login function returned:", loggedUser);
 
       if (!loggedUser) {
-        console.log("❌ Login returned null");
+        // console.log("❌ Login returned null");
         throw new Error("Invalid credentials");
       }
 
-      console.log("✅ User role:", loggedUser.role);
+      // console.log("✅ User role:", loggedUser.role);
 
       if (loggedUser.role === "Player") {
         router.replace("/(drawer)/(user)/(tabs)/dashboard");

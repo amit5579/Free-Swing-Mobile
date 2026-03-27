@@ -174,24 +174,6 @@ function CustomDrawerContent({ navigation }: any) {
                   onPress={() => {
                     navigation.closeDrawer();
                     requestAnimationFrame(() => {
-                      router.push("/(drawer)/(user)/(startNewRound)");
-                    });
-                  }}
-                  style={styles.drawerItem}
-                >
-                  <Ionicons
-                    name="caret-forward-circle-outline"
-                    size={26}
-                    color="#2e7d32"
-                  />
-                  <Text style={styles.drawerText}>Start New Round</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    navigation.closeDrawer();
-                    requestAnimationFrame(() => {
                       router.push("/(drawer)/(user)/(teeTimeBooking)");
                     });
                   }}
@@ -288,7 +270,14 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>Combined Leaderboards</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => router.push("/(drawer)/(admin)/(feedbackInbox)")}
+                onPress={
+                  () => {
+                    navigation.closeDrawer();
+                    requestAnimationFrame(() => {
+                      router.push("/(drawer)/(admin)/(feedbackInbox)");
+                    });
+                  }
+                }
                 style={styles.drawerItem}
               >
                 <Ionicons

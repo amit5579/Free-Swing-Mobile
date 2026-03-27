@@ -333,3 +333,5 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
     );
 
 }
+
+export default HistoryTab;

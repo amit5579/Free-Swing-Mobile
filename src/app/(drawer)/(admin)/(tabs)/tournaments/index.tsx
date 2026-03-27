@@ -3,6 +3,7 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   useColorScheme,
@@ -20,7 +21,6 @@ import { Box } from "@/components/box";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
-import { Text } from "@/components/text";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -41,12 +41,7 @@ export default function adminTournamentsPage() {
   const isDark = colorScheme === "dark";
 const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  // const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  // const [selectedTeeColor, setSelectedTeeColor] = useState<string | null>(null);
-  // const [selectedScoringType, setSelectedScoringType] = useState<string | null>(
-  //   null,
-  // );
-  // const [date, setDate] = useState(new Date());
+
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
@@ -118,11 +113,6 @@ const [loading, setLoading] = useState(true);
 
     setModalVisible(false);
   };
-
-  // const scoringTypes = [
-  //   { label: "Stableford", value: 3 },
-  //   { label: "Net Score", value: 1 },
-  // ];
 
   const fetchTournaments = async () => {
     try {
@@ -291,7 +281,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     ))}
   </>
 ) : (
-  <> {tournaments.map((tournament: any) => (
+  <>{tournaments.map((tournament: any) => (
               <TournamentCard
                 key={tournament.tournamentId}
                 tournament={tournament}
@@ -303,7 +293,6 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
               />
             ))}</>)}
 
-           
           </VStack>
         </ScrollView>
       </ThemedView>
