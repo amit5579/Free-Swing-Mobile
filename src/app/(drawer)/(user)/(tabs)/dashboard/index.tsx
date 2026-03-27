@@ -103,6 +103,9 @@ export default function DashboardScreen() {
           likes: item.likeCount || 0,
           isLiked: item.isLikedByMe || false,
           isTournament: !!item.isTournament,
+          isAuthenticated: item.isAuthenticated || false,
+          authenticatedBy: item.authenticatedBy || null,
+          profileImage: item.playerAvatar,
         }));
         setCards(mappedCards);
       } else {
@@ -166,17 +169,46 @@ export default function DashboardScreen() {
                 backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
               }}
             >
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} />
-            </HStack>
-          </VStack>
-        ) : (
-          // ✅ ORIGINAL HEADER
-          <>
-            <VStack className="mb-4">
-              <Text
-                className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+              Welcome back{profile?.username ? ", " : ""}
+            </Text>
+            {loading && !profile?.username ? (
+              <Skeleton isDark={isDark} height={28} width={100} style={{ marginLeft: 4 }} />
+            ) : (
+              profile?.username && (
+                <Text className="text-3xl font-bold" style={{ color: "#8BC34A" }}>
+                  {profile.username} !
+                </Text>
+              )
+            )}
+            {/* <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+              !
+            </Text> */}
+          </HStack>
+          <Text
+            className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+          >
+            Track your progress and manage your games
+          </Text>
+        </VStack>
+
+        <HStack
+          className="rounded-full p-1 justify-between"
+          style={{
+            backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+            borderWidth: isDark ? 1 : 0,
+            borderColor: isDark ? "#FFFFFF" : "transparent",
+          }}
+        >
+          {tabs.map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => handleTabChange(tab.key)}
+                className="px-4 py-2 rounded-full flex-row items-center justify-center"
+                style={{
+                  backgroundColor: active ? "#8BC34A" : "transparent",
+                }}
               >
                 Welcome back{profile?.username ? ", " : ""}
                 {profile?.username && (
