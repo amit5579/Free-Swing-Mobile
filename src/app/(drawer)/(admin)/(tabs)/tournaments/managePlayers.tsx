@@ -18,6 +18,7 @@ import {
   getTournamentPlayers,
   removePlayerFromTournament,
 } from "@/api/admin/tournaments";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -26,6 +27,7 @@ export default function managePlayers() {
 
   const { tournamentId, tournamentName } = useLocalSearchParams();
 
+  const [loading, setLoading] = useState(true);
   const [tournamentsName, setTournamentName] = useState<any>();
   const [allPlayers, setAllPlayers] = useState<any>([]);
   const [tournamentPlayers, setTournamentPlayers] = useState<any>([]);
@@ -59,6 +61,8 @@ export default function managePlayers() {
 
   const fetchPlayers = async () => {
     try {
+      setLoading(true);
+
       const data = await getTournamentPlayers(Number(tournamentId));
 
       const allPlayersData = await getAllPlayers();
@@ -66,6 +70,8 @@ export default function managePlayers() {
       setAllPlayers(allPlayersData);
     } catch (error) {
       console.error("Error fetching players:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,6 +87,53 @@ export default function managePlayers() {
   //     ),
   //   );
   // };
+
+  const PlayerCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 12,
+        }}
+      >
+        <VStack className="gap-2">
+          {/* Username */}
+          <Skeleton isDark={isDark} height={16} width="50%" />
+
+          {/* Email */}
+          <Skeleton isDark={isDark} height={12} width="70%" />
+
+          {/* Divider */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: isDark ? "#262626" : "#e5e5e5",
+              marginVertical: 8,
+            }}
+          />
+
+          {/* Bottom Row */}
+          <HStack className="justify-between items-center">
+            <VStack>
+              <Skeleton isDark={isDark} height={10} width={60} />
+              <Skeleton
+                isDark={isDark}
+                height={14}
+                width={40}
+                style={{ marginTop: 4 }}
+              />
+            </VStack>
+
+            {/* Button */}
+            <Skeleton isDark={isDark} height={32} width={80} borderRadius={8} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   return (
     <ThemedView
@@ -104,35 +157,69 @@ export default function managePlayers() {
         </Pressable>
 
         {/* CENTER: Title */}
-        <ThemedText
+        <HStack
           style={{
             flex: 1,
-            fontSize: 20,
-            fontWeight: "700",
-            textAlign: "center",
-            lineHeight: 30,
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          Manage Players: {tournamentsName}
-        </ThemedText>
+          <ThemedText
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+            }}
+          >
+            Manage Players:
+          </ThemedText>
+
+          {loading ? (
+            <Skeleton
+              isDark={isDark}
+              height={18}
+              width={120}
+              style={{ marginLeft: 8 }}
+            />
+          ) : (
+            <ThemedText
+              style={{
+                fontSize: 20,
+                fontWeight: "700",
+                marginLeft: 6,
+              }}
+            >
+              {tournamentsName}
+            </ThemedText>
+          )}
+        </HStack>
 
         {/* RIGHT: Add Button */}
         <View style={{ width: 40 }} />
       </HStack>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack className="p-4 gap-4">
-          {allPlayers.map((player: any) => (
-            <PlayerCard
-              key={player.id}
-              player={player}
-              tournamentPlayers={tournamentPlayers}
-              setTournamentPlayers={setTournamentPlayers}
-              tournamentId={tournamentId}
-              handleAdd={handleAdd}
-              handleRemove={handleRemove}
-              isDark={isDark}
-            />
-          ))}
+          {loading ? (
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <PlayerCardSkeleton key={i} isDark={isDark} />
+              ))}
+            </>
+          ) : (
+            <>
+              {allPlayers.map((player: any) => (
+                <PlayerCard
+                  key={player.id}
+                  player={player}
+                  tournamentPlayers={tournamentPlayers}
+                  setTournamentPlayers={setTournamentPlayers}
+                  tournamentId={tournamentId}
+                  handleAdd={handleAdd}
+                  handleRemove={handleRemove}
+                  isDark={isDark}
+                />
+              ))}
+            </>
+          )}
         </VStack>
       </ScrollView>
     </ThemedView>

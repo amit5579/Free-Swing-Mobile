@@ -7,6 +7,7 @@ import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   useColorScheme,
@@ -450,7 +451,6 @@ const FeedCard = ({
                     borderColor: isDark ? "#fff" : "#8BC34A",
                     backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
                   }}
-                  onPress={() => handleVerifyCard(card.id, card.playerName)}
                 >
                   <ButtonText className={`${isDark ? "text-white" : "text-green-600"} text-xs font-extrabold`}>Verify Score</ButtonText>
                 </Button>
@@ -634,8 +634,8 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
 
   const handleViewScorecard = (scorecardId: string) => {
     router.push({
-      pathname: "/(drawer)/scoreCard/resume/[id]" as any,
-      params: { id: scorecardId, handicap: 0 },
+      pathname: "/(drawer)/(admin)/(tabs)/dashboard/scorecardDetails",
+      params: { scorecardId },
     });
   };
 
@@ -645,17 +645,12 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
 
   if (loading) {
     return (
-      <VStack space="md">
-        {!hideHeader && (
-          <Skeleton isDark={isDark} width="50%" height={36} style={{ marginBottom: 16 }} />
-        )}
-        {[1, 2, 3].map((i) => (
-          <FeedCardSkeleton key={i} />
-        ))}
-      </VStack>
+      <Box className="items-center justify-center py-10">
+        <ActivityIndicator size="large" color="#8BC34A" />
+        <Text className="mt-2 text-gray-500">Loading feed...</Text>
+      </Box>
     );
   }
-
 
   return (
     <VStack space="md">

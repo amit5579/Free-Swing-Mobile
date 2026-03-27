@@ -280,7 +280,7 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
                 </HStack>
 
                 {cards.length === 0 && (
-                    <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.7)", borderColor: "rgba(139, 195, 74, 0.3)" }}>
+                    <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(30,30,30,0.6)" : "rgba(255,255,255,0.6)", borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.5)" }}>
                         <Text className="text-4xl">⛳</Text>
                         <Text className="font-semibold text-sm mt-3" style={{ color: isDark ? "#aaa" : "#6B7280" }}>No scorecards yet</Text>
                     </Box>

@@ -13,19 +13,13 @@ import Watermark from "@/components/watermark";
 //     const routePage = useRouter();
 
 import { HStack } from "@/components/hstack";
-import { useRouter } from "expo-router";
-import { Modal, Pressable, useColorScheme, View } from "react-native";
+import { Modal, Pressable, View } from "react-native";
 
-import { Divider } from "@/components/divider";
 import { Text } from "@/components/text";
-import { TextInput } from "react-native";
-import { ThemedView } from "@/components/themed-view";
-import { Dropdown } from "react-native-element-dropdown";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function CombinedLeaderboardsPage() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const routePage = useRouter();
+ 
 
   const [modalVisible, setModalVisible] = useState(false);
 

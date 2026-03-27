@@ -26,11 +26,14 @@ import { getTeeBox } from "@/api/admin/courses";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teeBoxSchema } from "@/schema/adminSchemas";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function teeBoxPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+
+  const [loading, setLoading] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -60,10 +63,14 @@ export default function teeBoxPage() {
 
   const fetchTeeDetails = async () => {
     try {
+      setLoading(true);
+
       const response = await getTeeBox(courseId as string);
       setTeeBox(response);
     } catch (error) {
       console.error("Error fetching tee details:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,78 +101,81 @@ export default function teeBoxPage() {
     { label: "Silver", value: "silver" },
   ];
 
-  const tees = [
-    {
-      id: 1,
-      name: "Kala",
-      color: "Black",
-      rating: 50,
-      slope: 130,
-      location: "Bangalore",
-      tees: 2,
-      free: true,
-    },
-    {
-      id: 2,
-      name: "Neela",
-      color: "Blue",
-      rating: 55,
-      slope: 120,
-      location: "Delhi",
-      tees: 4,
-      free: false,
-    },
-    {
-      id: 3,
-      name: "Safed",
-      color: "White",
-      rating: 65,
-      slope: 105,
-      location: "Mumbai",
-      tees: 3,
-      free: true,
-    },
-    {
-      id: 4,
-      name: "Lal",
-      color: "Red",
-      rating: 72,
-      slope: 110,
-      location: "Mumbai",
-      tees: 3,
-      free: true,
-    },
-    {
-      id: 5,
-      name: "Hara",
-      color: "Green",
-      rating: 72,
-      slope: 110,
-      location: "Mumbai",
-      tees: 3,
-      free: true,
-    },
-    {
-      id: 6,
-      name: "Rajat",
-      color: "Silver",
-      rating: 72,
-      slope: 110,
-      location: "Mumbai",
-      tees: 3,
-      free: true,
-    },
-    {
-      id: 7,
-      name: "Sona",
-      color: "Gold",
-      rating: 72,
-      slope: 110,
-      location: "Mumbai",
-      tees: 3,
-      free: true,
-    },
-  ];
+  const TeeCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
+        className="rounded-2xl p-5"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          marginBottom: 12,
+        }}
+      >
+        {/* Color Badge */}
+        <Skeleton
+          isDark={isDark}
+          height={20}
+          width={60}
+          borderRadius={20}
+          style={{ position: "absolute", top: 12, right: 12 }}
+        />
+
+        {/* Title */}
+        <Skeleton
+          isDark={isDark}
+          height={18}
+          width="40%"
+          style={{ marginBottom: 12 }}
+        />
+
+        {/* Rating + Slope */}
+        <HStack className="justify-between my-3">
+          <VStack>
+            <Skeleton isDark={isDark} height={12} width={50} />
+            <Skeleton
+              isDark={isDark}
+              height={14}
+              width={30}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+
+          <VStack>
+            <Skeleton isDark={isDark} height={12} width={50} />
+            <Skeleton
+              isDark={isDark}
+              height={14}
+              width={30}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+        </HStack>
+
+        {/* Button */}
+        <Skeleton
+          isDark={isDark}
+          height={36}
+          borderRadius={10}
+          style={{ marginTop: 10 }}
+        />
+
+        {/* Divider */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+            marginVertical: 12,
+          }}
+        />
+
+        {/* Actions */}
+        <HStack style={{ justifyContent: "space-between" }}>
+          <Skeleton isDark={isDark} height={14} width={50} />
+          <Skeleton isDark={isDark} height={14} width={50} />
+        </HStack>
+      </Box>
+    );
+  };
 
   return (
     <>
@@ -233,16 +243,26 @@ export default function teeBoxPage() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-3">
             <VStack className="gap-4">
-              {teeBox?.map((tee: any) => (
-                <TeeCardAdmin
-                  key={tee.id}
-                  tee={tee}
-                  isDark={isDark}
-                  openModal={() => setModalVisible(true)}
-                  setIsEditMode={setIsEditMode}
-                  setEditingCourse={setEditingCourse}
-                />
-              ))}
+              {loading ? (
+                <>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <TeeCardSkeleton key={i} isDark={isDark} />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {teeBox?.map((tee: any) => (
+                    <TeeCardAdmin
+                      key={tee.id}
+                      tee={tee}
+                      isDark={isDark}
+                      openModal={() => setModalVisible(true)}
+                      setIsEditMode={setIsEditMode}
+                      setEditingCourse={setEditingCourse}
+                    />
+                  ))}
+                </>
+              )}
             </VStack>
           </VStack>
         </ScrollView>
@@ -497,7 +517,9 @@ function TeeCardAdmin({
 
       {/*setup holes button */}
       <Pressable
-        onPress={() => routePage.push(`/courses/holes?teeBoxId=${tee.teeBoxId}`)}
+        onPress={() =>
+          routePage.push(`/courses/holes?teeBoxId=${tee.teeBoxId}`)
+        }
         className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
         style={({ pressed }) => ({
           backgroundColor: pressed ? "#8bc34a" : "transparent",

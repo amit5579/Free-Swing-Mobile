@@ -1,15 +1,17 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Pressable,
   useColorScheme,
+  ActivityIndicator,
   View,
   TouchableOpacity,
   ScrollView,
   Alert,
   StyleSheet,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -22,15 +24,7 @@ import Watermark from "@/components/watermark";
 
 import { UserIcon } from "lucide-react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-// import { getUsers, UserListApi } from "@/api/admin/allMembers";
-import {
-  getUsers,
-  approveUser,
-  denyUser,
-  toggleBlockUser,
-  UserListApi
-} from "@/api/admin/allMembers";
-import { Skeleton } from "@/components/Skeleton";
+import { getUsers, UserListApi } from "@/api/admin/allMembers";
 
 export default function AllMembersPage() {
   const colorScheme = useColorScheme();
@@ -41,11 +35,9 @@ export default function AllMembersPage() {
   const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
   const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchUsers();
-    }, [])
-  );
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -64,62 +56,11 @@ export default function AllMembersPage() {
       setMembers(sortedMembers);
 
       // Auto-expand first item if it exists
-      if (sortedMembers.length > 0) {
-        setExpanded({ [sortedMembers[0].id]: true });
+      if (data.length > 0) {
+        setExpanded({ [data[0].id]: true });
       }
     } catch (error) {
       console.error("Fetch users error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApprove = async (id: number) => {
-    try {
-      setLoading(true);
-      await approveUser(id);
-      Alert.alert("Success", "Member approved successfully");
-      fetchUsers();
-    } catch (error) {
-      Alert.alert("Error", "Failed to approve member");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeny = async (id: number) => {
-    Alert.alert(
-      "Deny Member",
-      "Are you sure you want to deny this member? This will remove their request.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Deny",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await denyUser(id);
-              Alert.alert("Success", "Member denied successfully");
-              fetchUsers();
-            } catch (error) {
-              Alert.alert("Error", "Failed to deny member");
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleToggleBlock = async (id: number) => {
-    try {
-      setLoading(true);
-      await toggleBlockUser(id);
-      fetchUsers();
-    } catch (error) {
-      Alert.alert("Error", "Failed to update member status");
     } finally {
       setLoading(false);
     }
@@ -189,26 +130,21 @@ export default function AllMembersPage() {
         backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
+      {/* WATERMARK */}
       <Watermark />
 
       {loading ? (
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
-          <HStack className="items-center justify-between mb-8">
-            <Skeleton isDark={isDark} width={120} height={24} />
-            <Skeleton isDark={isDark} width={100} height={32} borderRadius={12} />
-          </HStack>
-          <VStack className="px-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <MemberCardSkeleton
-                key={i}
-                isExpanded={i === 1}
-                isDark={isDark}
-              />
-            ))}
-          </VStack>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="#8bc34a" />
+          <ThemedText style={{ marginTop: 12, color: "#8bc34a" }}>
+            Loading members...
+          </ThemedText>
         </View>
       ) : (
         <>
+          {/* HEADER */}
           <HStack className="items-center justify-between mb-6 px-4">
             <HStack className="items-center">
               <Pressable onPress={() => router.back()}>
@@ -296,27 +232,22 @@ export default function AllMembersPage() {
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
           >
             <VStack className="px-4">
+              {/* MEMBERS LIST */}
               <VStack space="md" style={{ gap: 16 }}>
                 {members.map((member) => (
                   <Box
                     key={member.id}
                     style={{
                       backgroundColor: isDark
-                        ? "rgba(26, 26, 26, 0.6)"
-                        : "rgba(255, 255, 255, 0.8)",
+                        ? "rgba(26, 26, 26, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
                       borderRadius: 20,
                       borderLeftWidth: 6,
-                      borderLeftColor: !member.isApproved
-                        ? "#8BC34A" // Pending: Light Green
-                        : (member.isBlocked ? "#EF4444" : "#8BC34A"), // Blocked: Red, Active: Light Green
+                      borderLeftColor: member.isBlocked ? "#EF4444" : "#8BC34A",
                       borderTopWidth: isDark ? 1.5 : 0,
                       borderRightWidth: isDark ? 1.5 : 0,
                       borderBottomWidth: isDark ? 1.5 : 0,
-                      borderColor: isDark
-                        ? (!member.isApproved
-                          ? "#8BC34A"
-                          : (member.isBlocked ? "#EF4444" : "#8BC34A"))
-                        : "transparent",
+                      borderColor: isDark ? (member.isBlocked ? "#EF4444" : "#8BC34A") : "transparent",
                       padding: 16,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 4 },
@@ -326,6 +257,7 @@ export default function AllMembersPage() {
                       overflow: "hidden",
                     }}
                   >
+                    {/* MEMBER HEADER */}
                     <Pressable onPress={() => toggleMember(member.id)}>
                       <HStack className="items-center justify-between">
                         <HStack className="items-center" style={{ flex: 1 }}>
@@ -388,7 +320,7 @@ export default function AllMembersPage() {
                                 ? "rgba(239,68,68,0.15)"
                                 : "rgba(139,195,74,0.15)",
                               paddingHorizontal: 10,
-                              paddingVertical: 4,
+                              paddingVertical: 5,
                               borderRadius: 12,
                               marginRight: 8,
                             }}
@@ -417,6 +349,7 @@ export default function AllMembersPage() {
                       </HStack>
                     </Pressable>
 
+                    {/* EXPANDED DETAILS */}
                     {expanded[member.id] && (
                       <VStack style={{ marginTop: 20 }}>
                         <Divider
@@ -536,8 +469,9 @@ export default function AllMembersPage() {
                           </VStack>
                         </HStack>
 
+                        {/* Actions */}
                         <HStack
-                          style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}
+                          style={{ marginTop: 24, justifyContent: "flex-end" }}
                         >
                           {member.isBlocked ? (
                             <>
@@ -582,42 +516,15 @@ export default function AllMembersPage() {
                           ) : (
                             <TouchableOpacity
                               style={{
-                                paddingHorizontal: 20,
-                                paddingVertical: 10,
-                                borderRadius: 12,
-                                backgroundColor: member.isBlocked
-                                  ? "rgba(34,197,94,0.1)"
-                                  : "rgba(239,68,68,0.15)",
-                                borderWidth: 1,
-                                borderColor: member.isBlocked
-                                  ? "rgba(34,197,94,0.2)"
-                                  : "rgba(239,68,68,0.2)",
-                                flexDirection: "row",
-                                alignItems: "center",
+                                marginLeft: 6,
+                                fontSize: 13,
+                                fontWeight: "800",
+                                color: member.isBlocked ? "#22C55E" : "#EF4444",
                               }}
-                              onPress={() => handleToggleBlock(member.id)}
                             >
-                              <Ionicons
-                                name={
-                                  member.isBlocked
-                                    ? "checkmark-circle-outline"
-                                    : "ban-outline"
-                                }
-                                size={16}
-                                color={member.isBlocked ? "#22C55E" : "#EF4444"}
-                              />
-                              <ThemedText
-                                style={{
-                                  marginLeft: 6,
-                                  fontSize: 13,
-                                  fontWeight: "800",
-                                  color: member.isBlocked ? "#22C55E" : "#EF4444",
-                                }}
-                              >
-                                {member.isBlocked ? "Unblock" : "Block Member"}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          )}
+                              {member.isBlocked ? "Unblock" : "Block Member"}
+                            </ThemedText>
+                          </TouchableOpacity>
                         </HStack>
                       </VStack>
                     )}
