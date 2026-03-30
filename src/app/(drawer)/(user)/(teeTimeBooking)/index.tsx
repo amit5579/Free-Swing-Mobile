@@ -12,7 +12,7 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, useColorScheme, View } from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
@@ -528,26 +528,27 @@ export default function TeeTimeBookingPage() {
               >
                 <Dropdown
                   style={{
-                    flex: 1,
-                    padding: 10,
-                    borderRadius: 7,
-                    borderColor: "#e5e5e5",
                     borderWidth: 1,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    height: 40,
+                    // marginTop: 6,
+                    borderColor: isDark ? "#333" : "#ddd",
+                    flex: 1,
                     marginRight: 10,
                   }}
-                  selectedTextStyle={{
-                    color: isDark ? "white" : "black",
+                  placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+                  selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                  containerStyle={{
+                    backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                    borderColor: isDark ? "#333" : "#ddd",
                   }}
-                  itemTextStyle={{
-                    color: isDark ? "white" : "black",
-                  }}
-                  placeholderStyle={{
-                    color: isDark ? "white" : "black",
-                  }}
+                  itemTextStyle={{ color: isDark ? "white" : "black" }}
+                  activeColor={isDark ? "#333" : "#f0f0f0"}
                   data={courses}
                   labelField="label"
                   valueField="value"
-                  placeholder="Select course"
+                  placeholder="Select Course"
                   value={selectedCourse}
                   onChange={(item) => {
                     setSelectedCourse(item.value);
@@ -555,7 +556,7 @@ export default function TeeTimeBookingPage() {
                 />
                 <Pressable
                   style={{
-                    paddingVertical: 10,
+                    paddingVertical: 12,
                     paddingHorizontal: 14,
                     borderRadius: 10,
                     backgroundColor: "#8BC34A",

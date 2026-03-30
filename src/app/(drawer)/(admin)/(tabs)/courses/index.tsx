@@ -285,16 +285,16 @@ export default function adminCoursePage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 18, fontWeight: "700", lineHeight: 27 }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", lineHeight: 27, color: isDark ? "white" : "black" }}>
                 {isEditMode ? "Edit Course" : "Add Course"}
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} />
+                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
               </Pressable>
             </HStack>
 
@@ -307,8 +307,15 @@ export default function adminCoursePage() {
                   <>
                     <TextInput
                       placeholder="Enter course name"
-                      placeholderTextColor="#999"
-                      style={styles.input}
+                      placeholderTextColor={isDark ? "#777" : "#999"}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#818589",
+                          color: isDark ? "white" : "black",
+                        },
+                      ]}
                       value={value}
                       onChangeText={onChange}
                     />
@@ -331,7 +338,15 @@ export default function adminCoursePage() {
                   <>
                     <TextInput
                       placeholder="Enter course location"
-                      style={styles.input}
+                      placeholderTextColor={isDark ? "#777" : "#999"}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#818589",
+                          color: isDark ? "white" : "black",
+                        },
+                      ]}
                       value={value}
                       onChangeText={onChange}
                     />
@@ -353,7 +368,21 @@ export default function adminCoursePage() {
                 render={({ field: { onChange, value } }) => (
                   <>
                     <Dropdown
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#818589",
+                        },
+                      ]}
+                      placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+                      selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                      containerStyle={{
+                        backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                        borderColor: isDark ? "#333" : "#818589",
+                      }}
+                      itemTextStyle={{ color: isDark ? "white" : "black" }}
+                      activeColor={isDark ? "#333" : "#f0f0f0"}
                       data={[
                         { label: "Free", value: false },
                         { label: "Premium", value: true },
@@ -375,7 +404,7 @@ export default function adminCoursePage() {
               />
             </VStack>
 
-            <Text className="text-gray-500">
+            <Text style={{ color: isDark ? "#777" : "#6B7280" }}>
               *Premium courses are only available to subscribed members.
             </Text>
             {/* Footer Buttons */}
@@ -542,8 +571,8 @@ function CourseCardAdmin({
         visible={deleteModalVisible}
         onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             {/* FORM */}
             <VStack className="gap-3">
               <ThemedText
@@ -609,13 +638,6 @@ const styles = StyleSheet.create({
     padding: 35,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   button: {
     borderRadius: 20,

@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: 2350,
-    height: 350,
+    width: "90%",
+    height: "90%",
     opacity: 0.30,
     // transform: [{ rotate: "-20deg" }],
   },
