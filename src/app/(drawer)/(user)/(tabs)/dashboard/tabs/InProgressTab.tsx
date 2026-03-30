@@ -6,7 +6,7 @@ import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, useColorScheme } from "react-native";
+import { ActivityIndicator, useColorScheme, View, ScrollView, Pressable } from "react-native";
 import { getInProgressGames, InProgressApiItem } from "@/api/dashboard";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "expo-router";
@@ -64,8 +64,23 @@ export function InProgressTab({
 
   if (loading) {
     return (
-      <VStack space="md" className="p-4">
-        {[1, 2].map((key) => (
+      <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+        <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
+          <VStack>
+            <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
+              In Progress
+            </Text>
+            <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+              Games you are currently playing
+            </Text>
+          </VStack>
+          <Pressable onPress={fetchGames} className="p-2 rounded-full">
+            <Ionicons name="sync-outline" size={20} color={isDark ? "#fff" : "#6B7280"} />
+          </Pressable>
+        </HStack>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+          <VStack space="md" className="pt-4">
+            {[1, 2].map((key) => (
           <Box
             key={key}
             className="mb-4"
@@ -99,37 +114,52 @@ export function InProgressTab({
             </Box>
           </Box>
         ))}
-      </VStack>
-    );
-  }
-
-  if (!games.length) {
-    return (
-      <Box
-        className="p-8 rounded-xl items-center"
-        style={{
-          backgroundColor: isDark ? "#161618" : "#FFFFFF",
-          borderWidth: 1,
-          borderColor: isDark ? "#8BC34A" : "#E5E7EB",
-        }}
-      >
-        <Ionicons name="documents-outline" size={32} color="#9ca3af" />
-        <Text
-          style={{
-            color: isDark ? "#FFFFFF" : "#6B7280",
-            fontWeight: "500",
-            marginTop: 8,
-          }}
-        >
-          No games in progress
-        </Text>
-      </Box>
+          </VStack>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <VStack space="md">
-      {games.map((game) => (
+    <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+      <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
+        <VStack>
+          <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
+            In Progress
+          </Text>
+          <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+            Games you are currently playing
+          </Text>
+        </VStack>
+        <Pressable onPress={fetchGames} className="p-2 rounded-full">
+          <Ionicons name="sync-outline" size={20} color={isDark ? "#fff" : "#6B7280"} />
+        </Pressable>
+      </HStack>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+        {!games.length ? (
+          <Box
+            className="p-8 rounded-xl items-center mt-4"
+            style={{
+              backgroundColor: isDark ? "#161618" : "#FFFFFF",
+              borderWidth: 1,
+              borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+            }}
+          >
+            <Ionicons name="documents-outline" size={32} color="#9ca3af" />
+            <Text
+              style={{
+                color: isDark ? "#FFFFFF" : "#6B7280",
+                fontWeight: "500",
+                marginTop: 8,
+              }}
+            >
+              No games in progress
+            </Text>
+          </Box>
+        ) : (
+          <VStack space="md" className="pt-4">
+            {games.map((game) => (
         <Box
           key={game.id}
           className="mb-4"
@@ -263,7 +293,10 @@ export function InProgressTab({
           </Box>
         </Box>
       ))}
-    </VStack>
+          </VStack>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
 import { getProducts } from "@/api/shop";
 import { deleteProduct, Product } from "@/api/admin/proShop";
+import { Skeleton } from "@/components/Skeleton";
 // import { getProducts, deleteProduct, Product } from "@/api/adminAPI/proShop";
 
 export default function ProShop() {
@@ -21,10 +22,13 @@ export default function ProShop() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [])
+  );
 
   const fetchProducts = async () => {
     try {
@@ -111,10 +115,46 @@ export default function ProShop() {
         </HStack>
 
         {loading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color="#8bc34a" />
-            <ThemedText style={{ marginTop: 12, color: "#8bc34a" }}>Loading shop...</ThemedText>
-          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 150, paddingHorizontal: 16 }}
+          >
+            <VStack style={{ gap: 20 }}>
+              {[1, 2, 3, 4].map((item) => (
+                <Box
+                  key={item}
+                  style={{
+                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
+                    borderRadius: 24,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+                    borderLeftWidth: 6,
+                    borderLeftColor: "#8BC34A",
+                  }}
+                >
+                  <HStack space="md" className="items-center">
+                    <Skeleton isDark={isDark} width={90} height={90} borderRadius={18} style={{ borderWidth: 2, borderColor: "#8BC34A" }} />
+                    <VStack style={{ flex: 1 }}>
+                      <HStack className="justify-between items-start">
+                        <Skeleton isDark={isDark} width={120} height={20} />
+                        <Skeleton isDark={isDark} width={40} height={16} borderRadius={6} />
+                      </HStack>
+                      <Skeleton isDark={isDark} width="90%" height={12} style={{ marginTop: 8 }} />
+                      <Skeleton isDark={isDark} width="60%" height={12} style={{ marginTop: 4 }} />
+                      <HStack className="items-center justify-between mt-4">
+                        <Skeleton isDark={isDark} width={60} height={24} />
+                        <HStack space="sm">
+                          <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
+                          <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
+                        </HStack>
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                </Box>
+              ))}
+            </VStack>
+          </ScrollView>
         ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -149,11 +189,18 @@ export default function ProShop() {
                       overflow: 'hidden',
                       borderWidth: 2,
                       borderColor: "#8BC34A",
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }}>
+                      {imgLoadingMap[item.id] !== false && (
+                        <ActivityIndicator style={{ position: 'absolute' }} color="#8BC34A" size="small" />
+                      )}
                       <Image
                         source={{ uri: `https://kolve18freeswing.com${item.imageUrl}` }}
                         style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"
+                        onLoadStart={() => setImgLoadingMap(prev => ({...prev, [item.id]: true}))}
+                        onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [item.id]: false}))}
                       />
                     </Box>
 

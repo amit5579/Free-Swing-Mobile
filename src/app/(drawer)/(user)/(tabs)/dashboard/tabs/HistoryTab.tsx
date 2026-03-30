@@ -5,13 +5,13 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, useColorScheme, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, StyleSheet, useColorScheme, ActivityIndicator, View } from "react-native";
 import { useEffect, useState } from "react";
 
 import { getScoreHistory, ScoreHistoryItem } from "@/api/dashboard";
 import { router } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
+import { ScrollView } from "react-native";
 
 export type GameHistory = {
     id: string;
@@ -65,7 +65,7 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
 
     if (loading) {
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+            <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
                 <VStack className="p-4 space-y-4">
 
                     {/* Header Skeleton */}
@@ -140,7 +140,7 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
                         </Box>
                     ))}
                 </VStack>
-            </SafeAreaView>
+            </View>
         );
     }
 
@@ -149,13 +149,10 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, paddingTop: 0, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
-            <VStack space="md" className="pb-8 mt-0 pt-0">                
-                <HStack
-                className="justify-between items-center px-4 mb-3"
-            >
+        <View style={{ flex: 1, paddingTop: 0, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+            <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
                 <VStack>
-                    <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`}>
+                    <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
                         Recent Activity
                     </Text>
                     <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
@@ -165,13 +162,14 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
 
                 <Pressable onPress={fetchHistory} className="p-2 rounded-full">
                     <Ionicons
-                        name="refresh-outline"
+                        name="sync-outline"
                         size={20}
                         color={isDark ? "#fff" : "#6B7280"}
                     />
                 </Pressable>
             </HStack>
 
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
                 {history.length === 0 ? (
                     <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4">
                         <Ionicons name="time-outline" size={40} color="#9ca3af" />
@@ -328,8 +326,8 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
                         </Pressable>
                     ))
                 )}
-            </VStack>
-        </SafeAreaView>
+            </ScrollView>
+        </View>
     );
 
 }

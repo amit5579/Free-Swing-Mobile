@@ -63,7 +63,12 @@ function CustomDrawerContent({ navigation }: any) {
     <SafeAreaView
       style={[
         styles.container,
-        { backgroundColor: isDark ? "#121212" : "#e8f5e9" },
+        { 
+          backgroundColor: isDark ? "#121212" : "#e8f5e9",
+          borderTopLeftRadius: 32,
+          borderBottomLeftRadius: 32,
+          overflow: "hidden",
+        },
       ]}
     >
       {/* Profile Section */}
@@ -71,9 +76,9 @@ function CustomDrawerContent({ navigation }: any) {
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
             {profile?.profilePictureUrl &&
-            profile.profilePictureUrl.trim() !== "" &&
-            profile.profilePictureUrl !== "null" &&
-            !imageError ? (
+              profile.profilePictureUrl.trim() !== "" &&
+              profile.profilePictureUrl !== "null" &&
+              !imageError ? (
               <Image
                 source={{
                   uri: profile.profilePictureUrl.startsWith("http")
@@ -149,7 +154,6 @@ function CustomDrawerContent({ navigation }: any) {
           {/* USER PROFILE */}
           {!isAdmin && (
             <>
-              {/* User Profile */}
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
@@ -168,45 +172,56 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>User Profile</Text>
               </TouchableOpacity>
 
-              <>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    navigation.closeDrawer();
-                    requestAnimationFrame(() => {
-                      router.push("/(drawer)/(user)/(teeTimeBooking)");
-                    });
-                  }}
-                  style={styles.drawerItem}
-                >
-                  <Ionicons
-                    name="calendar-number-outline"
-                    size={26}
-                    color="#2e7d32"
-                  />
-                  <Text style={styles.drawerText}>Tee Time Booking</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(teeTimeBooking)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="calendar-number-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>Tee Time Booking</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    navigation.closeDrawer();
-                    requestAnimationFrame(() => {
-                      router.push("/(drawer)/(user)/(contactAdmin)");
-                    });
-                  }}
-                  style={styles.drawerItem}
-                >
-                  <Ionicons
-                    name="chatbubble-ellipses-outline"
-                    size={26}
-                    color="#2e7d32"
-                  />
-                  <Text style={styles.drawerText}>Contact Admin</Text>
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>Contact Admin</Text>
+              </TouchableOpacity>
 
-              {/* R & A Rules */}
+              {/* <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    Linking.openURL("https://your-updates-link.com");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons name="notifications-outline" size={26} color="#2e7d32" />
+                <Text style={styles.drawerText}>Important Updates</Text>
+              </TouchableOpacity> */}
+
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
@@ -225,7 +240,6 @@ function CustomDrawerContent({ navigation }: any) {
             </>
           )}
 
-          {/* SHOW THESE TWO TABS ALWAYS */}
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -293,7 +307,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                  router.push("/(drawer)/(admin)/(importantUpdate)");
+                    router.push("/(drawer)/(admin)/(importantUpdate)");
                   });
                 }}
                 style={styles.drawerItem}
@@ -336,6 +350,10 @@ export default function DrawerLayout() {
         drawerStyle: {
           width: 300,
           backgroundColor: isDark ? "#121212" : "#e8f5e9",
+          borderLeftWidth: 2,
+          borderLeftColor: "#8BC34A",
+          borderTopLeftRadius: 32,
+          borderBottomLeftRadius: 32,
         },
       }}
     >
