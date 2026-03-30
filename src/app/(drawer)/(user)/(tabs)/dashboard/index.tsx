@@ -5,7 +5,7 @@ import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useCallback, useRef } from "react";
 import {
-  ActivityIndicator,                                                                                  
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -188,7 +188,8 @@ export default function DashboardScreen() {
             <HStack
               className="rounded-full p-1 justify-between"
               style={{
-                backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+                // backgroundColor: isDark ? "rgba(31,31,31,0.6)" : "rgba(229,231,235,0.6)", 
+                backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
                 borderWidth: isDark ? 1 : 0,
                 borderColor: isDark ? "#FFFFFF" : "transparent",
               }}

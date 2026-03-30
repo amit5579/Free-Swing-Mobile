@@ -51,7 +51,7 @@ export default function TabLayout() {
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, gap: 12 }}>
             <TouchableOpacity
-              // onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
+              onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
               style={{
                 width: 38,
                 height: 38,
@@ -69,25 +69,25 @@ export default function TabLayout() {
               onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
               style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
             >
-            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
-              <Image
-                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-                onError={() => setImageError(true)}
-              />
-            ) : profile?.username && profile.username.trim() !== "" ? (
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
-                <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                  {profile.username.trim()[0].toUpperCase()}
-                </Text>
-              </View>
-            ) : (
-              <Image
-                source={{ uri: "https://i.pravatar.cc/100" }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-              />
-            )}
-          </TouchableOpacity>
+              {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+                <Image
+                  source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                  style={{ width: 42, height: 42, borderRadius: 21 }}
+                  onError={() => setImageError(true)}
+                />
+              ) : profile?.username && profile.username.trim() !== "" ? (
+                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
+                  <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
+                    {profile.username.trim()[0].toUpperCase()}
+                  </Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: "https://i.pravatar.cc/100" }}
+                  style={{ width: 42, height: 42, borderRadius: 21 }}
+                />
+              )}
+            </TouchableOpacity>
           </View>
         ),
         tabBarActiveTintColor: "#8bc34a",

@@ -1,0 +1,282 @@
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+  TouchableOpacity,
+  useColorScheme,
+  Linking,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { getUpdates, UpdateApi } from "@/api/admin/dashboard";
+import { useRouter } from "expo-router";
+import { Skeleton } from "@/components/Skeleton";
+
+export default function ImportantUpdatesUser() {
+  const [updates, setUpdates] = useState<UpdateApi[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [imageErrorMap, setImageErrorMap] = useState<{ [key: number]: boolean }>({});
+
+  const router = useRouter();
+  const isDark = useColorScheme() === "dark";
+
+  const fetchUpdates = async (refresh = false) => {
+    try {
+      if (!refresh) setLoading(true);
+
+      const data = await getUpdates();
+
+      const sorted = [...data].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+      );
+
+      setUpdates(sorted);
+    } catch (err) {
+      console.log("Error:", err);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+        setRefreshing(false);
+      }, 500);
+    }
+  };
+
+  useEffect(() => {
+    fetchUpdates();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView className="px-4 pt-4">
+
+          {[1, 2, 3].map((i) => (
+            <View
+              key={i}
+              className="mb-5 p-4 rounded-2xl"
+              style={{
+                backgroundColor: isDark ? "#1A1A1A" : "#FFF",
+                borderWidth: 1,
+                borderColor: "rgba(139,195,74,0.2)",
+              }}
+            >
+              {/* DATE */}
+              <Skeleton
+                isDark={isDark}
+                width="40%"
+                height={12}
+                style={{ marginBottom: 10 }}
+              />
+
+              {/* CONTENT */}
+              <Skeleton
+                isDark={isDark}
+                width="90%"
+                height={16}
+                style={{ marginBottom: 6 }}
+              />
+              <Skeleton
+                isDark={isDark}
+                width="70%"
+                height={16}
+                style={{ marginBottom: 12 }}
+              />
+
+              {/* IMAGE */}
+              <Skeleton
+                isDark={isDark}
+                width="100%"
+                height={180}
+                borderRadius={12}
+                style={{ marginBottom: 12 }}
+              />
+
+              {/* LINK */}
+              <Skeleton
+                isDark={isDark}
+                width="60%"
+                height={14}
+                borderRadius={8}
+              />
+            </View>
+          ))}
+
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+
+      {/* HEADER */}
+      <View className="flex-row items-center px-4 py-3">
+
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#8BC34A" />
+        </TouchableOpacity>
+
+        <Text
+          className={`ml-3 text-2xl font-bold ${isDark ? "text-white" : "text-black"
+            }`}
+        >
+          Important Updates
+        </Text>
+
+      </View>
+
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchUpdates(true);
+            }}
+            tintColor="#8BC34A"
+          />
+        }
+      >
+        <View className="px-4 pb-10">
+
+          {updates.length === 0 ? (
+            <View className="items-center mt-20 opacity-60">
+              <Ionicons name="notifications-off-outline" size={60} color="#8BC34A" />
+              <Text className="mt-4 text-gray-500">
+                No updates available
+              </Text>
+            </View>
+          ) : (
+            updates.map((item) => (
+              <View
+                key={item.id}
+                className="mb-5 p-4 rounded-2xl"
+                style={{
+                  backgroundColor: isDark ? "#1A1A1A" : "#FFF",
+                  borderWidth: 1,
+                  borderColor: "rgba(139,195,74,0.2)",
+                }}
+              >
+
+                {/* TOP HEADER */}
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+
+                  {/* LEFT: PROFILE + NAME + DATE */}
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+
+                    {/* PROFILE CIRCLE */}
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: "#8BC34A20",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 8,
+                      }}
+                    >
+                      <Ionicons name="person" size={18} color="#8BC34A" />
+                    </View>
+
+                    {/* NAME + DATE */}
+                    <View>
+                      <Text style={{ fontSize: 13, fontWeight: "bold", color: isDark ? "#fff" : "#000" }}>
+                        {item.authorName || "Admin"}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: "#888" }}>
+                        {new Date(item.createdAt).toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* RIGHT: PRIORITY */}
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons name="megaphone" size={14} color="#F59E0B" />
+                    <Text style={{ fontSize: 11, color: "#F59E0B", marginLeft: 4 }}>
+                      Priority
+                    </Text>
+                  </View>
+                </View>
+
+                {/* CONTENT */}
+                {item.content && (
+                  <Text
+                    className={`mb-3 ${isDark ? "text-gray-200" : "text-gray-800"}`}
+                  >
+                    {item.content}
+                  </Text>
+                )}
+
+                {/* IMAGE */}
+                {item.mediaUrl && (
+                  <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden" }}>
+                    <Image
+                      source={{
+                        uri:
+                          imageErrorMap[item.id] || !item.mediaUrl
+                            ? "https://images.unsplash.com/photo-1535131749006-b7f58c99034b"
+                            : item.mediaUrl.startsWith("http")
+                              ? item.mediaUrl
+                              : `https://kolve18freeswing.com${item.mediaUrl}`,
+                      }}
+                      style={{ width: "100%", height: "100%" }}
+                      resizeMode="cover"
+                      onError={() =>
+                        setImageErrorMap((prev) => ({
+                          ...prev,
+                          [item.id]: true,
+                        }))
+                      }
+                    />
+                  </View>
+                )}
+
+                {/* BOTTOM ROW */}
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10, alignItems: "center" }}>
+
+                  {/* LEFT: TYPE */}
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons name="notifications" size={14} color="#8BC34A" />
+                    <Text style={{ fontSize: 12, color: "#8BC34A", marginLeft: 4 }}>
+                      Announcement
+                    </Text>
+                  </View>
+
+                  {/* RIGHT: AUTHOR */}
+                  <Text style={{ fontSize: 12, color: "#888" }}>
+                    by {item.authorName || "Admin"}
+                  </Text>
+                </View>
+
+                {/* LINK */}
+                {(item as any).linkUrl && (
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL((item as any).linkUrl)}
+                    className="flex-row items-center bg-[#8BC34A]/10 p-2 rounded-lg mt-3"
+                  >
+                    <Ionicons name="link-outline" size={16} color="#8BC34A" />
+                    <Text
+                      numberOfLines={1}
+                      className="ml-2 text-[#8BC34A] text-xs flex-1"
+                    >
+                      {(item as any).linkUrl}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
