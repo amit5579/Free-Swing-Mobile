@@ -117,7 +117,11 @@ export default function ScoreCardUser() {
     const styleConfig = getScoreStyle(type);
 
     return (
-      <HStack key={item.holeNumber} style={styles.row}>
+      <HStack
+        key={item.holeNumber}
+        style={styles.row}
+        // isDark = colorScheme === "dark"
+      >
         <View style={styles.cell}>
           <ThemedText>{item.holeNumber}</ThemedText>
         </View>
@@ -162,7 +166,12 @@ export default function ScoreCardUser() {
     const t = calculateTotals(data);
 
     return (
-      <HStack style={[styles.row, { backgroundColor: "#f1f5f9" }]}>
+      <HStack
+        style={[
+          styles.tableHeader,
+          { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
+        ]}
+      >
         <View style={styles.cell}>
           <ThemedText style={{ fontWeight: "700" }}>{label}</ThemedText>
         </View>
@@ -304,10 +313,20 @@ export default function ScoreCardUser() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View>
                 {/* Header */}
-                <HStack style={styles.tableHeader}>
+                <HStack
+                  // "#e5e7eb"
+                  style={[
+                    styles.tableHeader,
+                    { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
+                  ]}
+                >
                   {["Hole", "HCP", "Yds", "Par", "Score", "Net"].map((h) => (
                     <View key={h} style={styles.cell}>
-                      <ThemedText style={styles.headerText}>{h}</ThemedText>
+                      <ThemedText
+                      // style={styles.headerText}
+                      >
+                        {h}
+                      </ThemedText>
                     </View>
                   ))}
                 </HStack>
@@ -396,7 +415,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#e5e7eb",
+    // backgroundColor: "#e5e7eb",
     paddingVertical: 10,
   },
 

@@ -274,16 +274,20 @@ export default function teeBoxPage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 17, fontWeight: "700" }}>
+              <Text style={{ fontSize: 17, fontWeight: "700", color: isDark ? "white" : "black" }}>
                 {isEditMode ? "Edit Tee Box" : "Add Tee Box"}
               </Text>
 
-              <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} />
+              <Pressable onPress={() => {
+                setSelectedColor(null);
+                setModalVisible(false);
+              }}
+              >
+                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
               </Pressable>
             </HStack>
 
@@ -303,8 +307,15 @@ export default function teeBoxPage() {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       placeholder="Enter tee name"
-                      placeholderTextColor="#999"
-                      style={styles.input}
+                      placeholderTextColor={isDark ? "#777" : "#999"}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#818589",
+                          color: isDark ? "white" : "black",
+                        },
+                      ]}
                       value={value}
                       onChangeText={onChange}
                     />
@@ -328,13 +339,24 @@ export default function teeBoxPage() {
                   name="color"
                   render={({ field: { onChange, value } }) => (
                     <Dropdown
-                      style={{
-                        borderWidth: 1,
-                        borderColor: "#818589",
-                        borderRadius: 10,
-                        padding: 14,
-                        marginBottom: 14,
+                      style={[
+                        {
+                          borderWidth: 1,
+                          borderColor: isDark ? "#333" : "#818589",
+                          borderRadius: 10,
+                          padding: 14,
+                          marginBottom: 14,
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                        },
+                      ]}
+                      placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+                      selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                      containerStyle={{
+                        backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                        borderColor: isDark ? "#333" : "#818589",
                       }}
+                      itemTextStyle={{ color: isDark ? "white" : "black" }}
+                      activeColor={isDark ? "#333" : "#f0f0f0"}
                       data={color}
                       labelField="label"
                       valueField="value"
@@ -355,7 +377,7 @@ export default function teeBoxPage() {
               {/* Rating + Slope Row */}
               <HStack className="justify-between mb-4" style={{ gap: 10 }}>
                 <VStack style={{ flex: 1 }}>
-                  <Text style={styles.label}>Rating</Text>
+                  <ThemedText style={styles.label}>Rating</ThemedText>
 
                   <Controller
                     control={control}
@@ -363,8 +385,16 @@ export default function teeBoxPage() {
                     render={({ field: { onChange, value } }) => (
                       <TextInput
                         placeholder="Rating"
+                        placeholderTextColor={isDark ? "#777" : "#999"}
                         keyboardType="numeric"
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#818589",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         value={value?.toString()}
                         onChangeText={(text) => onChange(Number(text))}
                       />
@@ -378,7 +408,7 @@ export default function teeBoxPage() {
                 </VStack>
 
                 <VStack style={{ flex: 1 }}>
-                  <Text style={styles.label}>Slope</Text>
+                  <ThemedText style={styles.label}>Slope</ThemedText>
 
                   <Controller
                     control={control}
@@ -386,8 +416,16 @@ export default function teeBoxPage() {
                     render={({ field: { onChange, value } }) => (
                       <TextInput
                         placeholder="Slope"
+                        placeholderTextColor={isDark ? "#777" : "#999"}
                         keyboardType="numeric"
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#818589",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         value={value?.toString()}
                         onChangeText={(text) => onChange(Number(text))}
                       />

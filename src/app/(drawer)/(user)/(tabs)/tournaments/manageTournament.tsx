@@ -38,7 +38,7 @@ export default function ManageTournament() {
 
       const membersData = await getMembersList();
       setMembers(membersData);
-      console.log("Fetching Tournament players list:", members);
+      // console.log("Fetching Tournament players list:", members);
     } catch (error) {
       console.error("Fetching tournament players Error:", error);
       throw error;

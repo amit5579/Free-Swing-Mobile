@@ -309,8 +309,8 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
           setEditingCourse(null);
         }}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             <HStack className="justify-between items-center mb-4">
               <ThemedText style={{ fontSize: 17, fontWeight: "700" }}>
                 {isEditMode ? "Edit Tournament" : "Create Tournament"}
@@ -324,7 +324,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                   setEditingCourse(null);
                 }}
               >
-                <Ionicons name="close" size={22} />
+                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
               </Pressable>
             </HStack>
 
@@ -338,7 +338,15 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                     render={({ field: { onChange, value } }) => (
                       <TextInput
                         placeholder="Enter Tournament Name"
-                        style={styles.input}
+                        placeholderTextColor={isDark ? "#777" : "#9ca3af"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         value={value}
                         onChangeText={onChange}
                       />
@@ -356,7 +364,21 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                     name="courseId"
                     render={({ field: { onChange, value } }) => (
                       <Dropdown
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                          },
+                        ]}
+                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
+                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        containerStyle={{
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#9ca3af",
+                        }}
+                        itemTextStyle={{ color: isDark ? "white" : "black" }}
+                        activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={courses}
                         labelField="label"
                         valueField="value"
@@ -379,7 +401,21 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                     name="teeColor"
                     render={({ field: { onChange, value } }) => (
                       <Dropdown
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                          },
+                        ]}
+                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
+                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        containerStyle={{
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#9ca3af",
+                        }}
+                        itemTextStyle={{ color: isDark ? "white" : "black" }}
+                        activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={[
                           { label: "red", value: "1" },
                           { label: "blue", value: "2" },
@@ -412,7 +448,21 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                     name="scoringType"
                     render={({ field: { onChange, value } }) => (
                       <Dropdown
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                          },
+                        ]}
+                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
+                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        containerStyle={{
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#9ca3af",
+                        }}
+                        itemTextStyle={{ color: isDark ? "white" : "black" }}
+                        activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={scoringTypes}
                         labelField="label"
                         valueField="value"
@@ -438,9 +488,15 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                       <>
                         <Pressable
                           onPress={() => setShowStartPicker(true)}
-                          style={styles.input}
+                          style={[
+                            styles.input,
+                            {
+                              backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                              borderColor: isDark ? "#333" : "#9ca3af",
+                            },
+                          ]}
                         >
-                          <Text>
+                          <Text style={{ color: isDark ? "white" : "black" }}>
                             {value
                               ? value?.toDateString()
                               : "Select start Date"}
@@ -477,9 +533,15 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                       <>
                         <Pressable
                           onPress={() => setShowEndPicker(true)}
-                          style={styles.input}
+                          style={[
+                            styles.input,
+                            {
+                              backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                              borderColor: isDark ? "#333" : "#9ca3af",
+                            },
+                          ]}
                         >
-                          <Text>
+                          <Text style={{ color: isDark ? "white" : "black" }}>
                             {value ? value?.toDateString() : "Select End Date"}
                           </Text>
                         </Pressable>
@@ -512,9 +574,17 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                     render={({ field: { onChange, value } }) => (
                       <TextInput
                         placeholder="Optional Description"
+                        placeholderTextColor={isDark ? "#777" : "#9ca3af"}
                         multiline
                         numberOfLines={3}
-                        style={styles.textArea}
+                        style={[
+                          styles.textArea,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         value={value}
                         onChangeText={onChange}
                       />
@@ -526,7 +596,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
                 onPress={() => {
                   setModalVisible(false);
                   reset();
@@ -534,7 +604,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                   setEditingCourse(null);
                 }}
               >
-                <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
               </Pressable>
 
               <Pressable
@@ -697,7 +767,7 @@ function TournamentCard({
         onRequestClose={() => setMenuVisible(false)}
       >
         <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menu}>
+          <View style={[styles.menu, { backgroundColor: isDark ? "#1a1a1a" : "#fff", borderColor: isDark ? "#333" : "#e5e5e5" }]}>
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -709,7 +779,7 @@ function TournamentCard({
               }}
             >
               <Ionicons name="time-outline" size={20} color="#06b6d4" />
-              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 History
               </ThemedText>
             </TouchableOpacity>
@@ -724,7 +794,7 @@ function TournamentCard({
               }}
             >
               <Ionicons name="stats-chart-outline" size={20} color="#f59e0b" />
-              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 Leaderboard
               </ThemedText>
             </TouchableOpacity>
@@ -737,7 +807,7 @@ function TournamentCard({
               }}
             >
               <Ionicons name="trash-outline" size={20} color="#ef4444" />
-              <ThemedText style={[styles.menuText, { color: "#000" }]}>
+              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 Delete
               </ThemedText>
             </TouchableOpacity>
