@@ -58,12 +58,12 @@ const FeedCard = ({
     const handleViewScorecard = () => {
         if (card.isAuthenticated) {
             router.push({
-                pathname: "/(drawer)/scoreCard/view/[scoreCard]" as any,
-                params: { scoreCard: card.id, handicap: 0 },
+                pathname: "/(drawer)/(user)/scorecard/view/[scoreCard]" as any,
+                params: { scoreCard: card.id, username: card.playerName, courseName: card.course },
             });
         } else {
             router.push({
-                pathname: "/(drawer)/scoreCard/resume/[id]" as any,
+                pathname: "/(drawer)/(user)/scorecard/resume/[id]" as any,
                 params: { id: card.id, handicap: 0 },
             });
         }
@@ -271,7 +271,7 @@ export function OverviewTab({ cards, handleLike }: OverviewTabProps) {
             <VStack space="md">
                 <HStack className="justify-between items-center mb-2">
                     <HStack space="sm" className="items-center">
-                        <Text className="text-xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>Game Feed</Text>
+                        <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>Game Feed</Text>
                         <HStack className="items-center px-3 py-1 rounded-full space-x-2" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(209,250,229,0.7)", borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#fff" : "transparent" }}>
                             <Ionicons name="pulse" size={16} color={isDark ? "#fff" : "#22C55E"} style={{ marginRight: 4 }} />
                             <Text className="text-xs font-semibold" style={{ color: isDark ? "#fff" : "#15803D" }}>Live</Text>

@@ -64,7 +64,7 @@ const FeedCard = ({
   isExpanded: boolean;
   onToggle: () => void;
   handleLike: (id: string) => void;
-  handleViewScorecard: (id: string) => void;
+  handleViewScorecard: (id: string, playerName: string, courseName: string) => void;
   handleVerifyCard: (id: string, playerName: string) => void;
   onActivity: (id: string) => void;
 }) => {
@@ -436,7 +436,7 @@ const FeedCard = ({
                 size="sm"
                 className="rounded-full px-4 h-9 shadow-sm"
                 style={{ backgroundColor: "#8BC34A" }}
-                onPress={() => handleViewScorecard(card.id)}
+                onPress={() => handleViewScorecard(card.id, card.playerName, card.courseName)}
               >
                 <Ionicons name="eye-outline" size={14} color="#fff" />
                 <ButtonText className="text-white text-xs font-extrabold ml-1.5">View</ButtonText>
@@ -633,10 +633,10 @@ export function GameFeedContent({ hideHeader = false }: { hideHeader?: boolean }
     }
   };
 
-  const handleViewScorecard = (scorecardId: string) => {
+  const handleViewScorecard = (scorecardId: string, playerName: string, courseName: string) => {
     router.push({
-      pathname: "/(drawer)/(admin)/(tabs)/dashboard/scorecardDetails",
-      params: { scorecardId },
+      pathname: "/(drawer)/(admin)/scorecard/view/[scoreCard]",
+      params: { scoreCard: scorecardId, username: playerName, courseName: courseName },
     });
   };
 

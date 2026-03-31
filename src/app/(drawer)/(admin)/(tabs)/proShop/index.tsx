@@ -64,6 +64,7 @@ export default function ProShop() {
 
   return (
     <SafeAreaView
+    edges={["left", "right"]}
       style={{
         flex: 1,
         backgroundColor: isDark ? "#000" : "#f2f2f2",
@@ -74,7 +75,7 @@ export default function ProShop() {
       <VStack className="flex-1">
         {/* HEADER */}
         <HStack style={{ marginBottom: 24, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-          <VStack>
+          <VStack className="mt-4">
             <ThemedText
               style={{
                 fontSize: 24,

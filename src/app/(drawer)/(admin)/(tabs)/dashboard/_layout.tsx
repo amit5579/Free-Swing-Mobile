@@ -19,11 +19,6 @@ export default function dashboardLayout() {
       />
 
       <Stack.Screen
-        name="scorecardDetails"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-
-      <Stack.Screen
         name="gameFeed"
         options={{ headerShown: false }}
       />

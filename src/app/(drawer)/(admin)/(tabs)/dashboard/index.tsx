@@ -69,7 +69,6 @@ export default function AdminDashboard() {
         getCourses(),
       ]);
 
-      // Calculate best handicap (lowest value from index or baseline)
       let best = "-";
       if (players.length > 0) {
         const handicaps = players
@@ -107,12 +106,11 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
     >
       <Watermark />
 
-      {/* Header + Tabs */}
       <VStack className="px-4 bg-transparent">
         <VStack className="mb-6">
           <HStack className="items-center">
@@ -137,7 +135,6 @@ export default function AdminDashboard() {
           </HStack>
         </VStack>
 
-        {/* Tab Buttons */}
         <HStack
           className="rounded-full p-1 mb-6"
           style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
@@ -173,7 +170,6 @@ export default function AdminDashboard() {
         </HStack>
       </VStack>
 
-      {/* Tab Content */}
       <View style={{ flex: 1 }}>
         <ScrollView
           ref={scrollViewRef}
@@ -329,7 +325,6 @@ export default function AdminDashboard() {
                 </VStack>
               )}
 
-              {/* GameFeed displays its own loading skeletons concurrently */}
               <Box className="mt-4">
                 <GameFeedContent />
               </Box>

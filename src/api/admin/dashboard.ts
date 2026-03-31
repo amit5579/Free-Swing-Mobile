@@ -284,7 +284,7 @@ export type ScorecardHole = {
 };
 
 export const getScorecardDetails = async (
-  scorecardId: number
+  scorecardId: number | string
 ): Promise<ScorecardHoleApi[]> => {
   try {
     const response = await https.get(
@@ -294,5 +294,35 @@ export const getScorecardDetails = async (
   } catch (error) {
     console.error("Scorecard Details API Error:", error);
     return [];
+  }
+};
+
+export const verifyScoreApi = async (roundRefId: number | string) => {
+  try {
+    const response = await https.post(`/scorecard/authenticate/${roundRefId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error verifying scorecard ${roundRefId}:`, error);
+    throw error;
+  }
+};
+
+export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
+  try {
+    const response = await https.put(`/scorecard/update`, { scorecardId, holeScores });
+    return response.data;
+  } catch (error) {
+    console.error("Updating scorecard error:", error);
+    throw error;
+  }
+};
+
+export const saveScorecardApi = async (scorecardId: string | number) => {
+  try {
+    const response = await https.post(`/scorecard/save`, { scorecardId });
+    return response.data;
+  } catch (error) {
+    console.error("Saving scorecard error:", error);
+    throw error;
   }
 };

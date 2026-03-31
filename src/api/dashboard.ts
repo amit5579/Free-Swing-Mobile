@@ -252,3 +252,22 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
 };
 
 
+export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
+  try {
+    const response = await https.post(`/scorecard/update`, { scorecardId, holeScores });
+    return response.data;
+  } catch (error) {
+    console.error("Updating scorecard error:", error);
+    throw error;
+  }
+};
+
+export const saveScorecardApi = async (scorecardId: string | number) => {
+  try {
+    const response = await https.post(`/scorecard/save`, { scorecardId });
+    return response.data;
+  } catch (error) {
+    console.error("Saving scorecard error:", error);
+    throw error;
+  }
+};

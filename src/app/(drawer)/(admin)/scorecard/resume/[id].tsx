@@ -1,4 +1,4 @@
-import { getScorecardDetails, ScorecardHole } from "@/api/dashboard";
+import { getScorecardDetails, ScorecardHoleApi as ScorecardHole, updateScorecardApi, saveScorecardApi } from "@/api/admin/dashboard";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { View, Text, ScrollView, TextInput, Pressable, useColorScheme, ActivityIndicator, Alert, StyleSheet, TouchableOpacity } from "react-native";
@@ -56,11 +56,12 @@ export default function ResumeScorecard() {
     };
 
     const handleScoreChange = (holeId: number, text: string) => {
+        // Remove non-numeric chars to prevent negative numbers
         let formattedText = text.replace(/[^0-9]/g, '');
 
         if (formattedText !== "") {
             const num = parseInt(formattedText, 10);
-            if (num > 15) return; 
+            if (num > 15) return; // block entering values above 15
             formattedText = num.toString();
         }
 
@@ -80,13 +81,53 @@ export default function ResumeScorecard() {
     const handleSave = async () => {
         try {
             setSaving(true);
-            Alert.alert("Success", "Scorecard updated successfully");
+            const holeScores = Object.entries(textScores).map(([holeId, score]) => ({
+                holeId: parseInt(holeId),
+                score: score === "" ? 0 : parseInt(score)
+            }));
+            await updateScorecardApi(id!, holeScores);
+            // Alert.alert("Success", "Scorecard updated successfully");
         } catch (err) {
             console.error(err);
-            Alert.alert("Error", "Failed to save scorecard. Please try again.");
+            // Alert.alert("Error", "Failed to save scorecard. Please try again.");
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleFinishRound = async () => {
+        Alert.alert(
+            "Finish Round",
+            "Are you sure you want to finish this round?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "OK",
+                    onPress: async () => {
+                        try {
+                            setSaving(true);
+                            // First save current scores
+                            const holeScores = Object.entries(textScores).map(([holeId, score]) => ({
+                                holeId: parseInt(holeId),
+                                score: score === "" ? 0 : parseInt(score)
+                            }));
+                            await updateScorecardApi(id!, holeScores);
+
+                            // Then finish the round
+                            await saveScorecardApi(id!);
+                            Alert.alert("Success", "Round finished successfully", [
+                                { text: "OK", onPress: () => navigation.goBack() }
+                            ]);
+                        } catch (err) {
+                            console.error(err);
+                            Alert.alert("Error", "Failed to finish round. Please try again.");
+                        } finally {
+                            setSaving(false);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const sumScores = (arr: ScorecardHole[]) =>
@@ -106,6 +147,7 @@ export default function ResumeScorecard() {
             <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)" }}>
                 <Watermark />
                 <ScrollView className="px-4 py-4 mt-4" showsVerticalScrollIndicator={false}>
+                    {/* Header Row Skeleton */}
                     <View className="flex-row items-center mb-6 mt-4">
                         <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
                         <View className="flex-1">
@@ -114,8 +156,10 @@ export default function ResumeScorecard() {
                         </View>
                     </View>
 
+                    {/* Banner Skeleton */}
                     <Skeleton isDark={isDark} width="100%" height={56} borderRadius={12} style={{ marginBottom: 12 }} />
 
+                    {/* Table Header Skeleton */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <View key={i} className="flex-1 items-center">
@@ -124,6 +168,7 @@ export default function ResumeScorecard() {
                         ))}
                     </View>
 
+                    {/* Table Rows Skeleton */}
                     <View className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`} style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
                         {[...Array(9)].map((_, i) => (
                             <View key={i} className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}>
@@ -161,6 +206,7 @@ export default function ResumeScorecard() {
         if (rawValue === "" || rawValue === undefined) return null;
 
         if (score === 0) {
+            // Albatross: Double Dark Cyan Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -170,6 +216,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 1) {
+            // Hole-in-One: Double Gold Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
@@ -179,6 +226,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 2) {
+            // Eagle: Double Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
@@ -188,6 +236,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 3) {
+            // Birdie: Single Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
@@ -195,9 +244,11 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 4) {
+            // Par: no indicator
             return null;
         }
         if (score === 5) {
+            // Bogey: Single Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
@@ -205,6 +256,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 6) {
+            // Double Bogey: Double Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
@@ -214,6 +266,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 7) {
+            // Triple Bogey: Triple Purple Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
@@ -225,6 +278,7 @@ export default function ResumeScorecard() {
             );
         }
         if (score !== null && score >= 8) {
+            // Quadruple Bogey+: Single Black/White Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: isDark ? "#fff" : "#000" }]} />
@@ -238,6 +292,7 @@ export default function ResumeScorecard() {
         <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)" }}>
             <Watermark />
 
+            {/* Top Fixed Area */}
             <View className="px-4 pt-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#000" : "transparent" }}>
                 <View className="flex-row items-center mb-4 mt-8">
                     <TouchableOpacity
@@ -267,6 +322,7 @@ export default function ResumeScorecard() {
                     </View>
                 </View>
 
+                {/* Instruction Banner */}
                 <View className={`p-3 rounded-xl border flex-row items-center ${isDark ? "bg-[#1A2E05] border-[#2e5209]" : "bg-green-50 border-green-200"}`}>
                     <Ionicons name="pencil" size={18} color={isDark ? "#8BC34A" : "#4CAF50"} />
                     <Text className={`ml-2 flex-1 text-sm font-medium ${isDark ? "text-[#8BC34A]" : "text-green-800"}`}>
@@ -275,11 +331,13 @@ export default function ResumeScorecard() {
                 </View>
             </View>
 
+            {/* Scrollable Table Area */}
             <ScrollView
                 className="px-4 flex-1"
                 showsVerticalScrollIndicator={false}
                 stickyHeaderIndices={[0]}
             >
+                {/* 0th Element: Table Header (Sticky) */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: "transparent" }}>
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`} style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}>
                         {["Hole", "SI", "Yards", "Par", "Score ✎", "Net"].map((h) => (
@@ -290,6 +348,7 @@ export default function ResumeScorecard() {
                     </View>
                 </View>
 
+                {/* Table Rows */}
                 <View className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`} style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
                     {holes.map((h, index) => (
                         <View key={h.holeId} className={`flex-row items-center p-3 ${index < holes.length - 1 ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}>
@@ -327,7 +386,9 @@ export default function ResumeScorecard() {
                     ))}
                 </View>
 
+                {/* Totals Section */}
                 <View className="mt-6 mb-8 gap-y-2">
+                    {/* Front 9 Subtotal */}
                     <View className={`flex-row p-3 rounded-xl ${isDark ? "bg-[#262626]" : "bg-gray-100"}`}>
                         <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>Front 9</Text>
                         <Text className="flex-1" />
@@ -337,6 +398,7 @@ export default function ResumeScorecard() {
                         <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(holes.slice(0, 9))}</Text>
                     </View>
 
+                    {/* Grand Total */}
                     <View className={`flex-row p-3 rounded-xl ${isDark ? "bg-[#8BC34A]" : "bg-[#8BC34A]"}`}>
                         <Text className="flex-1 text-center font-bold text-white">Grand Total</Text>
                         <Text className="flex-1" />
@@ -347,22 +409,25 @@ export default function ResumeScorecard() {
                     </View>
                 </View>
 
+                {/* Finish Round Button */}
                 <Pressable
-                    onPress={handleSave}
+                    onPress={handleFinishRound}
                     disabled={saving}
-                    className={`p-4 rounded-xl mb-8 flex-row justify-center items-center ${saving ? "bg-gray-500" : "bg-[#8BC34A]"}`}
+                    className={`mt-6 p-4 rounded-xl mb-4 flex-row justify-center items-center ${saving ? "bg-gray-500" : "bg-[#8BC34A]"}`}
                 >
                     {saving ? (
                         <ActivityIndicator color="white" />
                     ) : (
                         <>
-                            <Ionicons name="save-outline" size={20} color="white" />
-                            <Text className="text-white font-bold ml-2 text-lg">Save Scorecard</Text>
+                            <Ionicons name="checkmark-done-outline" size={20} color="white" />
+                            <Text className="text-white font-bold ml-2 text-lg">Finish Round</Text>
                         </>
                     )}
                 </Pressable>
 
+                {/* Scorecard Legend */}
                 {(() => {
+                    // Count occurrences of each raw score value (include 0 for Albatross)
                     const scoreCounts: Record<number, number> = {};
                     holes.forEach(h => {
                         const s = h.score;
@@ -371,6 +436,7 @@ export default function ResumeScorecard() {
                         }
                     });
 
+                    // Renders count text centered inside a shape; shows nothing if count=0
                     const InnerCount = ({ count, color, small = false }: { count: number; color: string; small?: boolean }) =>
                         count > 0 ? (
                             <Text style={{
@@ -387,6 +453,7 @@ export default function ResumeScorecard() {
                             scoreVal: 1,
                             label: "Hole-in-One",
                             render: (count: number) => (
+                                // Double gold circle — count in inner circle
                                 <View style={[styles.doubleCircle, { borderColor: "#ffd700", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#ffd700", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
                                         <InnerCount count={count} color="#ffd700" />
@@ -398,6 +465,7 @@ export default function ResumeScorecard() {
                             scoreVal: 0,
                             label: "Albatross",
                             render: (count: number) => (
+                                // Double cyan circle — count in inner circle
                                 <View style={[styles.doubleCircle, { borderColor: "#006064", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#006064", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
                                         <InnerCount count={count} color="#006064" />
@@ -409,6 +477,7 @@ export default function ResumeScorecard() {
                             scoreVal: 2,
                             label: "Eagle",
                             render: (count: number) => (
+                                // Double green circle — count in inner circle
                                 <View style={[styles.doubleCircle, { borderColor: "#2e7d32", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#2e7d32", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
                                         <InnerCount count={count} color="#2e7d32" />
@@ -420,6 +489,7 @@ export default function ResumeScorecard() {
                             scoreVal: 3,
                             label: "Birdie",
                             render: (count: number) => (
+                                // Single green circle — count centered inside
                                 <View style={[styles.singleCircle, { borderColor: "#2e7d32", width: 48, height: 48, borderRadius: 24, justifyContent: "center", alignItems: "center" }]}>
                                     <InnerCount count={count} color="#2e7d32" />
                                 </View>
@@ -429,6 +499,7 @@ export default function ResumeScorecard() {
                             scoreVal: 4,
                             label: "Par",
                             render: (count: number) => (
+                                // Dashed square — count centered inside
                                 <View style={{ width: 48, height: 48, borderWidth: 2, borderStyle: "dashed", borderColor: "#9CA3AF", justifyContent: "center", alignItems: "center" }}>
                                     <InnerCount count={count} color="#6B7280" />
                                 </View>
@@ -438,6 +509,7 @@ export default function ResumeScorecard() {
                             scoreVal: 5,
                             label: "Bogey",
                             render: (count: number) => (
+                                // Single red square — count centered inside
                                 <View style={[styles.singleSquare, { borderColor: "#d32f2f", width: 48, height: 48, justifyContent: "center", alignItems: "center" }]}>
                                     <InnerCount count={count} color="#d32f2f" />
                                 </View>
@@ -447,6 +519,7 @@ export default function ResumeScorecard() {
                             scoreVal: 6,
                             label: "Double Bogey",
                             render: (count: number) => (
+                                // Double red square — count in inner square
                                 <View style={[styles.doubleSquare, { borderColor: "#d32f2f", width: 48, height: 48 }]}>
                                     <View style={[styles.innerSquare, { borderColor: "#d32f2f", width: 34, height: 34, justifyContent: "center", alignItems: "center" }]}>
                                         <InnerCount count={count} color="#d32f2f" />
@@ -458,6 +531,7 @@ export default function ResumeScorecard() {
                             scoreVal: 7,
                             label: "Triple Bogey",
                             render: (count: number) => (
+                                // Triple purple square — count in innermost square
                                 <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a", width: 48, height: 48 }]}>
                                     <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a", width: 37, height: 37 }]}>
                                         <View style={[styles.tripleSquareInner, { borderColor: "#6a1b9a", width: 26, height: 26, justifyContent: "center", alignItems: "center" }]}>
@@ -471,6 +545,7 @@ export default function ResumeScorecard() {
                             scoreVal: 8,
                             label: "Quad Bogey+",
                             render: (_count: number) => {
+                                // count all scores >= 8
                                 const quadCount = Object.entries(scoreCounts)
                                     .filter(([k]) => Number(k) >= 8)
                                     .reduce((s, [, v]) => s + v, 0);
@@ -487,6 +562,7 @@ export default function ResumeScorecard() {
                         <View className="mb-20 p-4 rounded-2xl" style={{ backgroundColor: isDark ? "rgba(31,31,31,0.6)" : "rgba(255,255,255,0.6)", borderWidth: 1, borderColor: isDark ? "rgba(51,51,51,0.6)" : "rgba(238,238,238,0.6)" }}>
                             <Text className={`font-bold mb-6 text-center text-lg ${isDark ? "text-white" : "text-black"}`}>Scorecard Legend</Text>
                             {(() => {
+                                // Chunk into rows of 3
                                 const rows: (typeof dynamicLegend)[] = [];
                                 for (let i = 0; i < dynamicLegend.length; i += 3) {
                                     rows.push(dynamicLegend.slice(i, i + 3));
@@ -495,7 +571,7 @@ export default function ResumeScorecard() {
                                     <View key={rowIdx} style={{ flexDirection: "row", justifyContent: "space-around", marginBottom: 20 }}>
                                         {row.map((item, idx) => {
                                             const count = item.scoreVal === 8
-                                                ? 0 
+                                                ? 0 // handled inside render
                                                 : (scoreCounts[item.scoreVal] || 0);
                                             return (
                                                 <View key={idx} style={{ flex: 1, alignItems: "center" }}>

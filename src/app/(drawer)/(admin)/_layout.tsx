@@ -9,6 +9,8 @@ export default function AdminRootLayout() {
             <Stack.Screen name="(handicapSetup)" options={{ headerShown: false }} />
             <Stack.Screen name="(subAdmins)" options={{ headerShown: false }} />
             <Stack.Screen name="(importantUpdate)" options={{ headerShown: false }} />
+            <Stack.Screen name="scorecard/view/[scoreCard]" options={{ headerShown: false }} />
+            <Stack.Screen name="scorecard/resume/[id]" options={{ headerShown: false }} />
         </Stack>
     );
 }

@@ -6,10 +6,9 @@ import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, useColorScheme, ActivityIndicator, View } from "react-native";
-import { useEffect, useState } from "react";
-
+import { useEffect, useState, useCallback } from "react";
 import { getScoreHistory, ScoreHistoryItem } from "@/api/dashboard";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import { ScrollView } from "react-native";
 
@@ -36,12 +35,15 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
     const [history, setHistory] = useState<GameHistory[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchHistory();
-    }, [playerId]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchHistory();
+        }, [playerId])
+    );
 
     const fetchHistory = async () => {
         try {
+            setLoading(true);
             const data: ScoreHistoryItem[] = await getScoreHistory(playerId);
 
             const mapped: GameHistory[] = data.map((item) => ({
@@ -144,8 +146,11 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
         );
     }
 
-    const handleViewScorecard = (id: string) => {
-        router.push(`/(drawer)/(user)/(tabs)/dashboard/tabs/scoreCard/${id}`);
+    const handleViewScorecard = (id: string, course: string) => {
+        router.push({
+            pathname: "/(drawer)/(user)/scorecard/view/[scoreCard]",
+            params: { scoreCard: id, courseName: course },
+        });
     };
 
     return (
@@ -179,7 +184,7 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
                     </Box>
                 ) : (
                     history.map((item) => (
-                        <Pressable key={item.id} onPress={() => handleViewScorecard(item.id)}>
+                        <Pressable key={item.id} onPress={() => handleViewScorecard(item.id, item.course)}>
                             <Box
                                 className="rounded-2xl mb-4"
                                 style={{
@@ -313,7 +318,7 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
                                             size="sm"
                                             className="w-full rounded-full h-10 flex-row items-center justify-center"
                                             style={{ backgroundColor: "#8BC34A" }}
-                                            onPress={() => handleViewScorecard(item.id)}
+                                            onPress={() => handleViewScorecard(item.id, item.course)}
                                         >
                                             <Ionicons name="eye-outline" size={14} color="white" />
                                             <ButtonText className="text-white text-xs font-bold ml-1.5">

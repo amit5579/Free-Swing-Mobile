@@ -2,6 +2,7 @@ import { Badge } from "@/components/badge";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
+import { Divider } from "@/components/divider";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useCallback, useRef } from "react";
 import {
@@ -52,6 +53,7 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       fetchFeed();
       fetchStats();
       fetchProfile();
@@ -252,36 +254,102 @@ export default function DashboardScreen() {
               {loading ? (
                 <VStack className="space-y-4 pt-4">
                   <HStack className="space-x-3 mb-3">
-                    <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                    <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
                       <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
                       <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
                       <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
                     </Box>
-                    <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                    <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
                       <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
                       <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
                       <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
                     </Box>
                   </HStack>
                   <HStack className="space-x-3 mb-3">
-                    <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                    <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
                       <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
                       <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
                       <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
                     </Box>
-                    <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                    <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
                       <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
                       <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 8 }} />
                       <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
                     </Box>
                   </HStack>
-                  <Box className="rounded-xl p-5 mb-3" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1, minHeight: 140 }}>
-                    <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 12 }} />
-                    <Skeleton isDark={isDark} height={14} width="40%" style={{ marginBottom: 8 }} />
+                  <Box className="rounded-xl p-5 mb-3" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                    <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 16 }} />
+                    <Skeleton isDark={isDark} height={14} width="40%" style={{ marginBottom: 12 }} />
                     <Skeleton isDark={isDark} height={20} width="30%" borderRadius={10} />
                   </Box>
+
+                  {/* Game Feed Title Skeleton */}
+                  <HStack className="justify-between items-center mb-4 mt-4">
+                    <HStack space="sm" className="items-center">
+                      <Skeleton isDark={isDark} width={120} height={28} />
+                      <Skeleton isDark={isDark} width={60} height={24} borderRadius={20} />
+                    </HStack>
+                  </HStack>
+
+                  {/* Expanded Card Skeleton (One Open Card) */}
+                  <Box className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden" }}>
+                    <View style={{ padding: 16 }}>
+                      <HStack className="justify-between items-center">
+                        <HStack space="sm" className="items-center">
+                          <Skeleton isDark={isDark} width={45} height={45} borderRadius={48} />
+                          <VStack space="xs">
+                            <Skeleton isDark={isDark} width={120} height={20} style={{ marginBottom: 4 }} />
+                            <Skeleton isDark={isDark} width={80} height={12} />
+                          </VStack>
+                        </HStack>
+                        <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+                      </HStack>
+                    </View>
+                    <Divider style={{ backgroundColor: isDark ? "rgba(51,51,51,0.5)" : "rgba(240,240,240,0.5)" }} />
+                    <View style={{ padding: 16 }}>
+                      <HStack space="xs" className="items-center mb-4">
+                        <Skeleton isDark={isDark} width={100} height={12} style={{ marginRight: 8 }} />
+                        <Skeleton isDark={isDark} width={40} height={18} borderRadius={4} />
+                        <Skeleton isDark={isDark} width={60} height={18} borderRadius={10} />
+                      </HStack>
+                      <HStack space="sm" className="mb-4">
+                        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: "rgba(139,195,74,0.3)", backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255,255,255,0.6)" }}>
+                          <Skeleton isDark={isDark} width={30} height={10} style={{ marginBottom: 8 }} />
+                          <Skeleton isDark={isDark} width={50} height={32} />
+                        </Box>
+                        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: "rgba(139,195,74,0.3)", backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255,255,255,0.6)" }}>
+                          <Skeleton isDark={isDark} width={30} height={10} style={{ marginBottom: 8 }} />
+                          <Skeleton isDark={isDark} width={50} height={32} />
+                        </Box>
+                      </HStack>
+                      <HStack space="sm" className="mb-4">
+                        <Box className="flex-1 rounded-xl items-center py-3 border" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255,255,255,0.6)", borderColor: "rgba(139,195,74,0.3)" }}>
+                          <Skeleton isDark={isDark} width={20} height={8} style={{ marginBottom: 4 }} />
+                          <Skeleton isDark={isDark} width={30} height={16} />
+                        </Box>
+                        <Box className="flex-1 rounded-xl items-center py-3 border" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255,255,255,0.6)", borderColor: "rgba(139,195,74,0.3)" }}>
+                          <Skeleton isDark={isDark} width={20} height={8} style={{ marginBottom: 4 }} />
+                          <Skeleton isDark={isDark} width={30} height={16} />
+                        </Box>
+                        <Box className="flex-1 rounded-xl items-center py-3 border" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255,255,255,0.6)", borderColor: "rgba(139,195,74,0.3)" }}>
+                          <Skeleton isDark={isDark} width={20} height={8} style={{ marginBottom: 4 }} />
+                          <Skeleton isDark={isDark} width={30} height={16} />
+                        </Box>
+                      </HStack>
+                    </View>
+                    <Divider style={{ backgroundColor: isDark ? "rgba(51,51,51,0.5)" : "rgba(240,240,240,0.5)" }} />
+                    <HStack className="px-4 py-4 justify-between items-center" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.3)" : "rgba(249, 250, 251, 0.3)" }}>
+                      <Skeleton isDark={isDark} width={60} height={32} borderRadius={20} />
+                      <HStack space="sm">
+                        <Skeleton isDark={isDark} width={80} height={32} borderRadius={20} />
+                        <Skeleton isDark={isDark} width={70} height={32} borderRadius={20} />
+                      </HStack>
+                    </HStack>
+                  </Box>
+
+                  {/* Collapsed Card Skeleton 1 */}
                   <Box className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
-                    <HStack className="justify-between items-center mb-4">
+                    <HStack className="justify-between items-center">
                       <HStack space="sm" className="items-center">
                         <Skeleton isDark={isDark} width={45} height={45} borderRadius={48} />
                         <VStack space="xs">
@@ -289,6 +357,29 @@ export default function DashboardScreen() {
                           <Skeleton isDark={isDark} width={80} height={12} />
                         </VStack>
                       </HStack>
+                      <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+                    </HStack>
+                    <HStack space="sm" className="items-center mt-3">
+                      <Skeleton isDark={isDark} width={100} height={12} />
+                      <Skeleton isDark={isDark} width={60} height={18} borderRadius={10} />
+                    </HStack>
+                  </Box>
+
+                  {/* Collapsed Card Skeleton 2 */}
+                  <Box className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
+                    <HStack className="justify-between items-center">
+                      <HStack space="sm" className="items-center">
+                        <Skeleton isDark={isDark} width={45} height={45} borderRadius={48} />
+                        <VStack space="xs">
+                          <Skeleton isDark={isDark} width={120} height={20} style={{ marginBottom: 4 }} />
+                          <Skeleton isDark={isDark} width={80} height={12} />
+                        </VStack>
+                      </HStack>
+                      <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+                    </HStack>
+                    <HStack space="sm" className="items-center mt-3">
+                      <Skeleton isDark={isDark} width={100} height={12} />
+                      <Skeleton isDark={isDark} width={60} height={18} borderRadius={10} />
                     </HStack>
                   </Box>
                 </VStack>
@@ -299,9 +390,9 @@ export default function DashboardScreen() {
                       <Box
                         className="flex-1 rounded-xl p-5 relative min-h-[140px] mr-2"
                         style={{
-                          backgroundColor: isDark ? "#161618" : "#fff",
-                          borderWidth: 1,
-                          borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                          backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                          borderColor: "#8BC34A",
+                          borderWidth: 1.5,
                         }}
                       >
                         <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -322,9 +413,9 @@ export default function DashboardScreen() {
                       <Box
                         className="flex-1 rounded-xl p-5 relative min-h-[140px] ml-2"
                         style={{
-                          backgroundColor: isDark ? "#161618" : "#fff",
-                          borderWidth: 1,
-                          borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                          backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                          borderColor: "#8BC34A",
+                          borderWidth: 1.5,
                         }}
                       >
                         <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -348,9 +439,9 @@ export default function DashboardScreen() {
                       <Box
                         className="flex-1 rounded-xl p-5 relative min-h-[140px] mr-2"
                         style={{
-                          backgroundColor: isDark ? "#161618" : "#fff",
-                          borderWidth: 1,
-                          borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                          backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                          borderColor: "#8BC34A",
+                          borderWidth: 1.5,
                         }}
                       >
                         <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -371,9 +462,9 @@ export default function DashboardScreen() {
                       <Box
                         className="flex-1 rounded-xl p-5 relative min-h-[140px] ml-2"
                         style={{
-                          backgroundColor: isDark ? "#161618" : "#fff",
-                          borderWidth: 1,
-                          borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                          backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                          borderColor: "#8BC34A",
+                          borderWidth: 1.5,
                         }}
                       >
                         <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
@@ -396,9 +487,9 @@ export default function DashboardScreen() {
                     <Box
                       className="rounded-xl p-5 relative min-h-[140px]"
                       style={{
-                        backgroundColor: isDark ? "#161618" : "#fff",
-                        borderWidth: 1,
-                        borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+                        backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                        borderColor: "#8BC34A",
+                        borderWidth: 1.5,
                       }}
                     >
                       <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
