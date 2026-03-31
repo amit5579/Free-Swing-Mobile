@@ -23,9 +23,9 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: "90%",
-    height: "90%",
+    width: "80%",
+    height: "80%",
     opacity: 0.30,
-    // transform: [{ rotate: "-20deg" }],
+    transform: [{ rotate: "-5deg" }],
   },
 });
