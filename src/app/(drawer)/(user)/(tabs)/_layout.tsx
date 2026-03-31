@@ -124,7 +124,7 @@ export default function TabLayout() {
 
       {/* NEW ROUND - FAB style */}
       <Tabs.Screen
-        name="newRound/index"
+        name="newRound"
         options={{
           title: "",
           tabBarIcon: ({ focused }) => (

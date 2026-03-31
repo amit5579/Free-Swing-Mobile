@@ -51,7 +51,7 @@
     "expo-system-ui": "~55.0.9",
     "expo-web-browser": "~55.0.9",
     "lodash": "^4.17.23",
-    "lucide-react-native": "^0.577.0",
+    "lucide-react-native": "^0.510.0",
     "nativewind": "^4.2.2",
     "react": "19.2.0",
     "react-aria": "^3.33.0",
@@ -78,6 +78,7 @@
     "eslint": "^9.0.0",
     "eslint-config-expo": "~55.0.0",
     "prettier-plugin-tailwindcss": "^0.5.14",
+    "react-refresh": "^0.18.0",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.9.2"
   },
