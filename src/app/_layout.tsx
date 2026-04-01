@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 import { AuthProvider } from "@/context/AuthContext";
 
@@ -37,6 +38,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack screenOptions={{ headerShown: false }} />
+          <Toast />
         </ThemeProvider>
       </AuthProvider>
     </GestureHandlerRootView>
