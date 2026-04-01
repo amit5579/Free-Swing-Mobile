@@ -7,6 +7,9 @@ import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { HStack } from "@/components/hstack";
+import { Box } from "@/components/box";
+import { Skeleton } from "@/components/Skeleton";
 
 import { Colors } from "@/constants/theme";
 
@@ -40,6 +43,10 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+        },
         headerTitle: "",
         headerLeftContainerStyle: { paddingLeft: 0, marginLeft: -10 },
         headerLeft: () => (
@@ -51,7 +58,7 @@ export default function TabLayout() {
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, gap: 12 }}>
             <TouchableOpacity
-              // onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
+              onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
               style={{
                 width: 38,
                 height: 38,
@@ -69,25 +76,25 @@ export default function TabLayout() {
               onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
               style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
             >
-            {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
-              <Image
-                source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-                onError={() => setImageError(true)}
-              />
-            ) : profile?.username && profile.username.trim() !== "" ? (
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
-                <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                  {profile.username.trim()[0].toUpperCase()}
-                </Text>
-              </View>
-            ) : (
-              <Image
-                source={{ uri: "https://i.pravatar.cc/100" }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-              />
-            )}
-          </TouchableOpacity>
+              {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+                <Image
+                  source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                  style={{ width: 42, height: 42, borderRadius: 21 }}
+                  onError={() => setImageError(true)}
+                />
+              ) : profile?.username && profile.username.trim() !== "" ? (
+                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
+                  <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
+                    {profile.username.trim()[0].toUpperCase()}
+                  </Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: "https://i.pravatar.cc/100" }}
+                  style={{ width: 42, height: 42, borderRadius: 21 }}
+                />
+              )}
+            </TouchableOpacity>
           </View>
         ),
         tabBarActiveTintColor: "#8bc34a",
@@ -104,6 +111,55 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
+          headerStyle: {
+            backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          },
+          headerLeft: () => {
+            if (!profile) {
+              return (
+                <View style={{ marginLeft: 20, paddingVertical: 10 }}>
+                  <Skeleton isDark={isDark} width={80} height={12} style={{ marginBottom: 8 }} borderRadius={4} />
+                  <Skeleton isDark={isDark} width={140} height={28} borderRadius={4} />
+                </View>
+              );
+            }
+            
+            return (
+              <View style={{ marginLeft: 20, paddingVertical: 10 }}>
+                <HStack space="xs" className="items-center">
+                  <Text style={{ 
+                    color: isDark ? "#A3A3A3" : "#737373", 
+                    fontSize: 10, 
+                    fontWeight: "900",
+                    letterSpacing: 2.5,
+                    textTransform: "uppercase"
+                  }}>
+                    Welcome Back
+                  </Text>
+                  <Text style={{ fontSize: 12 }}>👋</Text>
+                </HStack>
+                <HStack space="xs" className="items-baseline">
+                  <Text style={{ 
+                    color: "#8BC34A", 
+                    fontSize: 24, 
+                    fontWeight: "900",
+                    letterSpacing: -0.8,
+                    marginTop: -2
+                  }}>
+                    {profile.username.toUpperCase()}
+                  </Text>
+                  <Text style={{ 
+                    color: "#8BC34A", 
+                    fontSize: 24, 
+                    fontWeight: "900",
+                    marginLeft: 2
+                  }}>
+                    !
+                  </Text>
+                </HStack>
+              </View>
+            );
+          },
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />

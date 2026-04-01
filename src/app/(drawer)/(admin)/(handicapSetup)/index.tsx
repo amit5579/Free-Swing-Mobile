@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Pressable,
   useColorScheme,
@@ -6,7 +6,6 @@ import {
   RefreshControl,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ActivityIndicator } from "react-native";
@@ -19,6 +18,7 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { Ionicons } from "@expo/vector-icons";
 import { getUsers, User } from "@/api/admin/handicapSetup";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function PlayerHandicapSetup() {
   const colorScheme = useColorScheme();
@@ -79,12 +79,10 @@ export default function PlayerHandicapSetup() {
     }
   };
 
-  // ✅ REFRESH ON FOCUS
-  useFocusEffect(
-    useCallback(() => {
-      fetchPlayers();
-    }, []),
-  );
+  // ✅ LOAD ONCE on mount only
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
 
   const togglePlayer = (id: number | string) => {
     setExpanded((prev) => ({
@@ -212,31 +210,64 @@ export default function PlayerHandicapSetup() {
             }
           >
             {loading ? (
-              <VStack className="items-center justify-center py-20">
-                <ActivityIndicator size="large" color="#8bc34a" />
-                <ThemedText style={{ marginTop: 12, opacity: 0.6 }}>
-                  Loading Players...
-                </ThemedText>
+              <VStack style={{ gap: 10 }}>
+                {[1, 2, 3, 4].map((key) => (
+                  <Box
+                    key={key}
+                    style={{
+                      backgroundColor: isDark ? "rgba(26,26,26,0.85)" : "rgba(255,255,255,0.85)",
+                      borderRadius: 14,
+                      borderLeftWidth: 4,
+                      borderLeftColor: "#8BC34A",
+                      borderTopWidth: isDark ? 1 : 0,
+                      borderRightWidth: isDark ? 1 : 0,
+                      borderBottomWidth: isDark ? 1 : 0,
+                      borderColor: isDark ? "#8BC34A" : "transparent",
+                      padding: 10,
+                      marginBottom: 8,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isDark ? 0.2 : 0.05,
+                      shadowRadius: 6,
+                      elevation: 2,
+                    }}
+                  >
+                    <HStack className="items-center justify-between">
+                      <HStack className="items-center" style={{ flex: 1 }}>
+                        <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ marginRight: 10 }} />
+                        <VStack style={{ gap: 5 }}>
+                          <Skeleton isDark={isDark} width={130} height={15} borderRadius={6} />
+                          <Skeleton isDark={isDark} width={80} height={10} borderRadius={4} />
+                        </VStack>
+                      </HStack>
+                      <Skeleton isDark={isDark} width={18} height={18} borderRadius={9} />
+                    </HStack>
+                  </Box>
+                ))}
               </VStack>
             ) : (
               <VStack space="md" className="pb-20">
                 {filteredPlayers.map((player) => (
                   <Box
                     key={player.id}
-                    className="p-4 rounded-2xl mb-3"
                     style={{
                       backgroundColor: isDark
                         ? "rgba(26,26,26,0.85)"
                         : "rgba(255,255,255,0.85)",
-                      borderRadius: 20,
-                      borderLeftWidth: 6,
+                      borderRadius: 14,
+                      borderLeftWidth: 4,
                       borderLeftColor: "#8BC34A",
-                      padding: 16,
+                      borderTopWidth: isDark ? 1 : 0,
+                      borderRightWidth: isDark ? 1 : 0,
+                      borderBottomWidth: isDark ? 1 : 0,
+                      borderColor: isDark ? "#8BC34A" : "transparent",
+                      padding: 10,
+                      marginBottom: 8,
                       shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: isDark ? 0.3 : 0.08,
-                      shadowRadius: 10,
-                      elevation: 4,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isDark ? 0.2 : 0.05,
+                      shadowRadius: 6,
+                      elevation: 2,
                     }}
                   >
                     {/* PLAYER HEADER */}
@@ -295,10 +326,10 @@ export default function PlayerHandicapSetup() {
 
                     {/* DETAILS */}
                     {expanded[player.id.toString()] && (
-                      <VStack className="px-4 pb-4">
+                      <VStack style={{ paddingTop: 2, paddingBottom: 2 }}>
                         <Divider
                           style={{
-                            marginBottom: 16,
+                            marginBottom: 10,
                             backgroundColor: isDark ? "#333" : "#F0F0F0",
                           }}
                         />
@@ -400,8 +431,6 @@ export default function PlayerHandicapSetup() {
                             </ThemedText>
                           </HStack>
                         </VStack>
-
-                        <Divider style={{ marginVertical: 10, opacity: 0 }} />
                       </VStack>
                     )}
                   </Box>

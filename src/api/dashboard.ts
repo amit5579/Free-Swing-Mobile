@@ -47,13 +47,15 @@ export const likeFeedApi = async (id: string | number) => {
 };
 
 export interface LikedUser {
-  username: string;
-  profilePictureUrl: string | null;
+  type: string;
+  user: string;
+  date: string;
+  profilePictureUrl?: string | null;
 }
 
 export const getLikedUsersApi = async (roundRefId: number | string) => {
   try {
-    const response = await https.get(`feed/likes/${roundRefId}`);
+    const response = await https.get(`feed/interactions/${roundRefId}`);
     return (response.data || []) as LikedUser[];
   } catch (error) {
     console.error(`Fetching Liked Users Error for ${roundRefId}:`, error);
@@ -252,3 +254,22 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
 };
 
 
+export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
+  try {
+    const response = await https.post(`/scorecard/update`, { scorecardId, holeScores });
+    return response.data;
+  } catch (error) {
+    console.error("Updating scorecard error:", error);
+    throw error;
+  }
+};
+
+export const saveScorecardApi = async (scorecardId: string | number) => {
+  try {
+    const response = await https.post(`/scorecard/save`, { scorecardId });
+    return response.data;
+  } catch (error) {
+    console.error("Saving scorecard error:", error);
+    throw error;
+  }
+};

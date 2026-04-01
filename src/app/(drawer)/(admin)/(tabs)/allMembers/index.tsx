@@ -126,44 +126,57 @@ export default function AllMembersPage() {
     return (
       <View
         style={{
-          backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+          backgroundColor: isDark ? "rgba(26, 26, 26, 0.4)" : "rgba(255, 255, 255, 0.35)",
           borderRadius: 20,
           borderLeftWidth: 6,
-          borderLeftColor: isDark ? "#333" : "#e5e7eb",
+          borderLeftColor: "#8BC34A",
+          borderTopWidth: isDark ? 1.5 : 0,
+          borderRightWidth: isDark ? 1.5 : 0,
+          borderBottomWidth: isDark ? 1.5 : 0,
+          borderColor: isDark ? "#8BC34A" : "transparent",
           padding: 16,
           marginBottom: 16,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isDark ? 0.3 : 0.08,
+          shadowRadius: 10,
+          elevation: 4,
+          overflow: "hidden",
         }}
       >
         <HStack className="items-center justify-between">
           <HStack className="items-center" style={{ flex: 1 }}>
             {/* Avatar skeleton */}
-            <Skeleton isDark={isDark} width={48} height={48} borderRadius={24} style={{ marginRight: 12 }} />
-            <VStack space="xs" style={{ gap: 4 }}>
-              <Skeleton isDark={isDark} width={100} height={18} />
-              <Skeleton isDark={isDark} width={70} height={12} />
+            <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
+            <VStack style={{ gap: 5 }}>
+              <Skeleton isDark={isDark} width={130} height={17} borderRadius={6} />
+              <Skeleton isDark={isDark} width={80} height={11} borderRadius={4} />
             </VStack>
           </HStack>
           {/* Badge & arrow skeleton */}
           <HStack className="items-center">
-            <Skeleton isDark={isDark} width={60} height={22} borderRadius={12} style={{ marginRight: 8 }} />
+            <Skeleton isDark={isDark} width={62} height={22} borderRadius={12} style={{ marginRight: 8 }} />
             <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
           </HStack>
         </HStack>
 
         {isExpanded && (
-          <VStack style={{ marginTop: 20 }}>
-            <View style={{ height: 1.5, backgroundColor: isDark ? "#333" : "#f0f0f0", marginBottom: 16 }} />
-            <HStack style={{ flexWrap: "wrap", gap: 16 }}>
-              {[1, 2, 3, 4].map((i) => (
+          <VStack style={{ marginTop: 16 }}>
+            <View style={{ height: 1, backgroundColor: isDark ? "#333" : "#f0f0f0", marginBottom: 12 }} />
+            <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                 <VStack key={i} style={{ width: "47%" }}>
-                  <Skeleton isDark={isDark} width={50} height={10} style={{ marginBottom: 4 }} />
-                  <Skeleton isDark={isDark} width={"80%"} height={14} />
+                  <Skeleton isDark={isDark} width={55} height={9} borderRadius={4} style={{ marginBottom: 4 }} />
+                  <HStack style={{ alignItems: "center", gap: 5 }}>
+                    <Skeleton isDark={isDark} width={14} height={14} borderRadius={7} />
+                    <Skeleton isDark={isDark} width={"70%"} height={13} borderRadius={4} />
+                  </HStack>
                 </VStack>
               ))}
             </HStack>
-            <HStack style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}>
-              <Skeleton isDark={isDark} width={80} height={36} borderRadius={12} />
-              <Skeleton isDark={isDark} width={80} height={36} borderRadius={12} />
+            <HStack style={{ marginTop: 20, justifyContent: "flex-end", gap: 10 }}>
+              <Skeleton isDark={isDark} width={76} height={36} borderRadius={12} />
+              <Skeleton isDark={isDark} width={90} height={36} borderRadius={12} />
             </HStack>
           </VStack>
         )}
@@ -173,7 +186,7 @@ export default function AllMembersPage() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{
         flex: 1,
         backgroundColor: isDark ? "#000" : "#f2f2f2",
@@ -183,17 +196,29 @@ export default function AllMembersPage() {
       <Watermark />
 
       {loading ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size="large" color="#8bc34a" />
-          <ThemedText style={{ marginTop: 12, color: "#8bc34a" }}>
-            Loading members...
-          </ThemedText>
-        </View>
+        <>
+          {/* HEADER shown during loading too */}
+          <HStack className="items-center justify-between mt-4 mb-6 px-4">
+            <HStack className="items-center">
+              <Pressable onPress={() => router.back()}>
+                <Ionicons name="arrow-back-outline" size={24} color={isDark ? "#fff" : "#020617"} />
+              </Pressable>
+              <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
+                All Members
+              </ThemedText>
+            </HStack>
+          </HStack>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+            <VStack>
+              <MemberCardSkeleton isDark={isDark} isExpanded={true} />
+              <MemberCardSkeleton isDark={isDark} />
+              <MemberCardSkeleton isDark={isDark} />
+              <MemberCardSkeleton isDark={isDark} />
+            </VStack>
+          </ScrollView>
+        </>
       ) : (
         <>
-          {/* HEADER */}
           <HStack className="items-center justify-between mb-6 px-4">
             <HStack className="items-center">
               <Pressable onPress={() => router.back()}>
@@ -234,7 +259,7 @@ export default function AllMembersPage() {
                     fontWeight: "700",
                     marginLeft: 6,
                     fontSize: 14,
-                    includeFontPadding: false, // ✅ fixes vertical alignment
+                    includeFontPadding: false, 
                   }}
                 >
                   {members.length} Members
@@ -281,7 +306,6 @@ export default function AllMembersPage() {
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
           >
             <VStack className="px-4">
-              {/* MEMBERS LIST */}
               <VStack space="md" style={{ gap: 16 }}>
                 {members.map((member) => (
                   <Box
@@ -306,7 +330,6 @@ export default function AllMembersPage() {
                       overflow: "hidden",
                     }}
                   >
-                    {/* MEMBER HEADER */}
                     <Pressable onPress={() => toggleMember(member.id)}>
                       <HStack className="items-center justify-between">
                         <HStack className="items-center" style={{ flex: 1 }}>
@@ -398,7 +421,6 @@ export default function AllMembersPage() {
                       </HStack>
                     </Pressable>
 
-                    {/* EXPANDED DETAILS */}
                     {expanded[member.id] && (
                       <VStack style={{ marginTop: 20 }}>
                         <Divider
@@ -409,7 +431,6 @@ export default function AllMembersPage() {
                         />
 
                         <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
-                          {/* Row 1: Contact Info */}
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>EMAIL</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
@@ -426,7 +447,6 @@ export default function AllMembersPage() {
                             </HStack>
                           </VStack>
 
-                          {/* Row 2: Basic Info */}
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>ROLE</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
@@ -445,7 +465,6 @@ export default function AllMembersPage() {
                             </HStack>
                           </VStack>
 
-                          {/* Row 3: Course Info */}
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>HOME COURSE</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
@@ -464,7 +483,6 @@ export default function AllMembersPage() {
                             </HStack>
                           </VStack>
 
-                          {/* Row 4: Handicap Info */}
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>DECLARED HC / INDEX</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
@@ -485,7 +503,6 @@ export default function AllMembersPage() {
                             </HStack>
                           </VStack>
 
-                          {/* Row 5: DOB / Age */}
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>DATE OF BIRTH</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
@@ -518,7 +535,6 @@ export default function AllMembersPage() {
                           </VStack>
                         </HStack>
 
-                        {/* Actions */}
                         <HStack
                           style={{ marginTop: 24, justifyContent: "flex-end" }}
                         >
@@ -639,4 +655,3 @@ function denyUser(id: number) {
 function toggleBlockUser(id: number) {
   throw new Error("Function not implemented.");
 }
-
