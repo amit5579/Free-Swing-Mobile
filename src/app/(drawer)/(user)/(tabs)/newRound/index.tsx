@@ -12,26 +12,35 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, useColorScheme, View } from "react-native";
+import { Modal, Pressable, useColorScheme, View, Text } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
 import { getCourse } from "@/api/admin/courses";
 import { Divider } from "@/components/divider";
 import { Skeleton } from "@/components/Skeleton";
+import { Dropdown } from "react-native-element-dropdown";
+import {
+  Radio,
+  RadioGroup,
+  RadioIndicator,
+  RadioIcon,
+  RadioLabel,
+} from "@/components/radio";
+import { CircleIcon } from "@/components/icon";
+import { getHandicapDetails } from "@/api/newRound";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const routePage = useRouter();
 
   const [courseList, setCourseList] = useState<any>([]);
-  const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
       const ccs = await getCourse();
+      // console.log("tee detailllllsss", ccs);
+
       setCourseList(ccs);
     } catch (error) {
       throw console.log("Error fetching courses", error);
@@ -63,7 +72,6 @@ export default function StartNewRoundPage() {
           >
             Start new round
           </ThemedText>
-
         </HStack>
         <ThemedText
           style={{
@@ -143,10 +151,9 @@ export default function StartNewRoundPage() {
           flex: 1,
         }}
       >
-
         {/* Header */}
-       
-          <RenderHeader />
+
+        <RenderHeader />
 
         <Watermark />
 
@@ -179,14 +186,53 @@ export default function StartNewRoundPage() {
   );
 }
 
+/* ---------- CONSTANTS ---------- */
+const scoringOptions = {
+  net_including: { excluded: false, stableford: false },
+  net_excluding: { excluded: true, stableford: false },
+  stableford: { excluded: false, stableford: true },
+};
+
+const holesOptions = {
+  "18": 18,
+  front9: 9,
+  back9: 9,
+};
+
 /* ---------- COURSE CARD ---------- */
 function CourseCard({ course, isDark }: any) {
   const routePage = useRouter();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [teeBoxList, setTeeBoxList] = useState<any[]>([]);
+  const [selectedTeeBoxId, setSelectedTeeBoxId] = useState<number>(0);
+  const [handicapDetails, setHandicapDetails] = useState<any>([]);
+  const [scoreType, setScoreType] = useState<keyof typeof scoringOptions>("net_including");
+  const [holesToPlay, setHolesToPlay] = useState<keyof typeof holesOptions>("18");
+  const [handicapView, setHandicapView] = useState(false);
+  const textColor = isDark ? "#fff" : "#000";
+  const subTextColor = isDark ? "#aaa" : "#555";
+  const cardBg = isDark ? "#1e1e1e" : "#f9f9f9";
+  const borderColor = isDark ? "#333" : "#ddd";
+ 
+  const fetchHandiCap = async () => {
+    try {
+      const response = await getHandicapDetails(selectedTeeBoxId);
+      setHandicapDetails(response);
+    } catch (error) {
+      console.error("Fetching handicap scorecard Error:", error);
+      throw error;
+    }
+  };
+  useEffect(() => {
+    if (selectedTeeBoxId > 0) {
+      fetchHandiCap();
+    }
+  }, [selectedTeeBoxId]);
 
-  function routeTeeBox(courseId: string) {
-    routePage.push(`/courses/teeBox?courseId=${courseId}`);
-  }
+
+
+  const selectedScore = scoringOptions[scoreType];
+  const selectedHoles = holesOptions[holesToPlay];
 
   return (
     <>
@@ -259,8 +305,11 @@ function CourseCard({ course, isDark }: any) {
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
         <Pressable
-          //   onPress={() =>
-          //     }
+          onPress={() => {
+            setModalVisible(true);
+            setTeeBoxList(course.teeBoxes);
+            setSelectedTeeBoxId(0); // reset selection
+          }}
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
             backgroundColor: pressed ? "#8bc34a" : "transparent",
@@ -286,45 +335,242 @@ function CourseCard({ course, isDark }: any) {
         </Pressable>
       </Box>
 
-      <Modal
-        animationType="slide"
-        transparent
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
-            {/* FORM */}
-            <VStack className="gap-3">
+      <Modal animationType="slide" transparent visible={modalVisible}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
+            {/* HEADER */}
+            <HStack className="justify-between items-center mb-4">
               <ThemedText
-                style={{ fontSize: 16, fontWeight: "700", textAlign: "center" }}
+                style={{ fontSize: 18, fontWeight: "700", lineHeight: 27 }}
               >
-                Delete Course
+                Select Tee Box
               </ThemedText>
-              <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-                Are you sure you want to delete this course?
-              </ThemedText>
-            </VStack>
-
-            {/* Buttons */}
-            <HStack className="justify-end mt-6 gap-3">
-              <Pressable
-                style={styles.cancelButton}
-                onPress={() => setDeleteModalVisible(false)}
-              >
-                <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
-              </Pressable>
 
               <Pressable
                 onPress={() => {
-                  setDeleteModalVisible(false);
-                  //   onDelete(course.courseId);
+                  // reset();
+                  setModalVisible(false);
                 }}
-                style={styles.createButton}
               >
-                <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                  Yes, I'm sure
-                </ThemedText>
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
+              </Pressable>
+            </HStack>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <ThemedText>
+                You are now starting a round for {course.name}
+              </ThemedText>
+              <Dropdown
+                style={[
+                  styles.dropdown,
+                  {
+                    backgroundColor: cardBg,
+                    borderColor: borderColor,
+                    borderWidth: 1,
+                  },
+                ]}
+                placeholderStyle={{ color: subTextColor }}
+                selectedTextStyle={{ color: textColor }}
+                itemTextStyle={{ color: textColor }}
+                containerStyle={{
+                  backgroundColor: isDark ? "#333" : "#eee",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: borderColor,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: isDark ? "#333" : "#eee",
+                }}
+                activeColor={isDark ? "#333" : "#eee"}
+                data={teeBoxList as any}
+                labelField="name"
+                valueField="teeBoxId"
+                placeholder={"Choose Tee Box"}
+                value={selectedTeeBoxId}
+                onChange={(item: any) => {
+                  setHandicapView(true);
+                  setSelectedTeeBoxId(item.teeBoxId); // ✅ store ID
+                  // getHandicapDetails(item.teeBoxId)
+                }}
+              />
+
+              {handicapView && (
+                <HStack
+                  className={`justify-between items-center rounded-md p-3 border ${isDark ? "border-gray-700" : "border-gray-300"}`}
+                >
+                  <VStack>
+                    <ThemedText>Your Handicap</ThemedText>
+                    <ThemedText>
+                      Based on Index: {handicapDetails.handicapIndex}
+                    </ThemedText>
+                  </VStack>
+                  <ThemedText style={{ fontSize: 20, fontWeight: 700 }}>
+                    {handicapDetails.handicap}
+                  </ThemedText>
+                </HStack>
+              )}
+
+              <View style={styles.container}>
+                <RadioGroup value={scoreType} onChange={setScoreType}>
+                  <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                    Scoring Mode
+                  </ThemedText>
+
+                  {[
+                    {
+                      label: "Net Score (including par 3)",
+                      value: "net_including",
+                      excluded: false,
+                      stableford: false,
+                    },
+                    {
+                      label: "Net Score (excluding par 3)",
+                      value: "net_excluding",
+                      excluded: true,
+                      stableford: false,
+                    },
+                    {
+                      label: "Stableford Scoring",
+                      value: "stableford",
+                      excluded: false,
+                      stableford: true,
+                    },
+                  ].map((item) => (
+                    <Radio
+                      key={item.value}
+                      value={item.value}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 10,
+                      }}
+                    >
+                      <RadioIndicator
+                        style={{
+                          borderColor: textColor,
+                          borderWidth: 2,
+                          marginRight: 10,
+                        }}
+                      >
+                        {scoreType === item.value && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: textColor,
+                            }}
+                          />
+                        )}
+                      </RadioIndicator>
+
+                      <RadioLabel style={{ color: textColor }}>
+                        {item.label}
+                      </RadioLabel>
+                    </Radio>
+                  ))}
+                </RadioGroup>
+              </View>
+
+              {/* Holes to play */}
+              <View style={styles.container}>
+                <RadioGroup value={holesToPlay} onChange={setHolesToPlay}>
+                  <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                    Holes to Play
+                  </ThemedText>
+
+                  {[
+                    {
+                      label: "18 Holes",
+                      value: "18",
+                      holes: 18,
+                    },
+                    {
+                      label: "Front Nine (1-9)",
+                      value: "front9",
+                      holes: 9,
+                    },
+                    {
+                      label: "Back Nine (10-18)",
+                      value: "back9",
+                      holes: 9,
+                    },
+                  ].map((item) => (
+                    <Radio
+                      key={item.value}
+                      value={item.value}
+                      style={{ flexDirection: "row", marginBottom: 10 }}
+                    >
+                      <RadioIndicator
+                        style={{
+                          borderColor: textColor,
+                          borderWidth: 2,
+                          marginRight: 10,
+                        }}
+                      >
+                        {holesToPlay === item.value && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: textColor,
+                            }}
+                          />
+                        )}
+                      </RadioIndicator>
+
+                      <RadioLabel style={{ color: textColor }}>
+                        {item.label}
+                      </RadioLabel>
+                    </Radio>
+                  ))}
+                </RadioGroup>
+              </View>
+            </ScrollView>
+
+            {/* BUTTONS */}
+            <HStack style={styles.buttonRow}>
+              <Pressable
+                style={[
+                  styles.cancelBtn,
+                  { borderColor: isDark ? "#444" : "#ccc" },
+                ]}
+                onPress={() => {
+                  // reset();
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={{ color: isDark ? "#ccc" : "#333" }}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={
+                  // handleSubmit(onSubmit)
+                  () => {
+                    setModalVisible(false);
+                    routePage.push(
+                      `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${selectedTeeBoxId}`
+                    );
+                  }
+                }
+                style={styles.createBtn}
+              >
+                <Text style={{ color: "#fff" }}>Start Game</Text>
               </Pressable>
             </HStack>
           </View>
@@ -335,6 +581,21 @@ function CourseCard({ course, isDark }: any) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  dropdown: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 7,
+    paddingHorizontal: 10,
+    marginVertical: 10,
+  },
   centeredView: {
     flex: 1,
     justifyContent: "center",
@@ -441,5 +702,20 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginTop: 1,
+  },
+  buttonRow: {
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  cancelBtn: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 8,
+  },
+  createBtn: {
+    backgroundColor: "#8bc34a",
+    padding: 10,
+    borderRadius: 8,
   },
 });

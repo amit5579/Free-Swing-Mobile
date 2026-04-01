@@ -204,7 +204,6 @@ export default function FeedbackInboxPage() {
     );
   };
 
-  
   return (
     <>
       <ThemedView
@@ -399,6 +398,7 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
     setReply(item.adminResponse || "");
     setStatus(item.status);
   }, [item]);
+
   return (
     <Box className="p-4 rounded-xl border border-neutral-200 mb-4">
       <VStack space="sm">
@@ -467,21 +467,25 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
             Status
           </ThemedText>
           <Dropdown
-            style={{
-              padding: 10,
-              borderRadius: 7,
-              borderColor: "#e5e5e5",
-              borderWidth: 1,
+            style={[
+              {
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                height: 45,
+                marginTop: 6,
+                backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                borderColor: isDark ? "#333" : "#ddd",
+              },
+            ]}
+            placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+            selectedTextStyle={{ color: isDark ? "white" : "black" }}
+            containerStyle={{
+              backgroundColor: isDark ? "#1a1a1a" : "#fff",
+              borderColor: isDark ? "#333" : "#ddd",
             }}
-            selectedTextStyle={{
-              color: isDark ? "white" : "black",
-            }}
-            itemTextStyle={{
-              color: isDark ? "white" : "black",
-            }}
-            placeholderStyle={{
-              color: isDark ? "white" : "black",
-            }}
+            itemTextStyle={{ color: isDark ? "white" : "black" }}
+            activeColor={isDark ? "#333" : "#f0f0f0"}
             data={[
               { label: "Open", value: "Open" },
               { label: "Resolved", value: "Resolved" },

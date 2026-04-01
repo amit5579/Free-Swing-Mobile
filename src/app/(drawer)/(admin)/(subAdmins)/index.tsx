@@ -306,18 +306,18 @@ export default function subAdminsPage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text className="text-xl font-bold">
+              <Text className="text-xl font-bold" style={{ color: isDark ? "white" : "black" }}>
                 {isEditMode
                   ? `Edit Sub-Admin — ${editingAdmin?.username}`
                   : "Create Sub Admin"}
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} />
+                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
               </Pressable>
             </HStack>
 
@@ -331,7 +331,15 @@ export default function subAdminsPage() {
                     <>
                       <TextInput
                         placeholder="Full name"
-                        style={styles.input}
+                        placeholderTextColor={isDark ? "#777" : "#999"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
@@ -354,7 +362,15 @@ export default function subAdminsPage() {
                     <>
                       <TextInput
                         placeholder="email@example.com"
-                        style={styles.input}
+                        placeholderTextColor={isDark ? "#777" : "#999"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
@@ -379,7 +395,15 @@ export default function subAdminsPage() {
                     <>
                       <TextInput
                         placeholder="Phone number"
-                        style={styles.input}
+                        placeholderTextColor={isDark ? "#777" : "#999"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
@@ -403,8 +427,16 @@ export default function subAdminsPage() {
                     <>
                       <TextInput
                         placeholder="Set password"
+                        placeholderTextColor={isDark ? "#777" : "#999"}
                         secureTextEntry
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
@@ -426,7 +458,21 @@ export default function subAdminsPage() {
                   render={({ field: { onChange, value } }) => (
                     <>
                       <MultiSelect
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                          },
+                        ]}
+                        placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        containerStyle={{
+                          backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                          borderColor: isDark ? "#333" : "#d1d5db",
+                        }}
+                        itemTextStyle={{ color: isDark ? "white" : "black" }}
+                        activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={courseList}
                         labelField="label"
                         valueField="value"
@@ -448,6 +494,7 @@ export default function subAdminsPage() {
                                 flexDirection: "row",
                                 alignItems: "center",
                                 padding: 15,
+                                backgroundColor: isDark ? "#1a1a1a" : "#fff",
                               }}
                             >
                               <Checkbox
@@ -456,7 +503,7 @@ export default function subAdminsPage() {
                                 color={isSelected ? "#8bc34a" : undefined}
                               />
 
-                              <Text style={{ marginLeft: 10 }}>
+                              <Text style={{ marginLeft: 10, color: isDark ? "white" : "black" }}>
                                 {item.label}
                               </Text>
                             </View>
@@ -477,10 +524,10 @@ export default function subAdminsPage() {
             {/* Buttons */}
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
                 onPress={() => setModalVisible(false)}
               >
-                <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
               </Pressable>
 
               <Pressable
@@ -597,8 +644,8 @@ function SubAdminCard({
         visible={deleteModalVisible}
         onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
+        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
+          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
             {/* FORM */}
             <VStack className="gap-3">
               <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
@@ -610,10 +657,10 @@ function SubAdminCard({
             {/* Buttons */}
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={styles.cancelButton}
+                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <ThemedText style={{ color: "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
               </Pressable>
 
               <Pressable
@@ -674,14 +721,14 @@ const styles = StyleSheet.create({
   courseBadge: {
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "rgba(139, 195, 74, 0.1)", // Consistent translucent green
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
 
   playerBadge: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "rgba(139, 195, 74, 0.1)", // Consistent translucent green
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,

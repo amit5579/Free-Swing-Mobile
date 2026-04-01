@@ -3,7 +3,6 @@ import { ActivityIndicator, StyleSheet, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Skeleton } from "@/components/Skeleton";
 
-import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 
