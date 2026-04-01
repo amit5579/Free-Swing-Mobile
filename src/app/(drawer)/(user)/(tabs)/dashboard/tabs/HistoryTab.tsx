@@ -188,13 +188,10 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                         </Text>
                     </Box>
                 ) : (
-<<<<<<< Updated upstream
-                    history.map((item) => (
-                        <Pressable key={item.id} onPress={() => handleViewScorecard(item.id)}>
-=======
+                    // history.map((item) => (
+                    //     <Pressable key={item.id} onPress={() => handleViewScorecard(item.id)}>
                     filteredHistory.map((item) => (
                         <Pressable key={item.id} onPress={() => handleViewScorecard(item.id, item.course)}>
->>>>>>> Stashed changes
                             <Box
                                 className="rounded-2xl mb-4"
                                 style={{
