@@ -48,20 +48,20 @@ const PlayerCard = ({
         backgroundColor: isDark
           ? "rgba(26,26,26,0.4)"
           : "rgba(255,255,255,0.35)",
-        borderRadius: 20,
-        borderLeftWidth: 6,
+        borderRadius: 16,
+        borderLeftWidth: 4,
         borderLeftColor: "#8BC34A",
-        borderTopWidth: isDark ? 1.5 : 0,
-        borderRightWidth: isDark ? 1.5 : 0,
-        borderBottomWidth: isDark ? 1.5 : 0,
+        borderTopWidth: isDark ? 1 : 0,
+        borderRightWidth: isDark ? 1 : 0,
+        borderBottomWidth: isDark ? 1 : 0,
         borderColor: isDark ? "#8BC34A" : "transparent",
-        padding: 16,
-        marginBottom: 16,
+        padding: 8,
+        marginBottom: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.08,
-        shadowRadius: 10,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDark ? 0.2 : 0.05,
+        shadowRadius: 8,
+        elevation: 2,
         overflow: "hidden",
       }}
     >
@@ -69,19 +69,25 @@ const PlayerCard = ({
       <Pressable onPress={onToggle}>
         <HStack className="items-center justify-between">
           <HStack className="items-center" style={{ flex: 1 }}>
-            <Avatar
-              size="md"
+            <Box
               style={{
-                borderWidth: 2,
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                borderWidth: 1.5,
                 borderColor: !player.isBlocked ? "#8BC34A" : "#EF4444",
                 backgroundColor: !player.isBlocked
                   ? "rgba(139,195,74,0.1)"
                   : "rgba(239,68,68,0.1)",
-                marginRight: 12,
+                marginRight: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                overflow: "hidden",
               }}
             >
               {player.profilePictureUrl && player.profilePictureUrl.trim() !== "" && player.profilePictureUrl !== "null" && !imageError ? (
                 <AvatarImage
+                  style={{ width: "100%", height: "100%", borderRadius: 19 }}
                   source={{
                     uri: player.profilePictureUrl.startsWith('http') ? player.profilePictureUrl : `https://kolve18freeswing.com${player.profilePictureUrl}`,
                   }}
@@ -91,15 +97,16 @@ const PlayerCard = ({
                 <ThemedText
                   style={{
                     fontWeight: "800",
+                    fontSize: 16,
                     color: !player.isBlocked ? "#8BC34A" : "#EF4444",
                   }}
                 >
                   {player.username.charAt(0).toUpperCase()}
                 </ThemedText>
               )}
-            </Avatar>
+            </Box>
             <VStack>
-              <ThemedText style={{ fontWeight: "800", fontSize: 17 }}>
+              <ThemedText style={{ fontWeight: "800", fontSize: 16 }}>
                 {player.username}
               </ThemedText>
               <ThemedText
@@ -125,22 +132,21 @@ const PlayerCard = ({
         </HStack>
       </Pressable>
 
-      {/* EXPANDED DETAILS */}
       {isExpanded && (
-        <VStack style={{ marginTop: 20 }}>
+        <VStack style={{ marginTop: 8 }}>
           <Divider
             style={{
-              marginBottom: 16,
+              marginBottom: 8,
               backgroundColor: isDark ? "#333" : "#F0F0F0",
             }}
           />
 
           {/* Statistics Grid */}
-          <HStack style={{ flexWrap: "wrap", gap: 16 }}>
+          <HStack style={{ flexWrap: "wrap", gap: 8 }}>
             <VStack style={{ width: "47%" }}>
               <ThemedText
                 style={{
-                  fontSize: 10,
+                  fontSize: 9,
                   color: "#999",
                   fontWeight: "700",
                   marginBottom: 4,
@@ -232,13 +238,13 @@ const PlayerCard = ({
           </HStack>
 
           {/* Action Button */}
-          <HStack style={{ marginTop: 24, justifyContent: "flex-end" }}>
+          <HStack style={{ marginTop: 12, justifyContent: "flex-end" }}>
             <TouchableOpacity
               style={{
                 backgroundColor: "rgba(139,195,74,0.15)",
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
                 flexDirection: "row",
                 alignItems: "center",
                 borderWidth: 1,
@@ -268,11 +274,13 @@ const PlayerCard = ({
 interface PlayerStatisticsProps {
   players: PlayerApi[];
   loading: boolean;
+  searchQuery?: string;
 }
 
 export default function PlayerStatistics({
   players,
   loading,
+  searchQuery = "",
 }: PlayerStatisticsProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -347,7 +355,7 @@ export default function PlayerStatistics({
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
       <FlatList
-        data={players}
+        data={players.filter(p => !searchQuery || p.username.toLowerCase().includes(searchQuery.toLowerCase()))}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <PlayerCard

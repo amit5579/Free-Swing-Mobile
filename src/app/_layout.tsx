@@ -12,6 +12,8 @@ import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import NoConnectionScreen from "@/components/NoConnectionScreen";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +30,8 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
+  const { isConnected } = useNetworkStatus();
+
   if (!loaded && !error) {
     return null;
   }
@@ -36,7 +40,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <Stack screenOptions={{ headerShown: false }} />
+          {isConnected === false ? (
+            <NoConnectionScreen />
+          ) : (
+            <Stack screenOptions={{ headerShown: false }} />
+          )}
         </ThemeProvider>
       </AuthProvider>
     </GestureHandlerRootView>

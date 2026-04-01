@@ -23,6 +23,7 @@ export default function ProShop() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
+  const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -64,6 +65,7 @@ export default function ProShop() {
 
   return (
     <SafeAreaView
+    edges={["left", "right"]}
       style={{
         flex: 1,
         backgroundColor: isDark ? "#000" : "#f2f2f2",
@@ -72,9 +74,8 @@ export default function ProShop() {
       <Watermark />
 
       <VStack className="flex-1">
-        {/* HEADER */}
         <HStack style={{ marginBottom: 24, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-          <VStack>
+          <VStack className="mt-4">
             <ThemedText
               style={{
                 fontSize: 24,
@@ -168,8 +169,8 @@ export default function ProShop() {
                     backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
                     borderRadius: 24,
                     padding: 12,
-                    borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+                    borderWidth: isDark ? 1.5 : 0,
+                    borderColor: isDark ? "#8BC34A" : "transparent",
                     borderLeftWidth: 6,
                     borderLeftColor: "#8BC34A",
                     shadowColor: "#000",
@@ -180,7 +181,6 @@ export default function ProShop() {
                   }}
                 >
                   <HStack space="md" className="items-center">
-                    {/* PRODUCT IMAGE */}
                     <Box style={{ 
                       width: 90, 
                       height: 90, 
@@ -192,19 +192,33 @@ export default function ProShop() {
                       justifyContent: 'center',
                       alignItems: 'center',
                     }}>
-                      {imgLoadingMap[item.id] !== false && (
-                        <ActivityIndicator style={{ position: 'absolute' }} color="#8BC34A" size="small" />
+                      {imgErrorMap[item.id] ? (
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+                          <Ionicons name="bag-outline" size={28} color={isDark ? "#8BC34A" : "#aaa"} />
+                          <ThemedText
+                            numberOfLines={2}
+                            style={{ fontSize: 9, color: isDark ? "#8BC34A" : "#888", textAlign: 'center', marginTop: 4, fontWeight: '700' }}
+                          >
+                            {item.name}
+                          </ThemedText>
+                        </View>
+                      ) : (
+                        <>
+                          {imgLoadingMap[item.id] !== false && (
+                            <ActivityIndicator style={{ position: 'absolute' }} color="#8BC34A" size="small" />
+                          )}
+                          <Image
+                            source={{ uri: item.imageUrl ? `https://kolve18freeswing.com${item.imageUrl}` : '' }}
+                            style={{ width: '100%', height: '100%' }}
+                            resizeMode="cover"
+                            onLoadStart={() => setImgLoadingMap(prev => ({...prev, [item.id]: true}))}
+                            onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [item.id]: false}))}
+                            onError={() => setImgErrorMap(prev => ({...prev, [item.id]: true}))}
+                          />
+                        </>
                       )}
-                      <Image
-                        source={{ uri: `https://kolve18freeswing.com${item.imageUrl}` }}
-                        style={{ width: '100%', height: '100%' }}
-                        resizeMode="cover"
-                        onLoadStart={() => setImgLoadingMap(prev => ({...prev, [item.id]: true}))}
-                        onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [item.id]: false}))}
-                      />
                     </Box>
 
-                    {/* PRODUCT CONTENT */}
                     <VStack style={{ flex: 1 }}>
                       <HStack className="justify-between items-start">
                         <ThemedText
@@ -254,7 +268,6 @@ export default function ProShop() {
                           ₹{item.price.toLocaleString()}
                         </ThemedText>
 
-                        {/* ACTIONS */}
                         <HStack space="sm">
                           <TouchableOpacity
                             onPress={() => router.push({

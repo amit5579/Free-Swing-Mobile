@@ -47,6 +47,11 @@ export default function AdminTabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
+        // headerTransparent: true,
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: "transparent",
+        },
         headerTitle: "",
         headerLeftContainerStyle: { paddingLeft: 0, marginLeft: -10 },
         headerLeft: () => (
