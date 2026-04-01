@@ -26,9 +26,10 @@ export type GameHistory = {
 type HistoryTabProps = {
     playerId: number;
     onViewGame?: (id: string) => void;
+    searchQuery?: string;
 };
 
-export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
+export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTabProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
 
@@ -65,9 +66,13 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
         }
     };
 
+    const filteredHistory = history.filter((item) =>
+        item.course.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     if (loading) {
         return (
-            <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+            <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                 <VStack className="p-4 space-y-4">
 
                     {/* Header Skeleton */}
@@ -154,7 +159,7 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
     };
 
     return (
-        <View style={{ flex: 1, paddingTop: 0, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+        <View style={{ flex: 1, paddingTop: 0, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
             <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
                 <VStack>
                     <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
@@ -175,16 +180,21 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
             </HStack>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
-                {history.length === 0 ? (
+                {filteredHistory.length === 0 ? (
                     <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4">
                         <Ionicons name="time-outline" size={40} color="#9ca3af" />
                         <Text className="text-typography-400 font-semibold text-sm mt-3">
-                            No history yet
+                            {searchQuery ? "No matching history found" : "No history yet"}
                         </Text>
                     </Box>
                 ) : (
+<<<<<<< Updated upstream
                     history.map((item) => (
+                        <Pressable key={item.id} onPress={() => handleViewScorecard(item.id)}>
+=======
+                    filteredHistory.map((item) => (
                         <Pressable key={item.id} onPress={() => handleViewScorecard(item.id, item.course)}>
+>>>>>>> Stashed changes
                             <Box
                                 className="rounded-2xl mb-4"
                                 style={{
@@ -337,4 +347,4 @@ export function HistoryTab({ playerId, onViewGame }: HistoryTabProps) {
 
 }
 
-export default HistoryTab;
+export default HistoryTab;

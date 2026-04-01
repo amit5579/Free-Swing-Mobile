@@ -21,6 +21,7 @@ export default function ImportantUpdatesUser() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [imageErrorMap, setImageErrorMap] = useState<{ [key: number]: boolean }>({});
+  const [imageLoadingMap, setImageLoadingMap] = useState<{ [key: number]: boolean }>({});
 
   const router = useRouter();
   const isDark = useColorScheme() === "dark";
@@ -114,7 +115,7 @@ export default function ImportantUpdatesUser() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#FFF", }}>
 
       {/* HEADER */}
       <View className="flex-row items-center px-4 py-3">
@@ -217,7 +218,24 @@ export default function ImportantUpdatesUser() {
 
                 {/* IMAGE */}
                 {item.mediaUrl && (
-                  <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden" }}>
+                  <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative" }}>
+                    {imageLoadingMap[item.id] !== false && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
+                          zIndex: 1,
+                        }}
+                      >
+                        <ActivityIndicator size="small" color="#8BC34A" />
+                      </View>
+                    )}
                     <Image
                       source={{
                         uri:
@@ -229,12 +247,22 @@ export default function ImportantUpdatesUser() {
                       }}
                       style={{ width: "100%", height: "100%" }}
                       resizeMode="cover"
-                      onError={() =>
+                      onLoad={() =>
+                        setImageLoadingMap((prev) => ({
+                          ...prev,
+                          [item.id]: false,
+                        }))
+                      }
+                      onError={() => {
                         setImageErrorMap((prev) => ({
                           ...prev,
                           [item.id]: true,
-                        }))
-                      }
+                        }));
+                        setImageLoadingMap((prev) => ({
+                          ...prev,
+                          [item.id]: false,
+                        }));
+                      }}
                     />
                   </View>
                 )}

@@ -7,6 +7,9 @@ import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { HStack } from "@/components/hstack";
+import { Box } from "@/components/box";
+import { Skeleton } from "@/components/Skeleton";
 
 import { Colors } from "@/constants/theme";
 
@@ -40,6 +43,10 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+        },
         headerTitle: "",
         headerLeftContainerStyle: { paddingLeft: 0, marginLeft: -10 },
         headerLeft: () => (
@@ -104,6 +111,55 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
+          headerStyle: {
+            backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          },
+          headerLeft: () => {
+            if (!profile) {
+              return (
+                <View style={{ marginLeft: 20, paddingVertical: 10 }}>
+                  <Skeleton isDark={isDark} width={80} height={12} style={{ marginBottom: 8 }} borderRadius={4} />
+                  <Skeleton isDark={isDark} width={140} height={28} borderRadius={4} />
+                </View>
+              );
+            }
+            
+            return (
+              <View style={{ marginLeft: 20, paddingVertical: 10 }}>
+                <HStack space="xs" className="items-center">
+                  <Text style={{ 
+                    color: isDark ? "#A3A3A3" : "#737373", 
+                    fontSize: 10, 
+                    fontWeight: "900",
+                    letterSpacing: 2.5,
+                    textTransform: "uppercase"
+                  }}>
+                    Welcome Back
+                  </Text>
+                  <Text style={{ fontSize: 12 }}>👋</Text>
+                </HStack>
+                <HStack space="xs" className="items-baseline">
+                  <Text style={{ 
+                    color: "#8BC34A", 
+                    fontSize: 24, 
+                    fontWeight: "900",
+                    letterSpacing: -0.8,
+                    marginTop: -2
+                  }}>
+                    {profile.username.toUpperCase()}
+                  </Text>
+                  <Text style={{ 
+                    color: "#8BC34A", 
+                    fontSize: 24, 
+                    fontWeight: "900",
+                    marginLeft: 2
+                  }}>
+                    !
+                  </Text>
+                </HStack>
+              </View>
+            );
+          },
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />

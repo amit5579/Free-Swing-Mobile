@@ -47,13 +47,15 @@ export const likeFeedApi = async (id: string | number) => {
 };
 
 export interface LikedUser {
-  username: string;
-  profilePictureUrl: string | null;
+  type: string;
+  user: string;
+  date: string;
+  profilePictureUrl?: string | null;
 }
 
 export const getLikedUsersApi = async (roundRefId: number | string) => {
   try {
-    const response = await https.get(`feed/likes/${roundRefId}`);
+    const response = await https.get(`feed/interactions/${roundRefId}`);
     return (response.data || []) as LikedUser[];
   } catch (error) {
     console.error(`Fetching Liked Users Error for ${roundRefId}:`, error);

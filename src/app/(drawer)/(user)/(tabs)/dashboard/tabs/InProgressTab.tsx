@@ -22,12 +22,14 @@ type InProgressTabProps = {
   playerId: number;
   onDelete?: (id: string) => void;
   onResume?: (id: string) => void;
+  searchQuery?: string;
 };
 
 export function InProgressTab({
   playerId,
   onDelete = () => { },
   onResume = () => { },
+  searchQuery = "",
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,9 +64,13 @@ export function InProgressTab({
     }
   };
 
+  const filteredGames = games.filter((game) =>
+    game.courseName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+      <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
         <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
           <VStack>
             <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
@@ -121,7 +127,7 @@ export function InProgressTab({
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#f2f2f2" }}>
+    <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
       <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
         <VStack>
           <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
@@ -137,7 +143,7 @@ export function InProgressTab({
       </HStack>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
-        {!games.length ? (
+        {!filteredGames.length ? (
           <Box
             className="p-8 rounded-xl items-center mt-4"
             style={{
@@ -154,12 +160,12 @@ export function InProgressTab({
                 marginTop: 8,
               }}
             >
-              No games in progress
+              {searchQuery ? "No matching games found" : "No games in progress"}
             </Text>
           </Box>
         ) : (
           <VStack space="md" className="pt-4">
-            {games.map((game) => (
+            {filteredGames.map((game) => (
         <Box
           key={game.id}
           className="mb-4"

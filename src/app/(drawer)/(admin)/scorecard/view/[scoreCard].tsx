@@ -160,10 +160,11 @@ const ScoreCard: React.FC = () => {
     const front9 = holes.slice(0, 9);
     const back9 = holes.slice(9, 18);
 
-    /** Maps raw stroke count to the same shape indicators as the editable view */
-    const renderScoreIndicator = (score: number | null, isDark: boolean, rawValue: string) => {
-        if (rawValue === "" || rawValue === undefined) return null;
-        if (score === 0)
+    const renderScoreIndicator = (score: number | null, par: number, isDark: boolean, rawValue: string) => {
+        if (rawValue === "" || rawValue === undefined || score === null) return null;
+
+        if (score === 0) {
+            // Albatross: Double Dark Cyan Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -171,7 +172,9 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
             );
-        if (score === 1)
+        }
+        if (score === 1) {
+            // Hole-in-One: Double Gold Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
@@ -179,7 +182,22 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
             );
-        if (score === 2)
+        }
+
+        const diff = score - par;
+
+        if (diff === -3) {
+            // Albatross (if not already handled by score === 0 or score === 1)
+            return (
+                <View style={styles.indicatorContainer}>
+                    <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
+                        <View style={[styles.innerCircle, { borderColor: "#006064" }]} />
+                    </View>
+                </View>
+            );
+        }
+        if (diff === -2) {
+            // Eagle: Double Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
@@ -187,20 +205,29 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
             );
-        if (score === 3)
+        }
+        if (diff === -1) {
+            // Birdie: Single Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
                 </View>
             );
-        if (score === 4) return null; // Par — no indicator
-        if (score === 5)
+        }
+        if (diff === 0) {
+            // Par: no indicator
+            return null;
+        }
+        if (diff === 1) {
+            // Bogey: Single Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
                 </View>
             );
-        if (score === 6)
+        }
+        if (diff === 2) {
+            // Double Bogey: Double Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
@@ -208,7 +235,9 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
             );
-        if (score === 7)
+        }
+        if (diff === 3) {
+            // Triple Bogey: Triple Purple Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
@@ -218,12 +247,15 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
             );
-        if (score !== null && score >= 8)
+        }
+        if (diff >= 4) {
+            // Quadruple Bogey+: Single Black/White Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: isDark ? "#fff" : "#000" }]} />
                 </View>
             );
+        }
         return null;
     };
 
@@ -231,31 +263,47 @@ const ScoreCard: React.FC = () => {
         return (
             <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255,255,255,0.7)", paddingTop: insets.top }}>
                 <Watermark />
-                <ScrollView className="px-4 py-4 mt-4" showsVerticalScrollIndicator={false}>
-                    <View className="flex-row items-center mb-6 mt-0">
+                <ScrollView className="px-4 py-4 mt-0" showsVerticalScrollIndicator={false}>
+                    {/* Header Row Skeleton */}
+                    <View className="flex-row items-center mb-6 mt-4">
                         <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
                         <View className="flex-1">
-                            <Skeleton isDark={isDark} width={200} height={24} style={{ marginBottom: 4 }} borderRadius={6} />
+                            <Skeleton isDark={isDark} width={180} height={24} style={{ marginBottom: 6 }} borderRadius={6} />
                             <Skeleton isDark={isDark} width={100} height={16} borderRadius={4} />
                         </View>
                     </View>
+
+                    {/* Info Banner Skeleton */}
+                    <Skeleton isDark={isDark} width="100%" height={56} borderRadius={12} style={{ marginBottom: 20 }} />
+
+                    {/* Table Header Skeleton - Match 6 columns */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                        {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
                             <View key={i} className="flex-1 items-center">
-                                <Skeleton isDark={isDark} width={24} height={14} borderRadius={4} />
+                                <Skeleton isDark={isDark} width={28} height={12} borderRadius={4} />
                             </View>
                         ))}
                     </View>
-                    <View className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}>
-                        {[...Array(9)].map((_, i) => (
+
+                    {/* Table Rows Skeleton */}
+                    <View className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`} style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
+                        {[...Array(18)].map((_, i) => (
                             <View key={i} className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}>
-                                {[1, 2, 3, 4, 5, 6].map((j) => (
-                                    <View key={j} className="flex-1 items-center">
-                                        <Skeleton isDark={isDark} width={24} height={16} borderRadius={4} />
-                                    </View>
-                                ))}
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={16} height={16} borderRadius={4} /></View>
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={16} height={16} borderRadius={4} /></View>
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={24} height={16} borderRadius={4} /></View>
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={16} height={16} borderRadius={4} /></View>
+                                <View className="flex-1 items-center">
+                                    <Skeleton isDark={isDark} width={46} height={36} borderRadius={8} />
+                                </View>
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>
                             </View>
                         ))}
+                    </View>
+
+                    {/* Grand Total Skeleton */}
+                    <View className="mt-6 mb-12">
+                        <Skeleton isDark={isDark} width="100%" height={48} borderRadius={12} />
                     </View>
                 </ScrollView>
             </ThemedView>
@@ -273,13 +321,12 @@ const ScoreCard: React.FC = () => {
             </ThemedView>
         );
     }
-
     return (
-        <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255,255,255,0.7)" }}>
+        <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F9FAFB" }}>
             <Watermark />
 
             {/* ── Fixed Top Area ── */}
-            <View className="px-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#000" : "transparent", paddingTop: Math.max(insets.top, 16) }}>
+            <View className="px-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF", paddingTop: Math.max(insets.top, 16) }}>
                 {/* Back + Title */}
                 <View className="flex-row items-center mb-4 mt-0">
                     <TouchableOpacity
@@ -336,7 +383,7 @@ const ScoreCard: React.FC = () => {
                 stickyHeaderIndices={[0]}
             >
                 {/* 0th child → sticky table header */}
-                <View className="z-10 shadow-sm" style={{ backgroundColor: "transparent" }}>
+                <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View
                         className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
@@ -365,13 +412,13 @@ const ScoreCard: React.FC = () => {
                             <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                             <View className="flex-1 items-center justify-center relative">
-                                {renderScoreIndicator(h.score ?? null, isDark, textScores[h.holeId] || "")}
+                                {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
                                 <TextInput
                                     style={{
                                         width: 50,
                                         height: 36,
-                                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                                        borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)",
+                                        backgroundColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"),
+                                        borderColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"),
                                         borderWidth: 1,
                                         color: isDark ? "#fff" : "#000",
                                         textAlign: "center",
@@ -419,13 +466,13 @@ const ScoreCard: React.FC = () => {
                             <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                             <View className="flex-1 items-center justify-center relative">
-                                {renderScoreIndicator(h.score ?? null, isDark, textScores[h.holeId] || "")}
+                                {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
                                 <TextInput
                                     style={{
                                         width: 50,
                                         height: 36,
-                                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                                        borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)",
+                                        backgroundColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"),
+                                        borderColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"),
                                         borderWidth: 1,
                                         color: isDark ? "#fff" : "#000",
                                         textAlign: "center",
@@ -493,11 +540,34 @@ const ScoreCard: React.FC = () => {
 
                 {/* ── Dynamic Legend with counts (same as editable view) ── */}
                 {(() => {
-                    const scoreCounts: Record<number, number> = {};
+                    const scoreCounts: Record<string, number> = {
+                        holeInOne: 0,
+                        albatross: 0,
+                        eagle: 0,
+                        birdie: 0,
+                        par: 0,
+                        bogey: 0,
+                        doubleBogey: 0,
+                        tripleBogey: 0,
+                        quadBogey: 0,
+                    };
+
                     holes.forEach((h) => {
                         const s = h.score;
-                        if (s != null && s >= 0) {
-                            scoreCounts[s] = (scoreCounts[s] || 0) + 1;
+                        if (s == null || s < 0 || textScores[h.holeId] === "" || textScores[h.holeId] === undefined) return;
+
+                        if (s === 1) scoreCounts.holeInOne++;
+                        else if (s === 0) scoreCounts.albatross++;
+                        else {
+                            const diff = s - h.par;
+                            if (diff === -3) scoreCounts.albatross++;
+                            else if (diff === -2) scoreCounts.eagle++;
+                            else if (diff === -1) scoreCounts.birdie++;
+                            else if (diff === 0) scoreCounts.par++;
+                            else if (diff === 1) scoreCounts.bogey++;
+                            else if (diff === 2) scoreCounts.doubleBogey++;
+                            else if (diff === 3) scoreCounts.tripleBogey++;
+                            else if (diff >= 4) scoreCounts.quadBogey++;
                         }
                     });
 
@@ -510,8 +580,8 @@ const ScoreCard: React.FC = () => {
 
                     const dynamicLegend = [
                         {
-                            scoreVal: 1,
                             label: "Hole-in-One",
+                            count: scoreCounts.holeInOne,
                             render: (count: number) => (
                                 <View style={[styles.doubleCircle, { borderColor: "#ffd700", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#ffd700", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
@@ -521,8 +591,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 0,
                             label: "Albatross",
+                            count: scoreCounts.albatross,
                             render: (count: number) => (
                                 <View style={[styles.doubleCircle, { borderColor: "#006064", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#006064", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
@@ -532,8 +602,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 2,
                             label: "Eagle",
+                            count: scoreCounts.eagle,
                             render: (count: number) => (
                                 <View style={[styles.doubleCircle, { borderColor: "#2e7d32", width: 48, height: 48, borderRadius: 24 }]}>
                                     <View style={[styles.innerCircle, { borderColor: "#2e7d32", width: 34, height: 34, borderRadius: 17, justifyContent: "center", alignItems: "center" }]}>
@@ -543,8 +613,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 3,
                             label: "Birdie",
+                            count: scoreCounts.birdie,
                             render: (count: number) => (
                                 <View style={[styles.singleCircle, { borderColor: "#2e7d32", width: 48, height: 48, borderRadius: 24, justifyContent: "center", alignItems: "center" }]}>
                                     <InnerCount count={count} color="#2e7d32" />
@@ -552,8 +622,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 4,
                             label: "Par",
+                            count: scoreCounts.par,
                             render: (count: number) => (
                                 <View style={{ width: 48, height: 48, borderWidth: 2, borderStyle: "dashed", borderColor: "#9CA3AF", justifyContent: "center", alignItems: "center" }}>
                                     <InnerCount count={count} color="#6B7280" />
@@ -561,8 +631,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 5,
                             label: "Bogey",
+                            count: scoreCounts.bogey,
                             render: (count: number) => (
                                 <View style={[styles.singleSquare, { borderColor: "#d32f2f", width: 48, height: 48, justifyContent: "center", alignItems: "center" }]}>
                                     <InnerCount count={count} color="#d32f2f" />
@@ -570,8 +640,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 6,
                             label: "Double Bogey",
+                            count: scoreCounts.doubleBogey,
                             render: (count: number) => (
                                 <View style={[styles.doubleSquare, { borderColor: "#d32f2f", width: 48, height: 48 }]}>
                                     <View style={[styles.innerSquare, { borderColor: "#d32f2f", width: 34, height: 34, justifyContent: "center", alignItems: "center" }]}>
@@ -581,8 +651,8 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 7,
                             label: "Triple Bogey",
+                            count: scoreCounts.tripleBogey,
                             render: (count: number) => (
                                 <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a", width: 48, height: 48 }]}>
                                     <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a", width: 37, height: 37 }]}>
@@ -594,18 +664,13 @@ const ScoreCard: React.FC = () => {
                             ),
                         },
                         {
-                            scoreVal: 8,
                             label: "Quad Bogey+",
-                            render: (_count: number) => {
-                                const quadCount = Object.entries(scoreCounts)
-                                    .filter(([k]) => Number(k) >= 8)
-                                    .reduce((s, [, v]) => s + v, 0);
-                                return (
-                                    <View style={[styles.singleSquare, { borderColor: isDark ? "#fff" : "#000", width: 48, height: 48, justifyContent: "center", alignItems: "center" }]}>
-                                        <InnerCount count={quadCount} color={isDark ? "#fff" : "#000"} />
-                                    </View>
-                                );
-                            },
+                            count: scoreCounts.quadBogey,
+                            render: (count: number) => (
+                                <View style={[styles.singleSquare, { borderColor: isDark ? "#fff" : "#000", width: 48, height: 48, justifyContent: "center", alignItems: "center" }]}>
+                                    <InnerCount count={count} color={isDark ? "#fff" : "#000"} />
+                                </View>
+                            ),
                         },
                     ];
 
@@ -629,10 +694,9 @@ const ScoreCard: React.FC = () => {
                             {rows.map((row, rowIdx) => (
                                 <View key={rowIdx} style={{ flexDirection: "row", justifyContent: "space-around", marginBottom: 20 }}>
                                     {row.map((item, idx) => {
-                                        const count = item.scoreVal === 8 ? 0 : (scoreCounts[item.scoreVal] || 0);
                                         return (
                                             <View key={idx} style={{ flex: 1, alignItems: "center" }}>
-                                                {item.render(count)}
+                                                {item.render(item.count)}
                                                 <Text style={{ fontSize: 11, marginTop: 6, fontWeight: "500", color: isDark ? "#D1D5DB" : "#4B5563", textAlign: "center" }}>
                                                     {item.label}
                                                 </Text>

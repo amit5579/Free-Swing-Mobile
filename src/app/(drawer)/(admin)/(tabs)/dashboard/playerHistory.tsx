@@ -7,7 +7,7 @@ import {
   useColorScheme,
   Pressable,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   getScorecardHistory,
@@ -20,6 +20,7 @@ import { Box } from "@/components/box";
 import { Divider } from "@/components/divider";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
+import { Skeleton } from "@/components/Skeleton";
 
 const HistoryCard = ({
   item,
@@ -42,20 +43,20 @@ const HistoryCard = ({
         backgroundColor: isDark
           ? "rgba(26,26,26,0.4)"
           : "rgba(255,255,255,0.35)",
-        borderRadius: 20,
-        borderLeftWidth: 6,
+        borderRadius: 16,
+        borderLeftWidth: 4,
         borderLeftColor: "#8BC34A",
-        borderTopWidth: isDark ? 1.5 : 0,
-        borderRightWidth: isDark ? 1.5 : 0,
-        borderBottomWidth: isDark ? 1.5 : 0,
+        borderTopWidth: isDark ? 1 : 0,
+        borderRightWidth: isDark ? 1 : 0,
+        borderBottomWidth: isDark ? 1 : 0,
         borderColor: isDark ? "#8BC34A" : "transparent",
-        padding: 16,
-        marginBottom: 16,
+        padding: 12,
+        marginBottom: 12,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.08,
-        shadowRadius: 10,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDark ? 0.2 : 0.05,
+        shadowRadius: 6,
+        elevation: 2,
         overflow: "hidden",
       }}
     >
@@ -63,7 +64,7 @@ const HistoryCard = ({
       <Pressable onPress={onToggle}>
         <HStack className="items-center justify-between">
           <VStack style={{ flex: 1 }}>
-            <ThemedText style={{ fontWeight: "800", fontSize: 17 }}>
+            <ThemedText style={{ fontWeight: "800", fontSize: 16 }}>
               {item.courseName}
             </ThemedText>
             <HStack className="items-center" style={{ marginTop: 4 }}>
@@ -127,10 +128,10 @@ const HistoryCard = ({
 
       {/* EXPANDED CONTENT */}
       {isExpanded && (
-        <VStack style={{ marginTop: 20 }}>
+        <VStack style={{ marginTop: 12 }}>
           <Divider
             style={{
-              marginBottom: 16,
+              marginBottom: 12,
               backgroundColor: isDark ? "#333" : "#F0F0F0",
             }}
           />
@@ -140,9 +141,9 @@ const HistoryCard = ({
               backgroundColor: isDark
                 ? "rgba(255,255,255,0.05)"
                 : "rgba(0,0,0,0.03)",
-              borderRadius: 18,
-              padding: 12,
-              marginBottom: 16,
+              borderRadius: 14,
+              padding: 8,
+              marginBottom: 10,
               borderWidth: 1,
               borderColor: isDark ? "#8BC34A" : "#E5E7EB",
             }}
@@ -158,7 +159,7 @@ const HistoryCard = ({
                 <ThemedText
                   style={{
                     fontWeight: "900",
-                    fontSize: 18,
+                    fontSize: 16,
                     color: isDark ? "#fff" : "#1B5E20",
                   }}
                 >
@@ -194,7 +195,7 @@ const HistoryCard = ({
                 <ThemedText
                   style={{
                     fontWeight: "900",
-                    fontSize: 18,
+                    fontSize: 16,
                     color: isDark ? "#fff" : "#333",
                   }}
                 >
@@ -228,7 +229,7 @@ const HistoryCard = ({
                   style={{ marginBottom: 4 }}
                 />
                 <ThemedText
-                  style={{ fontWeight: "900", fontSize: 18, color: "#EF4444" }}
+                  style={{ fontWeight: "900", fontSize: 16, color: "#EF4444" }}
                 >
                   {item.par}
                 </ThemedText>
@@ -250,9 +251,9 @@ const HistoryCard = ({
             <TouchableOpacity
               style={{
                 backgroundColor: "rgba(139,195,74,0.15)",
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
                 flexDirection: "row",
                 alignItems: "center",
                 borderWidth: 1,
@@ -279,8 +280,8 @@ const HistoryCard = ({
                 style={{
                   color: "#2E7D32",
                   fontWeight: "800",
-                  marginLeft: 8,
-                  fontSize: 13,
+                  marginLeft: 6,
+                  fontSize: 12,
                 }}
               >
                 Details
@@ -308,6 +309,21 @@ export default function PlayerHistoryScreen() {
       fetchHistory();
     }
   }, [userId]);
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: "none" },
+      headerShown: false,
+    });
+    return () => {
+      navigation.getParent()?.setOptions({
+        tabBarStyle: { display: "flex", backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff" },
+        headerShown: true,
+      });
+    };
+  }, [navigation, isDark]);
 
   const fetchHistory = async () => {
     try {
@@ -377,14 +393,31 @@ export default function PlayerHistoryScreen() {
       </VStack>
 
       {loading ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size="large" color="#8BC34A" />
-          <ThemedText style={{ marginTop: 12, color: "#8BC34A" }}>
-            Analyzing history...
-          </ThemedText>
-        </View>
+        <VStack className="space-y-4 px-4 pt-4">
+          {[1, 2, 3].map((key) => (
+            <Box
+              key={key}
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(26,26,26,0.4)"
+                  : "rgba(255,255,255,0.35)",
+                borderRadius: 16,
+                borderLeftWidth: 4,
+                borderLeftColor: "#8BC34A",
+                padding: 12,
+                marginBottom: 12,
+                borderWidth: isDark ? 1 : 0,
+                borderColor: isDark ? "#8BC34A" : "transparent",
+              }}
+            >
+              <HStack className="justify-between items-center mb-2">
+                <Skeleton isDark={isDark} width={150} height={20} borderRadius={8} />
+                <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+              </HStack>
+              <Skeleton isDark={isDark} width={100} height={14} borderRadius={6} />
+            </Box>
+          ))}
+        </VStack>
       ) : (
         <View style={{ flex: 1 }}>
           {history.length === 0 ? (

@@ -44,14 +44,21 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [cardWidth, setCardWidth] = useState(160);
+  const [hasError, setHasError] = useState(false);
 
-  const displayImages = product.images.slice(0, 3);
+  const fallbackImages = [
+    { uri: `https://placehold.co/400x400/8BC34A/FFFFFF/png?text=${encodeURIComponent(product.name)}` },
+    { uri: `https://placehold.co/400x400/222222/FFFFFF/png?text=${encodeURIComponent(product.name)}` }
+  ];
+
+  const hasEmptyOrPlaceholder = !product.images || product.images.length === 0 || product.images[0].uri.includes('placeholder.png');
+  const displayImages = (hasError || hasEmptyOrPlaceholder) ? fallbackImages : product.images.slice(0, 3);
 
   const handleScroll = (event: any) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = event.nativeEvent.contentOffset.x / slideSize;
-    if (!isNaN(index)) {
-      setActiveIndex(Math.round(index));
+    if (!isNaN(index) && displayImages.length > 0) {
+      setActiveIndex(Math.min(Math.round(index), displayImages.length - 1));
     }
   };
 
@@ -86,6 +93,7 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
                 source={img}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
+                onError={() => setHasError(true)}
               />
             </View>
           ))}
@@ -106,7 +114,6 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
           </ThemedText>
         </Box> */}
 
-        {/* Pagination Dots */}
         <HStack
           style={{
             position: "absolute",
@@ -286,10 +293,9 @@ export default function ShopScreen() {
   };
 
   return (
-    <ThemedView className="flex-1 pt-4 self-center w-full max-w-[1200px]">
+    <ThemedView className="flex-1 self-center w-full max-w-[1200px]" style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}>
       <Watermark />
 
-      {/* Header */}
       <VStack className="mx-5 mb-3">
         <HStack className="justify-between items-center w-full">
           <HStack className="items-center gap-2">
@@ -314,7 +320,7 @@ export default function ShopScreen() {
                     position: 'absolute',
                     top: -8,
                     right: -8,
-                    backgroundColor: '#EF4444', // Red
+                    backgroundColor: '#EF4444',
                     borderRadius: 12,
                     minWidth: 22,
                     height: 22,
@@ -338,11 +344,18 @@ export default function ShopScreen() {
           </Animated.View>
         </HStack>
 
-        <ThemedText className="text-xs text-gray-500">
-          Browse and purchase official gear and equipment.
+        <ThemedText
+          style={{
+            fontSize: 14,
+            color: "#9CA3AF",
+            opacity: 0.8,
+          }}
+        >
+          {/* Browse and purchase official gear and equipment. */}
+          Gear up with official equipment
         </ThemedText>
       </VStack>
-      {/* Products */}
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -385,13 +398,11 @@ export default function ShopScreen() {
         )}
       </ScrollView>
 
-      {/* Cart Modal */}
       <Modal visible={isCartOpen} transparent animationType="slide">
         <View className="flex-1 bg-black/50 justify-center items-center">
           <ThemedView className="w-[94%] h-[92%] rounded-[20px] overflow-hidden">
             <HStack className="p-4 border-b border-gray-100 justify-between items-center bg-gray-50/50">
 
-              {/* Left side: Icon + Text */}
               <HStack className="items-center gap-2">
                 <Ionicons name="cart-outline" size={24} color="#8BC34A" />
 
@@ -400,7 +411,6 @@ export default function ShopScreen() {
                 </ThemedText>
               </HStack>
 
-              {/* Right side: Close button */}
               <TouchableOpacity onPress={() => setIsCartOpen(false)}>
                 <Ionicons name="close-circle" size={28} color="#8BC34A" />
               </TouchableOpacity>
@@ -430,7 +440,6 @@ export default function ShopScreen() {
                     alignItems: "center",
                   }}
                 >
-                  {/* Left: Image */}
                   <View
                     style={{
                       width: 64,
@@ -449,7 +458,6 @@ export default function ShopScreen() {
                     />
                   </View>
 
-                  {/* Mid-Left: Name & Price */}
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <ThemedText
                       style={{ fontWeight: "bold", fontSize: 14 }}
@@ -462,7 +470,6 @@ export default function ShopScreen() {
                     </ThemedText>
                   </View>
 
-                  {/* Quantity Controls */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
                     <TouchableOpacity
                       onPress={() => updateQuantity(item.id, -1)}
@@ -483,14 +490,12 @@ export default function ShopScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  {/* Item Total */}
                   <View style={{ minWidth: 80, alignItems: 'flex-end' }}>
                     <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
                       ₹{(item.price * item.quantity).toLocaleString()}
                     </ThemedText>
                   </View>
 
-                  {/* Remove Button */}
                   <TouchableOpacity
                     onPress={() => removeFromCart(item.id)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -540,14 +545,12 @@ export default function ShopScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Row 2: Redirection Message */}
                 <View style={{ marginBottom: 15, alignItems: 'center' }}>
                   <ThemedText style={{ fontSize: 11, color: '#666', textAlign: 'center' }}>
                     You will be redirected to WhatsApp to confirm this order.
                   </ThemedText>
                 </View>
 
-                {/* Row 3: Full-width Checkout Button */}
                 <TouchableOpacity
                   onPress={checkoutViaWhatsApp}
                   style={{

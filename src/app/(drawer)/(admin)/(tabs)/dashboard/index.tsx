@@ -16,6 +16,7 @@ import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
 import { Ionicons } from "@expo/vector-icons";
 import { HStack } from "@/components/hstack";
+import { TextInput } from "react-native";
 import PlayerStatistics from "./playerStatistics";
 import GameFeed, { GameFeedContent } from "./gameFeed";
 import Watermark from "@/components/watermark";
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
   });
   const [players, setPlayers] = useState<PlayerApi[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -115,7 +117,7 @@ export default function AdminDashboard() {
         <VStack className="mb-6">
           <HStack className="items-center">
             <VStack style={{ flex: 1 }}>
-              <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+              <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                 Dashboard
               </Text>
               <Text className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -134,6 +136,38 @@ export default function AdminDashboard() {
             </VStack>
           </HStack>
         </VStack>
+
+        <Box className="mb-4">
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+              borderRadius: 24,
+              paddingHorizontal: 16,
+              height: 46,
+            }}
+          >
+            <Ionicons name="search" size={20} color={isDark ? "#aaa" : "#6b7280"} />
+            <TextInput
+              style={{
+                flex: 1,
+                marginLeft: 10,
+                color: isDark ? "#fff" : "#111",
+                fontSize: 15,
+              }}
+              placeholder={activeTab === "overview" ? "Search games..." : "Search players..."}
+              placeholderTextColor={isDark ? "#aaa" : "#6b7280"}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={20} color={isDark ? "#aaa" : "#6b7280"} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </Box>
 
         <HStack
           className="rounded-full p-1 mb-6"
@@ -195,50 +229,49 @@ export default function AdminDashboard() {
             >
               {loading ? (
                 <VStack className="space-y-4 pt-4">
-                  <HStack className="space-x-3 mb-3">
-                    <Box className="flex-1 rounded-xl p-5 mr-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                      <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 16 }} />
-                      <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 12 }} />
-                      <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
+                  <HStack className="space-x-2 mb-3">
+                    <Box className="flex-1 rounded-xl p-3 mr-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                      <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
+                      <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
+                      <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
                     </Box>
-                    <Box className="flex-1 rounded-xl p-5 ml-2" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                      <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 16 }} />
-                      <Skeleton isDark={isDark} height={14} width="80%" style={{ marginBottom: 12 }} />
-                      <Skeleton isDark={isDark} height={20} width="60%" borderRadius={10} />
+                    <Box className="flex-1 rounded-xl p-3 mx-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                      <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
+                      <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
+                      <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
+                    </Box>
+                    <Box className="flex-1 rounded-xl p-3 ml-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
+                      <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
+                      <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
+                      <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
                     </Box>
                   </HStack>
-
-                  <Box className="rounded-xl p-5 mb-3" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 160, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                    <Skeleton isDark={isDark} height={36} width={50} style={{ marginBottom: 16 }} />
-                    <Skeleton isDark={isDark} height={14} width="40%" style={{ marginBottom: 12 }} />
-                    <Skeleton isDark={isDark} height={20} width="30%" borderRadius={10} />
-                  </Box>
                 </VStack>
               ) : (
                 <VStack style={{ gap: 16, marginBottom: 16 }}>
-                  <HStack style={{ gap: 12 }}>
+                  <HStack style={{ gap: 8 }}>
                     <Box
-                      className="flex-1 rounded-xl p-5 min-h-[160px]"
+                      className="flex-1 rounded-xl p-3 min-h-[140px]"
                       style={{
                         backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
                         borderColor: "#8BC34A",
                         borderWidth: 1.5,
                       }}
                     >
-                      <Box className="absolute top-3 right-3 bg-green-100 p-2 rounded-full">
-                        <Ionicons
-                          name="people-outline"
-                          size={22}
-                          color="#8BC34A"
-                        />
-                      </Box>
                       <VStack className="flex-1 justify-between">
-                        <VStack>
-                          <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.players}</Text>
-                          <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Players</Text>
+                        <VStack className="items-center mt-1">
+                          <Box className="bg-green-100 p-1.5 rounded-full mb-2">
+                            <Ionicons
+                              name="people-outline"
+                              size={16}
+                              color="#8BC34A"
+                            />
+                          </Box>
+                          <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.players}</Text>
+                          <Text className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Players</Text>
                         </VStack>
                         <Pressable
-                          className="py-2 rounded-lg items-center mt-2"
+                          className="py-1.5 rounded-lg items-center mt-2"
                           onPress={() => {
                             setActiveTab("statistics");
                             scrollViewRef.current?.scrollTo({ x: SCREEN_WIDTH, animated: true });
@@ -249,7 +282,7 @@ export default function AdminDashboard() {
                             borderWidth: 1.0,
                           }}
                         >
-                          <Text className="text-[10px] font-bold text-[#2E7D32]">
+                          <Text className="text-[9px] font-bold text-[#2E7D32]">
                             MEMBERS
                           </Text>
                         </Pressable>
@@ -257,82 +290,82 @@ export default function AdminDashboard() {
                     </Box>
 
                     <Box
-                      className="flex-1 rounded-xl p-5 min-h-[160px]"
+                      className="flex-1 rounded-xl p-3 min-h-[140px]"
                       style={{
                         backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
                         borderColor: "#8BC34A",
                         borderWidth: 1.5,
                       }}
                     >
-                      <Box className="absolute top-3 right-3 bg-blue-100 p-2 rounded-full">
-                        <Ionicons name="flag-outline" size={22} color="#06B6D4" />
-                      </Box>
                       <VStack className="flex-1 justify-between">
-                        <VStack>
-                          <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
-                          <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Total Courses</Text>
+                        <VStack className="items-center mt-1">
+                          <Box className="bg-blue-100 p-1.5 rounded-full mb-2">
+                            <Ionicons name="flag-outline" size={16} color="#06B6D4" />
+                          </Box>
+                          <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
+                          <Text className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Courses</Text>
                         </VStack>
                         <Pressable
-                          className="py-2 rounded-lg items-center mt-2"
+                          className="py-1.5 rounded-lg items-center mt-2"
                           style={{
                             backgroundColor: "rgba(255, 255, 255, 0.2)",
                             borderColor: "rgba(2, 136, 209, 0.4)",
                             borderWidth: 1.0,
                           }}
                         >
-                          <Text className="text-[10px] font-bold text-[#0288D1]">
+                          <Text className="text-[9px] font-bold text-[#0288D1]">
                             VENUES
                           </Text>
                         </Pressable>
                       </VStack>
                     </Box>
-                  </HStack>
 
-                  <Box
-                    className="rounded-xl p-5 min-h-[160px]"
-                    style={{
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
-                      borderColor: "#8BC34A",
-                      borderWidth: 1.5,
-                    }}
-                  >
-                    <Box className="absolute top-3 right-3 bg-yellow-100 p-2 rounded-full">
-                      <Ionicons
-                        name="trending-down-outline"
-                        size={22}
-                        color="#FBBF24"
-                      />
-                    </Box>
-                    <VStack className="flex-1 justify-between">
-                      <VStack>
-                        <Text className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
-                        <Text className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top Handicaps</Text>
+                    <Box
+                      className="flex-1 rounded-xl p-3 min-h-[140px]"
+                      style={{
+                        backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                        borderColor: "#8BC34A",
+                        borderWidth: 1.5,
+                      }}
+                    >
+                      <VStack className="flex-1 justify-between">
+                        <VStack className="items-center mt-1">
+                          <Box className="bg-yellow-100 p-1.5 rounded-full mb-2">
+                            <Ionicons
+                              name="trending-down-outline"
+                              size={16}
+                              color="#FBBF24"
+                            />
+                          </Box>
+                          <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
+                          <Text className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}>Top HCP</Text>
+                        </VStack>
+                        <Pressable
+                          className="py-1.5 rounded-lg items-center mt-2"
+                          style={{
+                            backgroundColor: "rgba(254, 252, 232, 0.2)",
+                            borderColor: "rgba(176, 137, 0, 0.4)",
+                            borderWidth: 1.0,
+                          }}
+                        >
+                          <Text className="text-[9px] font-bold text-[#B08900]">
+                            TRACKED
+                          </Text>
+                        </Pressable>
                       </VStack>
-                      <Pressable
-                        className="py-2 rounded-lg items-center mt-2"
-                        style={{
-                          backgroundColor: "rgba(254, 252, 232, 0.2)",
-                          borderColor: "rgba(176, 137, 0, 0.4)",
-                          borderWidth: 1.0,
-                        }}
-                      >
-                        <Text className="text-[10px] font-bold text-[#B08900]">
-                          TRACKED
-                        </Text>
-                      </Pressable>
-                    </VStack>
-                  </Box>
+                    </Box>
+                  </HStack>
                 </VStack>
               )}
 
               <Box className="mt-4">
-                <GameFeedContent />
+                <GameFeedContent searchQuery={searchQuery} />
               </Box>
             </ScrollView>
           </View>
 
           <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
-            <PlayerStatistics players={players} loading={loading} />
+            <PlayerStatistics players={players} loading={loading} searchQuery={searchQuery} />
           </View>
         </ScrollView>
       </View>
