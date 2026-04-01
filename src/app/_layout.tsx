@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
@@ -39,11 +40,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
           {isConnected === false ? (
             <NoConnectionScreen />
           ) : (
-            <Stack screenOptions={{ headerShown: false }} />
+            <>
+              <Stack screenOptions={{ headerShown: false }} />
+              <Toast />
+            </>
           )}
         </ThemeProvider>
       </AuthProvider>

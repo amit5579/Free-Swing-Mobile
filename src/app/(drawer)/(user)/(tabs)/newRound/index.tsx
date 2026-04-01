@@ -27,6 +27,7 @@ import {
 } from "@/components/radio";
 import { CircleIcon } from "@/components/icon";
 import { getHandicapDetails } from "@/api/newRound";
+import Toast from "react-native-toast-message";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
@@ -186,7 +187,13 @@ export default function StartNewRoundPage() {
   );
 }
 
-/* ---------- CONSTANTS ---------- */
+
+
+/* ---------- COURSE CARD ---------- */
+function CourseCard({ course, isDark }: any) {
+  const routePage = useRouter();
+
+  /* ---------- CONSTANTS ---------- */
 const scoringOptions = {
   net_including: { excluded: false, stableford: false },
   net_excluding: { excluded: true, stableford: false },
@@ -194,14 +201,11 @@ const scoringOptions = {
 };
 
 const holesOptions = {
-  "18": 18,
-  front9: 9,
-  back9: 9,
+  "18": "18",
+  front9: "front9",
+  back9: "back9",
 };
 
-/* ---------- COURSE CARD ---------- */
-function CourseCard({ course, isDark }: any) {
-  const routePage = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [teeBoxList, setTeeBoxList] = useState<any[]>([]);
   const [selectedTeeBoxId, setSelectedTeeBoxId] = useState<number>(0);
@@ -507,7 +511,7 @@ function CourseCard({ course, isDark }: any) {
                     {
                       label: "Back Nine (10-18)",
                       value: "back9",
-                      holes: 9,
+                      holes: 10,
                     },
                   ].map((item) => (
                     <Radio
@@ -552,6 +556,7 @@ function CourseCard({ course, isDark }: any) {
                 ]}
                 onPress={() => {
                   // reset();
+                  setHandicapView(false);
                   setModalVisible(false);
                 }}
               >
@@ -562,6 +567,11 @@ function CourseCard({ course, isDark }: any) {
                 onPress={
                   // handleSubmit(onSubmit)
                   () => {
+                    Toast.show({
+  type: "error",
+  text1: "Maximum score per hole is 15",
+});
+                    setHandicapView(false);
                     setModalVisible(false);
                     routePage.push(
                       `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${selectedTeeBoxId}`
