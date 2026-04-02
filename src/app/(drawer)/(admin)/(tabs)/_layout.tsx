@@ -97,7 +97,7 @@ export default function AdminTabLayout() {
         },
       }}
     >
-      {/* DASHBOARD */}
+
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -108,7 +108,6 @@ export default function AdminTabLayout() {
         }}
       />
 
-      {/* MEMBERS */}
       <Tabs.Screen
         name="allMembers/index"
         options={{
@@ -119,7 +118,6 @@ export default function AdminTabLayout() {
         }}
       />
 
-      {/* CENTERED TOURNAMENT TAB */}
       <Tabs.Screen
         name="tournaments"
         options={{
@@ -138,7 +136,6 @@ export default function AdminTabLayout() {
         }}
       />
 
-      {/* COURSES */}
       <Tabs.Screen
         name="courses"
         options={{
@@ -149,7 +146,6 @@ export default function AdminTabLayout() {
         }}
       />
 
-      {/* SHOP */}
       <Tabs.Screen
         name="proShop"
         options={{

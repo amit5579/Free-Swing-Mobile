@@ -93,18 +93,15 @@ export default function AllMembersPage() {
       setLoading(true);
       const data = await getUsers();
 
-      // Sort: Pending (!isApproved) members first, then by ID descending (newest first)
       const sortedMembers = [...data].sort((a, b) => {
-        // Pending (isBlocked: true) members at the BOTTOM (requested: "new user at the last")
         if (a.isBlocked !== b.isBlocked) {
           return a.isBlocked ? 1 : -1;
         }
-        return a.id - b.id; // Sorted by ID ascending
+        return a.id - b.id; 
       });
 
       setMembers(sortedMembers);
 
-      // Auto-expand first item if it exists
       if (data.length > 0) {
         setExpanded({ [data[0].id]: true });
       }
@@ -146,14 +143,14 @@ export default function AllMembersPage() {
       >
         <HStack className="items-center justify-between">
           <HStack className="items-center" style={{ flex: 1 }}>
-            {/* Avatar skeleton */}
+
             <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
             <VStack style={{ gap: 5 }}>
               <Skeleton isDark={isDark} width={130} height={17} borderRadius={6} />
               <Skeleton isDark={isDark} width={80} height={11} borderRadius={4} />
             </VStack>
           </HStack>
-          {/* Badge & arrow skeleton */}
+
           <HStack className="items-center">
             <Skeleton isDark={isDark} width={62} height={22} borderRadius={12} style={{ marginRight: 8 }} />
             <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
@@ -192,12 +189,11 @@ export default function AllMembersPage() {
         backgroundColor: isDark ? "#000" : "#f2f2f2",
       }}
     >
-      {/* WATERMARK */}
+
       <Watermark />
 
       {loading ? (
         <>
-          {/* HEADER shown during loading too */}
           <HStack className="items-center justify-between mt-4 mb-6 px-4">
             <HStack className="items-center">
               <Pressable onPress={() => router.back()}>

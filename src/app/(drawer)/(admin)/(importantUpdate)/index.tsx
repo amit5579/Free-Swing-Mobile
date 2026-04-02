@@ -40,7 +40,6 @@ export default function ManageImportantUpdates() {
   const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>({});
   const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
 
-  // Form states
   const [content, setContent] = useState("");
   const [image, setImage] = useState<any>(null);
   const [linkUrl, setLinkUrl] = useState("");
@@ -53,7 +52,6 @@ export default function ManageImportantUpdates() {
     try {
       if (!isRefreshing) setLoading(true);
       const data = await getUpdates();
-      // Sort updates by date descending
       const sortedData = [...data].sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -273,11 +271,24 @@ export default function ManageImportantUpdates() {
                     </Text>
                   )}
 
-                  <View style={{ width: "100%", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", justifyContent: "center", alignItems: "center" }}>
-                    {imgLoadingMap[update.id] !== false && (
-                      <ActivityIndicator size="large" color="#8BC34A" style={{ position: "absolute" }} />
-                    )}
-                    {update.mediaUrl ? (
+                  {(update as any).linkUrl && (
+                    <TouchableOpacity
+                      onPress={() => Linking.openURL((update as any).linkUrl)}
+                      className="mb-4 flex-row items-center bg-[#8BC34A]/10 p-3 rounded-xl border border-[#8BC34A]/20"
+                    >
+                      <Ionicons name="link-outline" size={18} color="#8BC34A" />
+                      <Text className="ml-2 text-[#8BC34A] font-semibold text-xs flex-1" numberOfLines={1}>
+                        {(update as any).linkUrl}
+                      </Text>
+                      <Ionicons name="open-outline" size={14} color="#8BC34A" />
+                    </TouchableOpacity>
+                  )}
+
+                  {update.mediaUrl && (
+                    <View style={{ width: "100%", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", justifyContent: "center", alignItems: "center" }}>
+                      {imgLoadingMap[update.id] !== false && (
+                        <ActivityIndicator size="large" color="#8BC34A" style={{ position: "absolute" }} />
+                      )}
                       <Image
                         source={{
                           uri:
@@ -298,30 +309,7 @@ export default function ManageImportantUpdates() {
                           }))
                         }
                       />
-                    ) : (
-                      <Image
-                        source={{
-                          uri: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
-                        }}
-                        style={{ width: "100%", height: "100%" }}
-                        resizeMode="cover"
-                        onLoadStart={() => setImgLoadingMap(prev => ({...prev, [update.id]: true}))}
-                        onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [update.id]: false}))}
-                      />
-                    )}
-                  </View>
-
-                  {(update as any).linkUrl && (
-                    <TouchableOpacity
-                      onPress={() => Linking.openURL((update as any).linkUrl)}
-                      className="mt-3 flex-row items-center bg-[#8BC34A]/10 p-3 rounded-xl border border-[#8BC34A]/20"
-                    >
-                      <Ionicons name="link-outline" size={18} color="#8BC34A" />
-                      <Text className="ml-2 text-[#8BC34A] font-semibold text-xs flex-1" numberOfLines={1}>
-                        {(update as any).linkUrl}
-                      </Text>
-                      <Ionicons name="open-outline" size={14} color="#8BC34A" />
-                    </TouchableOpacity>
+                    </View>
                   )}
 
                   <View className="mt-4 pt-4 border-t border-gray-100/10 flex-row items-center justify-between">
@@ -340,7 +328,6 @@ export default function ManageImportantUpdates() {
           </View>
         </ScrollView>
 
-        {/* NEW UPDATE MODAL */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -364,7 +351,6 @@ export default function ManageImportantUpdates() {
                   </TouchableOpacity>
                 </HStack>
 
-                {/* Message Content */}
                 <VStack space="xs">
                   <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
                     Message Content
@@ -387,7 +373,6 @@ export default function ManageImportantUpdates() {
                   />
                 </VStack>
 
-                {/* Attach Media */}
                 <VStack space="xs">
                   <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
                     Attach Media (Optional)
@@ -416,7 +401,6 @@ export default function ManageImportantUpdates() {
                   </TouchableOpacity>
                 </VStack>
 
-                {/* Link URL */}
                 <VStack space="xs">
                   <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
                     Or specify Link URL
@@ -440,7 +424,6 @@ export default function ManageImportantUpdates() {
                   </Text>
                 </VStack>
 
-                {/* Action Buttons */}
                 <HStack space="md" className="mt-4 justify-end">
                   <Button
                     variant="outline"

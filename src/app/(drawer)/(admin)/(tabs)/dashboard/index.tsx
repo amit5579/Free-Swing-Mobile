@@ -273,8 +273,7 @@ export default function AdminDashboard() {
                         <Pressable
                           className="py-1.5 rounded-lg items-center mt-2"
                           onPress={() => {
-                            setActiveTab("statistics");
-                            scrollViewRef.current?.scrollTo({ x: SCREEN_WIDTH, animated: true });
+                             router.push("/allMembers");
                           }}
                           style={{
                             backgroundColor: "rgba(255, 255, 255, 0.2)",
@@ -307,6 +306,9 @@ export default function AdminDashboard() {
                         </VStack>
                         <Pressable
                           className="py-1.5 rounded-lg items-center mt-2"
+                          onPress={() => {
+                             router.push("/courses");
+                          }}
                           style={{
                             backgroundColor: "rgba(255, 255, 255, 0.2)",
                             borderColor: "rgba(2, 136, 209, 0.4)",

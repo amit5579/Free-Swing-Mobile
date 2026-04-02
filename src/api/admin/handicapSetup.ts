@@ -18,7 +18,6 @@ export type User = {
   invitedBySubAdminName: string | null;
 };
 
-// GET all users
 export const getUsers = async (): Promise<User[]> => {
   try {
     const response = await https.get("/User/list");
@@ -26,5 +25,29 @@ export const getUsers = async (): Promise<User[]> => {
   } catch (error) {
     console.error("Fetching Users Error:", error);
     return [];
+  }
+};
+
+export const updateHandicapApi = async (
+  userId: string | number,
+  handicap: number,
+): Promise<boolean> => {
+  try {
+
+    const response = await https.put(
+      `/User/set-handicap/${userId}`,
+      handicap, 
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    console.log(`📡 Update status for ${userId}:`, response.status);
+    return response.status >= 200 && response.status < 300;
+  } catch (error: any) {
+    console.error("Update Handicap Error details:", error.response?.data || error.message);
+    return false;
   }
 };

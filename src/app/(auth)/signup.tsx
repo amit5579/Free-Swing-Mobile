@@ -23,7 +23,6 @@ export default function SignupScreen() {
 
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-    // Form fields
     const [name, setName] = useState("");
     const [dob, setDob] = useState("");
     const [mobile, setMobile] = useState("");
@@ -47,7 +46,6 @@ export default function SignupScreen() {
     ];
 
 
-    // Format date to dd-mm-yyyy
     const formatDate = (date: Date) => {
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -55,7 +53,6 @@ export default function SignupScreen() {
         return `${day}-${month}-${year}`;
     };
 
-    // Handle date change with 18+ restriction
     const onDateChange = (event: any, date?: Date) => {
         setShowDatePicker(false);
         if (date) {
@@ -74,7 +71,6 @@ export default function SignupScreen() {
         }
     };
 
-    // Reset form fields when switching user type
     const resetForm = () => {
         setName("");
         setDob("");
@@ -141,7 +137,6 @@ export default function SignupScreen() {
 
     alert("Signup successful ✅");
 
-    // router.replace("/login");
     router.replace({
   pathname: "/login",
   params: { email: email, password: password },
@@ -175,7 +170,6 @@ export default function SignupScreen() {
                 <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
                     keyboardShouldPersistTaps="handled">
 
-                    {/* Header */}
                     <View style={{ alignItems: "center", marginTop: 40, marginBottom: 40 }}>
                         <Text style={{ color: "#2e7d32", fontSize: 32, fontWeight: "bold" }}>
                             Sign Up
@@ -185,7 +179,6 @@ export default function SignupScreen() {
                         </Text>
                     </View>
 
-                    {/* Glass Card */}
                     <View
                         style={{
                             backgroundColor: "rgba(255,255,255,0.65)",
@@ -201,7 +194,6 @@ export default function SignupScreen() {
                         }}
                     >
 
-                        {/* User Type */}
                         <View style={{ flexDirection: "row", marginBottom: 20 }}>
                             <TouchableOpacity
                                 onPress={() => setUserType("beginner")}
@@ -242,7 +234,6 @@ export default function SignupScreen() {
                             keyboardDismissMode="on-drag"
                             contentContainerStyle={{ paddingBottom: 20 }}
                         >
-                            {/* Name */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Name
                             </Text>
@@ -261,7 +252,7 @@ export default function SignupScreen() {
                                     color: "#000",
                                 }}
                             />
-                            {/* DOB with clear button */}
+
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Date of Birth
                             </Text>
@@ -286,7 +277,6 @@ export default function SignupScreen() {
                                     </Text>
                                 </TouchableOpacity>
 
-                                {/* Clear button */}
                                 {dob ? (
                                     <TouchableOpacity
                                         onPress={() => setDob("")}
@@ -303,7 +293,6 @@ export default function SignupScreen() {
                                         <Ionicons name="close" size={16} color="red" />
                                     </TouchableOpacity>
                                 ) : (
-                                    // Calendar icon if no DOB selected
                                     <Ionicons
                                         name="calendar"
                                         size={20}
@@ -323,7 +312,6 @@ export default function SignupScreen() {
                                 />
                             )}
 
-                            {/* Mobile */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Mobile Number
                             </Text>
@@ -339,12 +327,11 @@ export default function SignupScreen() {
                                     borderRadius: 14,
                                     paddingHorizontal: 16,
                                     height: 50,
-                                    backgroundColor: "rgba(255,255,255,0.9)", // glass-style background
+                                    backgroundColor: "rgba(255,255,255,0.9)", 
                                     color: "#000",
                                 }}
                             />
 
-                            {/* Email */}
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Email
                             </Text>
@@ -362,15 +349,13 @@ export default function SignupScreen() {
                                     paddingHorizontal: 16,
                                     height: 50,
                                     marginBottom: 20,
-                                    backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
+                                    backgroundColor: "rgba(255,255,255,0.9)", 
                                     color: "#000",
                                 }}
                             />
 
-                            {/* Experienced Fields */}
                             {userType === "experienced" && (
                                 <>
-                                    {/* Home Course Dropdown */}
                                     <TouchableOpacity
                                         onPress={() => setCourseModal(true)}
                                         style={{
@@ -417,7 +402,7 @@ export default function SignupScreen() {
                                                 height: 50,
                                                 width: "48%",
                                                 marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
+                                                backgroundColor: "rgba(255,255,255,0.9)", 
                                                 color: "#000",
                                             }}
                                         />
@@ -434,7 +419,7 @@ export default function SignupScreen() {
                                                 height: 50,
                                                 width: "48%",
                                                 marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
+                                                backgroundColor: "rgba(255,255,255,0.9)",
                                                 color: "#000",
                                             }}
                                         />
@@ -456,7 +441,7 @@ export default function SignupScreen() {
                                                 height: 50,
                                                 width: "48%",
                                                 marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
+                                                backgroundColor: "rgba(255,255,255,0.9)", 
                                                 color: "#000",
                                             }}
                                         />
@@ -473,14 +458,14 @@ export default function SignupScreen() {
                                                 height: 50,
                                                 width: "48%",
                                                 marginBottom: 20,
-                                                backgroundColor: "rgba(255,255,255,0.9)", // stronger input background
+                                                backgroundColor: "rgba(255,255,255,0.9)",
                                                 color: "#000",
                                             }}
                                         />
                                     </View>
                                 </>
                             )}
-                            {/* Password */}
+
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
                                 Password
                             </Text>
@@ -515,7 +500,6 @@ export default function SignupScreen() {
                             </View>
                         </ScrollView>
 
-                        {/* Signup Button */}
                         <TouchableOpacity
                             style={{
                                 backgroundColor: "#8bc34a",
@@ -531,7 +515,6 @@ export default function SignupScreen() {
                             </Text>
                         </TouchableOpacity>
 
-                        {/* Login */}
                         <Text style={{ textAlign: "center", marginTop: 15 }}>
                             Already have an account?{" "}
                             <Text
@@ -546,7 +529,6 @@ export default function SignupScreen() {
                 </ScrollView>
             </ImageBackground>
 
-            {/* Course Modal */}
             <Modal visible={courseModal} transparent animationType="slide">
                 <View
                     style={{

@@ -10,7 +10,6 @@ const https = axios.create({
   },
 });
 
-// REQUEST INTERCEPTOR
 https.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
@@ -80,7 +79,6 @@ https.interceptors.response.use(
       await AsyncStorage.removeItem("userId");
 
       router.replace("/(auth)/login");
-      // Reset isRedirecting after a delay to allow future redirects if needed
       setTimeout(() => {
         isRedirecting = false;
       }, 5000);

@@ -75,7 +75,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
             <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                 <VStack className="p-4 space-y-4">
 
-                    {/* Header Skeleton */}
                     <HStack className="justify-between items-center mb-3">
                         <VStack>
                             <Skeleton isDark={isDark} width={140} height={20} style={{ marginBottom: 6 }} />
@@ -84,7 +83,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                         <Skeleton isDark={isDark} width={36} height={36} borderRadius={18} />
                     </HStack>
 
-                    {/* Cards Skeleton */}
                     {[1, 2, 3].map((key) => (
                         <Box
                             key={key}
@@ -101,12 +99,10 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                 padding: 16,
                             }}
                         >
-                            {/* 🔹 Top Row */}
                             <HStack className="justify-between items-start">
                                 <VStack style={{ flex: 1 }}>
                                     <Skeleton isDark={isDark} width="70%" height={18} style={{ marginBottom: 8 }} />
 
-                                    {/* Tournament badge skeleton */}
                                     <Skeleton isDark={isDark} width={90} height={18} borderRadius={12} />
                                 </VStack>
 
@@ -116,7 +112,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                 </VStack>
                             </HStack>
 
-                            {/* 🔹 Stats Row */}
                             <HStack space="sm" className="mt-4">
                                 {[1, 2, 3].map((i) => (
                                     <Box
@@ -136,7 +131,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                 ))}
                             </HStack>
 
-                            {/* 🔹 Button Skeleton */}
                             <Skeleton
                                 isDark={isDark}
                                 width="100%"
@@ -214,10 +208,8 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                 }}
                             >
                                 <Box className="p-4">
-                                    {/* 🔹 Top Row */}
                                     <HStack className="justify-between items-start">
 
-                                        {/* LEFT */}
                                         <VStack space="xs" style={{ flex: 1, paddingRight: 12 }}>
                                             <Text
                                                 className="text-[#8BC34A] font-bold text-lg"
@@ -249,7 +241,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                             )}
                                         </VStack>
 
-                                        {/* RIGHT */}
                                         <VStack className="items-end" style={{ flexShrink: 0 }}>
                                             <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                                                 {item.date}
@@ -260,7 +251,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                         </VStack>
                                     </HStack>
 
-                                    {/* 🔹 Stats Row */}
                                     <HStack space="sm" className="mt-4">
                                         {[
                                             { label: "SCORE", value: item.score, type: "normal" },
@@ -276,7 +266,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                                     borderWidth: 1,
                                                 }}
                                             >
-                                                {/* Label */}
                                                 <Text
                                                     className="text-[10px] uppercase tracking-widest mb-1"
                                                     style={{
@@ -293,7 +282,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                                     {s.label}
                                                 </Text>
 
-                                                {/* Value */}
                                                 <Text
                                                     className="text-base font-bold"
                                                     style={{
@@ -319,7 +307,6 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                         ))}
                                     </HStack>
 
-                                    {/* 🔹 View Button */}
                                     <HStack className="mt-4 w-full">
                                         <Button
                                             size="sm"
