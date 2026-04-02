@@ -180,19 +180,10 @@ export const getTournamentHistoryByUserId = async (tournamentId: number) => {
 
 
 
-// get scorecard of player: scorecard/details/1936
 
-export const getScorecardDetails = async (scorecardId: number) => {
-    try {
-        const response = await https.get(`scorecard/details/${scorecardId}`);
-        // console.log("Fetching scorecard details:", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Fetching scorecard details Error:", error);
-        throw error;
-    }
-};
 
+
+// tournament-scorecard
 // get handicap by user id and tournament id - scorecard/handicap/2/2
 
 export const getHandicap = async (tournamentId: number) => {
