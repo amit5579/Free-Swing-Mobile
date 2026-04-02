@@ -68,7 +68,6 @@ export default function ImportantUpdatesUser() {
                 borderColor: "rgba(139,195,74,0.2)",
               }}
             >
-              {/* DATE */}
               <Skeleton
                 isDark={isDark}
                 width="40%"
@@ -76,13 +75,13 @@ export default function ImportantUpdatesUser() {
                 style={{ marginBottom: 10 }}
               />
 
-              {/* CONTENT */}
               <Skeleton
                 isDark={isDark}
                 width="90%"
                 height={16}
                 style={{ marginBottom: 6 }}
               />
+
               <Skeleton
                 isDark={isDark}
                 width="70%"
@@ -90,7 +89,6 @@ export default function ImportantUpdatesUser() {
                 style={{ marginBottom: 12 }}
               />
 
-              {/* IMAGE */}
               <Skeleton
                 isDark={isDark}
                 width="100%"
@@ -99,7 +97,6 @@ export default function ImportantUpdatesUser() {
                 style={{ marginBottom: 12 }}
               />
 
-              {/* LINK */}
               <Skeleton
                 isDark={isDark}
                 width="60%"
@@ -117,7 +114,6 @@ export default function ImportantUpdatesUser() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#FFF", }}>
 
-      {/* HEADER */}
       <View className="flex-row items-center px-4 py-3">
 
         <TouchableOpacity onPress={() => router.back()}>
@@ -166,13 +162,9 @@ export default function ImportantUpdatesUser() {
                 }}
               >
 
-                {/* TOP HEADER */}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-
-                  {/* LEFT: PROFILE + NAME + DATE */}
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
 
-                    {/* PROFILE CIRCLE */}
                     <View
                       style={{
                         width: 36,
@@ -187,7 +179,6 @@ export default function ImportantUpdatesUser() {
                       <Ionicons name="person" size={18} color="#8BC34A" />
                     </View>
 
-                    {/* NAME + DATE */}
                     <View>
                       <Text style={{ fontSize: 13, fontWeight: "bold", color: isDark ? "#fff" : "#000" }}>
                         {item.authorName || "Admin"}
@@ -198,7 +189,6 @@ export default function ImportantUpdatesUser() {
                     </View>
                   </View>
 
-                  {/* RIGHT: PRIORITY */}
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="megaphone" size={14} color="#F59E0B" />
                     <Text style={{ fontSize: 11, color: "#F59E0B", marginLeft: 4 }}>
@@ -207,7 +197,6 @@ export default function ImportantUpdatesUser() {
                   </View>
                 </View>
 
-                {/* CONTENT */}
                 {item.content && (
                   <Text
                     className={`mb-3 ${isDark ? "text-gray-200" : "text-gray-800"}`}
@@ -216,7 +205,21 @@ export default function ImportantUpdatesUser() {
                   </Text>
                 )}
 
-                {/* IMAGE */}
+                {(item as any).linkUrl && (
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL((item as any).linkUrl)}
+                    className="flex-row items-center bg-[#8BC34A]/10 p-2 rounded-lg mb-3"
+                  >
+                    <Ionicons name="link-outline" size={16} color="#8BC34A" />
+                    <Text
+                      numberOfLines={1}
+                      className="ml-2 text-[#8BC34A] text-xs flex-1"
+                    >
+                      {(item as any).linkUrl}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
                 {item.mediaUrl && (
                   <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative" }}>
                     {imageLoadingMap[item.id] !== false && (
@@ -267,10 +270,8 @@ export default function ImportantUpdatesUser() {
                   </View>
                 )}
 
-                {/* BOTTOM ROW */}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10, alignItems: "center" }}>
-
-                  {/* LEFT: TYPE */}
+                  
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="notifications" size={14} color="#8BC34A" />
                     <Text style={{ fontSize: 12, color: "#8BC34A", marginLeft: 4 }}>
@@ -278,28 +279,10 @@ export default function ImportantUpdatesUser() {
                     </Text>
                   </View>
 
-                  {/* RIGHT: AUTHOR */}
                   <Text style={{ fontSize: 12, color: "#888" }}>
                     by {item.authorName || "Admin"}
                   </Text>
                 </View>
-
-                {/* LINK */}
-                {(item as any).linkUrl && (
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL((item as any).linkUrl)}
-                    className="flex-row items-center bg-[#8BC34A]/10 p-2 rounded-lg mt-3"
-                  >
-                    <Ionicons name="link-outline" size={16} color="#8BC34A" />
-                    <Text
-                      numberOfLines={1}
-                      className="ml-2 text-[#8BC34A] text-xs flex-1"
-                    >
-                      {(item as any).linkUrl}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
               </View>
             ))
           )}

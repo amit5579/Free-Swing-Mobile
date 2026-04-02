@@ -40,7 +40,7 @@ export default function AddProduct() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -57,12 +57,12 @@ export default function AddProduct() {
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append("Name", name);
-      formData.append("Price", price);
-      formData.append("Description", description);
+      formData.append("Name", name.trim());
+      formData.append("Price", price.trim());
+      formData.append("Description", (description || '').trim());
 
       if (image) {
-        formData.append("ProductImage", {
+        formData.append("Image", {
           uri: image.uri,
           name: image.fileName || "product.jpg",
           type: image.mimeType || "image/jpeg",
@@ -88,7 +88,6 @@ export default function AddProduct() {
     }
   };
 
-  // Get image preview URI
   const getImageUri = () => {
     if (image?.uri) return image.uri;
     if (params.imageUrl) return `https://kolve18freeswing.com${params.imageUrl}`;
@@ -97,6 +96,7 @@ export default function AddProduct() {
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={{
         flex: 1,
         backgroundColor: isDark ? "#000" : "#f2f2f2",
@@ -104,17 +104,16 @@ export default function AddProduct() {
     >
       <Watermark />
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 150 }}
       >
         <VStack className="px-4">
 
-          {/* HEADER */}
           <HStack style={{ marginBottom: 10, alignItems: 'center' }}>
-            <TouchableOpacity 
-              onPress={() => router.back()} 
-              style={{ 
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
                 marginRight: 12,
                 backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
                 padding: 8,
@@ -141,12 +140,11 @@ export default function AddProduct() {
             </VStack>
           </HStack>
 
-          {/* FORM CARD */}
           <Box
             style={{
               backgroundColor: isDark
-                    ? "rgba(40,40,40,0.6)"
-                    : "rgba(255,255,255,0.9)",
+                ? "rgba(40,40,40,0.6)"
+                : "rgba(255,255,255,0.9)",
               padding: 24,
               borderRadius: 24,
               borderWidth: 1,
@@ -160,7 +158,6 @@ export default function AddProduct() {
           >
             <VStack space="lg">
 
-              {/* PRODUCT IMAGE */}
               <VStack space="xs">
 
                 <Text
@@ -218,7 +215,6 @@ export default function AddProduct() {
                 </TouchableOpacity>
               </VStack>
 
-              {/* PRODUCT NAME */}
               <VStack space="xs">
 
                 <Text
@@ -247,7 +243,6 @@ export default function AddProduct() {
 
               </VStack>
 
-              {/* PRICE */}
               <VStack space="xs">
 
                 <Text
@@ -292,14 +287,10 @@ export default function AddProduct() {
                       color: isDark ? "#fff" : "#000",
                     }}
                   />
-
                 </HStack>
-
               </VStack>
 
-              {/* DESCRIPTION */}
               <VStack space="xs">
-
                 <Text
                   style={{
                     fontWeight: "600",
@@ -326,12 +317,9 @@ export default function AddProduct() {
                     color: isDark ? "#fff" : "#000",
                   }}
                 />
-
               </VStack>
 
-              {/* ACTION BUTTONS */}
               <HStack className="justify-end mt-4">
-
                 <Button
                   variant="outline"
                   onPress={() => router.back()}

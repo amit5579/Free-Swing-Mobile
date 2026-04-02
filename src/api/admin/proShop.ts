@@ -12,7 +12,7 @@ export type Product = {
 // GET all products
 export const getProducts = async (): Promise<Product[]> => {
   try {
-    const response = await https.get("/Products");
+    const response = await https.get("Products");
     return response.data;
   } catch (error) {
     console.error("Fetching Products Error:", error);
@@ -23,7 +23,7 @@ export const getProducts = async (): Promise<Product[]> => {
 // CREATE a new product
 export const addProduct = async (formData: FormData): Promise<any> => {
   try {
-    const response = await https.post("/Products", formData, {
+    const response = await https.post("Products", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -38,7 +38,7 @@ export const addProduct = async (formData: FormData): Promise<any> => {
 // UPDATE an existing product
 export const updateProduct = async (id: number, formData: FormData): Promise<any> => {
   try {
-    const response = await https.put(`/Products/${id}`, formData, {
+    const response = await https.put(`Products/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

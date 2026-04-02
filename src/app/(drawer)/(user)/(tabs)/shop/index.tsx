@@ -351,7 +351,6 @@ export default function ShopScreen() {
             opacity: 0.8,
           }}
         >
-          {/* Browse and purchase official gear and equipment. */}
           Gear up with official equipment
         </ThemedText>
       </VStack>
@@ -521,7 +520,6 @@ export default function ShopScreen() {
                   elevation: 5
                 }}
               >
-                {/* Row 1: Total and Continue Shopping */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
                   <View>
                     <ThemedText style={{ fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 'bold' }}>Grand Total</ThemedText>

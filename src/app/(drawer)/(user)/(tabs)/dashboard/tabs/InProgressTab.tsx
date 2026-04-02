@@ -189,7 +189,6 @@ export function InProgressTab({
           }}
         >
           <Box className="p-4">
-            {/* Course Name */}
             <Text
               style={{
                 color: isDark ? "#FFFFFF" : "#111827",
@@ -200,7 +199,6 @@ export function InProgressTab({
               {game.courseName}
             </Text>
 
-            {/* Date + Holes Played */}
             <HStack className="items-center mt-1 space-x-2">
               <Ionicons
                 name="calendar-outline"
@@ -247,7 +245,6 @@ export function InProgressTab({
               </Badge>
             </HStack>
 
-            {/* Buttons */}
             <HStack className="mt-4 justify-between">
               <Button
                 variant="outline"
@@ -306,4 +303,4 @@ export function InProgressTab({
   );
 }
 
-export default InProgressTab;
+export default InProgressTab;
