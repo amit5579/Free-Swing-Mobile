@@ -334,7 +334,7 @@ export default function ContactAdminPage() {
           {/* MODAL CONTENT (NO closing pressable here) */}
           <View
             style={{
-              backgroundColor: isDark ? "#020617" : "#ffffff",
+              backgroundColor: isDark ? "#333" : "#eee",
               borderRadius: 16,
               padding: 16,
             }}
@@ -384,6 +384,15 @@ export default function ContactAdminPage() {
                       placeholderStyle={{
                         color: isDark ? "white" : "black",
                       }}
+                      containerStyle={{
+                        backgroundColor: isDark ? "#333" : "#eee",
+                        borderRadius: 8,
+                        overflow: "hidden",
+                      }}
+                      itemContainerStyle={{
+                        backgroundColor: isDark ? "#333" : "#eee",
+                      }}
+                      activeColor={isDark ? "#333" : "#eee"}
                       data={[
                         { label: "Bug", value: "bug" },
                         { label: "Improvement", value: "improvement" },

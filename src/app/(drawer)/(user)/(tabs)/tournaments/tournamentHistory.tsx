@@ -11,16 +11,24 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  getHandicap,
-  getScorecardDetails,
   getTournamentHistoryByUserId,
 } from "@/api/admin/tournaments";
+
+import {
+  getScorecardHandicap,
+  getScorecardDetails,
+  getScoreCardOpen,
+} from "@/api/scoreCard";
+
+
 import { Skeleton } from "@/components/Skeleton";
 
-export default function ScoreCardUser() {
+export default function TournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+
+const { tournamentId,  teeBoxId } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +37,15 @@ export default function ScoreCardUser() {
   const [history, setTournamentHistory] = useState<any[]>([]); //contains  "isExcluded": true "scorecardId": 361,
   const [scorecardDetails, setScorecardDetails] = useState<any[]>([]);
 
-  const { tournamentId } = useLocalSearchParams();
 
   const fetchScoreCard = async () => {
     try {
       setLoading(true);
-      const hcp = await getHandicap(Number(tournamentId));
+      const hcp = await getScorecardHandicap(Number(teeBoxId));
       // console.log("Handicap:", hcp);
+
+      const sco = await getScoreCardOpen(Number(tournamentId));
+      // console.log("Scorecard Open:", sco);
 
       const sht = await getTournamentHistoryByUserId(Number(tournamentId));
       // console.log("Tournament History:", sht);
@@ -46,7 +56,7 @@ export default function ScoreCardUser() {
 
       if (scorecardId) {
         const scd = await getScorecardDetails(scorecardId);
-        // console.log("Scorecard Details:", scd);
+        console.log("Scorecard Details:", scd);
         setScorecardDetails(scd);
       } else {
         console.warn("No scorecardId found in history results");
