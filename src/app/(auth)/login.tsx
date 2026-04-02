@@ -8,14 +8,22 @@ import {
   View,
   Platform,
   ImageBackground,
+  Modal,
+  Alert,
+  useColorScheme,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router"; import { Ionicons } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "@/context/AuthContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/schema/authSchemas";
+
 export default function LoginScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  
   const { email: emailParam, password: passwordParam } = useLocalSearchParams<{
     email?: string;
     password?: string;
@@ -23,11 +31,19 @@ export default function LoginScreen() {
   const { login } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
-
-
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetPhoneNumber, setResetPhoneNumber] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
 
-  const bgImage = require("/assets/golf-bgg.jpg");
+  const bgImage = require("@/assets/golf-bgg.jpg");
 
   const {
     control,
@@ -45,8 +61,6 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const loggedUser = await login(data.email, data.password);
-
-
       if (!loggedUser) throw new Error("Invalid credentials");
 
       if (loggedUser.role === "Player") {
@@ -54,14 +68,13 @@ export default function LoginScreen() {
       } else {
         router.replace("/(drawer)/(admin)/(tabs)/dashboard");
       }
-
     } catch (error) {
       console.log("🚨 HANDLE LOGIN ERROR:", error);
-      alert("Login failed. Please check your credentials.");
+      Alert.alert("Error", "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -72,11 +85,13 @@ export default function LoginScreen() {
         source={bgImage}
         style={{ flex: 1, width: "100%", height: "100%" }}
         resizeMode="cover"
+        blurRadius={showResetModal ? 10 : 0}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+          scrollEnabled={!showResetModal}
+          style={{ opacity: showResetModal ? 0.3 : 1 }}
         >
-          {/* Header */}
           <View style={{ alignItems: "center", marginBottom: 40 }}>
             <Text style={{ color: "#fff", fontSize: 32, fontWeight: "bold" }}>
               Login
@@ -86,7 +101,6 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          {/* Card */}
           <View
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.6)",
@@ -101,7 +115,6 @@ export default function LoginScreen() {
               shadowRadius: 12,
             }}
           >
-            {/* Email */}
             <Text
               style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}
             >
@@ -141,7 +154,7 @@ export default function LoginScreen() {
                 {errors.email.message}
               </Text>
             )}
-            {/* Password */}
+
             <Text
               style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}
             >
@@ -195,7 +208,6 @@ export default function LoginScreen() {
               </Text>
             )}
 
-            {/* Remember / Forgot */}
             <View
               style={{
                 flexDirection: "row",
@@ -204,12 +216,13 @@ export default function LoginScreen() {
               }}
             >
               <Text style={{ color: "#374151" }}>Remember Me</Text>
-              <Text style={{ color: "#2e7d32", fontWeight: "600" }}>
-                Forgot Password?
-              </Text>
+              <TouchableOpacity onPress={() => setShowResetModal(true)}>
+                <Text style={{ color: "#2e7d32", fontWeight: "600" }}>
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Login Button */}
             <TouchableOpacity
               activeOpacity={0.85}
               disabled={loading}
@@ -233,7 +246,6 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Signup */}
             <Text style={{ textAlign: "center", color: "#374151" }}>
               Don't have an Account?{" "}
               <Text
@@ -246,6 +258,265 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </ImageBackground>
+
+      <Modal
+        visible={showResetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowResetModal(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowResetModal(false)}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.75)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{
+              backgroundColor: isDark ? "#1f2937" : "#fff",
+              width: "100%",
+              borderRadius: 20,
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.25,
+              shadowRadius: 15,
+              elevation: 10,
+              maxHeight: "90%",
+            }}
+          >
+            <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+              <View style={{ width: "100%" }}>
+                <View style={{ alignItems: "center", marginBottom: 10 }}>
+                  <View
+                    style={{
+                      backgroundColor: isDark ? "rgba(139, 195, 74, 0.2)" : "rgba(139, 195, 74, 0.1)",
+                      width: 50,
+                      height: 50,
+                      borderRadius: 9999,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Ionicons name="key-outline" size={28} color="#8bc34a" />
+                  </View>
+                  <Text style={{ fontSize: 24, fontWeight: "bold", color: isDark ? "#f9fafb" : "#1f2937" }}>
+                    Reset Password
+                  </Text>
+                  <Text
+                    style={{
+                      color: isDark ? "#9ca3af" : "#6b7280",
+                      textAlign: "center",
+                      marginTop: 2,
+                      fontSize: 13,
+                    }}
+                  >
+                    Complete the form to reset your password.
+                  </Text>
+                </View>
+
+                {resetError ? (
+                  <View
+                    style={{
+                      backgroundColor: "rgba(239, 68, 68, 0.1)",
+                      padding: 8,
+                      borderRadius: 10,
+                      marginBottom: 10,
+                      borderWidth: 1,
+                      borderColor: "rgba(239, 68, 68, 0.2)",
+                    }}
+                  >
+                    <Text style={{ color: "#ef4444", fontSize: 12, textAlign: "center" }}>
+                      {resetError}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                  Email Address
+                </Text>
+                <TextInput
+                  placeholder="Enter email"
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                  value={resetEmail}
+                  onChangeText={setResetEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                    height: 44,
+                    marginBottom: 10,
+                    backgroundColor: isDark ? "#111827" : "#f9fafb",
+                    color: isDark ? "#fff" : "#000",
+                    fontSize: 14,
+                  }}
+                />
+
+                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                  Phone Number
+                </Text>
+                <TextInput
+                  placeholder="Enter phone"
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                  value={resetPhoneNumber}
+                  onChangeText={setResetPhoneNumber}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                    height: 44,
+                    marginBottom: 10,
+                    backgroundColor: isDark ? "#111827" : "#f9fafb",
+                    color: isDark ? "#fff" : "#000",
+                    fontSize: 14,
+                  }}
+                />
+
+                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                  New Password
+                </Text>
+                <View
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderRadius: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 12,
+                    height: 44,
+                    marginBottom: 10,
+                    backgroundColor: isDark ? "#111827" : "#f9fafb",
+                  }}
+                >
+                  <TextInput
+                    placeholder="Password"
+                    placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry={!showNewPassword}
+                    style={{ flex: 1, height: "100%", color: isDark ? "#fff" : "#000", fontSize: 14 }}
+                  />
+                  <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+                    <Ionicons name={showNewPassword ? "eye" : "eye-off"} size={20} color={isDark ? "#9ca3af" : "#374151"} />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                  Confirm Password
+                </Text>
+                <View
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderRadius: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 12,
+                    height: 44,
+                    marginBottom: 16,
+                    backgroundColor: isDark ? "#111827" : "#f9fafb",
+                  }}
+                >
+                  <TextInput
+                    placeholder="Confirm"
+                    placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    style={{ flex: 1, height: "100%", color: isDark ? "#fff" : "#000", fontSize: 14 }}
+                  />
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <Ionicons name={showConfirmPassword ? "eye" : "eye-off"} size={20} color={isDark ? "#9ca3af" : "#374151"} />
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  disabled={resetLoading}
+                  onPress={async () => {
+                    setResetError("");
+                    if (!resetEmail || !resetPhoneNumber || !newPassword || !confirmPassword) {
+                      setResetError("Please fill in all fields");
+                      return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                      setResetError("Passwords do not match");
+                      return;
+                    }
+                    try {
+                      setResetLoading(true);
+                      const response = await fetch("https://kolve18freeswing.com/api/Auth/forgot-password", {
+                        method: "POST",
+                        headers: { Accept: "application/json", "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          Email: resetEmail,
+                          PhoneNumber: resetPhoneNumber,
+                          Password: newPassword,
+                          ConfirmPassword: confirmPassword,
+                        }),
+                      });
+                      if (response.ok) {
+                        Alert.alert("Success", "Successfully reset password!", [
+                          { 
+                            text: "OK", 
+                            onPress: () => {
+                              setShowResetModal(false);
+                              setResetEmail("");
+                              setResetPhoneNumber("");
+                              setNewPassword("");
+                              setConfirmPassword("");
+                              setResetError("");
+                            } 
+                          }
+                        ]);
+                      } else {
+                        const data = await response.json();
+                        setResetError(data.message || "Details not found.");
+                      }
+                    } catch (error) {
+                      setResetError("An unexpected error occurred.");
+                    } finally {
+                      setResetLoading(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: "#8bc34a",
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    marginBottom: 10,
+                    opacity: resetLoading ? 0.7 : 1,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                    {resetLoading ? "Processing..." : "Reset Password"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setShowResetModal(false)} style={{ paddingVertical: 4 }}>
+                  <Text style={{ color: isDark ? "#9ca3af" : "#6b7280", textAlign: "center", fontWeight: "500", fontSize: 14 }}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

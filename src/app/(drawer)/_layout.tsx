@@ -71,7 +71,6 @@ function CustomDrawerContent({ navigation }: any) {
         },
       ]}
     >
-      {/* Profile Section */}
       <View>
         <View style={styles.topSection}>
           <View style={styles.avatarWrapper}>
@@ -130,10 +129,7 @@ function CustomDrawerContent({ navigation }: any) {
           </Text>
         </View>
 
-        {/* Drawer Menu */}
         <View style={styles.drawerItems}>
-          {/* ADMIN PROFILE */}
-
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -151,6 +147,7 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
             </>
           )}
+          
           {/* USER PROFILE */}
           {!isAdmin && (
             <>

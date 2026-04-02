@@ -33,7 +33,8 @@ export default function ProShop() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
+      // Only show full-screen skeleton on initial load or if list is empty
+      if (products.length === 0) setLoading(true);
       const data = await getProducts();
       setProducts(data);
     } catch (error) {

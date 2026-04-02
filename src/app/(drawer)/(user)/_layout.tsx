@@ -7,7 +7,7 @@ export default function UserLayout() {
             <Stack.Screen name="scorecard/view/[scoreCard]" options={{ headerShown: false }} />
             <Stack.Screen name="scorecard/resume/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="(teeTimeBooking)" options={{ headerShown: false }} />
-            <Stack.Screen name="(contactAdmin)" options={{ headerShown: false }} />
+            <Stack.Screen name="(contactAdmin)/index" options={{ headerShown: false }} />
         </Stack>
     );
 }

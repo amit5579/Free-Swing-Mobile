@@ -64,7 +64,6 @@ const ScoreCard: React.FC = () => {
     const front9 = holes.slice(0, 9);
     const back9 = holes.slice(9, 18);
 
-    /** Maps raw stroke count to the same shape indicators as the editable view */
     const renderScoreIndicator = (score: number | null, isDark: boolean) => {
         if (score == null || score < 0) return null;
         if (score === 0)
@@ -97,7 +96,7 @@ const ScoreCard: React.FC = () => {
                     <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
                 </View>
             );
-        if (score === 4) return null; // Par — no indicator
+        if (score === 4) return null; 
         if (score === 5)
             return (
                 <View style={styles.indicatorContainer}>
@@ -182,9 +181,7 @@ const ScoreCard: React.FC = () => {
         <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255,255,255,0.7)" }}>
             <Watermark />
 
-            {/* ── Fixed Top Area ── */}
             <View className="px-4 pt-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#000" : "transparent" }}>
-                {/* Back + Title */}
                 <View className="flex-row items-center mb-4 mt-8">
                     <TouchableOpacity
                         onPress={() => router.back()}
@@ -215,7 +212,6 @@ const ScoreCard: React.FC = () => {
                         )}
                     </View>
 
-                    {/* Verified badge — only shown when not coming from admin context */}
                     {!username && (
                         <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
                             <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
@@ -224,7 +220,6 @@ const ScoreCard: React.FC = () => {
                     )}
                 </View>
 
-                {/* Info banner */}
                 <View className={`p-3 rounded-xl border flex-row items-center ${isDark ? "bg-[#1A2E05] border-[#2e5209]" : "bg-green-50 border-green-200"}`}>
                     <Ionicons name={username ? "eye-outline" : "lock-closed-outline"} size={18} color={isDark ? "#8BC34A" : "#4CAF50"} />
                     <Text className={`ml-2 flex-1 text-sm font-medium ${isDark ? "text-[#8BC34A]" : "text-green-800"}`}>
@@ -236,13 +231,11 @@ const ScoreCard: React.FC = () => {
                 </View>
             </View>
 
-            {/* ── Scrollable Table ── */}
             <ScrollView
                 className="px-4 flex-1"
                 showsVerticalScrollIndicator={false}
                 stickyHeaderIndices={[0]}
             >
-                {/* 0th child → sticky table header */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: "transparent" }}>
                     <View
                         className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
@@ -256,12 +249,10 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Table rows — inline subtotals */}
                 <View
                     className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
                     style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}
                 >
-                    {/* ── Front 9 holes ── */}
                     {front9.map((h, index) => (
                         <View
                             key={h.holeId}
@@ -283,7 +274,6 @@ const ScoreCard: React.FC = () => {
                         </View>
                     ))}
 
-                    {/* ── Front 9 Subtotal ── */}
                     <View
                         className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
                         style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
@@ -296,7 +286,6 @@ const ScoreCard: React.FC = () => {
                         <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(front9)}</Text>
                     </View>
 
-                    {/* ── Back 9 holes (only if 18-hole round) ── */}
                     {back9.length > 0 && back9.map((h, index) => (
                         <View
                             key={h.holeId}
@@ -318,7 +307,6 @@ const ScoreCard: React.FC = () => {
                         </View>
                     ))}
 
-                    {/* ── Back 9 Subtotal (18-hole only) ── */}
                     {back9.length > 0 && (
                         <View
                             className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
@@ -333,7 +321,6 @@ const ScoreCard: React.FC = () => {
                         </View>
                     )}
 
-                    {/* ── Grand Total ── */}
                     <View className="flex-row p-3" style={{ backgroundColor: "#8BC34A" }}>
                         <Text className="flex-1 text-center font-black text-xs text-white">Grand Total</Text>
                         <Text className="flex-1" />
@@ -344,7 +331,6 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
 
-                {/* ── Dynamic Legend with counts (same as editable view) ── */}
                 {(() => {
                     const scoreCounts: Record<number, number> = {};
                     holes.forEach((h) => {

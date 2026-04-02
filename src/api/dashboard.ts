@@ -1,8 +1,6 @@
 import https from "./https";
 
-/* =========================
-   Feed API
-========================= */
+/* -*-*-*-*- Feed API -*-*-*-*- */
 
 export interface FeedItem {
   roundRefId: number;
@@ -63,9 +61,7 @@ export const getLikedUsersApi = async (roundRefId: number | string) => {
   }
 };
 
-/* =========================
-   In Progress API
-========================= */
+/* -*-*-*-*- In Progress API -*-*-*-*- */
 
 export interface InProgressApiItem {
   scorecardId: number;
@@ -89,9 +85,7 @@ export const getInProgressGames = async (playerId: number) => {
   }
 };
 
-/* =========================
-   User API
-========================= */
+/* -*-*-*-*- User API -*-*-*-*- */
 
 export interface UserProfile {
   id: number;
@@ -116,9 +110,7 @@ export const getUserProfile = async (userId: number) => {
   }
 };
 
-/* =========================
-   Leaderboard API
-========================= */
+/* -*-*-*-*- Leaderboard API -*-*-*-*- */
 
 export interface LeaderboardPlayer {
   id: number;
@@ -136,9 +128,7 @@ export const getLeaderboard = async () => {
   }
 };
 
-/* =========================
-   Player Count API
-========================= */
+/* -*-*-*-*- Player Count API -*-*-*-*- */
 
 export interface PlayerCount {
   totalPlayers: number;
@@ -154,9 +144,7 @@ export const getPlayerCount = async () => {
   }
 };
 
-/* =========================
-   Score Stats API
-========================= */
+/* -*-*-*-*- Score Stats API -*-*-*-*- */
 
 export interface ScoreStats {
   totalGames: number;
@@ -175,9 +163,7 @@ export const getScoreStats = async (playerId: number) => {
   }
 };
 
-/* =========================
-   Score History API
-========================= */
+/* -*-*-*-*- Score History API -*-*-*-*- */
 
 export interface ScoreHistoryItem {
   scorecardId: number;
@@ -200,9 +186,7 @@ export const getScoreHistory = async (playerId: number) => {
   }
 };
 
-/* =========================
-   Updates API
-========================= */
+/* -*-*-*-*- Updates API -*-*-*-*- */
 
 export interface UpdateItem {
   id: number;

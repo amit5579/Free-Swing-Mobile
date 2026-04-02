@@ -9,6 +9,8 @@ export type ProductApi = {
   createdAt: string;
 };
 
+/* -*-*-*-*- Get Products API -*-*-*-*- */
+
 export const getProducts = async (): Promise<ProductApi[]> => {
   try {
     const response = await https.get("/Products");
