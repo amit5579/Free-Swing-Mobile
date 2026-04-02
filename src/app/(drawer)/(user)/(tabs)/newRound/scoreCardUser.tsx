@@ -65,16 +65,6 @@ export default function ScoreCardUserPage() {
     }
   };
 
-  const filteredHoles = (() => {
-    if (holes === "18") return scoreCardDetails;
-
-    if (holes === "front9") return scoreCardDetails.slice(0, 9);
-
-    if (holes === "back9") return scoreCardDetails.slice(9, 18);
-
-    return scoreCardDetails;
-  })();
-
   const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
     const base = Math.floor(playerHandicap / 18);
     const remainder = playerHandicap % 18;
@@ -83,10 +73,10 @@ export default function ScoreCardUserPage() {
   };
 
   const calculateHole = (hole: any) => {
-    if (hole.score === null) {
+    if (hole.score === null || hole.score === "" || hole.score === undefined) {
       return {
         ...hole,
-        netScore: 0,
+        netScore: "-",
         stablefordPoints: null,
       };
     }
@@ -121,17 +111,98 @@ export default function ScoreCardUserPage() {
     };
   };
 
+  const getScoreLegendCounts = (holes: any[]) => {
+    const counts = {
+      holeInOne: 0,
+      albatross: 0,
+      eagle: 0,
+      birdie: 0,
+      par: 0,
+      bogey: 0,
+      double: 0,
+      triple: 0,
+      quadPlus: 0,
+    };
+
+    holes.forEach((h) => {
+      if (!h.score && h.score !== 0) return;
+
+      const score = Number(h.score);
+      const diff = score - h.par;
+
+      // 🟡 Hole-in-One
+      if (score === 1) {
+        counts.holeInOne++;
+        return;
+      }
+
+      // 🟦 Albatross (-3)
+      if (diff === -3) {
+        counts.albatross++;
+        return;
+      }
+
+      // 🟢 Eagle (-2)
+      if (diff === -2) {
+        counts.eagle++;
+        return;
+      }
+
+      // 🟢 Birdie (-1)
+      if (diff === -1) {
+        counts.birdie++;
+        return;
+      }
+
+      // ⚪ Par
+      if (diff === 0) {
+        counts.par++;
+        return;
+      }
+
+      // 🔴 Bogey (+1)
+      if (diff === 1) {
+        counts.bogey++;
+        return;
+      }
+
+      // 🔴 Double (+2)
+      if (diff === 2) {
+        counts.double++;
+        return;
+      }
+
+      // 🟣 Triple (+3)
+      if (diff === 3) {
+        counts.triple++;
+        return;
+      }
+
+      // ⬛ Quad+
+      if (diff >= 4) {
+        counts.quadPlus++;
+        return;
+      }
+    });
+
+    return counts;
+  };
+
   const processedAllHoles = scoreCardDetails.map(calculateHole);
 
   const processedFront9 = processedAllHoles.slice(0, 9);
   const processedBack9 = processedAllHoles.slice(9, 18);
+  const legendCounts = getScoreLegendCounts(processedAllHoles);
 
   const getTotals = (holes: any[]) => ({
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
-    score: holes.reduce((sum, h) => sum + (h.score || 0), 0),
-    net: holes.reduce((sum, h) => sum + (h.netScore || 0), 0),
-    stableford: holes.reduce((sum, h) => sum + (h.stablefordPoints || 0), 0),
+    score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
+    net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
+    stableford: holes.reduce(
+      (sum, h) => sum + (Number(h.stablefordPoints) || 0),
+      0,
+    ),
   });
 
   const frontTotals = getTotals(processedFront9);
@@ -163,7 +234,7 @@ export default function ScoreCardUserPage() {
     Toast.show({
       type: "success",
       text1: "Round Finished",
-      text2: "Round has been submitted successfully",
+      text2: "Score submitted successfully",
     });
   };
 
@@ -178,43 +249,43 @@ export default function ScoreCardUserPage() {
   // triggers re-render
   // recalculates everything automatically
 
- const handleScoreChange = (holeId: number, value: string) => {
-  // allow empty
-  if (value === "") {
+  const handleScoreChange = (holeId: number, value: string) => {
+    // allow empty
+    if (value === "") {
+      setScoreCardDetails((prev: any[]) =>
+        prev.map((hole) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
+        ),
+      );
+      return;
+    }
+
+    // only digits allowed
+    if (!/^\d+$/.test(value)) {
+      Toast.show({
+        type: "error",
+        text1: "Enter valid score",
+      });
+      return;
+    }
+
+    const numericValue = Number(value);
+
+    if (numericValue > 15) {
+      Toast.show({
+        type: "error",
+        text1: "Max score is 15",
+      });
+      return;
+    }
+
+    // ✅ store STRING (IMPORTANT)
     setScoreCardDetails((prev: any[]) =>
       prev.map((hole) =>
-        hole.holeId === holeId ? { ...hole, score: "" } : hole
-      )
+        hole.holeId === holeId ? { ...hole, score: value } : hole,
+      ),
     );
-    return;
-  }
-
-  // only digits allowed
-  if (!/^\d+$/.test(value)) {
-    Toast.show({
-      type: "error",
-      text1: "Numbers only",
-    });
-    return;
-  }
-
-  const numericValue = Number(value);
-
-  if (numericValue > 15) {
-    Toast.show({
-      type: "error",
-      text1: "Max score is 15",
-    });
-    return;
-  }
-
-  // ✅ store STRING (IMPORTANT)
-  setScoreCardDetails((prev: any[]) =>
-    prev.map((hole) =>
-      hole.holeId === holeId ? { ...hole, score: value } : hole
-    )
-  );
-};
+  };
 
   const renderScoreIndicator = (
     score: number | string | null,
@@ -226,47 +297,129 @@ export default function ScoreCardUserPage() {
     const numericScore = Number(score);
     const diff = numericScore - par;
 
-    // 🟡 Eagle / better
-    if (diff <= -2) {
+    // 🟡 Hole-in-One (Priority 1)
+    if (numericScore === 1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View style={[styles.doubleCircle, { borderColor: "#FFD700" }]}>
-            <View style={[styles.innerCircle, { borderColor: "#FFD700" }]} />
-          </View>
+          <View
+            style={[
+              styles.singleCircle,
+              {
+                borderColor: "#fbc02d",
+              },
+            ]}
+          />
         </View>
       );
     }
 
-    // 🟢 Birdie
+    // 🟦 Albatross (-3)
+    if (diff <= -3) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={[
+              styles.singleCircle,
+              {
+                borderColor: "#00838f",
+              },
+            ]}
+          />
+        </View>
+      );
+    }
+
+    // 🟢 Eagle (-2)
+    if (diff === -2) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={[
+              styles.singleCircle,
+              {
+                borderColor: "#2e7d32",
+              },
+            ]}
+          />
+        </View>
+      );
+    }
+
+    // 🟢 Birdie (-1)
     if (diff === -1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
+          <View
+            style={[
+              styles.singleCircle,
+              {
+                borderColor: "#66bb6a",
+              },
+            ]}
+          />
         </View>
       );
     }
 
-    // ⚪ Par (optional)
+    // ⚪ Par (0) - Dashed square
     if (diff === 0) {
-      return null;
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: "#999",
+              borderRadius: 4,
+            }}
+          />
+        </View>
+      );
     }
 
-    // 🔴 Bogey
+    // ⬛ Quadruple+ (>= +4) - Check most specific bogey first
+    if (diff >= 4) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={[
+              styles.singleSquare,
+              { borderColor: isDark ? "#fff" : "#000" },
+            ]}
+          />
+        </View>
+      );
+    }
+
+    // 🟣 Triple Bogey (+3)
+    if (diff === 3) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleSquare, { borderColor: "#8e24aa" }]}>
+            <View style={[styles.innerSquare, { borderColor: "#8e24aa" }]} />
+          </View>
+        </View>
+      );
+    }
+
+    // 🔴 Double Bogey (+2)
+    if (diff === 2) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleSquare, { borderColor: "#e53935" }]}>
+            <View style={[styles.innerSquare, { borderColor: "#e53935" }]} />
+          </View>
+        </View>
+      );
+    }
+
+    // 🔴 Bogey (+1)
     if (diff === 1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
-        </View>
-      );
-    }
-
-    // 🔴 Double Bogey+
-    if (diff >= 2) {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
-            <View style={[styles.innerSquare, { borderColor: "#d32f2f" }]} />
-          </View>
+          <View style={[styles.singleSquare, { borderColor: "#e53935" }]} />
         </View>
       );
     }
@@ -274,18 +427,21 @@ export default function ScoreCardUserPage() {
     return null;
   };
 
-  const RenderHeader = () => {
+  const renderHeader = () => {
     return (
-      <>
+      <View style={{ paddingTop: 20 }}>
         <HStack
-          className="px-3 pt-5 items-center"
-          style={{ justifyContent: "space-between" }}
+          className="px-3 items-center"
+          style={{ height: 60, justifyContent: "center" }}
         >
-          {/* LEFT: Back button */}
-          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+          {/* LEFT: Back button (Absolute positioned for centering) */}
+          <Pressable
+            onPress={() => routePage.back()}
+            style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+          >
             <Ionicons
               name="arrow-back-outline"
-              size={22}
+              size={24}
               color={isDark ? "#ffffff" : "#020617"}
             />
           </Pressable>
@@ -293,41 +449,43 @@ export default function ScoreCardUserPage() {
           {/* CENTER: Title */}
           <ThemedText
             style={{
-              flex: 1,
               fontSize: 20,
               fontWeight: "700",
               textAlign: "center",
-              lineHeight: 30,
             }}
           >
             Scorecard
           </ThemedText>
-
-          {/* RIGHT: Add Button */}
-          <View style={{ width: 40 }} />
         </HStack>
-        <HStack className="justify-between px-5 items-center">
-          <ThemedText
-            style={{
-              textAlign: "center",
-              fontSize: 16,
-              fontWeight: "400",
-              lineHeight: 30,
-            }}
-          >
+
+        <HStack className="justify-between px-5 items-center mb-2">
+          <View style={{ flex: 1 }}>
             {excluded === "true" && stableford === "false" && (
-              <ThemedText>(Net Score Exclude Par 3)</ThemedText>
+              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                (Net Score Exclude Par 3)
+              </ThemedText>
             )}
             {excluded === "false" && stableford === "true" && (
-              <ThemedText>(Stableford)</ThemedText>
+              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                (Stableford)
+              </ThemedText>
             )}
             {excluded === "false" && stableford === "false" && (
-              <ThemedText>(Net Score Include Par 3)</ThemedText>
+              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                (Net Score Include Par 3)
+              </ThemedText>
             )}
+            {excluded === "true" && stableford === "true" && (
+              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                (Stableford Exclude Par 3)
+              </ThemedText>
+            )}
+          </View>
+          <ThemedText style={{ fontWeight: "600" }}>
+            Handicap: {handicap}
           </ThemedText>
-          <ThemedText>Handicap: {handicap as string}</ThemedText>
         </HStack>
-      </>
+      </View>
     );
   };
 
@@ -340,7 +498,7 @@ export default function ScoreCardUserPage() {
       >
         {/* Header */}
 
-        <RenderHeader />
+        {renderHeader()}
 
         <Watermark />
 
@@ -370,7 +528,9 @@ export default function ScoreCardUserPage() {
                     <HStack
                       style={{
                         paddingVertical: 12,
-                        backgroundColor: isDark ? "#262626" : "#f3f4f6",
+                        backgroundColor: isDark
+                          ? "rgba(38, 38, 38, 0.8)"
+                          : "rgba(243, 244, 246, 0.8)",
                         borderBottomWidth: 1,
                         borderColor: isDark ? "#444" : "#ddd",
                       }}
@@ -445,8 +605,14 @@ export default function ScoreCardUserPage() {
                               //   setBorderDisplay(false);
                               //   handleScoreChange(h.holeId, val);
                               // }}
-                              value={h.score !== null && h.score !== undefined ? String(h.score) : ""}
-                              onChangeText={(val) => handleScoreChange(h.holeId, val)}
+                              value={
+                                h.score !== null && h.score !== undefined
+                                  ? String(h.score)
+                                  : ""
+                              }
+                              onChangeText={(val) =>
+                                handleScoreChange(h.holeId, val)
+                              }
                               keyboardType="numeric"
                               style={{
                                 width: 42,
@@ -488,7 +654,9 @@ export default function ScoreCardUserPage() {
                         {index === 8 && (
                           <HStack
                             style={{
-                              backgroundColor: isDark ? "#262626" : "#f3f4f6",
+                              backgroundColor: isDark
+                                ? "rgba(38, 38, 38, 0.8)"
+                                : "rgba(243, 244, 246, 0.8)",
                               paddingVertical: 10,
                               borderTopWidth: 1,
                               borderColor: isDark ? "#444" : "#ddd",
@@ -523,7 +691,7 @@ export default function ScoreCardUserPage() {
                                 fontWeight: "700",
                               }}
                             >
-                              {frontTotals.score}
+                              {Number(frontTotals.score)}
                             </ThemedText>
 
                             <ThemedText
@@ -550,7 +718,9 @@ export default function ScoreCardUserPage() {
                         {index === 17 && (
                           <HStack
                             style={{
-                              backgroundColor: isDark ? "#262626" : "#f3f4f6",
+                              backgroundColor: isDark
+                                ? "rgba(38, 38, 38, 0.8)"
+                                : "rgba(243, 244, 246, 0.8)",
                               paddingVertical: 10,
                               borderTopWidth: 1,
                               borderColor: isDark ? "#444" : "#ddd",
@@ -669,7 +839,7 @@ export default function ScoreCardUserPage() {
                       <ThemedText
                         style={{ flex: 1, textAlign: "center", color: "#fff" }}
                       >
-                        {grandTotals.stableford}
+                        {Number(grandTotals.stableford)}
                       </ThemedText>
                     )}
                   </HStack>
@@ -703,6 +873,7 @@ export default function ScoreCardUserPage() {
                       Finish Round
                     </ThemedText>
                   </Pressable>
+
                   {/* Scorecard legend */}
                   <VStack
                     style={{
@@ -710,20 +881,19 @@ export default function ScoreCardUserPage() {
                       padding: 16,
                       borderRadius: 14,
                       backgroundColor: "transparent",
-                      // isDark ? "#1f1f1f" : "#fff"
                       borderWidth: 1,
                       borderColor: isDark ? "#eee" : "#333",
                     }}
                   >
                     <ThemedText
                       style={{
-                        textAlign: "center",
+                        textAlign: "left",
                         fontWeight: "700",
-                        fontSize: 16,
+                        fontSize: 14,
                         marginBottom: 16,
                       }}
                     >
-                      Score Legend
+                      Scorecard Legend
                     </ThemedText>
 
                     <View
@@ -733,24 +903,69 @@ export default function ScoreCardUserPage() {
                         justifyContent: "space-between",
                       }}
                     >
-                      {/* 🟡 Eagle */}
+                      {/* 🟡 Hole-in-One */}
                       <View style={styles.legendItemStyle}>
                         <View
                           style={[
-                            styles.doubleCircle,
-                            { borderColor: "#FFD700" },
+                            styles.singleCircle,
+                            {
+                              borderColor: "#fbc02d",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
                           ]}
                         >
-                          <View
-                            style={[
-                              styles.innerCircle,
-                              { borderColor: "#FFD700" },
-                            ]}
-                          />
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.holeInOne > 0
+                              ? legendCounts.holeInOne
+                              : ""}
+                          </ThemedText>
                         </View>
                         <ThemedText style={styles.legendText}>
-                          Eagle (-2)
+                          Hole-in-One
                         </ThemedText>
+                      </View>
+
+                      {/* 🔵 Albatross */}
+                      <View style={styles.legendItemStyle}>
+                        <View
+                          style={[
+                            styles.singleCircle,
+                            {
+                              borderColor: "#00838f",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
+                          ]}
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.albatross > 0
+                              ? legendCounts.albatross
+                              : ""}
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={styles.legendText}>
+                          Albatross
+                        </ThemedText>
+                      </View>
+
+                      {/* 🟢 Eagle */}
+                      <View style={styles.legendItemStyle}>
+                        <View
+                          style={[
+                            styles.singleCircle,
+                            {
+                              borderColor: "#2e7d32",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
+                          ]}
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.eagle > 0 ? legendCounts.eagle : ""}
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={styles.legendText}>Eagle</ThemedText>
                       </View>
 
                       {/* 🟢 Birdie */}
@@ -758,29 +973,41 @@ export default function ScoreCardUserPage() {
                         <View
                           style={[
                             styles.singleCircle,
-                            { borderColor: "#2e7d32" },
+                            {
+                              borderColor: "#66bb6a",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
                           ]}
-                        />
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.birdie > 0 ? legendCounts.birdie : ""}
+                          </ThemedText>
+                        </View>
                         <ThemedText style={styles.legendText}>
-                          Birdie (-1)
+                          Birdie
                         </ThemedText>
                       </View>
 
-                      {/* ⚪ Par */}
+                      {/* ⚪ Par (dashed square) */}
                       <View style={styles.legendItemStyle}>
                         <View
                           style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 17,
+                            width: 32,
+                            height: 32,
                             borderWidth: 1,
                             borderStyle: "dashed",
                             borderColor: "#999",
+                            borderRadius: 4,
+                            justifyContent: "center",
+                            alignItems: "center",
                           }}
-                        />
-                        <ThemedText style={styles.legendText}>
-                          Par (0)
-                        </ThemedText>
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.par > 0 ? legendCounts.par : ""}
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={styles.legendText}>Par</ThemedText>
                       </View>
 
                       {/* 🔴 Bogey */}
@@ -788,12 +1015,18 @@ export default function ScoreCardUserPage() {
                         <View
                           style={[
                             styles.singleSquare,
-                            { borderColor: "#d32f2f" },
+                            {
+                              borderColor: "#e53935",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
                           ]}
-                        />
-                        <ThemedText style={styles.legendText}>
-                          Bogey (+1)
-                        </ThemedText>
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.bogey > 0 ? legendCounts.bogey : ""}
+                          </ThemedText>
+                        </View>
+                        <ThemedText style={styles.legendText}>Bogey</ThemedText>
                       </View>
 
                       {/* 🔴 Double Bogey */}
@@ -801,31 +1034,89 @@ export default function ScoreCardUserPage() {
                         <View
                           style={[
                             styles.doubleSquare,
-                            { borderColor: "#d32f2f" },
+                            {
+                              borderColor: "#e53935",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
                           ]}
                         >
                           <View
                             style={[
                               styles.innerSquare,
-                              { borderColor: "#d32f2f" },
+                              {
+                                borderColor: "#e53935",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
                             ]}
-                          />
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.double > 0
+                                ? legendCounts.double
+                                : ""}
+                            </ThemedText>
+                          </View>
                         </View>
                         <ThemedText style={styles.legendText}>
-                          Double Bogey (+2)
+                          Double Bogey
                         </ThemedText>
                       </View>
 
-                      {/* ⬛ High */}
+                      {/* 🟣 Triple Bogey */}
+                      <View style={styles.legendItemStyle}>
+                        <View
+                          style={[
+                            styles.doubleSquare,
+                            {
+                              borderColor: "#8e24aa",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.innerSquare,
+                              {
+                                borderColor: "#8e24aa",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.triple > 0
+                                ? legendCounts.triple
+                                : ""}
+                            </ThemedText>
+                          </View>
+                        </View>
+                        <ThemedText style={styles.legendText}>
+                          Triple Bogey
+                        </ThemedText>
+                      </View>
+
+                      {/* ⬛ Quadruple+ */}
                       <View style={styles.legendItemStyle}>
                         <View
                           style={[
                             styles.singleSquare,
-                            { borderColor: isDark ? "#fff" : "#000" },
+                            {
+                              borderColor: isDark ? "#fff" : "#000",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            },
                           ]}
-                        />
+                        >
+                          <ThemedText style={{ textAlign: "center" }}>
+                            {legendCounts.quadPlus > 0
+                              ? legendCounts.quadPlus
+                              : ""}
+                          </ThemedText>
+                        </View>
                         <ThemedText style={styles.legendText}>
-                          +3 or more
+                          Quadruple Bogey+
                         </ThemedText>
                       </View>
                     </View>
