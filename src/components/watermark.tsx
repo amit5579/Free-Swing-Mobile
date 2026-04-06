@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Image, StyleSheet } from "react-native";
 
-export default function Watermark() {
+export default function Watermark({ opacity }: { opacity?: number }) {
   return (
     <View style={styles.container} pointerEvents="none">
       <Image
         source={require("../../assets/images/freeswing-watermark.png")}
-        style={styles.image}
+        style={[styles.image, opacity !== undefined && { opacity }]}
         resizeMode="contain"
       />
     </View>
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   image: {
     width: "80%",
     height: "80%",
-    opacity: 0.30,
+    opacity: 0.40,
     transform: [{ rotate: "-5deg" }],
   },
 });
