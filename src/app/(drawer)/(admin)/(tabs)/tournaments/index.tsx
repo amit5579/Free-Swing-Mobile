@@ -29,12 +29,14 @@ import {
   getTournaments,
   updateTournament,
 } from "@/api/admin/tournaments";
-import { getCourse } from "@/api/admin/courses";
+import { getCourse, getTeeBox } from "@/api/admin/courses";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { tournamentSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import { useFocusEffect } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
@@ -47,6 +49,7 @@ const [loading, setLoading] = useState(true);
 
   const [tournaments, setTournaments] = useState<any>([]);
   const [courses, setCourses] = useState<any>([]);
+  const [teeBox, setTeeBox] = useState<any>([]);
   // const [scoringTypes, setScoringTypes] = useState<any>([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -71,49 +74,90 @@ const [loading, setLoading] = useState(true);
     },
   });
 
+  const watchedCourseId = watch("courseId");
+
   const scoringMap: any = {
-    3: "stableford",
     1: "netScore",
+    2: "stableford",
+    3: "practice",
+    4: "double-peoria-net",
+    5: "double-peoria-stableford",
   };
-  // 👇 ADD HERE
-  const scoringTypes = [
-    { label: "Stableford", value: 3 },
-    { label: "Net Score", value: 1 },
-  ];
+
+  useEffect(() => {
+    const courseId = watchedCourseId?.[0];
+    if (!courseId) {
+      setTeeBox([]);
+      return;
+    }
+    getTeeBox(String(courseId)).then((boxes: any[]) => {
+      setTeeBox(
+        boxes.map((b) => ({
+          label: b.name,
+          value: b.teeBoxId,
+        }))
+      );
+    });
+  }, [watchedCourseId?.[0]]);
 
   const formatDate = (date: Date) => {
     return date.toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
-  const onSubmit = (data: any) => {
-    const tournamentData = {
-      name: data.name,
+  const onSubmit = async (data: any) => {
+    try {
+      const tournamentData = {
+        name: data.name,
+        courseId: data.courseId[0],
+        teeBoxId: data.teeColor[0],
+        scoringType: scoringMap[data.scoringType[0]] || "netScore",
+        startDate: formatDate(data.startDate),
+        endDate: formatDate(data.endDate),
+        description: data.description || "",
+        creatorId: 1, 
+      };
 
-      courseId: data.courseId[0], // ✅ array → single
+      if (isEditMode) {
+        console.log("UPDATE API", tournamentData);
+        await updateTournament(editingCourse.tournamentId, tournamentData);
+      } else {
+        console.log("CREATE API", tournamentData);
+        await createTournament(tournamentData);
+      }
 
-      teeBoxId: data.teeColor[0], // ✅ rename
-
-      scoringType: scoringMap[data.scoringType[0]],
-
-      startDate: formatDate(data.startDate),
-      endDate: formatDate(data.endDate),
-
-      description: data.description || "",
-
-      creatorId: 1, // ⚠️ replace with logged-in user later
-    };
-
-    if (isEditMode) {
-      console.log("UPDATE API", tournamentData);
-      updateTournament(editingCourse.tournamentId, tournamentData);
-    } else {
-      console.log("CREATE API", tournamentData);
-      createTournament(tournamentData);
+      await fetchTournaments();
+      
+      Toast.show({
+        type: "success",
+        text1: isEditMode ? "Tournament updated successfully" : "Tournament created successfully",
+      });
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Submission error:", error);
+      Toast.show({
+        type: "error",
+        text1: isEditMode ? "Tournament update failed" : "Tournament creation failed",
+      });
     }
-
-    setModalVisible(false);
   };
 
+
+  const onDelete = async (id: number) => {
+    try {
+      await deleteTournament(id);
+      await fetchTournaments();
+      Toast.show({
+        type: "success",
+        text1: "Tournament deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting tournament:", error);
+      Toast.show({
+        type: "error",
+        text1: "Tournament deletion failed",
+      });
+    }
+  }
   const fetchTournaments = async () => {
     try {
           setLoading(true);
@@ -139,10 +183,17 @@ const [loading, setLoading] = useState(true);
   }
   };
 
-  useEffect(() => {
+  useEffect(() => {    
     fetchTournaments();
   }, []);
 
+   useFocusEffect(
+    React.useCallback(() => {
+          fetchTournaments();
+   // 🔥 refetch when screen is focused again
+    }, [])
+  );
+  
   useEffect(() => {
     if (!isEditMode || !editingCourse || !editingCourse.name) return;
 
@@ -159,7 +210,7 @@ const [loading, setLoading] = useState(true);
 
       endDate: editingCourse.endDate ? new Date(editingCourse.endDate) : null,
     });
-  }, [isEditMode, editingCourse, courses, scoringTypes]);
+  }, [isEditMode, editingCourse, courses]);
 
 const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
   return (
@@ -285,6 +336,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
               <TournamentCard
                 key={tournament.tournamentId}
                 tournament={tournament}
+                onDelete={onDelete}
                 setIsEditMode={setIsEditMode}
                 setEditingCourse={setEditingCourse}
                 isEditMode={isEditMode}
@@ -416,15 +468,18 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                         }}
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
-                        data={[
-                          { label: "red", value: "1" },
-                          { label: "blue", value: "2" },
-                          { label: "black", value: "3" },
-                          { label: "white", value: "4" },
-                          { label: "gold", value: "5" },
-                          { label: "green", value: "6" },
-                          { label: "silver", value: "7" },
-                        ]}
+                        data={
+                        //   [
+                        //   { label: "red", value: "1" },
+                        //   { label: "blue", value: "2" },
+                        //   { label: "black", value: "3" },
+                        //   { label: "white", value: "4" },
+                        //   { label: "gold", value: "5" },
+                        //   { label: "green", value: "6" },
+                        //   { label: "silver", value: "7" },
+                        // ]
+                        teeBox
+                      }
                         labelField="label"
                         valueField="value"
                         placeholder="Select Tee Box"
@@ -463,18 +518,24 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                         }}
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
-                        data={scoringTypes}
+                        data={[
+                          { label: "Standard (Gross/Net)", value: 1 },
+                          { label: "Stableford", value: 2 },
+                          { label: "Excluded(practice)", value: 3 },
+                          { label: "DP Gross / Net", value: 4 },
+                          { label: "DP Stableford", value: 5 },
+                        ]}
                         labelField="label"
                         valueField="value"
                         placeholder="Select Scoring Type"
                         value={value?.[0]}
-                        onChange={(item) => onChange([item.value])}
+                        onChange={(item) => onChange([Number(item.value)])}
                       />
                     )}
                   />
                   {errors.scoringType && (
                     <Text style={{ color: "red" }}>
-                      *{errors.scoringType.message}
+                      *{errors.scoringType.message || (errors.scoringType as any)?.[0]?.message || "Invalid input"}
                     </Text>
                   )}
                 </VStack>
@@ -626,6 +687,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 function TournamentCard({
   tournament,
   isDark,
+  onDelete,
   setIsEditMode,
   setEditingCourse,
   setModalVisible,
@@ -803,7 +865,7 @@ function TournamentCard({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                deleteTournament(tournament?.tournamentId);
+                onDelete(tournament?.tournamentId);
               }}
             >
               <Ionicons name="trash-outline" size={20} color="#ef4444" />

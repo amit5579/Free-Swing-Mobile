@@ -18,7 +18,11 @@ import { VStack } from "@/components/vstack";
 import { ScrollView } from "react-native-gesture-handler";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { getScorecardHandicap, getScoreCardOpen } from "@/api/scoreCard";
+import {
+  getScorecardHandicap,
+  getScoreCardOpen,
+  saveScoreCard,
+} from "@/api/scoreCard";
 import Toast from "react-native-toast-message";
 
 export default function PlayScoreCard() {
@@ -26,22 +30,28 @@ export default function PlayScoreCard() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, teeBoxId, courseId, scoringType } = useLocalSearchParams();
+  const { tournamentId, teeBoxId, courseId, scoringType } =
+    useLocalSearchParams();
 
   const [loading, setLoading] = useState(false);
   const [scoreCard, setScoreCard] = useState<any>([]);
   const [handicap, setHandicap] = useState<any>([]);
   const [visible, setVisible] = useState(false);
 
-  const isStableford = scoringType === "stableford" || scoringType === "Stableford";
+  const isStableford =
+    scoringType === "stableford" || scoringType === "Stableford";
 
-const isDoublePeoria = scoringType === "double-peoria" || scoringType === "Double-Peoria" || scoringType === "double-peoria-stableford" || scoringType === "Double-Peoria-Stableford" || scoringType === "double-peoria-net" || scoringType === "Double-Peoria-Net";
-    
-const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
+  const isDoublePeoria =
+    scoringType === "double-peoria" ||
+    scoringType === "Double-Peoria" ||
+    scoringType === "double-peoria-stableford" ||
+    scoringType === "Double-Peoria-Stableford" ||
+    scoringType === "double-peoria-net" ||
+    scoringType === "Double-Peoria-Net";
 
-const isStandard = scoringType === "standard" || scoringType === "Standard";
+  const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
-
+  const isStandard = scoringType === "standard" || scoringType === "Standard";
 
   const fetchScoreCard = async () => {
     try {
@@ -72,13 +82,62 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     fetchScoreCard();
   }, []);
 
+  // ── Calculation helpers ──
+  const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
+    const base = Math.floor(playerHandicap / 18);
+    const remainder = playerHandicap % 18;
+    return base + (strokeIndex <= remainder ? 1 : 0);
+  };
+
+  const calculateHole = (hole: any) => {
+    if (hole.score === null || hole.score === "" || hole.score === undefined) {
+      return {
+        ...hole,
+        netScore: "-",
+        stablefordPoints: null,
+      };
+    }
+
+    const score = Number(hole.score);
+    // player handicap value (handled as number or object)
+    const playerHandicapVal =
+      typeof handicap === "object"
+        ? (handicap.courseHandicap ?? handicap.handicap ?? 0)
+        : Number(handicap || 0);
+
+    let strokesReceived = calculateStrokes(
+      Number(playerHandicapVal),
+      hole.handicap,
+    );
+
+    // Excluded logic
+    if (isExcluded && hole.par === 3) {
+      strokesReceived = 0;
+    }
+
+    const netScore = score - strokesReceived;
+
+    // Stableford
+    let stablefordPoints = null;
+    if (isStableford) {
+      const pts = hole.par - netScore + 2;
+      stablefordPoints = pts > 0 ? pts : 0;
+    }
+
+    return {
+      ...hole,
+      netScore,
+      stablefordPoints,
+    };
+  };
+
   // ── Score change handler ──
   const handleScoreChange = (holeId: number, value: string) => {
     if (value === "") {
       setScoreCard((prev: any[]) =>
         prev.map((hole) =>
-          hole.holeId === holeId ? { ...hole, score: "" } : hole
-        )
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
+        ),
       );
       return;
     }
@@ -89,15 +148,15 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     }
 
     const numericValue = Number(value);
-    if (numericValue > 15) {
-      Toast.show({ type: "error", text1: "Max score is 15" });
+    if (numericValue > 25) {
+      Toast.show({ type: "error", text1: "Max score is 25" });
       return;
     }
 
     setScoreCard((prev: any[]) =>
       prev.map((hole) =>
-        hole.holeId === holeId ? { ...hole, score: value } : hole
-      )
+        hole.holeId === holeId ? { ...hole, score: value } : hole,
+      ),
     );
   };
 
@@ -170,21 +229,36 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
     stableford: holes.reduce(
       (sum, h) => sum + (Number(h.stablefordPoints) || 0),
-      0
+      0,
     ),
   });
 
   // ── Processed data ──
-  const processedFront9 = scoreCard.slice(0, 9);
-  const processedBack9 = scoreCard.slice(9, 18);
-  const legendCounts = getScoreLegendCounts(scoreCard);
+  const processedScoreCard = scoreCard.map(calculateHole);
+
+  const processedFront9 = processedScoreCard.slice(0, 9);
+  const processedBack9 = processedScoreCard.slice(9, 18);
+  const legendCounts = getScoreLegendCounts(processedScoreCard);
 
   const frontTotals = getTotals(processedFront9);
   const backTotals = getTotals(processedBack9);
-  const grandTotals = getTotals(scoreCard);
+  const grandTotals = getTotals(processedScoreCard);
+
+  const payload = processedScoreCard.map((h: any) => ({
+    courseId: Number(courseId),
+    holeId: h.holeId,
+    isCompleted: true,
+    isExcluded: isExcluded && h.par === 3,
+    roundNumber: 1,
+    score: h.score ?? 0,
+    stablefordPoints: h.stablefordPoints ?? 0,
+    teeBoxId: Number(teeBoxId),
+  }));
 
   // ── Finish Round ──
   const handleFinishRound = () => {
+    saveScoreCard(payload);
+
     setVisible(false);
     Toast.show({
       type: "success",
@@ -197,7 +271,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
   const renderScoreIndicator = (
     score: number | string | null,
     par: number,
-    dark: boolean
+    dark: boolean,
   ) => {
     if (score === null || score === "" || score === undefined) return null;
 
@@ -208,9 +282,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     if (numericScore === 1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[styles.singleCircle, { borderColor: "#fbc02d" }]}
-          />
+          <View style={[styles.singleCircle, { borderColor: "#fbc02d" }]} />
         </View>
       );
     }
@@ -219,9 +291,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     if (diff <= -3) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[styles.singleCircle, { borderColor: "#00838f" }]}
-          />
+          <View style={[styles.singleCircle, { borderColor: "#00838f" }]} />
         </View>
       );
     }
@@ -230,9 +300,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     if (diff === -2) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[styles.singleCircle, { borderColor: "#2e7d32" }]}
-          />
+          <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
         </View>
       );
     }
@@ -241,9 +309,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
     if (diff === -1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[styles.singleCircle, { borderColor: "#66bb6a" }]}
-          />
+          <View style={[styles.singleCircle, { borderColor: "#66bb6a" }]} />
         </View>
       );
     }
@@ -317,7 +383,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
   // ── Header ──
   const renderHeader = () => {
     return (
-      <View style={{ paddingTop: 20 }}>
+      <View>
         <HStack
           className="px-3 items-center"
           style={{ height: 60, justifyContent: "center" }}
@@ -362,12 +428,12 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
 
   return (
     <>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}>
         {renderHeader()}
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          <VStack className="px-4 pt-6 pb-20">
+          <VStack className="px-4 pt-2 pb-20">
             <VStack className="gap-4">
               {loading ? (
                 <ThemedText>Loading...</ThemedText>
@@ -420,7 +486,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                     </HStack>
 
                     {/* 🔹 ROWS */}
-                    {scoreCard.map((h: any, index: number) => (
+                    {processedScoreCard.map((h: any, index: number) => (
                       <View key={h.holeId}>
                         <HStack
                           style={{
@@ -431,9 +497,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                           }}
                         >
                           {/* Hole Number */}
-                          <ThemedText
-                            style={{ flex: 1, textAlign: "center" }}
-                          >
+                          <ThemedText style={{ flex: 1, textAlign: "center" }}>
                             {h.holeNumber}
                           </ThemedText>
 
@@ -449,9 +513,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                           </ThemedText>
 
                           {/* Par */}
-                          <ThemedText
-                            style={{ flex: 1, textAlign: "center" }}
-                          >
+                          <ThemedText style={{ flex: 1, textAlign: "center" }}>
                             {h.par}
                           </ThemedText>
 
@@ -628,6 +690,12 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                         )}
                       </View>
                     ))}
+
+                    {scoreCard.length == 0 && (
+                      <ThemedText style={{ textAlign: "center" }}>
+                        No games played in this tournament yet.
+                      </ThemedText>
+                    )}
                   </VStack>
 
                   {/* GRAND TOTAL */}
@@ -825,9 +893,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                           ]}
                         >
                           <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.birdie > 0
-                              ? legendCounts.birdie
-                              : ""}
+                            {legendCounts.birdie > 0 ? legendCounts.birdie : ""}
                           </ThemedText>
                         </View>
                         <ThemedText style={styles.legendText}>
@@ -872,9 +938,7 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
                             {legendCounts.bogey > 0 ? legendCounts.bogey : ""}
                           </ThemedText>
                         </View>
-                        <ThemedText style={styles.legendText}>
-                          Bogey
-                        </ThemedText>
+                        <ThemedText style={styles.legendText}>Bogey</ThemedText>
                       </View>
 
                       {/* Double Bogey */}
@@ -985,15 +1049,11 @@ const isStandard = scoringType === "standard" || scoringType === "Standard";
               { backgroundColor: isDark ? "#1c1c1e" : "#fff" },
             ]}
           >
-            <Text
-              style={[styles.heading, { color: isDark ? "#fff" : "#000" }]}
-            >
+            <Text style={[styles.heading, { color: isDark ? "#fff" : "#000" }]}>
               Finish Round
             </Text>
 
-            <Text
-              style={[styles.content, { color: isDark ? "#ccc" : "#555" }]}
-            >
+            <Text style={[styles.content, { color: isDark ? "#ccc" : "#555" }]}>
               Are you sure you want to finish this round? Once submitted, you
               cannot edit your scores.
             </Text>

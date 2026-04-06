@@ -125,7 +125,7 @@ export const getTournamentPlayers = async (tournamentId: number) => {
 export const addPlayerToTournament = async (tournamentId: number, userId: number) => {
     try {
         const response = await https.post(`Tournament/join`, { tournamentId, userId });
-        console.log("Added Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
+        // console.log("Added Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
         return response.data;
 
     } catch (error) {
@@ -139,7 +139,7 @@ export const addPlayerToTournament = async (tournamentId: number, userId: number
 export const removePlayerFromTournament = async (tournamentId: any, userId: any) => {
     try {
         const response = await https.delete(`Tournament/${tournamentId}/players/${userId}`);
-        console.log("Removed Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
+        // console.log("Removed Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
         return response.data;
     } catch (error) {
         console.error("Removed tournament players Error:", error);

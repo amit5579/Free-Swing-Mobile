@@ -187,37 +187,37 @@ export default function StartNewRoundPage() {
   );
 }
 
-
-
 /* ---------- COURSE CARD ---------- */
 function CourseCard({ course, isDark }: any) {
   const routePage = useRouter();
 
   /* ---------- CONSTANTS ---------- */
-const scoringOptions = {
-  net_including: { excluded: false, stableford: false },
-  net_excluding: { excluded: true, stableford: false },
-  stableford: { excluded: false, stableford: true },
-};
+  const scoringOptions = {
+    net_including: { excluded: false, stableford: false },
+    net_excluding: { excluded: true, stableford: false },
+    stableford: { excluded: false, stableford: true },
+  };
 
-const holesOptions = {
-  "18": "18",
-  front9: "front9",
-  back9: "back9",
-};
+  const holesOptions = {
+    "18": "18",
+    front9: "front9",
+    back9: "back9",
+  };
 
   const [modalVisible, setModalVisible] = useState(false);
   const [teeBoxList, setTeeBoxList] = useState<any[]>([]);
   const [selectedTeeBoxId, setSelectedTeeBoxId] = useState<number>(0);
   const [handicapDetails, setHandicapDetails] = useState<any>([]);
-  const [scoreType, setScoreType] = useState<keyof typeof scoringOptions>("net_including");
-  const [holesToPlay, setHolesToPlay] = useState<keyof typeof holesOptions>("18");
+  const [scoreType, setScoreType] =
+    useState<keyof typeof scoringOptions>("net_including");
+  const [holesToPlay, setHolesToPlay] =
+    useState<keyof typeof holesOptions>("18");
   const [handicapView, setHandicapView] = useState(false);
   const textColor = isDark ? "#fff" : "#000";
   const subTextColor = isDark ? "#aaa" : "#555";
   const cardBg = isDark ? "#1e1e1e" : "#f9f9f9";
   const borderColor = isDark ? "#333" : "#ddd";
- 
+
   const fetchHandiCap = async () => {
     try {
       const response = await getHandicapDetails(selectedTeeBoxId);
@@ -232,8 +232,6 @@ const holesOptions = {
       fetchHandiCap();
     }
   }, [selectedTeeBoxId]);
-
-
 
   const selectedScore = scoringOptions[scoreType];
   const selectedHoles = holesOptions[holesToPlay];
@@ -568,13 +566,13 @@ const holesOptions = {
                   // handleSubmit(onSubmit)
                   () => {
                     Toast.show({
-  type: "error",
-  text1: "Maximum score per hole is 15",
-});
+                      type: "error",
+                      text1: "Maximum score per hole is 15",
+                    });
                     setHandicapView(false);
                     setModalVisible(false);
                     routePage.push(
-                      `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${selectedTeeBoxId}`
+                      `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${selectedTeeBoxId}`,
                     );
                   }
                 }

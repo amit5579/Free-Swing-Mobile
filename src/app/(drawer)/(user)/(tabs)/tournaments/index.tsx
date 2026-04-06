@@ -33,6 +33,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { tournamentSchema } from "@/schema/adminSchemas";
 import { userTournamentSchema } from "@/schema/userSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function TournamentsScreen() {
   const colorScheme = useColorScheme();
@@ -109,6 +111,16 @@ export default function TournamentsScreen() {
     getUserId();
     fetchTournaments();
   }, []);
+
+
+  useFocusEffect(
+  React.useCallback(() => {
+        fetchTournaments();
+ // 🔥 refetch when screen is focused again
+  }, [])
+);
+
+
   //  const userId = AsyncStorage.getItem("userId");
   // console.log("uuuuuuuuu",userId, "type:", typeof(userId));
 
@@ -118,7 +130,7 @@ export default function TournamentsScreen() {
 
   const onSubmit = (data: any) => {
     // console.log("FORM DATA:", data);
-
+    setTModalVisible(false);
     const tournamentData = {
       description: "",
       endDate: formatDate(data.endDate),
@@ -142,6 +154,12 @@ export default function TournamentsScreen() {
       tournamentData.startDate,
       tournamentData.teeBoxId,
     );
+
+    Toast.show({
+      type: "success",
+      text1: "Tournament created successfully",
+    });
+
     fetchTournaments();
     reset();
     setModalVisible(false);
@@ -293,7 +311,7 @@ export default function TournamentsScreen() {
                       <Pressable
                         onPress={() =>
                           routePage.push(
-                            `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}`,
+                            `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
                           )
                         }
                         className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg"
@@ -809,7 +827,7 @@ export default function TournamentsScreen() {
                             <Pressable
                               onPress={() => {
                                 setModalVisible(false);
-                                 routePage.push(
+                                routePage.push(
                                   `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
                                 );
                               }}
@@ -870,11 +888,11 @@ export default function TournamentsScreen() {
                 </Pressable>
               </HStack>
               {/* TOURNAMENT NAME */}
-              <Text
+              {/* <Text
                 style={[styles.label, { color: isDark ? "white" : "black" }]}
               >
                 Tournament Name
-              </Text>
+              </Text> */}
               <Controller
                 control={control}
                 name="name"
@@ -901,14 +919,14 @@ export default function TournamentsScreen() {
               {/* DATE ROW */}
               <HStack style={styles.row}>
                 <VStack style={{ flex: 1 }}>
-                  <Text
+                  {/* <Text
                     style={[
                       styles.label,
                       { color: isDark ? "white" : "black" },
                     ]}
                   >
                     Start Date
-                  </Text>
+                  </Text> */}
 
                   <Controller
                     control={control}
@@ -954,14 +972,14 @@ export default function TournamentsScreen() {
                 </VStack>
 
                 <VStack style={{ flex: 1 }}>
-                  <Text
+                  {/* <Text
                     style={[
                       styles.label,
                       { color: isDark ? "white" : "black" },
                     ]}
                   >
                     End Date
-                  </Text>
+                  </Text> */}
 
                   <Controller
                     control={control}
@@ -1006,11 +1024,11 @@ export default function TournamentsScreen() {
               </HStack>
 
               {/* COURSE */}
-              <Text
+              {/* <Text
                 style={[styles.label, { color: isDark ? "white" : "black" }]}
               >
                 Course
-              </Text>
+              </Text> */}
               <Controller
                 control={control}
                 name="courseId"
@@ -1055,11 +1073,11 @@ export default function TournamentsScreen() {
               )}
 
               {/* TEE BOX */}
-              <Text
+              {/* <Text
                 style={[styles.label, { color: isDark ? "white" : "black" }]}
               >
                 Tee Box
-              </Text>
+              </Text> */}
 
               <Controller
                 control={control}
@@ -1106,11 +1124,11 @@ export default function TournamentsScreen() {
               )}
 
               {/* SCORING TYPE */}
-              <Text
+              {/* <Text
                 style={[styles.label, { color: isDark ? "white" : "black" }]}
               >
                 Scoring Type
-              </Text>
+              </Text> */}
               <Controller
                 control={control}
                 name="scoringType"
@@ -1152,11 +1170,11 @@ export default function TournamentsScreen() {
                 </Text>
               )}
               {/* MAX PLAYERS */}
-              <Text
+              {/* <Text
                 style={[styles.label, { color: isDark ? "white" : "black" }]}
               >
                 Max Players
-              </Text>
+              </Text> */}
 
               <Controller
                 control={control}
