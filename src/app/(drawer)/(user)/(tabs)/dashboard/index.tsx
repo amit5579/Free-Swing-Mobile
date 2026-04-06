@@ -16,6 +16,7 @@ import {
   View,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
 
 import { HistoryTab } from "./tabs/HistoryTab";
@@ -150,7 +151,8 @@ export default function DashboardScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
+      <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
       <Watermark />
 
       <View
@@ -161,22 +163,34 @@ export default function DashboardScreen() {
         }}
       >
         {loading ? (
-          <VStack className="mb-4 space-y-3">
-            <Skeleton isDark={isDark} height={45} width="100%" borderRadius={12} />
+          <VStack className="space-y-4">
             <HStack
-              className="rounded-full p-2 mt-2"
+              className="rounded-full p-1 justify-between"
               style={{
-                backgroundColor: isDark ? "#1F1F1F" : "#E5E7EB",
+                backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                borderWidth: isDark ? 1 : 0,
+                borderColor: isDark ? "#FFFFFF" : "transparent",
               }}
             >
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} style={{ marginRight: 8 }} />
-              <Skeleton isDark={isDark} height={32} width="30%" borderRadius={20} />
+              <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1 }} />
+              <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1, marginHorizontal: 4 }} />
+              <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1 }} />
             </HStack>
+
+            <Box
+              className="flex-row items-center px-4 rounded-xl border h-11"
+              style={{
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
+                borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+              }}
+            >
+              <Skeleton isDark={isDark} height={18} width={18} borderRadius={9} />
+              <Skeleton isDark={isDark} height={14} width="60%" borderRadius={4} style={{ marginLeft: 8 }} />
+            </Box>
           </VStack>
         ) : (
           <>
-            <Box
+            {/* <Box
               className="flex-row items-center px-4 mb-4 rounded-xl border h-11"
               style={{
                 backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
@@ -209,7 +223,7 @@ export default function DashboardScreen() {
                   <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
                 </Pressable>
               )}
-            </Box>
+            </Box> */}
 
             <HStack
               className="rounded-full p-1 justify-between"
@@ -253,6 +267,41 @@ export default function DashboardScreen() {
                 );
               })}
             </HStack>
+
+            <Box
+              className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
+              style={{
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
+                borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+              }}
+            >
+              <Ionicons name="search-outline" size={18} color="#8BC34A" />
+              <TextInput
+                placeholder={
+                  activeTab === "overview"
+                    ? "Search game feed..."
+                    : activeTab === "progress"
+                      ? "Search in progress..."
+                      : "Search game history..."
+                }
+                placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                style={{
+                  flex: 1,
+                  marginLeft: 8,
+                  color: isDark ? "#fff" : "#111",
+                  fontSize: 14,
+                }}
+              />
+              {searchQuery !== "" && (
+                <Pressable onPress={() => setSearchQuery("")}>
+                  <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
+                </Pressable>
+              )}
+            </Box>
           </>
         )}
       </View>
@@ -276,7 +325,7 @@ export default function DashboardScreen() {
           <View style={{ width: SCREEN_WIDTH }}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
               {loading ? (
-                <VStack className="space-y-4 pt-4">
+                <VStack className="space-y-4">
                   <Box
                     className="rounded-2xl p-4"
                     style={{
@@ -314,7 +363,7 @@ export default function DashboardScreen() {
                     </VStack>
                   </Box>
 
-                  <HStack className="justify-between items-center mb-4 mt-4">
+                  <HStack className="justify-between items-center mb-2">
                     <HStack space="sm" className="items-center">
                       <Skeleton isDark={isDark} width={120} height={28} />
                       <Skeleton isDark={isDark} width={60} height={24} borderRadius={20} />
@@ -456,13 +505,13 @@ export default function DashboardScreen() {
                     </Box>
                   )}
                   {searchQuery !== "" && (
-                    <Box className="mt-2 mb-2">
+                    <Box className="m-0">
                       <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>
                         Game Feed Results
                       </Text>
                     </Box>
                   )}
-                  <Box className="mt-0">
+                  <Box className="mb-4">
                     <OverviewTab
                       cards={cards.filter(c =>
                         c.playerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -502,6 +551,7 @@ export default function DashboardScreen() {
         </ScrollView>
       </View>
     </ThemedView>
+    </SafeAreaView>
   );
 }
 

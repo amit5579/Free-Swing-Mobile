@@ -11,8 +11,9 @@ import {
   TextInput,
   useColorScheme,
   View,
+  BackHandler,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 import { HStack } from "@/components/hstack";
 import { Avatar } from "@/components/avatar";
@@ -21,7 +22,7 @@ import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { getProfile, uploadProfileImage } from "@/api/profile";
 import { Image } from "expo-image";
@@ -34,6 +35,19 @@ export default function AdminProfile() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.navigate("/(drawer)/(admin)/(tabs)/dashboard");
+        return true; 
+      };
+
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () => backHandler.remove();
+    }, [router])
+  );
 
   const {
     control,
@@ -55,6 +69,7 @@ export default function AdminProfile() {
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -179,18 +194,18 @@ export default function AdminProfile() {
           // backgroundColor: isDark ? "#000" : "#f2f2f2",
         }}
       >
-        <ThemedView className="flex-1  px-5">
+        <ThemedView className="flex-1 px-5">
           <Watermark />
           <ScrollView showsVerticalScrollIndicator={false}>
             {pageLoading ? (
               <>
-                {/* HEADER */}
                 <HStack className="items-center my-6">
                   <Skeleton isDark={isDark} height={24} width={24} />
                   <Skeleton
                     isDark={isDark}
                     height={20}
                     width="30%"
+                    borderRadius={4}
                     style={{ marginLeft: 12 }}
                   />
                 </HStack>
@@ -201,7 +216,6 @@ export default function AdminProfile() {
               </>
             ) : (
               <>
-                {/* ================= HEADER ================= */}
                 <HStack className="items-center my-6">
                   <Pressable onPress={() => router.back()}>
                     <Ionicons
@@ -217,24 +231,9 @@ export default function AdminProfile() {
                     Profile
                   </ThemedText>
                 </HStack>
-                {/* ================= PROFILE CARD ================= */}
+
                 <Box className="rounded-3xl p-6 mb-6 bg-white/5">
                   <VStack className="items-center">
-                    {/* Avatar */}
-                    {/* <View
-                  style={{
-                    borderWidth: 3,
-                    borderColor: "#8bc34a",
-                    borderRadius: 999,
-                    padding: 6,
-                    marginBottom: 14,
-                  }}
-                >
-                  <Avatar size="xl">
-                    <UserIcon size={38} color="#8bc34a" />
-                  </Avatar>
-                </View> */}
-
                     <Pressable onPress={pickImage}>
                       <View
                         style={{
@@ -246,25 +245,37 @@ export default function AdminProfile() {
                           position: "relative",
                         }}
                       >
-                        <Avatar size="xl">
-                          {image || adminProfile?.profilePictureUrl ? (
+                          {(image || (adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null")) && !imageError ? (
                             <Image
                               source={{
-                                uri: image || adminProfile?.profilePictureUrl,
+                                uri: image ? image : (adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`),
                               }}
                               style={{
                                 width: 90,
                                 height: 90,
                                 borderRadius: 45,
-                                padding: 3,
                               }}
+                              onError={() => setImageError(true)}
                             />
                           ) : (
-                            <UserIcon size={38} color="#8bc34a" />
+                            <View
+                              style={{
+                                width: 90,
+                                height: 90,
+                                borderRadius: 45,
+                                backgroundColor: isDark ? "#333" : "#C5E1A5",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                borderWidth: 2,
+                                borderColor: "#8BC34A",
+                              }}
+                            >
+                              <Text style={{ fontSize: 40, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
+                                {adminProfile?.username?.trim() ? adminProfile.username.trim()[0].toUpperCase() : "A"}
+                              </Text>
+                            </View>
                           )}
-                        </Avatar>
 
-                        {/* CAMERA ICON OVERLAY */}
                         <View
                           style={{
                             position: "absolute",
@@ -278,7 +289,6 @@ export default function AdminProfile() {
                           <Ionicons name="camera" size={14} color="white" />
                         </View>
 
-                        {/* LOADING OVERLAY */}
                         {uploading && (
                           <View
                             style={{
@@ -301,12 +311,10 @@ export default function AdminProfile() {
                       </View>
                     </Pressable>
 
-                    {/* Name */}
                     <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>
                       {adminProfile?.username}
                     </ThemedText>
 
-                    {/* Role */}
                     <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
                       <ThemedText style={{ fontSize: 14 }}>
                         {adminProfile?.role}
@@ -314,7 +322,7 @@ export default function AdminProfile() {
                     </Box>
                   </VStack>
                 </Box>
-                {/* ================= DETAILS ================= */}
+
                 <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
                   <VStack space="lg">
                     <HStack className="items-center gap-3">
@@ -332,7 +340,6 @@ export default function AdminProfile() {
                   </VStack>
                 </Box>
                 <VStack space="md" className="mt-6">
-                  {/* Change Password */}
                   <Pressable
                     onPress={() => setPasswordModal(true)}
                     style={{
@@ -351,7 +358,6 @@ export default function AdminProfile() {
             )}
           </ScrollView>
         </ThemedView>
-        {/* Change Password Modal */}
         <Modal
           animationType="slide"
           transparent
@@ -373,7 +379,6 @@ export default function AdminProfile() {
                 padding: 18,
               }}
             >
-              {/* HEADER */}
               <HStack
                 style={{
                   justifyContent: "space-between",
@@ -394,7 +399,6 @@ export default function AdminProfile() {
                 </Pressable>
               </HStack>
 
-              {/* SUBTEXT */}
               <ThemedText
                 style={{
                   fontSize: 13,
@@ -405,9 +409,7 @@ export default function AdminProfile() {
                 Enter your current and new password
               </ThemedText>
 
-              {/* INPUTS */}
               <VStack space="md">
-                {/* CURRENT PASSWORD */}
                 <Controller
                   control={control}
                   name="currentPassword"
@@ -441,7 +443,6 @@ export default function AdminProfile() {
                   )}
                 />
 
-                {/* NEW PASSWORD */}
                 <Controller
                   control={control}
                   name="newPassword"
@@ -473,7 +474,6 @@ export default function AdminProfile() {
                   )}
                 />
 
-                {/* CONFIRM PASSWORD */}
                 <Controller
                   control={control}
                   name="confirmPassword"
@@ -508,14 +508,12 @@ export default function AdminProfile() {
                 />
               </VStack>
 
-              {/* BUTTONS */}
               <HStack
                 style={{
                   marginTop: 18,
                   justifyContent: "space-between",
                 }}
               >
-                {/* CANCEL */}
                 <Pressable
                   onPress={() => setPasswordModal(false)}
                   style={{
@@ -531,7 +529,6 @@ export default function AdminProfile() {
                   <ThemedText style={{ fontWeight: "600" }}>Cancel</ThemedText>
                 </Pressable>
 
-                {/* SUBMIT */}
                 <Pressable
                   onPress={handleSubmit(onSubmit)}
                   style={{

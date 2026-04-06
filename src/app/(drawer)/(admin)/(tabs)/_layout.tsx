@@ -71,17 +71,12 @@ export default function AdminTabLayout() {
                 style={{ width: 42, height: 42, borderRadius: 21 }}
                 onError={() => setImageError(true)}
               />
-            ) : profile?.username && profile.username.trim() !== "" ? (
+            ) : (
               <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
                 <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                  {profile.username.trim()[0].toUpperCase()}
+                  {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "A"}
                 </Text>
               </View>
-            ) : (
-              <Image
-                source={{ uri: "https://i.pravatar.cc/100" }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-              />
             )}
           </TouchableOpacity>
         ),
@@ -101,6 +96,30 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
+          // headerLeft: () => (
+          //   <View style={{ marginLeft: 20, paddingVertical: 10 }}>
+          //     <Text style={{ 
+          //       color: "#8BC34A", 
+          //       fontSize: 22, 
+          //       fontWeight: "900",
+          //       letterSpacing: -1,
+          //       lineHeight: 22
+          //     }}>
+          //       FREE SWING
+          //     </Text>
+          //     <Text style={{ 
+          //       color: isDark ? "#A3A3A3" : "#737373", 
+          //       fontSize: 8, 
+          //       fontWeight: "900",
+          //       letterSpacing: 2.5,
+          //       textTransform: "uppercase",
+          //       marginTop: 2
+          //     }}>
+          //       Gold Handicap League
+          //     </Text>
+          //   </View>
+          // ),
+          
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />

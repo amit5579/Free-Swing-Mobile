@@ -348,9 +348,7 @@ export default function AddProduct() {
                     </Text>
                   )}
                 </Button>
-
               </HStack>
-
             </VStack>
           </Box>
 

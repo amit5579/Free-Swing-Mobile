@@ -87,7 +87,7 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.avatar}
                 onError={() => setImageError(true)}
               />
-            ) : profile?.username && profile.username.trim() !== "" ? (
+            ) : (
               <View
                 style={[
                   styles.avatar,
@@ -107,14 +107,9 @@ function CustomDrawerContent({ navigation }: any) {
                     fontWeight: "bold",
                   }}
                 >
-                  {profile.username.trim()[0].toUpperCase()}
+                  {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
                 </Text>
               </View>
-            ) : (
-              <Image
-                source={{ uri: "https://i.pravatar.cc/100" }}
-                style={styles.avatar}
-              />
             )}
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{isAdmin ? "Admin" : "User"}</Text>

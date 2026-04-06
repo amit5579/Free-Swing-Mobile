@@ -108,13 +108,13 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["top", "left", "right"]}
       style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
     >
       <Watermark />
 
       <VStack className="px-4 bg-transparent">
-        <VStack className="mb-6">
+        <VStack className="mb-0">
           <HStack className="items-center">
             <VStack style={{ flex: 1 }}>
               <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
           </HStack>
         </VStack>
 
-        <Box className="mb-4">
+        {/* <Box className="mb-4">
           <View
             style={{
               flexDirection: "row",
@@ -167,10 +167,10 @@ export default function AdminDashboard() {
               </TouchableOpacity>
             )}
           </View>
-        </Box>
+        </Box> */}
 
         <HStack
-          className="rounded-full p-1 mb-6"
+          className="rounded-full p-1 mb-4"
           style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
         >
           {tabs.map((tab) => {
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
                     scrollViewRef.current?.scrollTo({ x: SCREEN_WIDTH, animated: true });
                   }
                 }}
-                className="flex-1 px-4 py-2 rounded-full flex-row items-center justify-center"
+                className="flex-1 px-4 py-2.5 rounded-full flex-row items-center justify-center"
                 style={active ? { backgroundColor: "#8BC34A" } : {}}
               >
                 <Ionicons
@@ -202,6 +202,37 @@ export default function AdminDashboard() {
             );
           })}
         </HStack>
+        <Box className="mb-6">
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+              borderRadius: 24,
+              paddingHorizontal: 16,
+              height: 40,
+            }}
+          >
+            <Ionicons name="search" size={20} color={isDark ? "#aaa" : "#6b7280"} />
+            <TextInput
+              style={{
+                flex: 1,
+                marginLeft: 10,
+                color: isDark ? "#fff" : "#111",
+                fontSize: 15,
+              }}
+              placeholder={activeTab === "overview" ? "Search games..." : "Search players..."}
+              placeholderTextColor={isDark ? "#aaa" : "#6b7280"}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={20} color={isDark ? "#aaa" : "#6b7280"} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </Box>
       </VStack>
 
       <View style={{ flex: 1 }}>
@@ -273,7 +304,7 @@ export default function AdminDashboard() {
                         <Pressable
                           className="py-1.5 rounded-lg items-center mt-2"
                           onPress={() => {
-                             router.push("/allMembers");
+                            router.push("/allMembers");
                           }}
                           style={{
                             backgroundColor: "rgba(255, 255, 255, 0.2)",
@@ -307,7 +338,7 @@ export default function AdminDashboard() {
                         <Pressable
                           className="py-1.5 rounded-lg items-center mt-2"
                           onPress={() => {
-                             router.push("/courses");
+                            router.push("/courses");
                           }}
                           style={{
                             backgroundColor: "rgba(255, 255, 255, 0.2)",

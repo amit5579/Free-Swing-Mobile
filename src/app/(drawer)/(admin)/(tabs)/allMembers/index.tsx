@@ -97,7 +97,7 @@ export default function AllMembersPage() {
         if (a.isBlocked !== b.isBlocked) {
           return a.isBlocked ? 1 : -1;
         }
-        return a.id - b.id; 
+        return a.id - b.id;
       });
 
       setMembers(sortedMembers);
@@ -255,7 +255,7 @@ export default function AllMembersPage() {
                     fontWeight: "700",
                     marginLeft: 6,
                     fontSize: 14,
-                    includeFontPadding: false, 
+                    includeFontPadding: false,
                   }}
                 >
                   {members.length} Members
@@ -431,7 +431,14 @@ export default function AllMembersPage() {
                             <ThemedText style={styles.cardLabel}>EMAIL</ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
                               <Ionicons name="mail-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue} numberOfLines={1}>{member.email}</ThemedText>
+                              {/* <ThemedText style={styles.cardValue} numberOfLines={1}>{member.email}</ThemedText> */}
+                              <ThemedText
+                                style={[styles.cardValue, { flex: 1 }]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                              >
+                                {member.email}
+                              </ThemedText>
                             </HStack>
                           </VStack>
 
@@ -541,6 +548,7 @@ export default function AllMembersPage() {
                                   paddingHorizontal: 16,
                                   paddingVertical: 10,
                                   borderRadius: 12,
+                                  marginRight: 15,
                                   backgroundColor: "rgba(239,68,68,0.1)",
                                   borderWidth: 1,
                                   borderColor: "rgba(239,68,68,0.2)",
