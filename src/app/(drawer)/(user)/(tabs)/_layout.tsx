@@ -82,17 +82,12 @@ export default function TabLayout() {
                   style={{ width: 42, height: 42, borderRadius: 21 }}
                   onError={() => setImageError(true)}
                 />
-              ) : profile?.username && profile.username.trim() !== "" ? (
+              ) : (
                 <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
                   <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                    {profile.username.trim()[0].toUpperCase()}
+                    {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
                   </Text>
                 </View>
-              ) : (
-                <Image
-                  source={{ uri: "https://i.pravatar.cc/100" }}
-                  style={{ width: 42, height: 42, borderRadius: 21 }}
-                />
               )}
             </TouchableOpacity>
           </View>
