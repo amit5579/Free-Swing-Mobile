@@ -24,6 +24,7 @@ import {
   getTeeTimeSeats,
 } from "@/api/teeTime";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function TeeTimeBookingPage() {
   const colorScheme = useColorScheme();
@@ -38,11 +39,15 @@ export default function TeeTimeBookingPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [teeData, setTeeData] = useState<any>(null);
-  const [localBookedSeats, setLocalBookedSeats] = useState<any>({});
+  const [loadingSeats, setLoadingSeats] = useState<any>({});
 
   const [loading, setLoading] = useState(true);
-  const getSeatKey = (timeSlot: string, seatNumber: number) =>
-    `${timeSlot}-${seatNumber}`;
+  const getSeatKey = (
+    date: string,
+    teeBox: number,
+    timeSlot: string,
+    seatNumber: number,
+  ) => `${date}-${teeBox}-${timeSlot}-${seatNumber}`;
 
   const tabs = [
     { key: 1, label: "Tee1", icon: "grid-outline" },
@@ -79,25 +84,35 @@ export default function TeeTimeBookingPage() {
   // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
 
   const bookSeatHandler = async (timeSlot: string, seatNumber: number) => {
+    const date = availableDates[selectedDateIndex];
+    const teeBox = activeTeeTab;
+    const key = getSeatKey(date, teeBox, timeSlot, seatNumber);
+
+    if (loadingSeats[key]) return;
+    setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
+
     try {
-      await bookSeat(
-        selectedCourse,
-        availableDates[selectedDateIndex],
-        seatNumber,
-        activeTeeTab,
-        timeSlot,
-      );
+      await bookSeat(selectedCourse, date, seatNumber, teeBox, timeSlot);
 
-      const key = getSeatKey(timeSlot, seatNumber);
-
-      setLocalBookedSeats((prev: any) => ({
-        ...prev,
-        [key]: true, // 👈 instantly mark as mine
-      }));
-
-      fetchTeeTiming();
+      await fetchTeeTiming();
+      Toast.show({
+        type: "success",
+        text1: "Seat Booked",
+        text2: "Seat booked successfully",
+      });
     } catch (error) {
       console.error(error);
+      Toast.show({
+        type: "error",
+        text1: "Booking Failed",
+        text2: "Booking failed",
+      });
+    } finally {
+      setLoadingSeats((prev: any) => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
     }
   };
 
@@ -106,20 +121,35 @@ export default function TeeTimeBookingPage() {
     timeSlot: string,
     seatNumber: number,
   ) => {
+    const date = availableDates[selectedDateIndex];
+    const teeBox = activeTeeTab;
+    const key = getSeatKey(date, teeBox, timeSlot, seatNumber);
+
+    if (loadingSeats[key]) return;
+    setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
+
     try {
       await cancelSeatBooking(bookingId);
 
-      const key = getSeatKey(timeSlot, seatNumber);
-
-      setLocalBookedSeats((prev: any) => {
-        const updated = { ...prev };
-        delete updated[key]; // 👈 remove from local state
-        return updated;
+      await fetchTeeTiming();
+      Toast.show({
+        type: "success",
+        text1: "Booking Cancelled",
+        text2: "Booking cancelled successfully",
       });
-
-      fetchTeeTiming();
     } catch (error) {
       console.error(error);
+      Toast.show({
+        type: "error",
+        text1: "Cancellation Failed",
+        text2: "Booking cancellation failed",
+      });
+    } finally {
+      setLoadingSeats((prev: any) => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
     }
   };
 
@@ -244,58 +274,57 @@ export default function TeeTimeBookingPage() {
           {slot.seats.map((seat: any, index: number) => {
             const isBooked = seat?.isBooked;
 
-            const key = getSeatKey(slot.time, seat.seatNumber);
-            const isMine = localBookedSeats[key] || seat?.isMyBooking;
+            const date = availableDates[selectedDateIndex];
+            const teeBox = activeTeeTab;
+            const key = getSeatKey(date, teeBox, slot.time, seat.seatNumber);
+            const isMine = seat?.isMyBooking;
+            const isLoading = loadingSeats[key];
+
             return (
               <Pressable
                 key={seat.id ?? `${slot.time}-${index}`}
                 onPress={() => {
-                  const key = getSeatKey(slot.time, seat.seatNumber);
-                  const isMine = localBookedSeats[key] || seat?.isMyBooking;
+                  if (isLoading) return;
 
-                  if (isMine && seat.bookingId) {
-                    cancelBookingHandler(
-                      seat.bookingId,
-                      slot.time,
-                      seat.seatNumber,
-                    );
-                  } else if (!isBooked) {
+                  if (isBooked) {
+                    if (seat.bookingId) {
+                      cancelBookingHandler(
+                        seat.bookingId,
+                        slot.time,
+                        seat.seatNumber,
+                      );
+                    } else {
+                      Toast.show({
+                        type: "error",
+                        text1: "Cannot Cancel",
+                        text2: "You don't have permission to cancel this booking.",
+                      });
+                    }
+                  } else {
                     bookSeatHandler(slot.time, seat.seatNumber);
                   }
                 }}
-                disabled={isBooked && !isMine}
+                disabled={isLoading}
                 style={{
                   width: "23%", // 👈 4 per row
                   paddingVertical: 10,
                   borderRadius: 10,
                   marginBottom: 10,
                   alignItems: "center",
-
-                  backgroundColor: isMine
-                    ? "#ef4444"
-                    : isBooked
-                      ? isDark
-                        ? "#374151"
-                        : "#e5e7eb"
-                      : "#8BC34A",
+                  backgroundColor: isBooked ? "#ef4444" : "#8BC34A",
+                  // opacity: isLoading ? 0.6 : 1,
                 }}
               >
                 <Ionicons
                   name={
-                    isMine
-                      ? "close-circle"
+                    isLoading
+                      ? "hourglass-outline"
                       : isBooked
-                        ? "checkmark-done-sharp"
+                        ? "close-circle"
                         : "add-circle-sharp"
                   }
                   size={20}
-                  color={
-                    isBooked && !isMine
-                      ? isDark
-                        ? "#9ca3af"
-                        : "#6b7280"
-                      : "#fff"
-                  }
+                  color="#fff"
                   style={{ marginBottom: 4 }}
                 />
 
@@ -303,27 +332,21 @@ export default function TeeTimeBookingPage() {
                   style={{
                     fontSize: 11,
                     fontWeight: "500",
-                    color:
-                      isBooked && !isMine
-                        ? isDark
-                          ? "#9ca3af"
-                          : "#6b7280"
-                        : "#fff",
+                    color: "#fff",
+                    textAlign: "center",
                   }}
                 >
-                  {/* {isMine ? "Cancel" : isBooked ? "Cancel" : "Book"} */}
-                  {isMine ? "Cancel" : isBooked ? "Booked" : "Book"}
+                  {isLoading
+                    ? "Please wait"
+                    : isBooked
+                      ? "Cancel booking"
+                      : "Book"}
                 </Text>
                 <Text
                   style={{
                     fontSize: 13,
                     fontWeight: "700",
-                    color:
-                      isBooked && !isMine
-                        ? isDark
-                          ? "#9ca3af"
-                          : "#6b7280"
-                        : "#fff",
+                    color: "#fff",
                   }}
                 >
                   Seat {seat.seatNumber}
@@ -650,4 +673,3 @@ export default function TeeTimeBookingPage() {
   );
 }
 
-/* ---------- COURSE CARD ---------- */

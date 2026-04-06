@@ -229,7 +229,6 @@ export default function ScoreCardUserPage() {
 
   const handleFinishRound = () => {
     setVisible(false);
-    // console.log("ppppp",payload);
     saveScoreCard(payload);
     Toast.show({
       type: "success",
@@ -429,7 +428,7 @@ export default function ScoreCardUserPage() {
 
   const renderHeader = () => {
     return (
-      <View style={{ paddingTop: 20 }}>
+      <View style={{ paddingTop: 10 }}>
         <HStack
           className="px-3 items-center"
           style={{ height: 60, justifyContent: "center" }}

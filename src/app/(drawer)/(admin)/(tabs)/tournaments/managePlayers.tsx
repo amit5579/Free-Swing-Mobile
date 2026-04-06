@@ -19,6 +19,23 @@ import {
   removePlayerFromTournament,
 } from "@/api/admin/tournaments";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
+
+
+{/* <Ionicons
+                  name={
+                    isLoading
+                      ? "hourglass-outline"
+                      : isBooked
+                        ? "close-circle"
+                        : "add-circle-sharp"
+                  }
+                  size={20}
+                  color="#fff"
+                  style={{ marginBottom: 4 }}
+                /> */}
+
+
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -28,6 +45,7 @@ export default function managePlayers() {
   const { tournamentId, tournamentName } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
+  const [loadActions, setLoadActions] = useState(false);
   const [tournamentsName, setTournamentName] = useState<any>();
   const [allPlayers, setAllPlayers] = useState<any>([]);
   const [tournamentPlayers, setTournamentPlayers] = useState<any>([]);
@@ -35,27 +53,41 @@ export default function managePlayers() {
   const handleAdd = async (tournamentId: number, userId: number) => {
     try {
       await addPlayerToTournament(tournamentId, userId);
-      console.log("ADD payload:", {
-        tournamentId: tournamentId,
-        userId: userId,
-      });
+      setLoadActions(true);
+      // console.log("ADD payload:", {
+      //   tournamentId: tournamentId,
+      //   userId: userId,
+      // });
       // update UI instantly
       setTournamentPlayers((prev: any) => [...prev, { userId }]);
+
+      Toast.show({
+        type: "success",
+        text1: "Player added successfully",
+      });
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoadActions(false);
     }
   };
 
   async function handleRemove(userId: any) {
     try {
-      console.log("Removing player:", { tournamentId, userId });
+      // console.log("Removing player:", { tournamentId, userId });
       await removePlayerFromTournament(tournamentId, userId);
 
       setTournamentPlayers((prev: any) =>
         prev.filter((p: any) => p.userId !== userId),
       );
+      Toast.show({
+        type: "success",
+        text1: "Player removed successfully",
+      });
     } catch (err) {
       console.log("Remove player error:", err);
+    }finally {
+      setLoadActions(false);
     }
   }
 
@@ -212,6 +244,7 @@ export default function managePlayers() {
                   player={player}
                   tournamentPlayers={tournamentPlayers}
                   setTournamentPlayers={setTournamentPlayers}
+                  loadActions={loadActions}
                   tournamentId={tournamentId}
                   handleAdd={handleAdd}
                   handleRemove={handleRemove}
@@ -229,6 +262,7 @@ export default function managePlayers() {
 function PlayerCard({
   player,
   tournamentPlayers,
+  loadActions,
   handleAdd,
   handleRemove,
   isDark,
@@ -267,7 +301,7 @@ function PlayerCard({
             </ThemedText>
 
             <ThemedText style={{ fontWeight: "600" }}>
-              {player.handicap}
+              {player.handicap == 0 ? "-" : player.handicap}
             </ThemedText>
           </VStack>
           {/*  */}
@@ -283,7 +317,7 @@ function PlayerCard({
                   fontWeight: "600",
                 }}
               >
-                {"X Remove"}
+                {loadActions ? "Removing..." :"X Remove"}
               </ThemedText>
             </Pressable>
           ) : (
@@ -297,7 +331,7 @@ function PlayerCard({
                   fontWeight: "600",
                 }}
               >
-                {"+ Add"}
+                {loadActions ? "Adding..." : "+ Add"}
               </ThemedText>
             </Pressable>
           )}

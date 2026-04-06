@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
 import { getTournamentHistory, getTournamentHistoryByUserId } from "@/api/admin/tournaments";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function tournamentHistory() {
   const colorScheme = useColorScheme();
@@ -21,15 +22,19 @@ export default function tournamentHistory() {
   const { tournamentId } = useLocalSearchParams();
 
   const [history, setHistory] = useState<any>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchHistory = async () => {
     try {
+      setLoading(true);
       const data = await getTournamentHistory(Number(tournamentId));
       const hData = await getTournamentHistoryByUserId(Number(tournamentId));
-      console.log("hData", hData);
+      // console.log("hData", hData);
       setHistory(data);
     } catch (error) {
       console.error("Error fetching history:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,12 +87,76 @@ export default function tournamentHistory() {
         }}
       >
         <VStack className="gap-4">
-          {history.map((item: any) => (
-            <HistoryCard key={item.id} item={item} isDark={isDark} />
-          ))}
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <HistorySkeleton key={i} isDark={isDark} />
+            ))
+          ) : (
+            <>
+              {history.map((item: any) => (
+                <HistoryCard key={item.id} item={item} isDark={isDark} />
+              ))}
+
+              {history.length == 0 && (
+                <VStack style={{ alignItems: "center", padding: 20 }}>
+                  <ThemedText style={{ textAlign: "center", fontSize: 16, fontWeight: "600" }}>
+                    No History found for this tournament.
+                  </ThemedText>
+                </VStack>
+              )}
+            </>
+          )}
         </VStack>
       </ScrollView>
     </ThemedView>
+  );
+}
+
+function HistorySkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <Box
+      style={{
+        borderWidth: 1,
+        borderColor: isDark ? "#262626" : "#e5e5e5",
+        borderRadius: 14,
+        padding: 16,
+      }}
+    >
+      <VStack className="gap-3">
+        {/* Date Row */}
+        <HStack className="justify-between">
+          <Skeleton isDark={isDark} height={16} width={120} borderRadius={4} />
+          <Skeleton isDark={isDark} height={24} width={70} borderRadius={6} />
+        </HStack>
+
+        {/* Player Name */}
+        <Skeleton isDark={isDark} height={22} width={160} borderRadius={4} />
+        <Divider />
+
+        {/* Stats Row */}
+        <HStack className="justify-between">
+          <VStack className="gap-2">
+            <Skeleton isDark={isDark} height={14} width={45} borderRadius={4} />
+            <Skeleton isDark={isDark} height={20} width={30} borderRadius={4} />
+          </VStack>
+
+          <VStack className="gap-2">
+            <Skeleton isDark={isDark} height={14} width={45} borderRadius={4} />
+            <Skeleton isDark={isDark} height={20} width={30} borderRadius={4} />
+          </VStack>
+
+          <VStack className="gap-2">
+            <Skeleton isDark={isDark} height={14} width={45} borderRadius={4} />
+            <Skeleton isDark={isDark} height={20} width={30} borderRadius={4} />
+          </VStack>
+        </HStack>
+
+        {/* Action Button */}
+        <HStack className="justify-end items-center mt-2">
+          <Skeleton isDark={isDark} height={38} width={130} borderRadius={8} />
+        </HStack>
+      </VStack>
+    </Box>
   );
 }
 

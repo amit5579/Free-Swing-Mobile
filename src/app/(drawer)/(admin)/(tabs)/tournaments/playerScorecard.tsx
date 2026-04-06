@@ -13,19 +13,19 @@ import { HStack } from "@/components/hstack";
 import { ThemedView } from "@/components/themed-view";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getScorecardDetails } from "@/api/admin/tournaments";
+import { getTournamentHistory } from "@/api/admin/tournaments";
 
 const PlayerScorecard = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
-  const { scorecardId } = useLocalSearchParams();
+  const { tournamentId } = useLocalSearchParams();
 
   const [scorecardData, setScorecardData] = useState<any>(null);
 
   const fetchScorecardData = async () => {
     try {
-      const data = await getScorecardDetails(Number(scorecardId));
+      const data = await getTournamentHistory(Number(tournamentId));
       setScorecardData(data);
     } catch (error) {
       console.error("Error fetching scorecard data:", error);

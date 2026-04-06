@@ -10,9 +10,7 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  getTournamentHistoryByUserId,
-} from "@/api/admin/tournaments";
+import { getTournamentHistoryByUserId } from "@/api/admin/tournaments";
 
 import {
   getScorecardHandicap,
@@ -20,15 +18,15 @@ import {
   getScoreCardOpen,
 } from "@/api/scoreCard";
 
-
 import { Skeleton } from "@/components/Skeleton";
+import { VStack } from "@/components/vstack";
 
 export default function TournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-const { tournamentId,  teeBoxId } = useLocalSearchParams();
+  const { tournamentId, teeBoxId } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +35,66 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
   const [history, setTournamentHistory] = useState<any[]>([]); //contains  "isExcluded": true "scorecardId": 361,
   const [scorecardDetails, setScorecardDetails] = useState<any[]>([]);
 
+  // ── Helper Functions (Defined early to avoid hoisting issues) ──
+  const getScoreType = (score: number, par: number) => {
+    const diff = score - par;
+    if (score === 1) return "hole-in-one";
+    if (diff <= -3) return "albatross";
+    if (diff === -2) return "eagle";
+    if (diff === -1) return "birdie";
+    if (diff === 0) return "par";
+    if (diff === 1) return "bogey";
+    if (diff === 2) return "double";
+    if (diff === 3) return "triple";
+    return "quad";
+  };
+
+  const getScoreStyle = (type: string) => {
+    switch (type) {
+      case "hole-in-one":
+        return { borderColor: "#facc15", shape: "circle" };
+      case "albatross":
+        return { borderColor: "#0f766e", shape: "circle" };
+      case "eagle":
+        return { borderColor: "#166534", shape: "circle" };
+      case "birdie":
+        return { borderColor: "#16a34a", shape: "circle" };
+      case "par":
+        return { borderColor: "#9ca3af", shape: "square", dashed: true };
+      case "bogey":
+        return { borderColor: "#ef4444", shape: "square" };
+      case "double":
+        return { borderColor: "#dc2626", shape: "square" };
+      case "triple":
+        return { borderColor: "#7c3aed", shape: "square" };
+      default:
+        return { borderColor: "#000", shape: "square" };
+    }
+  };
+
+  const getScoreLegendCounts = (holes: any[]) => {
+    const counts: any = {
+      "hole-in-one": 0,
+      albatross: 0,
+      eagle: 0,
+      birdie: 0,
+      par: 0,
+      bogey: 0,
+      double: 0,
+      triple: 0,
+      quad: 0,
+    };
+
+    holes.forEach((h) => {
+      if (!h.score && h.score !== 0) return;
+      const type = getScoreType(Number(h.score), Number(h.par));
+      if (counts[type] !== undefined) {
+        counts[type]++;
+      }
+    });
+
+    return counts;
+  };
 
   const fetchScoreCard = async () => {
     try {
@@ -56,7 +114,7 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
 
       if (scorecardId) {
         const scd = await getScorecardDetails(scorecardId);
-        console.log("Scorecard Details:", scd);
+        // console.log("Scorecard Details:", scd);
         setScorecardDetails(scd);
       } else {
         console.warn("No scorecardId found in history results");
@@ -79,7 +137,7 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
     return (
       <>
         <HStack
-          className="px-3 pt-5 items-center"
+          className="px-3 pt-1 items-center"
           style={{ justifyContent: "space-between" }}
         >
           {/* LEFT: Back button */}
@@ -101,7 +159,7 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
               lineHeight: 30,
             }}
           >
-            Scorecard User
+            Scorecard
           </ThemedText>
 
           {/* RIGHT: Add Button */}
@@ -218,82 +276,75 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
   const calculateTotals = (data: any[]) => {
     return data.reduce(
       (acc, item) => {
-        acc.yardage += item.yardage;
-        acc.par += item.par;
-        acc.score += item.score;
-        acc.net += item.netScore;
+        acc.yardage += Number(item.yardage) || 0;
+        acc.par += Number(item.par) || 0;
+        acc.score += Number(item.score) || 0;
+        acc.net += Number(item.netScore) || 0;
         return acc;
       },
       { yardage: 0, par: 0, score: 0, net: 0 },
     );
   };
 
+  const legendCounts = getScoreLegendCounts(scorecardDetails || []);
+
   const legendData = [
-    { label: "Hole-in-One", border: "#facc15", type: "circle", text: "" },
-    { label: "Albatross", border: "#0f766e", type: "circle", text: "" },
-    { label: "Eagle", border: "#166534", type: "circle", text: "" },
-    { label: "Birdie", border: "#16a34a", type: "circle", text: "2" },
+    {
+      label: "Hole-in-One",
+      border: "#facc15",
+      type: "circle",
+      text: legendCounts["hole-in-one"] || "",
+    },
+    {
+      label: "Albatross",
+      border: "#0f766e",
+      type: "circle",
+      text: legendCounts.albatross || "",
+    },
+    {
+      label: "Eagle",
+      border: "#166534",
+      type: "circle",
+      text: legendCounts.eagle || "",
+    },
+    {
+      label: "Birdie",
+      border: "#16a34a",
+      type: "circle",
+      text: legendCounts.birdie || "",
+    },
     {
       label: "Par",
       border: "#9ca3af",
       type: "square",
-      text: "9",
+      text: legendCounts.par || "",
       dashed: true,
     },
-    { label: "Bogey", border: "#ef4444", type: "square", text: "6" },
-    { label: "Double Bogey", border: "#dc2626", type: "square", text: "1" },
-    { label: "Triple Bogey", border: "#7c3aed", type: "square", text: "" },
-    { label: "Quadruple Bogey+", border: "#000", type: "square", text: "" },
+    {
+      label: "Bogey",
+      border: "#ef4444",
+      type: "square",
+      text: legendCounts.bogey || "",
+    },
+    {
+      label: "Double Bogey",
+      border: "#dc2626",
+      type: "square",
+      text: legendCounts.double || "",
+    },
+    {
+      label: "Triple Bogey",
+      border: "#7c3aed",
+      type: "square",
+      text: legendCounts.triple || "",
+    },
+    {
+      label: "Quadruple Bogey+",
+      border: "#000",
+      type: "square",
+      text: legendCounts.quad || "",
+    },
   ];
-
-  const getScoreType = (score: number, par: number) => {
-    const diff = score - par;
-
-    if (score === 1) return "hole-in-one";
-    if (diff <= -3) return "albatross";
-    if (diff === -2) return "eagle";
-    if (diff === -1) return "birdie";
-    if (diff === 0) return "par";
-    if (diff === 1) return "bogey";
-    if (diff === 2) return "double";
-    if (diff === 3) return "triple";
-    return "quad";
-  };
-
-  const getScoreStyle = (type: string) => {
-    switch (type) {
-      case "hole-in-one":
-        return { borderColor: "#facc15", shape: "circle" };
-
-      case "albatross":
-        return { borderColor: "#0f766e", shape: "circle" };
-
-      case "eagle":
-        return { borderColor: "#166534", shape: "circle" };
-
-      case "birdie":
-        return { borderColor: "#16a34a", shape: "circle" };
-
-      case "par":
-        return {
-          borderColor: "#9ca3af",
-          shape: "square",
-          dashed: true,
-        };
-
-      case "bogey":
-        return { borderColor: "#ef4444", shape: "square" };
-
-      case "double":
-        return { borderColor: "#dc2626", shape: "square" };
-
-      case "triple":
-        return { borderColor: "#7c3aed", shape: "square" };
-
-      default:
-        return { borderColor: "#000", shape: "square" };
-    }
-  };
 
   const ScoreRowSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
@@ -330,15 +381,17 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
                     { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
                   ]}
                 >
-                  {["Hole", "HCP", "Yds", "Par", "Score", "Net"].map((h) => (
-                    <View key={h} style={styles.cell}>
-                      <ThemedText
-                      // style={styles.headerText}
-                      >
-                        {h}
-                      </ThemedText>
-                    </View>
-                  ))}
+                  {["Hole", "Stroke\nIndex", "Yds", "Par", "Score", "Net"].map(
+                    (h) => (
+                      <View key={h} style={styles.cell}>
+                        <ThemedText
+                        // style={styles.headerText}
+                        >
+                          {h}
+                        </ThemedText>
+                      </View>
+                    ),
+                  )}
                 </HStack>
                 {loading ? (
                   <>
@@ -368,7 +421,10 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
                 {renderTotals("Total", scorecardDetails || [])}
               </View>
             </ScrollView>
-            <ThemedView style={styles.legendRow}>
+
+            <ThemedText className="mt-3">Scorecard Legend</ThemedText>
+
+            <VStack style={styles.legendRow}>
               {legendData.map((item, index) => (
                 <ThemedView key={index} style={styles.legendItem}>
                   <ThemedView
@@ -392,7 +448,7 @@ const { tournamentId,  teeBoxId } = useLocalSearchParams();
                   <ThemedText style={styles.label}>{item.label}</ThemedText>
                 </ThemedView>
               ))}
-            </ThemedView>
+            </VStack>
           </ScrollView>
         </ThemedView>
       </ThemedView>
