@@ -58,6 +58,7 @@ export default function UserProfile() {
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
@@ -89,6 +90,7 @@ export default function UserProfile() {
     if (!result.canceled) {
       const selectedImage = result.assets[0];
       setImage(selectedImage.uri);
+      setImageError(false);
 
       try {
         setUploading(true);
@@ -113,7 +115,7 @@ export default function UserProfile() {
 
   const ProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
-       <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+      <Box className="rounded-3xl p-6 mb-6 bg-white/5">
         <VStack className="items-center">
           <Skeleton isDark={isDark} height={90} width={90} borderRadius={999} style={{ marginBottom: 14 }} />
           <Skeleton isDark={isDark} height={20} width="40%" style={{ marginBottom: 10 }} />
@@ -202,14 +204,17 @@ export default function UserProfile() {
                     <Pressable onPress={pickImage}>
                       <View style={{ borderWidth: 3, borderColor: "#8bc34a", borderRadius: 999, padding: 3, marginBottom: 14, position: "relative" }}>
                         <Avatar size="xl">
-                          {image || userProfile?.profilePictureUrl ? (
+                          {(image || (userProfile?.profilePictureUrl && userProfile.profilePictureUrl.trim() !== "" && userProfile.profilePictureUrl !== "null")) && !imageError ? (
                             <Image
                               source={{ uri: image || (userProfile?.profilePictureUrl?.startsWith('http') ? userProfile.profilePictureUrl : `https://kolve18freeswing.com${userProfile.profilePictureUrl}`) }}
                               style={{ width: 90, height: 90, borderRadius: 45 }}
+                              onError={() => setImageError(true)}
                             />
                           ) : (
                             <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "rgba(139,195,74,0.1)", justifyContent: "center", alignItems: "center" }}>
-                              <ThemedText style={{ fontSize: 32, fontWeight: "bold", color: "#8BC34A" }}>{userProfile?.username?.charAt(0).toUpperCase() || "?"}</ThemedText>
+                              <ThemedText style={{ fontSize: 32, fontWeight: "bold", color: "#8BC34A" }}>
+                                {userProfile?.username?.trim() ? userProfile.username.trim()[0].toUpperCase() : "U"}
+                              </ThemedText>
                             </View>
                           )}
                         </Avatar>
@@ -248,7 +253,7 @@ export default function UserProfile() {
                 </HStack>
 
                 <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
-                 <VStack space="lg">
+                  <VStack space="lg">
                     <HStack className="items-center gap-3">
                       <Mail size={20} color="#8bc34a" />
                       <VStack>

@@ -40,7 +40,7 @@ export default function AdminProfile() {
     useCallback(() => {
       const onBackPress = () => {
         router.navigate("/(drawer)/(admin)/(tabs)/dashboard");
-        return true; 
+        return true;
       };
 
       const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
@@ -90,13 +90,13 @@ export default function AdminProfile() {
       const selectedImage = result.assets[0];
 
       setImage(selectedImage.uri);
+      setImageError(false);
 
       try {
         setUploading(true);
 
         await uploadProfileImage(selectedImage);
 
-        // refresh profile after upload
         await fetchAdminProfile();
       } catch (error) {
         console.log("Upload failed", error);
@@ -126,7 +126,6 @@ export default function AdminProfile() {
   const onSubmit = (data: any) => {
     console.log("Validated Data:", data);
 
-    // call API here
   };
 
   const AdminProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
@@ -245,36 +244,36 @@ export default function AdminProfile() {
                           position: "relative",
                         }}
                       >
-                          {(image || (adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null")) && !imageError ? (
-                            <Image
-                              source={{
-                                uri: image ? image : (adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`),
-                              }}
-                              style={{
-                                width: 90,
-                                height: 90,
-                                borderRadius: 45,
-                              }}
-                              onError={() => setImageError(true)}
-                            />
-                          ) : (
-                            <View
-                              style={{
-                                width: 90,
-                                height: 90,
-                                borderRadius: 45,
-                                backgroundColor: isDark ? "#333" : "#C5E1A5",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                borderWidth: 2,
-                                borderColor: "#8BC34A",
-                              }}
-                            >
-                              <Text style={{ fontSize: 40, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
-                                {adminProfile?.username?.trim() ? adminProfile.username.trim()[0].toUpperCase() : "A"}
-                              </Text>
-                            </View>
-                          )}
+                        {(image || (adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null")) && !imageError ? (
+                          <Image
+                            source={{
+                              uri: image ? image : (adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`),
+                            }}
+                            style={{
+                              width: 90,
+                              height: 90,
+                              borderRadius: 45,
+                            }}
+                            onError={() => setImageError(true)}
+                          />
+                        ) : (
+                          <View
+                            style={{
+                              width: 90,
+                              height: 90,
+                              borderRadius: 45,
+                              backgroundColor: isDark ? "#333" : "#C5E1A5",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              borderWidth: 2,
+                              borderColor: "#8BC34A",
+                            }}
+                          >
+                            <Text style={{ fontSize: 40, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
+                              {adminProfile?.username?.trim() ? adminProfile.username.trim()[0].toUpperCase() : "A"}
+                            </Text>
+                          </View>
+                        )}
 
                         <View
                           style={{

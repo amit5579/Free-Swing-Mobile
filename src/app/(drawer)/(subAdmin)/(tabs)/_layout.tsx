@@ -1,19 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, TouchableOpacity, useColorScheme, View, Text, StyleSheet } from "react-native";
+import {
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+  StyleSheet,
+  Text,
+} from "react-native";
 import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
-import { HStack } from "@/components/hstack";
-import { Box } from "@/components/box";
-import { Skeleton } from "@/components/Skeleton";
 
-import { Colors } from "@/constants/theme";
-
-export default function TabLayout() {
+export default function SubAdminTabLayout() {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
 
@@ -49,7 +51,7 @@ export default function TabLayout() {
         headerShown: true,
         headerShadowVisible: false,
         headerStyle: {
-          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          backgroundColor: isDark ? "#000" : "#f2f2f2",
         },
         headerTitle: "",
         headerLeftContainerStyle: { paddingLeft: 0, marginLeft: -10 },
@@ -60,22 +62,19 @@ export default function TabLayout() {
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, gap: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16 }}>
             <TouchableOpacity
-              onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
-              style={{
-                width: 38,
-                height: 38,
-                // borderRadius: 19,
-                // backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "rgba(139,195,74,0.12)",
-                // borderWidth: 1,
-                borderColor: "#8BC34A",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
+              onPress={() => router.push("/(drawer)/(admin)/(importantUpdate)")}
+              style={{ marginRight: 16, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.1)", padding: 8, borderRadius: 20 }}
             >
-              <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
+              <Ionicons
+                name="megaphone-outline"
+                size={22}
+                color="#8BC34A"
+              />
+              <View style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF5252", borderWidth: 1.5, borderColor: isDark ? "#000" : "#f2f2f2" }} />
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
               style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
@@ -95,16 +94,38 @@ export default function TabLayout() {
                 >
                   <Ionicons name="person" size={24} color="#8BC34A" />
                 </View>
-              ) : profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+              ) : profile?.profilePictureUrl &&
+              profile.profilePictureUrl.trim() !== "" &&
+              profile.profilePictureUrl !== "null" &&
+              !imageError ? (
                 <Image
-                  source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                  source={{
+                    uri: profile.profilePictureUrl.startsWith("http")
+                      ? profile.profilePictureUrl
+                      : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
+                  }}
                   style={{ width: 42, height: 42, borderRadius: 21 }}
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
-                  <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                    {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isDark ? "#333" : "#C5E1A5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                  }}
+                >
+                  <Text
+                    style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}
+                  >
+                    {profile?.username?.trim()
+                      ? profile.username.trim()[0].toUpperCase()
+                      : "S"}
                   </Text>
                 </View>
               )}
@@ -114,66 +135,15 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
         tabBarStyle: {
-          backgroundColor: isDark
-            ? "rgba(30,30,30,0.75)"
-            : "#fff", height: 60 + insets.bottom,
+          backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff",
+          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
       }}
     >
-      {/* DASHBOARD */}
       <Tabs.Screen
         name="dashboard"
         options={{
-          headerStyle: {
-            backgroundColor: isDark ? "#161618" : "#FFFFFF",
-          },
-          headerLeft: () => {
-            if (!profile) {
-              return (
-                <View style={{ marginLeft: 20, paddingVertical: 10 }}>
-                  <Skeleton isDark={isDark} width={80} height={12} style={{ marginBottom: 8 }} borderRadius={4} />
-                  <Skeleton isDark={isDark} width={140} height={28} borderRadius={4} />
-                </View>
-              );
-            }
-            
-            return (
-              <View style={{ marginLeft: 20, paddingVertical: 10 }}>
-                <HStack space="xs" className="items-center">
-                  <Text style={{ 
-                    color: isDark ? "#A3A3A3" : "#737373", 
-                    fontSize: 10, 
-                    fontWeight: "900",
-                    letterSpacing: 2.5,
-                    textTransform: "uppercase"
-                  }}>
-                    Welcome Back
-                  </Text>
-                  <Text style={{ fontSize: 12 }}>👋</Text>
-                </HStack>
-                <HStack space="xs" className="items-baseline">
-                  <Text style={{ 
-                    color: "#8BC34A", 
-                    fontSize: 24, 
-                    fontWeight: "900",
-                    letterSpacing: -0.8,
-                    marginTop: -2
-                  }}>
-                    {profile.username.toUpperCase()}
-                  </Text>
-                  <Text style={{ 
-                    color: "#8BC34A", 
-                    fontSize: 24, 
-                    fontWeight: "900",
-                    marginLeft: 2
-                  }}>
-                    !
-                  </Text>
-                </HStack>
-              </View>
-            );
-          },
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
@@ -181,20 +151,18 @@ export default function TabLayout() {
         }}
       />
 
-      {/* TOURNAMENTS */}
       <Tabs.Screen
-        name="tournaments"
+        name="players/index"
         options={{
-          title: "Tournaments",
+          title: "Players",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "trophy" : "trophy-outline"} size={size} color={color} />
+            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
           ),
         }}
       />
 
-      {/* NEW ROUND - FAB style */}
       <Tabs.Screen
-        name="newRound"
+        name="tournaments/index"
         options={{
           title: "",
           tabBarIcon: ({ focused }) => (
@@ -202,15 +170,13 @@ export default function TabLayout() {
               <View
                 style={[
                   styles.fabInner,
-                  {
-                    backgroundColor: focused ? "#8bc34a" : "#fff",
-                  },
+                  { backgroundColor: focused ? "#6a9c2e" : "#8bc34a" },
                 ]}
               >
                 <Ionicons
-                  name="add"
-                  size={32}
-                  color={focused ? "#FFF" : "#8bc34a"}
+                  name="trophy"
+                  size={28}
+                  color={focused ? "#FFD700" : "#ffffff"}
                 />
               </View>
             </View>
@@ -218,24 +184,22 @@ export default function TabLayout() {
         }}
       />
 
-      {/* BOOK GAME */}
       <Tabs.Screen
-        name="bookGame/index"
+        name="course/index"
         options={{
-          title: "Book Game",
+          title: "Courses",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+            <Ionicons name={focused ? "flag" : "flag-outline"} size={size} color={color} />
           ),
         }}
       />
 
-      {/* SHOP */}
       <Tabs.Screen
-        name="shop/index"
+        name="teeTimeBooking/index"
         options={{
-          title: "Shop",
+          title: "Tee Time",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "cart" : "cart-outline"} size={size} color={color} />
+            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -264,7 +228,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#fff",
+    backgroundColor: "#8bc34a",
     justifyContent: "center",
     alignItems: "center",
   },

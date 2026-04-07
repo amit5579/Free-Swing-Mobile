@@ -108,7 +108,7 @@ export default function AdminDashboard() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
     >
       <Watermark />

@@ -63,8 +63,10 @@ export default function LoginScreen() {
       const loggedUser = await login(data.email, data.password);
       if (!loggedUser) throw new Error("Invalid credentials");
 
-      if (loggedUser.role === "Player") {
+      if (loggedUser.role === "Player" || loggedUser.role?.toLowerCase() === "player") {
         router.replace("/(drawer)/(user)/(tabs)/dashboard");
+      } else if (loggedUser.role?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin") {
+        router.replace("/(drawer)/(subAdmin)/(tabs)/dashboard" as any);
       } else {
         router.replace("/(drawer)/(admin)/(tabs)/dashboard");
       }
