@@ -275,3 +275,18 @@ export const addUsersToTournament = async (tournamentId: number) => {
         throw error;
     }
 };
+
+
+
+// post secret holes : Tournament/14/secret-holes payload : [1,2,3,4,5,6,7,8,9,10,11,12]
+
+export const postSecretHoles = async (tournamentId: number, secretHoles: number[]) => {
+    try {
+        const response = await https.post(`Tournament/${tournamentId}/secret-holes`, secretHoles);
+        // console.log("Posted secret holes:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Posted secret holes Error:", error);
+        throw error;
+    }
+};

@@ -851,7 +851,7 @@ function TournamentCard({
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
-                  `/(drawer)/(admin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId}`,
+                  `/(drawer)/(admin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId}&scoringType=${tournament?.scoringType}`,
                 );
               }}
             >
