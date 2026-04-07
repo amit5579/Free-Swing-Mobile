@@ -22,6 +22,7 @@ function CustomDrawerContent({ navigation }: any) {
 
   const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSubAdmin, setIsSubAdmin] = useState<boolean>(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageError, setImageError] = useState(false);
   const logout = async () => {
@@ -48,9 +49,12 @@ function CustomDrawerContent({ navigation }: any) {
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
+      const normalizedRole = storedRole?.toLowerCase().replace(/[^a-z]/g, '') ?? "";
 
-      if (storedRole === "Admin") {
+      if (normalizedRole === "admin") {
         setIsAdmin(true);
+      } else if (normalizedRole === "subadmin") {
+        setIsSubAdmin(true);
       }
       setRole(storedRole);
     };
@@ -112,7 +116,9 @@ function CustomDrawerContent({ navigation }: any) {
               </View>
             )}
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{isAdmin ? "Admin" : "User"}</Text>
+              <Text style={styles.badgeText}>
+                {isAdmin ? "Admin" : isSubAdmin ? "Sub Admin" : "User"}
+              </Text>
             </View>
           </View>
 
@@ -120,11 +126,14 @@ function CustomDrawerContent({ navigation }: any) {
           <Text style={styles.handicap}>
             {isAdmin
               ? "Administrator"
+              : isSubAdmin
+              ? "Sub Administrator"
               : `Handicap: ${profile?.handicap || "0"}`}
           </Text>
         </View>
 
         <View style={styles.drawerItems}>
+          {/* ADMIN DRAWER */}
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -142,9 +151,32 @@ function CustomDrawerContent({ navigation }: any) {
               </TouchableOpacity>
             </>
           )}
-          
-          {/* USER PROFILE */}
-          {!isAdmin && (
+
+          {/* SUB-ADMIN DRAWER — only Contact Admin */}
+          {isSubAdmin && (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>Contact Admin</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* USER DRAWER */}
+          {!isAdmin && !isSubAdmin && (
             <>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -199,20 +231,6 @@ function CustomDrawerContent({ navigation }: any) {
                 />
                 <Text style={styles.drawerText}>Contact Admin</Text>
               </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.closeDrawer();
-                  requestAnimationFrame(() => {
-                    Linking.openURL("https://your-updates-link.com");
-                  });
-                }}
-                style={styles.drawerItem}
-              >
-                <Ionicons name="notifications-outline" size={26} color="#2e7d32" />
-                <Text style={styles.drawerText}>Important Updates</Text>
-              </TouchableOpacity> */}
 
               <TouchableOpacity
                 activeOpacity={0.7}
