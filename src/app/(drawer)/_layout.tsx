@@ -181,7 +181,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.push("/(drawer)/(user)/(contactAdmin)");
+                    router.push("/(drawer)/(subAdmin)/(contactAdmin)");
                   });
                 }}
                 style={styles.drawerItem}
