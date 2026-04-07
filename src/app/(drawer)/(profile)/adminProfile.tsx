@@ -90,6 +90,7 @@ export default function AdminProfile() {
       const selectedImage = result.assets[0];
 
       setImage(selectedImage.uri);
+      setImageError(false);
 
       try {
         setUploading(true);

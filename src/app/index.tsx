@@ -23,8 +23,11 @@ export default function HomeScreen() {
           return;
         }
 
-        if (storedRole.toLowerCase() === "admin") {
+        const lowerRole = storedRole.toLowerCase().replace(/[^a-z]/g, '');
+        if (lowerRole === "admin") {
           router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+        } else if (lowerRole === "subadmin") {
+          router.replace("/(drawer)/(subAdmin)/(tabs)/dashboard" as any);
         } else {
           router.replace("/(drawer)/(user)/(tabs)/dashboard");
         }
