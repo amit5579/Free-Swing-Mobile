@@ -517,21 +517,30 @@ function PlayerCard({
         </HStack>
       </View>
 
-      {/* SUMMARY */}
-      <HStack style={styles.summary}>
-        <Stat label="OUT" value={player.front9} />
-        <Stat label="IN" value={player.back9} />
-        <Stat label="GROSS" value={player.gross} />
-        <Stat label="NET" value={player.net} />
-        <Stat label="PTS" value={player.points} />
-      </HStack>
-
-      {/* EXTRA STATS */}
-      <HStack style={styles.summary}>
-        <Stat label="Birdies" value={player.birdies} />
-        <Stat label="Pars" value={player.pars} />
-        <Stat label="Eagles" value={player.eagles} />
-      </HStack>
+      {/* STATS */}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          marginTop: 12,
+          rowGap: 12,
+        }}
+      >
+        {[
+          { label: "OUT", value: player.front9 },
+          { label: "IN", value: player.back9 },
+          { label: "GROSS", value: player.gross },
+          { label: "NET", value: player.net },
+          { label: "PTS", value: player.points },
+          { label: "Birdies", value: player.birdies },
+          { label: "Pars", value: player.pars },
+          { label: "Eagles", value: player.eagles },
+        ]
+          .filter((s) => s.value !== undefined && s.value !== null)
+          .map((stat, idx) => (
+            <Stat key={idx} label={stat.label} value={stat.value} />
+          ))}
+      </View>
     </View>
   );
 }
@@ -625,7 +634,7 @@ const styles = StyleSheet.create({
 
   stat: {
     alignItems: "center",
-    flex: 1,
+    minWidth: "18%",
   },
 
   statValue: {
