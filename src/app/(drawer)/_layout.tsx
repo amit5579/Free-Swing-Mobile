@@ -67,7 +67,7 @@ function CustomDrawerContent({ navigation }: any) {
     <SafeAreaView
       style={[
         styles.container,
-        { 
+        {
           backgroundColor: isDark ? "#121212" : "#e8f5e9",
           borderTopLeftRadius: 32,
           borderBottomLeftRadius: 32,
@@ -127,13 +127,12 @@ function CustomDrawerContent({ navigation }: any) {
             {isAdmin
               ? "Administrator"
               : isSubAdmin
-              ? "Sub Administrator"
-              : `Handicap: ${profile?.handicap || "0"}`}
+                ? "Sub Administrator"
+                : `Handicap: ${profile?.handicap || "0"}`}
           </Text>
         </View>
 
         <View style={styles.drawerItems}>
-          {/* ADMIN DRAWER */}
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -152,8 +151,30 @@ function CustomDrawerContent({ navigation }: any) {
             </>
           )}
 
-          {/* SUB-ADMIN DRAWER — only Contact Admin */}
           {isSubAdmin && (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(profile)/subAdminProfile");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="person-circle-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>Sub Admin Profile</Text>
+              </TouchableOpacity>
+
+            </>
+          )}
+
+          {!isAdmin && (
             <>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -175,7 +196,6 @@ function CustomDrawerContent({ navigation }: any) {
             </>
           )}
 
-          {/* USER DRAWER */}
           {!isAdmin && !isSubAdmin && (
             <>
               <TouchableOpacity
@@ -212,24 +232,6 @@ function CustomDrawerContent({ navigation }: any) {
                   color="#2e7d32"
                 />
                 <Text style={styles.drawerText}>Tee Time Booking</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.closeDrawer();
-                  requestAnimationFrame(() => {
-                    router.push("/(drawer)/(user)/(contactAdmin)");
-                  });
-                }}
-                style={styles.drawerItem}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>Contact Admin</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -312,7 +314,7 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>Feedback Inbox</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
@@ -324,12 +326,11 @@ function CustomDrawerContent({ navigation }: any) {
               >
                 <Ionicons name="notifications-outline" size={26} color="#2e7d32" />
                 <Text style={styles.drawerText}>Important Updates</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </>
           )}
         </View>
       </View>
-      {/* Logout */}
       <View style={styles.logoutContainer}>
         <TouchableOpacity
           onPress={async () => {
