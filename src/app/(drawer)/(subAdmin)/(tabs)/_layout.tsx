@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -24,10 +24,12 @@ export default function SubAdminTabLayout() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        setLoading(true);
         const userId = await AsyncStorage.getItem("userId");
         if (!userId) return;
         const data = await getUserProfile(Number(userId));
@@ -36,6 +38,8 @@ export default function SubAdminTabLayout() {
         }
       } catch (error) {
         console.log("Profile error:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -47,7 +51,7 @@ export default function SubAdminTabLayout() {
         headerShown: true,
         headerShadowVisible: false,
         headerStyle: {
-          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          backgroundColor: isDark ? "#000" : "#f2f2f2",
         },
         headerTitle: "",
         headerLeftContainerStyle: { paddingLeft: 0, marginLeft: -10 },
@@ -58,46 +62,75 @@ export default function SubAdminTabLayout() {
           />
         ),
         headerRight: () => (
-          <TouchableOpacity
-            onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-            style={{ marginRight: 16, borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
-          >
-            {profile?.profilePictureUrl &&
-            profile.profilePictureUrl.trim() !== "" &&
-            profile.profilePictureUrl !== "null" &&
-            !imageError ? (
-              <Image
-                source={{
-                  uri: profile.profilePictureUrl.startsWith("http")
-                    ? profile.profilePictureUrl
-                    : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
-                }}
-                style={{ width: 42, height: 42, borderRadius: 21 }}
-                onError={() => setImageError(true)}
+          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16 }}>
+            <TouchableOpacity
+              onPress={() => router.push("/(drawer)/(admin)/(importantUpdate)")}
+              style={{ marginRight: 16, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.1)", padding: 8, borderRadius: 20 }}
+            >
+              <Ionicons
+                name="megaphone-outline"
+                size={22}
+                color="#8BC34A"
               />
-            ) : (
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  backgroundColor: isDark ? "#333" : "#C5E1A5",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: "#8BC34A",
-                }}
-              >
-                <Text
-                  style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}
+              <View style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF5252", borderWidth: 1.5, borderColor: isDark ? "#000" : "#f2f2f2" }} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
+              style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
+            >
+              {loading ? (
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isDark ? "#333" : "#F5F5F5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                  }}
                 >
-                  {profile?.username?.trim()
-                    ? profile.username.trim()[0].toUpperCase()
-                    : "S"}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+                  <Ionicons name="person" size={24} color="#8BC34A" />
+                </View>
+              ) : profile?.profilePictureUrl &&
+              profile.profilePictureUrl.trim() !== "" &&
+              profile.profilePictureUrl !== "null" &&
+              !imageError ? (
+                <Image
+                  source={{
+                    uri: profile.profilePictureUrl.startsWith("http")
+                      ? profile.profilePictureUrl
+                      : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
+                  }}
+                  style={{ width: 42, height: 42, borderRadius: 21 }}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isDark ? "#333" : "#C5E1A5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                  }}
+                >
+                  <Text
+                    style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}
+                  >
+                    {profile?.username?.trim()
+                      ? profile.username.trim()[0].toUpperCase()
+                      : "S"}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         ),
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
@@ -108,7 +141,6 @@ export default function SubAdminTabLayout() {
         },
       }}
     >
-      {/* DASHBOARD */}
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -119,7 +151,6 @@ export default function SubAdminTabLayout() {
         }}
       />
 
-      {/* PLAYERS */}
       <Tabs.Screen
         name="players/index"
         options={{
@@ -130,7 +161,6 @@ export default function SubAdminTabLayout() {
         }}
       />
 
-      {/* TOURNAMENTS - FAB center button */}
       <Tabs.Screen
         name="tournaments/index"
         options={{
@@ -154,7 +184,6 @@ export default function SubAdminTabLayout() {
         }}
       />
 
-      {/* COURSES */}
       <Tabs.Screen
         name="course/index"
         options={{
@@ -165,7 +194,6 @@ export default function SubAdminTabLayout() {
         }}
       />
 
-      {/* TEE TIME BOOKING */}
       <Tabs.Screen
         name="teeTimeBooking/index"
         options={{

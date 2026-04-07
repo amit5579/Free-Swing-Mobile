@@ -75,7 +75,8 @@ const login = async (email: string, password: string): Promise<UserType | null> 
     // console.log("1️⃣3️⃣ Saving token in AsyncStorage...");
     await AsyncStorage.setItem("token", data.token);
     await AsyncStorage.setItem("userId", data.id.toString());
-    await AsyncStorage.setItem("role",data.role);
+    await AsyncStorage.setItem("role", data.role);
+    await AsyncStorage.setItem("username", data.username);
     // console.log("1️⃣4️⃣ Login successful");
 
     return userData;

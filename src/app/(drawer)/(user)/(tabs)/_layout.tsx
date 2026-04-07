@@ -22,10 +22,12 @@ export default function TabLayout() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        setLoading(true);
         const userId = await AsyncStorage.getItem("userId");
         if (!userId) return;
         const data = await getUserProfile(Number(userId));
@@ -34,6 +36,8 @@ export default function TabLayout() {
         }
       } catch (error) {
         console.log("Profile error:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -76,7 +80,22 @@ export default function TabLayout() {
               onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
               style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
             >
-              {profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+              {loading ? (
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isDark ? "#333" : "#F5F5F5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                  }}
+                >
+                  <Ionicons name="person" size={24} color="#8BC34A" />
+                </View>
+              ) : profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
                 <Image
                   source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
                   style={{ width: 42, height: 42, borderRadius: 21 }}

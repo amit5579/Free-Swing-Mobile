@@ -115,7 +115,7 @@ export default function UserProfile() {
 
   const ProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
-       <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+      <Box className="rounded-3xl p-6 mb-6 bg-white/5">
         <VStack className="items-center">
           <Skeleton isDark={isDark} height={90} width={90} borderRadius={999} style={{ marginBottom: 14 }} />
           <Skeleton isDark={isDark} height={20} width="40%" style={{ marginBottom: 10 }} />
@@ -253,7 +253,7 @@ export default function UserProfile() {
                 </HStack>
 
                 <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
-                 <VStack space="lg">
+                  <VStack space="lg">
                     <HStack className="items-center gap-3">
                       <Mail size={20} color="#8bc34a" />
                       <VStack>
