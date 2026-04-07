@@ -152,7 +152,7 @@ export default function SubAdminTabLayout() {
       />
 
       <Tabs.Screen
-        name="players/index"
+        name="players"
         options={{
           title: "Players",
           tabBarIcon: ({ color, size, focused }) => (
