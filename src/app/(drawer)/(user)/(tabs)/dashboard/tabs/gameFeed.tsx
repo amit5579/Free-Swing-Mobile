@@ -289,7 +289,7 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
         <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
             <VStack>
                 {!searchQuery && (
-                    <HStack className="justify-between items-center mb-2 mt-0">
+                    <HStack className="justify-between items-center mb-4 mt-6">
                         <HStack space="sm" className="items-center">
                             <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>Game Feed</Text>
                             <HStack className="items-center px-3 py-1 rounded-full space-x-2" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(209,250,229,0.7)", borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#fff" : "transparent" }}>

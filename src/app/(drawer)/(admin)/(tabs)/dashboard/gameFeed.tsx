@@ -102,10 +102,10 @@ const FeedCard = ({
             <Box style={{ position: "relative" }}>
               <Box
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 48,
-                  borderWidth: card.isAuthenticated ? 2.5 : 2,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 36,
+                  borderWidth: card.isAuthenticated ? 2 : 1.5,
                   borderColor: card.isAuthenticated ? "#4CAF50" : "#8BC34A",
                   justifyContent: "center",
                   alignItems: "center",
@@ -116,7 +116,7 @@ const FeedCard = ({
                 {card.profileImage && card.profileImage.trim() !== "" && card.profileImage !== "null" && !imageError ? (
                   <Image
                     source={{ uri: card.profileImage.startsWith('http') ? card.profileImage : `https://kolve18freeswing.com${card.profileImage}` }}
-                    style={{ width: "100%", height: "100%", borderRadius: 48 }}
+                    style={{ width: "100%", height: "100%", borderRadius: 36 }}
                     contentFit="cover"
                     onError={() => setImageError(true)}
                   />
@@ -125,7 +125,7 @@ const FeedCard = ({
                     style={{
                       color: isDark ? "#fff" : "#111",
                       fontWeight: "bold",
-                      fontSize: 16,
+                      fontSize: 14,
                     }}
                   >
                     {card.playerName?.charAt(0).toUpperCase()}
@@ -146,13 +146,13 @@ const FeedCard = ({
                     alignItems: "center",
                   }}
                 >
-                  <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
+                  <Ionicons name="checkmark-circle" size={12} color="#4CAF50" />
                 </Box>
               )}
             </Box>
             <VStack>
               <Text
-                className="font-bold text-xl"
+                className="font-bold text-lg"
                 style={{ color: isDark ? "#fff" : "#111" }}
                 numberOfLines={1}
               >
@@ -161,11 +161,11 @@ const FeedCard = ({
               <HStack space="xs" className="items-center mt-0.5">
                 <Ionicons
                   name="calendar-outline"
-                  size={11}
+                  size={10}
                   color={isDark ? "#aaa" : "#9ca3af"}
                 />
                 <Text
-                  className="text-xs"
+                  className="text-[10px]"
                   style={{ color: isDark ? "#ccc" : "#6b7280" }}
                 >
                   {card.date}
@@ -188,7 +188,7 @@ const FeedCard = ({
             )}
             <Ionicons
               name={isExpanded ? "chevron-up" : "chevron-down"}
-              size={20}
+              size={18}
               color="#8BC34A"
               style={{ marginLeft: 4 }}
             />
@@ -281,62 +281,16 @@ const FeedCard = ({
             </HStack>
           </VStack>
 
-          <HStack space="sm" className="mx-4 mb-3">
-            <Box
-              className="flex-1 rounded-2xl py-4 items-center border"
-              style={{
-                borderColor: isDark ? "#8BC34A" : "rgba(139,195,74,0.3)",
-                backgroundColor: isDark
-                  ? "rgba(22, 22, 24, 0.4)"
-                  : "rgba(255, 255, 255, 0.35)",
-              }}
-            >
-              <Text
-                className="text-[10px] uppercase font-bold tracking-widest mb-1"
-                style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
-              >
-                Gross
-              </Text>
-              <Text
-                className="text-3xl font-black tracking-tighter"
-                style={{ color: isDark ? "#fff" : "#111" }}
-              >
-                {card.grossScore}
-              </Text>
-            </Box>
-            <Box
-              className="flex-1 rounded-2xl py-4 items-center border"
-              style={{
-                borderColor: isDark ? "#8BC34A" : "rgba(139,195,74,0.3)",
-                backgroundColor: isDark
-                  ? "rgba(22, 22, 24, 0.4)"
-                  : "rgba(255, 255, 255, 0.35)",
-              }}
-            >
-              <Text
-                className="text-[10px] uppercase font-bold tracking-widest mb-1"
-                style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
-              >
-                To Par
-              </Text>
-              <Text
-                style={{ color: diffColor(card.grossDiff) }}
-                className="text-3xl font-black tracking-tighter"
-              >
-                {diffLabel(card.grossDiff)}
-              </Text>
-            </Box>
-          </HStack>
-
-          <HStack space="sm" className="mx-4 mb-3">
+          <HStack space="xs" className="mx-4 mb-4">
             {[
-              { label: "Net", value: card.net, green: true },
-              { label: "Points", value: card.points, green: true },
-              { label: "Par", value: card.totalPar || 72, green: false }, // Fallback to 72 if missing
+              { label: "Gross", value: card.grossScore, color: isDark ? "#fff" : "#000" },
+              { label: "To Par", value: diffLabel(card.grossDiff), color: diffColor(card.grossDiff) },
+              { label: "Net", value: card.net, color: isDark ? "#fff" : "#000" },
+              { label: "Points", value: card.points, color: isDark ? "#fff" : "#000" },
             ].map((s) => (
               <Box
                 key={s.label}
-                className="flex-1 rounded-xl items-center py-2 border"
+                className="flex-1 rounded-2xl items-center py-2 border"
                 style={{
                   backgroundColor: isDark
                     ? "rgba(22, 22, 24, 0.4)"
@@ -345,16 +299,14 @@ const FeedCard = ({
                 }}
               >
                 <Text
-                  className="text-[9px] uppercase tracking-widest mb-1"
-                  style={{ color: isDark ? "#aaa" : "#6b7280" }}
+                  className="text-[8px] uppercase font-bold tracking-widest mb-0.5"
+                  style={{ color: isDark ? "#aaa" : "#9CA3AF" }}
                 >
                   {s.label}
                 </Text>
                 <Text
-                  className={`text-sm font-bold`}
-                  style={{
-                    color: s.green ? "#10B981" : isDark ? "#fff" : "#111",
-                  }}
+                  className="text-sm font-black tracking-tighter"
+                  style={{ color: s.color }}
                 >
                   {s.value}
                 </Text>
@@ -401,21 +353,21 @@ const FeedCard = ({
           >
             <HStack space="lg" className="items-center">
               <Pressable
-                onPressIn={() => handleLike(card.id)}
+                onPress={() => handleLike(card.id)}
                 android_ripple={{ color: "#ccc", borderless: true }}
                 hitSlop={10}
-                className="p-2 rounded-full flex-row items-center"
+                className="p-1 px-2.5 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB",
                 }}
               >
                 <Ionicons
                   name={card.isLiked ? "heart" : "heart-outline"}
-                  size={20}
+                  size={16}
                   color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"}
                 />
                 <Text
-                  className="text-sm font-semibold ml-1.5"
+                  className="text-xs font-semibold ml-1"
                   style={{ color: isDark ? "#fff" : "#6b7280" }}
                 >
                   {card.likes}
@@ -423,9 +375,9 @@ const FeedCard = ({
               </Pressable>
 
               {card.isAuthenticated && (
-                <HStack space="xs" className="items-center ml-2">
-                  <Ionicons name="shield-checkmark" size={16} color="#8BC34A" />
-                  <Text className="text-xs font-bold text-green-600">Auth</Text>
+                <HStack space="xs" className="items-center ml-1">
+                  <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
+                  <Text className="text-[10px] font-bold text-green-600">Auth</Text>
                 </HStack>
               )}
             </HStack>
@@ -434,18 +386,18 @@ const FeedCard = ({
               <Pressable
                 onPress={() => onActivity(card.id)}
                 android_ripple={{ color: "#ccc", borderless: true }}
-                className="p-2 rounded-full flex-row items-center"
+                className="p-1 px-2.5 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#E5E7EB",
                 }}
               >
                 <Ionicons
                   name="people-outline"
-                  size={18}
+                  size={14}
                   color={isDark ? "#fff" : "#6b7280"}
                 />
                 <Text
-                  className="ml-1.5 text-sm font-semibold"
+                  className="ml-1 text-xs font-semibold"
                   style={{ color: isDark ? "#fff" : "#6b7280" }}
                 >
                   Activity
@@ -453,27 +405,27 @@ const FeedCard = ({
               </Pressable>
 
               <Button
-                size="sm"
-                className="rounded-full px-4 h-9 shadow-sm"
+                size="xs"
+                className="rounded-full px-3 h-8 shadow-sm"
                 style={{ backgroundColor: "#8BC34A" }}
                 onPress={() => handleViewScorecard(card.id, card.playerName, card.courseName)}
               >
-                <Ionicons name="eye-outline" size={14} color="#fff" />
-                <ButtonText className="text-white text-xs font-extrabold ml-1.5">View</ButtonText>
+                <Ionicons name="eye-outline" size={12} color="#fff" />
+                <ButtonText className="text-white text-[10px] font-extrabold ml-1">View</ButtonText>
               </Button>
 
               {card.canAuthenticate && !card.isAuthenticated && (
                 <Button
-                  size="sm"
+                  size="xs"
                   variant="outline"
-                  className="rounded-full px-4 h-9 border"
+                  className="rounded-full px-3 h-8 border"
                   style={{
                     borderColor: isDark ? "#fff" : "#8BC34A",
                     backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
                   }}
                   onPress={() => handleVerifyCard(card.id, card.playerName)}
                 >
-                  <ButtonText className={`${isDark ? "text-white" : "text-green-600"} text-xs font-extrabold`}>Verify Score</ButtonText>
+                  <ButtonText className={`${isDark ? "text-white" : "text-green-600"} text-[10px] font-extrabold`}>Verify</ButtonText>
                 </Button>
               )}
             </HStack>
@@ -501,23 +453,21 @@ const FeedCardSkeleton = () => {
     >
       <HStack className="items-center justify-between mb-4">
         <HStack space="sm" className="items-center flex-1">
-          <Skeleton isDark={isDark} width={45} height={45} borderRadius={24} />
+          <Skeleton isDark={isDark} width={38} height={38} borderRadius={24} />
           <VStack>
-            <Skeleton isDark={isDark} width={120} height={20} style={{ marginBottom: 4 }} />
-            <Skeleton isDark={isDark} width={80} height={12} />
+            <Skeleton isDark={isDark} width={120} height={18} style={{ marginBottom: 4 }} />
+            <Skeleton isDark={isDark} width={80} height={10} />
           </VStack>
         </HStack>
       </HStack>
 
-      <HStack space="sm" style={{ marginBottom: 12 }}>
-        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)" }}>
-          <Skeleton isDark={isDark} width="30%" height={10} style={{ marginBottom: 8 }} />
-          <Skeleton isDark={isDark} width="60%" height={32} />
-        </Box>
-        <Box className="flex-1 rounded-2xl py-6 items-center border" style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)" }}>
-          <Skeleton isDark={isDark} width="30%" height={10} style={{ marginBottom: 8 }} />
-          <Skeleton isDark={isDark} width="60%" height={32} />
-        </Box>
+      <HStack space="xs" style={{ marginBottom: 12 }}>
+        {[1, 2, 3, 4].map((i) => (
+          <Box key={i} className="flex-1 rounded-2xl py-3 items-center border" style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)" }}>
+            <Skeleton isDark={isDark} width="40%" height={6} style={{ marginBottom: 6 }} />
+            <Skeleton isDark={isDark} width="70%" height={20} />
+          </Box>
+        ))}
       </HStack>
 
       <HStack space="sm" className="justify-between items-center">

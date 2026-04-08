@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function tournamentsLayout() {
+export default function playersLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />

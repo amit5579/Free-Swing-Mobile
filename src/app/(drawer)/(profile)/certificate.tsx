@@ -6,10 +6,14 @@ import {
   ScrollView,
   Text,
   useColorScheme,
-  View
+  View,
+  BackHandler,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback } from "react";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Divider } from "@/components/divider";
@@ -17,33 +21,91 @@ import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useRef } from "react";
 import { getCertificateByUserId } from "@/api/profile";
-import ViewShot from "react-native-view-shot";
+import ViewShot, { captureRef } from "react-native-view-shot";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Skeleton } from "@/components/Skeleton";
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
-import { generateCertificateHTML } from "@/utils/certificateTemplate";
+// import { generateCertificateHTML } from "@/utils/certificateTemplate";
 import { Image } from "expo-image";
+import { Alert } from "react-native";
 
 export default function CertificatePage() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
   const certificateRef = useRef<any>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await AsyncStorage.getItem("role");
+      setRole(storedRole);
+    };
+    fetchRole();
+  }, []);
+
+  const handleBack = useCallback(() => {
+    const normalizedRole = role?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
+    if (normalizedRole === "subadmin") {
+      router.navigate("/(drawer)/(profile)/subAdminProfile");
+    } else {
+      router.navigate("/(drawer)/(profile)/userProfile");
+    }
+  }, [role, router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => backHandler.remove();
+    }, [handleBack])
+  );
 
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [watermarkBase64, setWatermarkBase64] = useState<string>("");
+  const [watermarkUri, setWatermarkUri] = useState<string>("");
+  const [logoUri, setLogoUri] = useState<string>("");
 
-  const loadWatermark = async () => {
+  const loadCertificateAssets = async () => {
     try {
-      const asset = Asset.fromModule(require("/assets/images/freeswing-watermark.png"));
-      await asset.downloadAsync();
-      const base64 = await FileSystem.readAsStringAsync(asset.localUri!, { encoding: 'base64' });
-      setWatermarkBase64(`data:image/png;base64,${base64}`);
+      console.log("Starting to load certificate assets...");
+
+      const watermarkAsset = Asset.fromModule(require("../../../../assets/images/freeswing-watermark.png"));
+      await watermarkAsset.downloadAsync();
+      const watermarkLocalUri = watermarkAsset.localUri || watermarkAsset.uri;
+
+      if (watermarkLocalUri) {
+        const watermarkBase64 = await FileSystem.readAsStringAsync(watermarkLocalUri, {
+          encoding: "base64",
+        });
+        setWatermarkUri(`data:image/png;base64,${watermarkBase64}`);
+        console.log("Watermark loaded successfully");
+      }
+
+      // Load logo
+      const logoAsset = Asset.fromModule(require("../../../../assets/FreeSwing.png"));
+      await logoAsset.downloadAsync();
+      const logoLocalUri = logoAsset.localUri || logoAsset.uri;
+
+      if (logoLocalUri) {
+        const logoBase64 = await FileSystem.readAsStringAsync(logoLocalUri, {
+          encoding: "base64",
+        });
+        setLogoUri(`data:image/png;base64,${logoBase64}`);
+        console.log("Logo loaded successfully");
+      }
     } catch (error) {
-      console.log("Watermark Load Error:", error);
+      console.log("Certificate asset load error:", error);
     }
   };
 
@@ -61,27 +123,77 @@ export default function CertificatePage() {
 
   useEffect(() => {
     fetchCertificate();
-    loadWatermark();
+    loadCertificateAssets();
   }, []);
 
   const downloadCertificate = async () => {
     try {
-      const html = generateCertificateHTML(userCertificate, watermarkBase64);
-      if (!html) return;
+      if (!certificateRef.current) return;
+
+      const base64 = await captureRef(certificateRef, {
+        format: "png",
+        quality: 1,
+        result: "base64",
+        width: 2000, // HD Resolution
+      });
+
+      const html = `
+        <html>
+          <head>
+            <style>
+              @page { size: auto; margin: 0mm; }
+              body { margin: 0; padding: 50px 0; background-color: white; display: flex; justify-content: center; align-items: flex-start; }
+              img { width: 100%; height: auto; max-width: 90vw; max-height: 90vh; object-fit: contain; }
+            </style>
+          </head>
+          <body>
+            <img src="data:image/png;base64,${base64}" />
+          </body>
+        </html>
+      `;
+
       await Print.printAsync({ html });
     } catch (error) {
       console.log("Download Error:", error);
+      Alert.alert("Error", "Could not generate certificate download.");
     }
   };
 
   const shareCertificate = async () => {
     try {
-      const html = generateCertificateHTML(userCertificate, watermarkBase64);
-      if (!html) return;
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: 'Share Handicap Certificate' });
+      if (!certificateRef.current) return;
+
+      const base64 = await captureRef(certificateRef, {
+        format: "png",
+        quality: 1,
+        result: "base64",
+        width: 2000, // HD Resolution
+      });
+
+      const html = `
+        <html>
+          <head>
+            <style>
+              @page { size: auto; margin: 0mm; }
+              body { margin: 0; padding: 50px 0; background-color: white; display: flex; justify-content: center; align-items: flex-start; }
+              img { width: 100%; height: auto; max-width: 90vw; max-height: 90vh; object-fit: contain; }
+            </style>
+          </head>
+          <body>
+            <img src="data:image/png;base64,${base64}" />
+          </body>
+        </html>
+      `;
+
+      const { uri: pdfUri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(pdfUri, {
+        UTI: '.pdf',
+        mimeType: 'application/pdf',
+        dialogTitle: 'Share Handicap Certificate'
+      });
     } catch (error) {
       console.log("Share Error:", error);
+      Alert.alert("Error", "Could not generate certificate for sharing.");
     }
   };
 
@@ -144,9 +256,10 @@ export default function CertificatePage() {
               </HStack>
             </Box>
 
-            <HStack style={{ gap: 12 }}>
-              <Skeleton isDark={isDark} height={54} width="75%" borderRadius={14} />
-              <Skeleton isDark={isDark} height={54} width={64} borderRadius={14} />
+            <HStack style={{ gap: 10, marginTop: 10 }}>
+              <Skeleton isDark={isDark} height={44} width="25%" borderRadius={12} />
+              <Skeleton isDark={isDark} height={44} width="35%" borderRadius={12} />
+              <Skeleton isDark={isDark} height={44} width="35%" borderRadius={12} />
             </HStack>
           </ScrollView>
         </ThemedView>
@@ -162,7 +275,7 @@ export default function CertificatePage() {
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
       <ThemedView className="flex-1 px-5">
         <HStack className="items-center my-6">
-          <Pressable onPress={() => router.back()} hitSlop={20} style={{ padding: 10, borderRadius: 50, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9" }}>
+          <Pressable onPress={handleBack} hitSlop={20} style={{ padding: 10, borderRadius: 50, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9" }}>
             <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
           </Pressable>
           <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
@@ -221,17 +334,7 @@ export default function CertificatePage() {
                 HANDICAP CERTIFICATE
               </ThemedText> */}
 
-              <VStack className="items-center mb-4">
-                <Image
-                  source={require("/assets/FreeSwing.png")}
-                  style={{
-                    width: 110,
-                    height: 110,
-                    resizeMode: "contain",
-                    // marginBottom: 8,
-                    opacity: 0.95,
-                  }}
-                />
+              <VStack className="items-center">
 
                 <ThemedText
                   style={{
@@ -245,6 +348,30 @@ export default function CertificatePage() {
                 >
                   HANDICAP CERTIFICATE
                 </ThemedText>
+
+                <Image
+                  source={require("../../../../assets/FreeSwing.png")}
+                  style={{
+                    width: 110,
+                    height: 110,
+                    resizeMode: "contain",
+                    // marginBottom: 8,
+                    opacity: 0.95,
+                  }}
+                />
+
+                {/* <ThemedText
+                  style={{
+                    textAlign: "center",
+                    fontWeight: "900",
+                    fontSize: 18,
+                    color: "#8BC34A",
+                    letterSpacing: 2,
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  HANDICAP CERTIFICATE
+                </ThemedText> */}
               </VStack>
 
               <VStack className="items-center mb-6">
@@ -339,20 +466,20 @@ export default function CertificatePage() {
                 {"."}
               </Text>
 
-              {userCertificate?.showCourseApproval && (
-                <HStack className="justify-between items-end mt-4">
+                {/* <HStack className="justify-between items-end mt-4">
                   <VStack>
                     <View style={{ width: 100, height: 1.5, backgroundColor: '#8BC34A', marginBottom: 4 }} />
                     <Text style={{ fontSize: 10, fontWeight: '700', color: '#8BC34A' }}>COURSE OFFICIAL</Text>
                   </VStack>
 
-                  <View style={{ width: 54, height: 54, borderRadius: 27, borderWidth: 4, borderColor: 'rgba(139, 195, 74, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
-                    <View style={{ width: 38, height: 38, borderRadius: 19, borderStyle: 'dashed', borderWidth: 1, borderColor: '#8BC34A', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="shield-checkmark" size={18} color="#8BC34A" />
-                    </View>
+                  <View style={{ position: 'relative' }}>
+                    <Image
+                      source={require("../../../../assets/images/freeswing-seal.png")}
+                      style={{ width: 90, height: 90 }}
+                      contentFit="contain"
+                    />
                   </View>
-                </HStack>
-              )}
+                </HStack> */}
 
               <View style={{ marginTop: 16 }}>
                 <Text style={{ fontSize: 8, color: "#aaa", textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -362,66 +489,70 @@ export default function CertificatePage() {
             </View>
           </ViewShot>
 
-          <VStack style={{ gap: 12, marginTop: 24 }}>
+          <HStack style={{ gap: 8, marginTop: 24, alignItems: 'center' }}>
+            {/* <Pressable
+              onPress={handleBack}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 12,
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(255,255,255,0.1)" : "#E2E8F0",
+              }}
+            >
+              <ThemedText style={{ color: isDark ? "#fff" : "#475569", fontWeight: "600", fontSize: 13 }}>
+                Cancel
+              </ThemedText>
+            </Pressable> */}
+
+            <Pressable
+              onPress={shareCertificate}
+              style={{
+                flex: 1.4,
+                paddingVertical: 10,
+                borderRadius: 12,
+                backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "white",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 5,
+                borderWidth: 1,
+                borderColor: "#8BC34A",
+              }}
+            >
+              <Ionicons name="share-social-outline" size={16} color="#8BC34A" />
+              <ThemedText style={{ color: "#8BC34A", fontWeight: "600", fontSize: 13 }}>
+                Share PDF
+              </ThemedText>
+            </Pressable>
+
             <Pressable
               onPress={downloadCertificate}
               style={{
-                width: '100%',
-                padding: 16,
-                borderRadius: 14,
+                flex: 1.6,
+                paddingVertical: 10,
+                borderRadius: 12,
                 backgroundColor: "#8BC34A",
-                flexDirection: 'row',
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: 'center',
-                gap: 8,
+                justifyContent: "center",
+                gap: 5,
                 shadowColor: "#8BC34A",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
               }}
             >
-              <Ionicons name="download-outline" size={20} color="white" />
-              <Text style={{ color: "#fff", fontWeight: '700', fontSize: 16 }}>Download Certificate</Text>
+              <Ionicons name="download-outline" size={16} color="white" />
+              <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>
+                Download
+              </ThemedText>
             </Pressable>
-
-            <HStack style={{ gap: 12 }}>
-              <Pressable
-                onPress={() => router.back()}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 14,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
-                  alignItems: "center",
-                  justifyContent: 'center',
-                  borderWidth: 1,
-                  borderColor: isDark ? "rgba(255,255,255,0.1)" : "#E2E8F0"
-                }}
-              >
-                <Text style={{ color: isDark ? "#fff" : "#475569", fontWeight: '700', fontSize: 16 }}>Cancel</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={shareCertificate}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 14,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "white",
-                  flexDirection: 'row',
-                  alignItems: "center",
-                  justifyContent: 'center',
-                  gap: 8,
-                  borderWidth: 1,
-                  borderColor: "#8BC34A"
-                }}
-              >
-                <Ionicons name="share-social-outline" size={20} color="#8BC34A" />
-                <Text style={{ color: "#8BC34A", fontWeight: '700', fontSize: 16 }}>Share as PDF</Text>
-              </Pressable>
-            </HStack>
-          </VStack>
+          </HStack>
         </ScrollView>
       </ThemedView>
     </SafeAreaView>

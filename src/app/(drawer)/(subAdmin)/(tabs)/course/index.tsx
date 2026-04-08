@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   useColorScheme,
   View,
@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
+
 import Watermark from "@/components/watermark";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -18,6 +20,9 @@ import {
   getSubAdminPlayers,
   SubAdminCourse,
   UserApi,
+  invitePlayer,
+  toggleBlockPlayer,
+  removePlayer,
 } from "@/api/subAdmin/dashboard";
 
 const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
@@ -185,6 +190,7 @@ const PlayerRow = ({
 export default function SubAdminCoursePage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<UserApi[]>([]);
@@ -192,6 +198,12 @@ export default function SubAdminCoursePage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {
@@ -201,7 +213,7 @@ export default function SubAdminCoursePage() {
         getSubAdminPlayers(),
       ]);
       setPlayers(
-        playerData.filter((p) => p.role?.toLowerCase() === "coursemarshal")
+        playerData.filter((p: UserApi) => p.role?.toLowerCase() === "coursemarshal")
       );
     } catch (error) {
       console.error("Failed to fetch SubAdmin course data", error);
@@ -211,7 +223,7 @@ export default function SubAdminCoursePage() {
   };
 
   const handleToggleBlock = (id: number) => {
-    const player = players.find((p) => p.id === id);
+    const player = players.find((p: UserApi) => p.id === id);
     if (!player) return;
 
     Alert.alert(
@@ -225,8 +237,9 @@ export default function SubAdminCoursePage() {
           onPress: async () => {
             try {
               setLoading(true);
-              setPlayers((prev) =>
-                prev.map((p) =>
+              await toggleBlockPlayer(id);
+              setPlayers((prev: UserApi[]) =>
+                prev.map((p: UserApi) =>
                   p.id === id ? { ...p, isBlocked: !p.isBlocked } : p
                 )
               );
@@ -243,7 +256,7 @@ export default function SubAdminCoursePage() {
   };
 
   const handleRemove = (id: number) => {
-    const player = players.find((p) => p.id === id);
+    const player = players.find((p: UserApi) => p.id === id);
     if (!player) return;
 
     Alert.alert(
@@ -257,7 +270,8 @@ export default function SubAdminCoursePage() {
           onPress: async () => {
             try {
               setLoading(true);
-              setPlayers((prev) => prev.filter((p) => p.id !== id));
+              await removePlayer(id);
+              setPlayers((prev: UserApi[]) => prev.filter((p: UserApi) => p.id !== id));
               Alert.alert("Success", "Player removed successfully");
             } catch (error) {
               Alert.alert("Error", "Failed to remove player");
@@ -269,6 +283,8 @@ export default function SubAdminCoursePage() {
       ]
     );
   };
+
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
@@ -282,25 +298,33 @@ export default function SubAdminCoursePage() {
                 Course Marshals
               </Text>
             </HStack>
-            <Text style={{ fontSize: 13, color: isDark ? "#aaa" : "#6b7280", marginTop: 2 }}>
+            {/* <Text style={{ fontSize: 13, color: isDark ? "#aaa" : "#6b7280", marginTop: 2 }}>
               Players assigned to manage your courses
-            </Text>
+            </Text> */}
           </VStack>
-          <HStack
-            style={{
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#D1FAE5",
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 20,
-              borderWidth: isDark ? 1 : 0,
-              borderColor: isDark ? "rgba(255,255,255,0.1)" : "transparent",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="pulse" size={14} color={isDark ? "#8BC34A" : "#15803D"} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 13, fontWeight: "700", color: isDark ? "#8BC34A" : "#15803D" }}>
-              {loading ? "—" : players.length} Marshals
-            </Text>
+          <HStack style={{ gap: 8, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/course/invite-marshal" as any)}
+              style={{
+                backgroundColor: "#8BC34A",
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: "#8BC34A",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+              <Text style={{ fontSize: 14, fontWeight: "800", color: "#fff" }}>
+                Invite
+              </Text>
+            </TouchableOpacity>
           </HStack>
         </HStack>
       </VStack>
@@ -337,3 +361,4 @@ export default function SubAdminCoursePage() {
     </SafeAreaView>
   );
 }
+

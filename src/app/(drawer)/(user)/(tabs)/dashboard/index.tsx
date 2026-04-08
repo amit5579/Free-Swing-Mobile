@@ -151,7 +151,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["left", "right"]}>
       <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
       <Watermark />
 
@@ -505,7 +505,7 @@ export default function DashboardScreen() {
                     </Box>
                   )}
                   {searchQuery !== "" && (
-                    <Box className="m-0">
+                    <Box className="mb-4 mt-6">
                       <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>
                         Game Feed Results
                       </Text>

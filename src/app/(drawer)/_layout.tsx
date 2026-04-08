@@ -168,13 +168,13 @@ function CustomDrawerContent({ navigation }: any) {
                   size={26}
                   color="#2e7d32"
                 />
-                <Text style={styles.drawerText}>Sub Admin Profile</Text>
+                <Text style={styles.drawerText}>Profile</Text>
               </TouchableOpacity>
 
             </>
           )}
 
-          {!isAdmin && (
+          {/* {!isAdmin && (
             <>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -194,7 +194,7 @@ function CustomDrawerContent({ navigation }: any) {
                 <Text style={styles.drawerText}>Contact Admin</Text>
               </TouchableOpacity>
             </>
-          )}
+          )} */}
 
           {!isAdmin && !isSubAdmin && (
             <>
@@ -213,7 +213,7 @@ function CustomDrawerContent({ navigation }: any) {
                   size={26}
                   color="#2e7d32"
                 />
-                <Text style={styles.drawerText}>User Profile</Text>
+                <Text style={styles.drawerText}>Profile</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -248,6 +248,28 @@ function CustomDrawerContent({ navigation }: any) {
               >
                 <Ionicons name="book-outline" size={26} color="#2e7d32" />
                 <Text style={styles.drawerText}>R & A Rules</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {!isAdmin && (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={26}
+                  color="#2e7d32"
+                />
+                <Text style={styles.drawerText}>Contact Admin</Text>
               </TouchableOpacity>
             </>
           )}

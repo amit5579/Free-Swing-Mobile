@@ -69,6 +69,10 @@ export default function SubAdminProfile() {
   const [passwordModal, setPasswordModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -186,7 +190,7 @@ export default function SubAdminProfile() {
                   <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
                 </Pressable>
                 <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
-                  Sub Admin Profile
+                  Profile
                 </ThemedText>
               </HStack>
 
@@ -219,9 +223,9 @@ export default function SubAdminProfile() {
                   </Pressable>
 
                   <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>{profileData?.username}</ThemedText>
-                  <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
+                  {/* <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
                     <ThemedText style={{ fontSize: 14 }}>{profileData?.role || "Sub Admin"}</ThemedText>
-                  </Box>
+                  </Box> */}
                 </VStack>
               </Box>
 
@@ -274,12 +278,12 @@ export default function SubAdminProfile() {
                   <ThemedText style={{ color: "#fff", fontWeight: "600" }}>Change Password</ThemedText>
                 </Pressable>
 
-                <Pressable
+                {/* <Pressable
                   onPress={() => router.push('/(drawer)/(profile)/certificate')}
                   style={{ borderWidth: 1, borderColor: "#8BC34A", padding: 14, borderRadius: 12, alignItems: "center" }}
                 >
                   <ThemedText style={{ fontWeight: "600", color: "#8BC34A" }}>Handicap Certificate</ThemedText>
-                </Pressable>
+                </Pressable> */}
               </VStack>
             </>
           )}
@@ -303,15 +307,38 @@ export default function SubAdminProfile() {
                 name="currentPassword"
                 render={({ field: { onChange, value } }) => (
                   <View>
-                    <TextInput
-                      placeholder="Current Password"
-                      value={value}
-                      onChangeText={onChange}
-                      secureTextEntry
-                      placeholderTextColor={isDark ? "#888" : "#9ca3af"}
-                      style={{ borderWidth: 1, borderColor: errors.currentPassword ? "red" : "#e5e5e5", borderRadius: 10, padding: 12, color: isDark ? "#fff" : "#000" }}
-                    />
-                    {errors.currentPassword && <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>*{errors.currentPassword.message}</Text>}
+                    <View style={{ position: "relative" }}>
+                      <TextInput
+                        placeholder="Current Password"
+                        value={value}
+                        onChangeText={onChange}
+                        secureTextEntry={!showCurrentPassword}
+                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: errors.currentPassword ? "red" : "#e5e5e5",
+                          borderRadius: 10,
+                          padding: 12,
+                          paddingRight: 45,
+                          color: isDark ? "#fff" : "#000",
+                        }}
+                      />
+                      <Pressable
+                        onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                        style={{ position: "absolute", right: 12, top: 12 }}
+                      >
+                        <Ionicons
+                          name={showCurrentPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color={isDark ? "#888" : "#666"}
+                        />
+                      </Pressable>
+                    </View>
+                    {errors.currentPassword && (
+                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                        *{errors.currentPassword.message}
+                      </Text>
+                    )}
                   </View>
                 )}
               />
@@ -320,15 +347,38 @@ export default function SubAdminProfile() {
                 name="newPassword"
                 render={({ field: { onChange, value } }) => (
                   <View>
-                    <TextInput
-                      placeholder="New Password"
-                      value={value}
-                      onChangeText={onChange}
-                      secureTextEntry
-                      placeholderTextColor={isDark ? "#888" : "#9ca3af"}
-                      style={{ borderWidth: 1, borderColor: errors.newPassword ? "red" : "#e5e5e5", borderRadius: 10, padding: 12, color: isDark ? "#fff" : "#000" }}
-                    />
-                    {errors.newPassword && <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>*{errors.newPassword.message}</Text>}
+                    <View style={{ position: "relative" }}>
+                      <TextInput
+                        placeholder="New Password"
+                        value={value}
+                        onChangeText={onChange}
+                        secureTextEntry={!showNewPassword}
+                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: errors.newPassword ? "red" : "#e5e5e5",
+                          borderRadius: 10,
+                          padding: 12,
+                          paddingRight: 45,
+                          color: isDark ? "#fff" : "#000",
+                        }}
+                      />
+                      <Pressable
+                        onPress={() => setShowNewPassword(!showNewPassword)}
+                        style={{ position: "absolute", right: 12, top: 12 }}
+                      >
+                        <Ionicons
+                          name={showNewPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color={isDark ? "#888" : "#666"}
+                        />
+                      </Pressable>
+                    </View>
+                    {errors.newPassword && (
+                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                        *{errors.newPassword.message}
+                      </Text>
+                    )}
                   </View>
                 )}
               />
@@ -337,15 +387,38 @@ export default function SubAdminProfile() {
                 name="confirmPassword"
                 render={({ field: { onChange, value } }) => (
                   <View>
-                    <TextInput
-                      placeholder="Confirm Password"
-                      value={value}
-                      onChangeText={onChange}
-                      secureTextEntry
-                      placeholderTextColor={isDark ? "#888" : "#9ca3af"}
-                      style={{ borderWidth: 1, borderColor: errors.confirmPassword ? "red" : "#e5e5e5", borderRadius: 10, padding: 12, color: isDark ? "#fff" : "#000" }}
-                    />
-                    {errors.confirmPassword && <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>*{errors.confirmPassword.message}</Text>}
+                    <View style={{ position: "relative" }}>
+                      <TextInput
+                        placeholder="Confirm Password"
+                        value={value}
+                        onChangeText={onChange}
+                        secureTextEntry={!showConfirmPassword}
+                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: errors.confirmPassword ? "red" : "#e5e5e5",
+                          borderRadius: 10,
+                          padding: 12,
+                          paddingRight: 45,
+                          color: isDark ? "#fff" : "#000",
+                        }}
+                      />
+                      <Pressable
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{ position: "absolute", right: 12, top: 12 }}
+                      >
+                        <Ionicons
+                          name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color={isDark ? "#888" : "#666"}
+                        />
+                      </Pressable>
+                    </View>
+                    {errors.confirmPassword && (
+                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                        *{errors.confirmPassword.message}
+                      </Text>
+                    )}
                   </View>
                 )}
               />
