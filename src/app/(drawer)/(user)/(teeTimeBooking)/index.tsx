@@ -25,6 +25,7 @@ import {
 } from "@/api/teeTime";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function TeeTimeBookingPage() {
   const colorScheme = useColorScheme();
@@ -41,6 +42,7 @@ export default function TeeTimeBookingPage() {
   const [teeData, setTeeData] = useState<any>(null);
   const [loadingSeats, setLoadingSeats] = useState<any>({});
 
+  const [userId, setUserId] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const getSeatKey = (
     date: string,
@@ -56,6 +58,8 @@ export default function TeeTimeBookingPage() {
 
   const fetchTeeTiming = async () => {
     try {
+      setLoading(true);
+
       const courseResponse = await getSubAdminCourses();
       const teeDetails = await getTeeTimeSeats(
         availableDates[selectedDateIndex],
@@ -81,6 +85,21 @@ export default function TeeTimeBookingPage() {
     }
   };
 
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const id = await AsyncStorage.getItem("userId");
+        if (id) {
+          setUserId(Number(id));
+        }
+      } catch (err) {
+        console.error("Error fetching userId:", err);
+      }
+    };
+    getUserId();
+  }, []);
+
+  
   // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
 
   const bookSeatHandler = async (timeSlot: string, seatNumber: number) => {
@@ -89,6 +108,21 @@ export default function TeeTimeBookingPage() {
     const key = getSeatKey(date, teeBox, timeSlot, seatNumber);
 
     if (loadingSeats[key]) return;
+
+    // Validation: Check if user already has a booking for this day
+    const hasBookingToday = teeData?.slots?.some((slot: any) =>
+      slot.seats?.some((seat: any) => seat.isBooked && seat.userId === userId),
+    );
+
+    if (hasBookingToday) {
+      Toast.show({
+        type: "error",
+        text1: "Booking Limit",
+        text2: "You can book only one seat for one day.",
+      });
+      return;
+    }
+
     setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
 
     try {
@@ -277,7 +311,7 @@ export default function TeeTimeBookingPage() {
             const date = availableDates[selectedDateIndex];
             const teeBox = activeTeeTab;
             const key = getSeatKey(date, teeBox, slot.time, seat.seatNumber);
-            const isMine = seat?.isMyBooking;
+            const isMine = seat?.userId === userId;
             const isLoading = loadingSeats[key];
 
             return (
@@ -287,19 +321,21 @@ export default function TeeTimeBookingPage() {
                   if (isLoading) return;
 
                   if (isBooked) {
-                    if (seat.bookingId) {
+                    if (isMine && seat.bookingId) {
                       cancelBookingHandler(
                         seat.bookingId,
                         slot.time,
                         seat.seatNumber,
                       );
-                    } else {
-                      Toast.show({
-                        type: "error",
-                        text1: "Cannot Cancel",
-                        text2: "You don't have permission to cancel this booking.",
-                      });
                     }
+                    //  else if (!isMine) {
+                    //   Toast.show({
+                    //     type: "error",
+                    //     text1: "Cannot Cancel",
+                    //     text2: "You don't have permission to cancel this booking.",
+                    //   });
+                    // }
+
                   } else {
                     bookSeatHandler(slot.time, seat.seatNumber);
                   }
@@ -311,16 +347,26 @@ export default function TeeTimeBookingPage() {
                   borderRadius: 10,
                   marginBottom: 10,
                   alignItems: "center",
-                  backgroundColor: isBooked ? "#ef4444" : "#8BC34A",
+                  backgroundColor: isBooked ?isMine? "#ef4444" :"grey" :"#8BC34A",
                   // opacity: isLoading ? 0.6 : 1,
                 }}
               >
+
+                {/*  {isLoading
+                    ? "Please wait"
+                    : isBooked
+                      ? isMine
+                        ? "Cancel booking"
+                        : seat.userName || "Booked"
+                      : "Book"} */}
                 <Ionicons
                   name={
                     isLoading
                       ? "hourglass-outline"
                       : isBooked
-                        ? "close-circle"
+                        ? isMine
+                          ? "close-circle"
+                          : "person"
                         : "add-circle-sharp"
                   }
                   size={20}
@@ -339,7 +385,9 @@ export default function TeeTimeBookingPage() {
                   {isLoading
                     ? "Please wait"
                     : isBooked
-                      ? "Cancel booking"
+                      ? isMine
+                        ? "Cancel booking"
+                        : seat.userName || "Booked"
                       : "Book"}
                 </Text>
                 <Text
