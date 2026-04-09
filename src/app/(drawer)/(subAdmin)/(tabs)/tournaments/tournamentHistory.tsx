@@ -12,7 +12,10 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
-import { getTournamentHistory, getTournamentHistoryByUserId } from "@/api/admin/tournaments";
+import {
+  getTournamentHistory,
+  getTournamentHistoryByUserId,
+} from "@/api/admin/tournaments";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function subAdminTournamentHistory() {
@@ -23,6 +26,63 @@ export default function subAdminTournamentHistory() {
 
   const [history, setHistory] = useState<any>([]);
   const [loading, setLoading] = useState(true);
+
+  // ── Colors ──
+  const colors = {
+    bg: isDark ? "#020617" : "#f8fafc",
+    cardBg: isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)",
+    cardBorder: isDark ? "#1e293b" : "#e2e8f0",
+    text: isDark ? "#f1f5f9" : "#0f172a",
+    subText: isDark ? "#94a3b8" : "#64748b",
+    dimText: isDark ? "#64748b" : "#94a3b8",
+    accent: "#84cc16",
+    accentSoft: isDark ? "rgba(132,204,22,0.15)" : "rgba(132,204,22,0.1)",
+    divider: isDark ? "#1e293b" : "#f1f5f9",
+    iconBg: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
+  };
+
+  const EmptyState = () => (
+    <VStack
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 60,
+        paddingHorizontal: 24,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: colors.iconBg,
+          padding: 18,
+          borderRadius: 50,
+          marginBottom: 16,
+        }}
+      >
+        <Ionicons name="time-outline" size={32} color={colors.subText} />
+      </View>
+      <ThemedText
+        style={{
+          fontSize: 18,
+          fontWeight: "600",
+          color: colors.text,
+          marginBottom: 6,
+        }}
+      >
+        No History Found
+      </ThemedText>
+      <ThemedText
+        style={{
+          fontSize: 14,
+          color: colors.subText,
+          textAlign: "center",
+          lineHeight: 20,
+        }}
+      >
+        No rounds have been completed for this tournament yet. Scores will
+        appear here once players start submitting their scorecards.
+      </ThemedText>
+    </VStack>
+  );
 
   const fetchHistory = async () => {
     try {
@@ -71,7 +131,7 @@ export default function subAdminTournamentHistory() {
             lineHeight: 30,
           }}
         >
-          Scorecard (Net Score Include Par 3)
+          Tournament History
         </ThemedText>
 
         {/* RIGHT: Add Button */}
@@ -93,16 +153,12 @@ export default function subAdminTournamentHistory() {
             ))
           ) : (
             <>
-              {history.map((item: any) => (
-                <HistoryCard key={item.id} item={item} isDark={isDark} />
-              ))}
-
-              {history.length == 0 && (
-                <VStack style={{ alignItems: "center", padding: 20 }}>
-                  <ThemedText style={{ textAlign: "center", fontSize: 16, fontWeight: "600" }}>
-                    No History found for this tournament.
-                  </ThemedText>
-                </VStack>
+              {history.length == 0 ? (
+                <EmptyState />
+              ) : (
+                history.map((item: any) => (
+                  <HistoryCard key={item.id} item={item} isDark={isDark} />
+                ))
               )}
             </>
           )}

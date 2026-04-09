@@ -595,8 +595,8 @@ function TeeCardAdmin({
           }}
           className="flex-row items-center gap-1"
         >
-          <Ionicons name="pencil-outline" size={15} color="#6b7280" />
-          <ThemedText style={{ color: "#6b7280", fontWeight: "400" }}>
+          <Ionicons name="pencil-outline" size={15} color={isDark? "#b2c1e0ff" : "#6b7280"} />
+          <ThemedText style={{ color: isDark? "#b2c1e0ff" : "#6b7280", fontWeight: "400" }}>
             Edit
           </ThemedText>
         </Pressable>

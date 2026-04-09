@@ -219,7 +219,6 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
         borderWidth: 1,
         borderRadius: 16,
         padding: 16,
-        marginBottom: 12,
         borderColor: isDark ? "#262626" : "#e5e5e5",
       }}
     >
@@ -851,7 +850,7 @@ function TournamentCard({
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
-                  `/(drawer)/(admin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId}&scoringType=${tournament?.scoringType}`,
+                  `/(drawer)/(admin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId}&scoringType=${tournament?.scoringType}&secretHoles=${tournament?.secretHoles}`,
                 );
               }}
             >
@@ -929,7 +928,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+  
 
     // shadowColor: "#000",
     // shadowOpacity: 0.08,

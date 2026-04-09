@@ -176,7 +176,7 @@ export default function EditHolesPage() {
      <>{holes.map((hole, index) => (
               <Box
                 key={hole.holeId}
-                className="p-4 rounded-xl border border-neutral-200"
+                className="p-4 rounded-xl border border-neutral-200 mb-3"
               >
                 <VStack space="sm">
                   {/* Hole Title */}

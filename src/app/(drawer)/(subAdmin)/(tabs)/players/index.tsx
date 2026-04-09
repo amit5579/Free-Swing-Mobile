@@ -545,6 +545,7 @@ export default function SubAdminPlayersPage() {
                 text1: "Handicap Certificate",
                 text2: `Viewing certificate for ${item.username}`,
               });
+              routePage.push(`/(drawer)/(subAdmin)/(tabs)/players/playerCertificate?userId=${item.id}`)
             }}
           />
           <ActionButton

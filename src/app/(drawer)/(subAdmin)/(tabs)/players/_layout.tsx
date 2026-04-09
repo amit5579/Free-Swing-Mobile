@@ -6,6 +6,7 @@ export default function playersLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="subGameHistory" options={{ headerShown: false }} />
       <Stack.Screen name="subHistoryScoreCard" options={{ headerShown: false }} />
+      <Stack.Screen name="playerCertificate" options={{ headerShown: false }} />
     </Stack>
   );
 }

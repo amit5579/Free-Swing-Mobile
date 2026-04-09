@@ -32,8 +32,21 @@ export default function LeaderboardPage() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, tournamentName, teeboxId, scoringType } =
+  const { tournamentId, tournamentName, teeboxId, scoringType, secretHoles } =
     useLocalSearchParams();
+  const strSecretHoles =
+    typeof secretHoles === "string"
+      ? secretHoles
+      : Array.isArray(secretHoles)
+        ? secretHoles[0]
+        : undefined;
+
+  const savedSecretHoles = strSecretHoles
+    ? strSecretHoles
+        .split(",")
+        .filter((h) => h.trim() !== "")
+        .map(Number)
+    : [];
 
   const isDoublePreoria =
     scoringType === "double-peoria" ||
@@ -62,19 +75,19 @@ export default function LeaderboardPage() {
     };
 
     loadData();
-
-    AsyncStorage.setItem(
-      "selectedHoles",
-      JSON.stringify({ front: selectedFront, back: selectedBack }),
-    );
     fetchData();
   }, []);
 
   const onSubmit = async () => {
     try {
-      // const secretHoles = holes.filter((hole: any) => hole.isSelected).map((hole: any) => hole.holeNumber);
-      const allSelectedHoles = [...selectedFront, ...selectedBack];
-      await postSecretHoles(Number(tournamentId), allSelectedHoles)
+      const allSelectedHoles = [
+        ...selectedFront,
+        ...selectedBack,
+        ...savedSecretHoles.filter(
+          (h) => !selectedFront.includes(h) && !selectedBack.includes(h),
+        ),
+      ];
+      await postSecretHoles(Number(tournamentId), allSelectedHoles);
       // console.log("selectedHoles", allSelectedHoles);
       Toast.show({
         type: "success",
@@ -167,7 +180,7 @@ export default function LeaderboardPage() {
     const isDark = colorScheme === "dark";
 
     if (!holes || holes.length === 0) return null;
-   
+
     const border = isDark ? "#334155" : "#d1d5db";
 
     const secondaryText = isDark ? "#94a3b8" : "#6b7280";
@@ -178,18 +191,28 @@ export default function LeaderboardPage() {
           ? selectedFront.includes(number)
           : selectedBack.includes(number);
 
-          const isDisabled =
-  (number <= 9 && selectedFront.length >= 6 && !selectedFront.includes(number)) ||
-  (number > 9 && selectedBack.length >= 6 && !selectedBack.includes(number));
+      const isDisabled =
+        (number <= 9 &&
+          selectedFront.length >= 6 &&
+          !selectedFront.includes(number) &&
+          !savedSecretHoles.includes(number)) ||
+        (number > 9 &&
+          selectedBack.length >= 6 &&
+          !selectedBack.includes(number) &&
+          !savedSecretHoles.includes(number)) ||
+        (savedSecretHoles.length > 0 && !savedSecretHoles.includes(number));
 
       return (
         <Pressable
-        disabled={isDisabled}
+          disabled={isDisabled}
           onPress={() => {
             const isFront = number <= 9;
 
             if (isFront) {
-              if (selectedFront.includes(number)) {
+              if (
+                selectedFront.includes(number) ||
+                savedSecretHoles.includes(number)
+              ) {
                 // remove
                 setSelectedFront((prev) => prev.filter((h) => h !== number));
               } else {
@@ -203,7 +226,10 @@ export default function LeaderboardPage() {
                 setSelectedFront((prev) => [...prev, number]);
               }
             } else {
-              if (selectedBack.includes(number)) {
+              if (
+                selectedBack.includes(number) ||
+                savedSecretHoles.includes(number)
+              ) {
                 setSelectedBack((prev) => prev.filter((h) => h !== number));
               } else {
                 if (selectedBack.length >= 6) {
@@ -218,28 +244,29 @@ export default function LeaderboardPage() {
             }
           }}
           style={{
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: border,
+            width: 60,
+            height: 60,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: border,
 
-    backgroundColor: isSelected
-      ? "#8bc34a"
-      : isDisabled
-        ? isDark
-          ? "rgba(100, 116, 139, 0.3)"
-          : "rgba(203, 213, 225, 0.5)"
-        : isDark
-          ? "rgba(15, 23, 42, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
+            backgroundColor:
+              isSelected || savedSecretHoles.includes(number)
+                ? "#8bc34a"
+                : isDisabled
+                  ? isDark
+                    ? "rgba(100, 116, 139, 0.3)"
+                    : "rgba(203, 213, 225, 0.5)"
+                  : isDark
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
 
-    opacity: isDisabled ? 0.5 : 1,
+            opacity: isDisabled ? 0.5 : 1,
 
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 4,
-  }}
+            justifyContent: "center",
+            alignItems: "center",
+            margin: 4,
+          }}
         >
           <ThemedText
             style={{
@@ -265,8 +292,6 @@ export default function LeaderboardPage() {
 
     const frontNine = holes.slice(0, 9);
     const backNine = holes.slice(9, 18);
-
-   
 
     return (
       <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
@@ -329,34 +354,70 @@ export default function LeaderboardPage() {
           ))}
         </View>
 
+        {/* Selected text */}
+        <ThemedText
+          style={{
+            fontSize: 13,
+            fontWeight: "500",
+          }}
+        >
+          Selected:
+          <ThemedText
+            style={{
+              fontSize: 13,
+              color: "#ef4444",
+              fontWeight: "500",
+            }}
+          >
+            {selectedFront.length ||
+              savedSecretHoles.filter((h: any) => h <= 9).length}
+            /6 Front |{" "}
+            {selectedBack.length ||
+              savedSecretHoles.filter((h: any) => h > 9).length}
+            /6 Back
+          </ThemedText>
+        </ThemedText>
         {/* FOOTER */}
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 16,
-            justifyContent: "space-between",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            marginTop: 10,
+            justifyContent: "flex-end",
           }}
         >
           {/* Button */}
           <Pressable
-            onPress={() =>
-               {
-                const allSelectedHoles = [...selectedFront, ...selectedBack];
-                const lessHoles = allSelectedHoles.length !== 12;
-                if(lessHoles){
-                  setDisabledSubmit(true);
-                  Toast.show({
-                    type: "error",
-                    text1: "Please select 6 holes from front and 6 holes from back",
-                  });
-                  return;
-                }
-                else{
-                  setDisabledSubmit(false);
-                }
-              onSubmit()}}
-              disabled = {disabledSubmit}
+            onPress={() => {
+              const allSelectedHoles = [
+                ...selectedFront,
+                ...selectedBack,
+                ...savedSecretHoles.filter(
+                  (h) =>
+                    !selectedFront.includes(h) && !selectedBack.includes(h),
+                ),
+              ];
+              const frontCount =
+                selectedFront.length ||
+                savedSecretHoles.filter((h) => h <= 9).length;
+              const backCount =
+                selectedBack.length ||
+                savedSecretHoles.filter((h) => h > 9).length;
+
+              if (frontCount !== 6 || backCount !== 6) {
+                setDisabledSubmit(true);
+                Toast.show({
+                  type: "error",
+                  text1:
+                    "Please select 6 holes from front and 6 holes from back",
+                });
+                return;
+              } else {
+                setDisabledSubmit(false);
+              }
+              onSubmit();
+            }}
+            disabled={disabledSubmit}
             style={{
               backgroundColor: disabledSubmit ? "#aad37bff" : "#8bc34a",
               paddingVertical: 10,
@@ -374,25 +435,6 @@ export default function LeaderboardPage() {
               Calculate Double Peoria
             </Text>
           </Pressable>
-
-          {/* Selected text */}
-          <ThemedText
-            style={{
-              fontSize: 13,
-              fontWeight: "500",
-            }}
-          >
-            Selected:
-            <ThemedText
-              style={{
-                fontSize: 13,
-                color: "#ef4444",
-                fontWeight: "500",
-              }}
-            >
-              {selectedFront.length}/6 Front | {selectedBack.length}/6 Back{" "}
-            </ThemedText>
-          </ThemedText>
         </View>
       </View>
     );

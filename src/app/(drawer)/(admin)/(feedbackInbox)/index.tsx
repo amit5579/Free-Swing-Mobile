@@ -71,6 +71,30 @@ export default function FeedbackInboxPage() {
     );
   };
 
+  const StatsSkeleton = () => {
+    return (
+      <HStack style={{ flexWrap: "wrap", justifyContent: "space-between" }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Box
+            key={i}
+            style={{
+              width: "48%",
+              padding: 10,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: isDark ? "#262626" : "#e5e7eb",
+              marginBottom: 8,
+              alignItems: "center",
+            }}
+          >
+            <Skeleton isDark={isDark} height={16} width={30} style={{ marginBottom: 4 }} />
+            <Skeleton isDark={isDark} height={10} width={40} />
+          </Box>
+        ))}
+      </HStack>
+    );
+  };
+
   const EmptyState = () => {
     return (
       <VStack
@@ -283,36 +307,40 @@ export default function FeedbackInboxPage() {
                 </Text>
 
                 {/* Stats Grid */}
-                <HStack
-                  style={{ flexWrap: "wrap", justifyContent: "space-between" }}
-                >
-                  {[
-                    { label: "Total", value: 2 },
-                    { label: "Open", value: 0 },
-                    { label: "Ongoing", value: 0 },
-                    { label: "Resolved", value: 2 },
-                  ].map((item, index) => (
-                    <Box
-                      key={index}
-                      style={{
-                        width: "48%",
-                        padding: 10,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: "#e5e7eb",
-                        marginBottom: 8,
-                        alignItems: "center",
-                      }}
-                    >
-                      <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-                        {item.value}
-                      </ThemedText>
-                      <Text style={{ fontSize: 11, color: "#6b7280" }}>
-                        {item.label}
-                      </Text>
-                    </Box>
-                  ))}
-                </HStack>
+                {isLoading ? (
+                  <StatsSkeleton />
+                ) : (
+                  <HStack
+                    style={{ flexWrap: "wrap", justifyContent: "space-between" }}
+                  >
+                    {[
+                      { label: "Total", value: feedbackData.length || 0 },
+                      { label: "Open", value: feedbackData.filter((item: any) => item.status === "Open").length || 0 },
+                      { label: "Ongoing", value: feedbackData.filter((item: any) => item.status === "Ongoing").length || 0 },
+                      { label: "Resolved", value: feedbackData.filter((item: any) => item.status === "Resolved").length || 0 },
+                    ].map((item, index) => (
+                      <Box
+                        key={index}
+                        style={{
+                          width: "48%",
+                          padding: 10,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: isDark? "#262626" : "#e5e7eb",
+                          marginBottom: 8,
+                          alignItems: "center",
+                        }}
+                      >
+                        <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+                          {item.value}
+                        </ThemedText>
+                        <Text style={{ fontSize: 11, color: "#6b7280" }}>
+                          {item.label}
+                        </Text>
+                      </Box>
+                    ))}
+                  </HStack>
+                )}
               </VStack>
               {/* Tab Buttons */}
               <HStack

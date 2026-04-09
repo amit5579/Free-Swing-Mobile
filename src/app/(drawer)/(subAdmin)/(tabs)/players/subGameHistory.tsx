@@ -65,7 +65,6 @@ const [gameHistory, setGameHistory] = useState([]);
   };
 
  
-
   // ── Fetch ──
   const fetchPlayers = async () => {
     try {
@@ -92,9 +91,6 @@ const [gameHistory, setGameHistory] = useState([]);
       fetchPlayers();
     }, []),
   );
-
-
-
  
   // ── Skeleton ──
   const GameHistorySkeleton = () => (
@@ -146,7 +142,7 @@ const [gameHistory, setGameHistory] = useState([]);
           marginBottom: 16,
         }}
       >
-        <Ionicons name="people-outline" size={32} color={colors.subText} />
+        <Ionicons name="golf-outline" size={32} color={colors.subText} />
       </View>
       <ThemedText
         style={{
@@ -156,7 +152,7 @@ const [gameHistory, setGameHistory] = useState([]);
           marginBottom: 6,
         }}
       >
-        No Players Found
+        No Games Found
       </ThemedText>
       <ThemedText
         style={{
@@ -166,8 +162,8 @@ const [gameHistory, setGameHistory] = useState([]);
           lineHeight: 20,
         }}
       >
-        Players assigned to your account will appear here. Tap "Add Player" to
-        invite one.
+        This player hasn't recorded any rounds in this module yet. Once they
+        complete a game, the scorecard and stats will be listed here.
       </ThemedText>
     </VStack>
   );
@@ -323,7 +319,6 @@ const [gameHistory, setGameHistory] = useState([]);
       </View>
     );
   };
-
 
   // ── Header ──
     const renderHeader = () => {
