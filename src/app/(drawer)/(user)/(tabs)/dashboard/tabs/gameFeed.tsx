@@ -6,13 +6,14 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView } from "react-native";
+import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getLikedUsersApi, LikedUser } from "@/api/dashboard";
 import { Skeleton } from "@/components/Skeleton";
+import GolferParadise from "./GolferParadise";
 
 export type Scorecard = {
     id: string;
@@ -32,6 +33,7 @@ export type Scorecard = {
     isAuthenticated: boolean;
     authenticatedBy: string | null;
     profileImage?: string | null;
+    isDQ: boolean;
 };
 
 const diffLabel = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
@@ -73,21 +75,20 @@ const FeedCard = ({
         <Box
             className="mb-4"
             style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isDark ? 0.3 : 0.08,
-                shadowRadius: 10,
-                elevation: 4,
+                shadowColor: "#8BC34A",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: isDark ? 0.4 : 0.15,
+                shadowRadius: 14,
                 backgroundColor: isDark
                     ? "rgba(26,26,26,0.6)"
-                    : "rgba(255,255,255,0.7)",
+                    : "rgba(255,255,255,0.6)",
                 borderLeftWidth: 6,
-                borderLeftColor: "#8BC34A",
+                borderLeftColor: card.isDQ ? "#ef4444" : "#8BC34A",
                 borderTopWidth: 1,
                 borderRightWidth: 1,
                 borderBottomWidth: 1,
-                borderColor: "rgba(139, 195, 74, 0.3)",
-                borderRadius: 20,
+                borderColor: card.isDQ && isDark ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
+                borderRadius: 22,
                 overflow: "hidden",
             }}
         >
@@ -105,7 +106,7 @@ const FeedCard = ({
                                     height: 38,
                                     borderRadius: 36,
                                     borderWidth: card.isAuthenticated ? 2 : 1.5,
-                                    borderColor: card.isAuthenticated ? "#4CAF50" : "#8BC34A",
+                                    borderColor: card.isDQ ? "#ef4444" : (card.isAuthenticated ? "#4CAF50" : "#8BC34A"),
                                     justifyContent: "center",
                                     alignItems: "center",
                                     overflow: "hidden",
@@ -159,6 +160,11 @@ const FeedCard = ({
                                 <BadgeText className="text-white font-bold text-[9px]">Tournament</BadgeText>
                             </Badge>
                         )}
+                        {card.isDQ && (
+                            <Badge size="sm" className="rounded-full px-2 py-0.5" style={{ backgroundColor: "#ef4444" }}>
+                                <BadgeText className="text-white font-bold text-[9px]">DQ</BadgeText>
+                            </Badge>
+                        )}
                         <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={18} color="#8BC34A" style={{ marginLeft: 4 }} />
                     </HStack>
                 </HStack>
@@ -199,13 +205,13 @@ const FeedCard = ({
                             { label: "Net", value: card.net, green: true },
                             { label: "Points", value: card.points, green: true },
                         ].map((s) => (
-                            <Box 
-                                key={s.label} 
-                                className="rounded-xl items-center py-2 border mb-1" 
-                                style={{ 
+                            <Box
+                                key={s.label}
+                                className="rounded-xl items-center py-2 border mb-1"
+                                style={{
                                     width: "23.5%",
-                                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)", 
-                                    borderColor: "rgba(139,195,74,0.3)" 
+                                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                                    borderColor: "rgba(139,195,74,0.3)"
                                 }}
                             >
                                 <Text className="text-[8px] uppercase tracking-wider mb-0.5" style={{ color: isDark ? "#aaa" : "#6b7280" }}>{s.label}</Text>
@@ -266,9 +272,20 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
     const [activityModalVisible, setActivityModalVisible] = useState(false);
     const [likedUsers, setLikedUsers] = useState<LikedUser[]>([]);
     const [activityLoading, setActivityLoading] = useState(false);
+    const [subTab, setSubTab] = useState<'feed' | 'paradise'>('feed');
+    const subTabScrollRef = useRef<ScrollView>(null);
+    const SCREEN_WIDTH = Dimensions.get('window').width;
 
     const toggleCard = (id: string) => {
         setExpandedId(prev => (prev === id ? null : id));
+    };
+
+    const handleSubTabChange = (tab: 'feed' | 'paradise') => {
+        setSubTab(tab);
+        subTabScrollRef.current?.scrollTo({
+            x: tab === 'feed' ? 0 : SCREEN_WIDTH,
+            animated: true
+        });
     };
 
     const handleShowActivity = async (id: string) => {
@@ -289,38 +306,65 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
         <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
             <VStack>
                 {!searchQuery && (
-                    <HStack className="justify-between items-center mb-4 mt-6">
-                        <HStack space="sm" className="items-center">
-                            <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>Game Feed</Text>
-                            <HStack className="items-center px-3 py-1 rounded-full space-x-2" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(209,250,229,0.7)", borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#fff" : "transparent" }}>
-                                <Ionicons name="pulse" size={16} color={isDark ? "#fff" : "#22C55E"} style={{ marginRight: 4 }} />
-                                <Text className="text-xs font-semibold" style={{ color: isDark ? "#fff" : "#15803D" }}>Live</Text>
+                    <HStack
+                        className="mb-3 p-1 rounded-full"
+                        style={{
+                            backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(243, 244, 246, 0.8)",
+                            borderWidth: 1,
+                            borderColor: isDark ? "rgba(139,195,74,0.1)" : "rgba(229,231,235,1)"
+                        }}
+                    >
+                        <Pressable
+                            onPress={() => handleSubTabChange('feed')}
+                            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+                            style={{ backgroundColor: subTab === 'feed' ? '#8BC34A' : 'transparent' }}
+                        >
+                            <HStack space="xs" className="items-center">
+                                <Ionicons name="pulse" size={16} color={subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                <Text className="font-bold text-sm" style={{ color: subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Game Feed</Text>
                             </HStack>
-                        </HStack>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => handleSubTabChange('paradise')}
+                            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+                            style={{ backgroundColor: subTab === 'paradise' ? '#8BC34A' : 'transparent' }}
+                        >
+                            <HStack space="xs" className="items-center">
+                                <Ionicons name="trophy-outline" size={16} color={subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                <Text className="font-bold text-sm" style={{ color: subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Golfer Paradise</Text>
+                            </HStack>
+                        </Pressable>
                     </HStack>
                 )}
-                
 
-                {cards.length === 0 && (
-                    <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(30,30,30,0.6)" : "rgba(255,255,255,0.6)", borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.5)" }}>
-                        <Text className="text-4xl">⛳</Text>
-                        <Text className="font-semibold text-sm mt-3" style={{ color: isDark ? "#aaa" : "#6B7280" }}>
-                            {searchQuery ? "No matching scorecards found" : "No scorecards yet"}
-                        </Text>
-                    </Box>
+                {subTab === 'feed' || searchQuery ? (
+                    <View style={{ width: SCREEN_WIDTH - 32, overflow: 'hidden' }}>
+                        {cards.length === 0 && (
+                            <Box className="rounded-2xl border py-12 items-center" style={{ backgroundColor: isDark ? "rgba(30,30,30,0.6)" : "rgba(255,255,255,0.6)", borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.5)" }}>
+                                <Text className="text-4xl">⛳</Text>
+                                <Text className="font-semibold text-sm mt-3" style={{ color: isDark ? "#aaa" : "#6B7280" }}>
+                                    {searchQuery ? "No matching scorecards found" : "No scorecards yet"}
+                                </Text>
+                            </Box>
+                        )}
+
+                        {cards.map((card) => (
+                            <FeedCard
+                                key={card.id}
+                                card={card}
+                                isDark={isDark}
+                                isExpanded={expandedId === card.id}
+                                onToggle={() => toggleCard(card.id)}
+                                handleLike={handleLike}
+                                onActivity={handleShowActivity}
+                            />
+                        ))}
+                    </View>
+                ) : (
+                    <View style={{ width: SCREEN_WIDTH - 32, overflow: 'hidden' }}>
+                        <GolferParadise />
+                    </View>
                 )}
-
-                {cards.map((card) => (
-                    <FeedCard
-                        key={card.id}
-                        card={card}
-                        isDark={isDark}
-                        isExpanded={expandedId === card.id}
-                        onToggle={() => toggleCard(card.id)}
-                        handleLike={handleLike}
-                        onActivity={handleShowActivity}
-                    />
-                ))}
             </VStack>
 
             <Modal

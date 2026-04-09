@@ -2,18 +2,10 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-<<<<<<< Updated upstream
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
 import Watermark from "@/components/watermark";
-=======
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import Watermark from '@/components/watermark';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
->>>>>>> Stashed changes
-
 export default function TournamentsScreen() {
   return (
     <ThemedView style={styles.container}>

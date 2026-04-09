@@ -44,6 +44,7 @@ export type Scorecard = {
   authenticatedBy: string | null;
   canAuthenticate: boolean;
   profileImage?: string | null;
+  isDQ: boolean;
 };
 
 const diffLabel = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
@@ -78,16 +79,15 @@ const FeedCard = ({
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: isDark ? 0.4 : 0.15,
         shadowRadius: 14,
-        elevation: 8,
         backgroundColor: isDark
           ? "rgba(26,26,26,0.6)"
           : "rgba(255,255,255,0.6)",
         borderLeftWidth: 6,
-        borderLeftColor: "#8BC34A",
+        borderLeftColor: card.isDQ ? "#ef4444" : "#8BC34A",
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderBottomWidth: 1,
-        borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+        borderColor: card.isDQ && isDark ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
         borderRadius: 22,
         overflow: "hidden",
       }}
@@ -106,7 +106,7 @@ const FeedCard = ({
                   height: 38,
                   borderRadius: 36,
                   borderWidth: card.isAuthenticated ? 2 : 1.5,
-                  borderColor: card.isAuthenticated ? "#4CAF50" : "#8BC34A",
+                  borderColor: card.isDQ ? "#ef4444" : (card.isAuthenticated ? "#4CAF50" : "#8BC34A"),
                   justifyContent: "center",
                   alignItems: "center",
                   overflow: "hidden",
@@ -183,6 +183,17 @@ const FeedCard = ({
               >
                 <BadgeText className="text-white font-bold text-[10px]">
                   Tournament
+                </BadgeText>
+              </Badge>
+            )}
+            {card.isDQ && (
+              <Badge
+                size="sm"
+                className="rounded-full px-2 py-0.5"
+                style={{ backgroundColor: "#ef4444" }}
+              >
+                <BadgeText className="text-white font-bold text-[10px]">
+                  DQ
                 </BadgeText>
               </Badge>
             )}
@@ -520,6 +531,7 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
           authenticatedBy: item.authenticatedBy,
           canAuthenticate: item.canAuthenticate,
           profileImage: item.playerAvatar,
+          isDQ: !!item.isDQ,
         }));
         setCards(mappedCards);
 

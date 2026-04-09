@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from "react";
 import {
-  useColorScheme,
   Text,
   View,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, router } from "expo-router";
 import { VStack } from "@/components/vstack";
@@ -110,46 +110,32 @@ export default function SubAdminDashboard() {
           </HStack>
         </VStack>
 
-        <Box className="mb-4">
-          <View
+        <Box
+          className="mb-4 flex-row items-center px-4 rounded-xl border"
+          style={{
+            height: 44,
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
+            borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+          }}
+        >
+          <Ionicons name="search-outline" size={18} color="#8BC34A" />
+          <TextInput
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: isDark
-                ? "rgba(255,255,255,0.1)"
-                : "#e5e7eb",
-              borderRadius: 24,
-              paddingHorizontal: 16,
-              height: 40,
+              flex: 1,
+              marginLeft: 8,
+              color: isDark ? "#fff" : "#111",
+              fontSize: 14,
             }}
-          >
-            <Ionicons
-              name="search"
-              size={20}
-              color={isDark ? "#aaa" : "#6b7280"}
-            />
-            <TextInput
-              style={{
-                flex: 1,
-                marginLeft: 10,
-                color: isDark ? "#fff" : "#111",
-                fontSize: 15,
-              }}
-              placeholder="Search game feed..."
-              placeholderTextColor={isDark ? "#aaa" : "#6b7280"}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons
-                  name="close-circle"
-                  size={20}
-                  color={isDark ? "#aaa" : "#6b7280"}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
+            placeholder="Search game feed..."
+            placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
+            </TouchableOpacity>
+          )}
         </Box>
       </VStack>
 
@@ -223,6 +209,7 @@ export default function SubAdminDashboard() {
                     {stats.players}
                   </Text>
                   <Text
+                    style={{ textAlign: "center" }}
                     className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
                   >
                     My Players
@@ -265,6 +252,7 @@ export default function SubAdminDashboard() {
                     {stats.courses}
                   </Text>
                   <Text
+                    style={{ textAlign: "center" }}
                     className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
                   >
                     Assigned Courses
@@ -305,12 +293,18 @@ export default function SubAdminDashboard() {
                       color="#FBBF24"
                     />
                   </Box>
-                  <Text
+                  {/* <Text
                     className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
                   >
                     {stats.updates}
+                  </Text> */}
+                  <Text
+                    className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                  >
+                    Ready
                   </Text>
                   <Text
+                    style={{ textAlign: "center" }}
                     className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
                   >
                     Update Center

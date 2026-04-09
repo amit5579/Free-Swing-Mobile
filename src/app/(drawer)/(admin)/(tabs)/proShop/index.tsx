@@ -126,13 +126,20 @@ export default function ProShop() {
                 <Box
                   key={item}
                   style={{
-                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-                    borderRadius: 24,
-                    padding: 12,
-                    borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+                    shadowColor: "#8BC34A",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: isDark ? 0.3 : 0.1,
+                    shadowRadius: 12,
+                    backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                    borderRadius: 22,
                     borderLeftWidth: 6,
                     borderLeftColor: "#8BC34A",
+                    borderTopWidth: 1,
+                    borderRightWidth: 1,
+                    borderBottomWidth: 1,
+                    borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                    padding: 12,
+                    marginBottom: 16,
                   }}
                 >
                   <HStack space="md" className="items-center">
@@ -167,18 +174,21 @@ export default function ProShop() {
                 <Box
                   key={item.id}
                   style={{
-                    backgroundColor: isDark ? "rgba(22, 22, 24, 0.7)" : "rgba(255, 255, 255, 0.3)",
-                    borderRadius: 24,
-                    padding: 12,
-                    borderWidth: isDark ? 1.5 : 0,
-                    borderColor: isDark ? "#8BC34A" : "transparent",
+                    shadowColor: "#8BC34A",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: isDark ? 0.3 : 0.1,
+                    shadowRadius: 12,
+                    backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                    borderRadius: 22,
                     borderLeftWidth: 6,
                     borderLeftColor: "#8BC34A",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: isDark ? 0.3 : 0.05,
-                    shadowRadius: 10,
-                    elevation: 3,
+                    borderTopWidth: 1,
+                    borderRightWidth: 1,
+                    borderBottomWidth: 1,
+                    borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#D1D5DB",
+                    padding: 12,
+                    marginBottom: 16,
+                    overflow: "hidden",
                   }}
                 >
                   <HStack space="md" className="items-center">

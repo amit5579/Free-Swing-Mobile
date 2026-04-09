@@ -29,14 +29,20 @@ const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
   <HStack
     style={{
       alignItems: "center",
-      marginBottom: 14,
+      marginBottom: 16,
       padding: 16,
       borderRadius: 22,
-      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff",
+      backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
       borderLeftWidth: 6,
       borderLeftColor: "#8BC34A",
-      borderWidth: 1,
-      borderColor: isDark ? "#2a2a2a" : "#e5e5e5",
+      borderTopWidth: 1,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+      shadowColor: "#8BC34A",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: isDark ? 0.4 : 0.15,
+      shadowRadius: 14,
     }}
   >
     <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
@@ -69,17 +75,18 @@ const PlayerRow = ({
         borderRadius: 22,
         backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
         borderLeftWidth: 6,
-        borderLeftColor: "#8BC34A",
+        borderLeftColor: isActive ? "#8BC34A" : "#EF4444",
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderBottomWidth: 1,
-        borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+        borderColor: isActive
+          ? (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0")
+          : (isDark ? "#EF4444" : "#FCA5A5"),
         marginBottom: 16,
-        shadowColor: "#8BC34A",
+        shadowColor: isActive ? "#8BC34A" : "#EF4444",
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: isDark ? 0.4 : 0.15,
         shadowRadius: 14,
-        elevation: 8,
       }}
     >
       <HStack style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -284,23 +291,31 @@ export default function SubAdminCoursePage() {
     );
   };
 
-
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
       <Watermark />
 
-      <VStack style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+      <VStack style={{ paddingHorizontal: 16, paddingBottom: 8, marginTop: 0 }}>
         <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
           <VStack>
-            <HStack style={{ alignItems: "center", gap: 8 }}>
+            <HStack style={{ alignItems: "center", gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{
+                  padding: 4,
+                  marginLeft: -4,
+                }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={isDark ? "#fff" : "#000"}
+                />
+              </TouchableOpacity>
               <Text style={{ fontSize: 24, fontWeight: "900", color: isDark ? "#fff" : "#111", letterSpacing: -0.5 }}>
                 Course Marshals
               </Text>
             </HStack>
-            {/* <Text style={{ fontSize: 13, color: isDark ? "#aaa" : "#6b7280", marginTop: 2 }}>
-              Players assigned to manage your courses
-            </Text> */}
           </VStack>
           <HStack style={{ gap: 8, alignItems: "center" }}>
             <TouchableOpacity
