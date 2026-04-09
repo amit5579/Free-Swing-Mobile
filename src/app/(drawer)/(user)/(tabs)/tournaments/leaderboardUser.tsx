@@ -84,7 +84,7 @@ export default function LeaderboardUser() {
   const RenderHeader = () => {
     return (
       <HStack
-        className="px-3 pt-5 pb-3 items-center"
+        className="px-3 items-center"
         style={{ justifyContent: "space-between" }}
       >
         {/* LEFT: Back button */}

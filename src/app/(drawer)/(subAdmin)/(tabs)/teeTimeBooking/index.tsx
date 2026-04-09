@@ -1,36 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import Svg, { Path } from "react-native-svg";
 
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Pressable, useColorScheme, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
 import { Dropdown } from "react-native-element-dropdown";
-import {
-  bookSeat,
-  cancelSeatBooking,
-  getSubAdminCourses,
-  getTeeTimeSeats,
-} from "@/api/teeTime";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+import { cancelSeatBooking, getSubAdminCourses, getSubAdminTeeTimeSeats } from "@/api/teeTime";
 
 export default function SubAdminTeeBookingPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const routePage = useRouter();
 
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
@@ -42,7 +35,7 @@ export default function SubAdminTeeBookingPage() {
   const [teeData, setTeeData] = useState<any>(null);
   const [loadingSeats, setLoadingSeats] = useState<any>({});
 
-  const [userId, setUserId] = useState<any>(null);
+  // const [userId, setUserId] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const getSeatKey = (
     date: string,
@@ -56,20 +49,9 @@ export default function SubAdminTeeBookingPage() {
     { key: 10, label: "Tee10", icon: "people-outline" },
   ];
 
-  const fetchTeeTiming = async () => {
+  const fetchCourses = async () => {
     try {
-      setLoading(true);
-
-      const courseResponse = await getSubAdminCourses(true);
-      const teeDetails = await getTeeTimeSeats(
-        availableDates[selectedDateIndex],
-        activeTeeTab,
-        selectedCourse,
-      );
-      setTeeData(teeDetails); // ✅ IMPORTANT
-
-      // console.log("teeDetails", teeDetails);
-      // Map courses to { label, value } for the dropdown
+      const courseResponse = await getSubAdminCourses();
       const formattedCourses = courseResponse.map((c: any) => ({
         label: c.name || `Course ${c.courseId}`,
         value: c.courseId,
@@ -78,7 +60,22 @@ export default function SubAdminTeeBookingPage() {
       if (formattedCourses.length > 0) {
         setSelectedCourse(formattedCourses[0].value);
       }
-      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+  const fetchTeeTiming = async () => {
+    // debugger;
+    if (!availableDates[selectedDateIndex]) return;
+    try {
+      setLoading(true);
+      const teeDetails = await getSubAdminTeeTimeSeats(
+        selectedCourse,
+        availableDates[selectedDateIndex],
+        activeTeeTab
+      );
+      setTeeData(teeDetails);
     } catch (error) {
       console.error("Error fetching tee timings:", error);
     } finally {
@@ -86,70 +83,27 @@ export default function SubAdminTeeBookingPage() {
     }
   };
 
+  // const getUserId = async () => {
+  //   try {
+  //     const id = await AsyncStorage.getItem("userId");
+  //     if (id) {
+  //       setUserId(Number(id));
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching userId:", err);
+  //   }
+  // };
+
   useEffect(() => {
-    const getUserId = async () => {
-      try {
-        const id = await AsyncStorage.getItem("userId");
-        if (id) {
-          setUserId(Number(id));
-        }
-      } catch (err) {
-        console.error("Error fetching userId:", err);
-      }
-    };
-    getUserId();
+    fetchCourses();
   }, []);
 
-  
-  // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
+// useFocusEffect(
+//   useCallback(() => {
+//     fetchTeeTiming();
+//   }, [])
+// )
 
-  const bookSeatHandler = async (timeSlot: string, seatNumber: number) => {
-    const date = availableDates[selectedDateIndex];
-    const teeBox = activeTeeTab;
-    const key = getSeatKey(date, teeBox, timeSlot, seatNumber);
-
-    if (loadingSeats[key]) return;
-
-    // Validation: Check if user already has a booking for this day
-    const hasBookingToday = teeData?.slots?.some((slot: any) =>
-      slot.seats?.some((seat: any) => seat.isBooked && seat.userId === userId),
-    );
-
-    if (hasBookingToday) {
-      Toast.show({
-        type: "error",
-        text1: "Booking Limit",
-        text2: "You can book only one seat for one day.",
-      });
-      return;
-    }
-
-    setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
-
-    try {
-      await bookSeat(selectedCourse, date, seatNumber, teeBox, timeSlot);
-
-      await fetchTeeTiming();
-      Toast.show({
-        type: "success",
-        text1: "Seat Booked",
-        text2: "Seat booked successfully",
-      });
-    } catch (error) {
-      console.error(error);
-      Toast.show({
-        type: "error",
-        text1: "Booking Failed",
-        text2: "Booking failed",
-      });
-    } finally {
-      setLoadingSeats((prev: any) => {
-        const updated = { ...prev };
-        delete updated[key];
-        return updated;
-      });
-    }
-  };
 
   const cancelBookingHandler = async (
     bookingId: number,
@@ -223,17 +177,16 @@ export default function SubAdminTeeBookingPage() {
     return (
       <>
         <HStack
-          className="px-3items-center"
-          style={{ justifyContent: "space-between" }}
+          className="px-3 items-center justify-center"
         >
           {/* LEFT: Back button */}
-          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+          {/* <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
             <Ionicons
               name="arrow-back-outline"
               size={22}
               color={colorScheme === "dark" ? "#ffffff" : "#020617"}
             />
-          </Pressable>
+          </Pressable> */}
 
           {/* CENTER: Title */}
           <ThemedText
@@ -248,8 +201,6 @@ export default function SubAdminTeeBookingPage() {
             Tee time booking
           </ThemedText>
 
-          {/* RIGHT: Add Button */}
-          <View style={{ width: 40 }} />
         </HStack>
       </>
     );
@@ -264,11 +215,8 @@ export default function SubAdminTeeBookingPage() {
           padding: 14,
           borderWidth: 1,
           borderColor: isDark ? "#1e293b" : "#ffffff",
-          // backgroundColor: isDark ? "#1e293b" : "#ffffff",
           shadowColor: "#000",
           shadowOpacity: isDark ? 0.2 : 0.05,
-          // borderRadius: 6,
-          // elevation: 2,
         }}
       >
         {/* Time Header */}
@@ -307,95 +255,113 @@ export default function SubAdminTeeBookingPage() {
           }}
         >
           {slot.seats.map((seat: any, index: number) => {
-            const isBooked = seat?.isBooked;
-
+            // Robust booking detection: check for the isBooked boolean, a bookingId, or a status of "Booked"
+            // const isBooked = seat?.isBooked || !!seat?.bookingId || seat?.status === "Booked" || (seat?.userName && seat.userName.trim() !== "");
+const isBooked = seat?.isBooked;
             const date = availableDates[selectedDateIndex];
             const teeBox = activeTeeTab;
             const key = getSeatKey(date, teeBox, slot.time, seat.seatNumber);
-            const isMine = seat?.userId === userId;
             const isLoading = loadingSeats[key];
+            if (!isBooked) {
+              // console.log("seat",seat);
+              
+              return (
+                <View
+                  key={seat.id ?? `${slot.time}-${index}`}
+                  style={{
+                    width: "23%",
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    marginBottom: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                    borderWidth: 1,
+                    borderStyle: "dashed",
+                    borderColor: isDark ? "#334155" : "#cbd5e1",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "500",
+                      color: isDark ? "#475569" : "#94a3b8",
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    Empty
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "700",
+                      color: isDark ? "#334155" : "#cbd5e1",
+                      marginTop: 2,
+                    }}
+                  >
+                    Seat {seat.seatNumber}
+                  </Text>
+                </View>
+              );
+            }
 
             return (
               <Pressable
                 key={seat.id ?? `${slot.time}-${index}`}
                 onPress={() => {
                   if (isLoading) return;
-
-                  if (isBooked) {
-                    if (isMine && seat.bookingId) {
-                      cancelBookingHandler(
-                        seat.bookingId,
-                        slot.time,
-                        seat.seatNumber,
-                      );
-                    }
-                    //  else if (!isMine) {
-                    //   Toast.show({
-                    //     type: "error",
-                    //     text1: "Cannot Cancel",
-                    //     text2: "You don't have permission to cancel this booking.",
-                    //   });
-                    // }
-
-                  } else {
-                    bookSeatHandler(slot.time, seat.seatNumber);
+                  if (seat.bookingId) {
+                    cancelBookingHandler(seat.bookingId, slot.time, seat.seatNumber);
                   }
                 }}
                 disabled={isLoading}
                 style={{
-                  width: "23%", // 👈 4 per row
+                  width: "23%",
                   paddingVertical: 10,
-                  borderRadius: 10,
+                  borderRadius: 12,
                   marginBottom: 10,
                   alignItems: "center",
-                  backgroundColor: isBooked ?isMine? "#ef4444" :"grey" :"#8BC34A",
-                  // opacity: isLoading ? 0.6 : 1,
+                  backgroundColor: isDark ? "#1e293b" : "#ffffff",
+                  borderWidth: 1.5,
+                  borderColor: "#8BC34A",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  elevation: 2,
                 }}
               >
+                <View style={{ position: "absolute", top: 4, right: 4 }}>
+                   <Ionicons name="close-circle" size={14} color="#ef4444" />
+                </View>
 
-                {/*  {isLoading
-                    ? "Please wait"
-                    : isBooked
-                      ? isMine
-                        ? "Cancel booking"
-                        : seat.userName || "Booked"
-                      : "Book"} */}
                 <Ionicons
-                  name={
-                    isLoading
-                      ? "hourglass-outline"
-                      : isBooked
-                        ? isMine
-                          ? "close-circle"
-                          : "person"
-                        : "add-circle-sharp"
-                  }
-                  size={20}
-                  color="#fff"
-                  style={{ marginBottom: 4 }}
+                  name={isLoading ? "hourglass-outline" : "person-circle"}
+                  size={24}
+                  color="#8BC34A"
+                  style={{ marginBottom: 2 }}
                 />
 
                 <Text
                   style={{
                     fontSize: 11,
-                    fontWeight: "500",
-                    color: "#fff",
+                    fontWeight: "600",
+                    color: isDark ? "#f8fafc" : "#1e293b",
                     textAlign: "center",
+                    width: "90%",
                   }}
+                  numberOfLines={1}
                 >
-                  {isLoading
-                    ? "Please wait"
-                    : isBooked
-                      ? isMine
-                        ? "Cancel booking"
-                        : seat.userName || "Booked"
-                      : "Book"}
+                  {isLoading ? "Wait" : (seat.userName || "Occupied").split(" ")[0]}
                 </Text>
+
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: 10,
                     fontWeight: "700",
-                    color: "#fff",
+                    color: "#8BC34A",
+                    marginTop: 2,
                   }}
                 >
                   Seat {seat.seatNumber}
@@ -671,11 +637,11 @@ export default function SubAdminTeeBookingPage() {
                     <Ionicons
                       name="golf-outline"
                       size={16}
-                      color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
+                      color={active ? "#fff" : isDark ? "#e2e8f0" : "#6b7280"}
                       className="mr-1"
                     />
                     <Text
-                      className={`text-md font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}
+                      className={`text-md font-medium ${active ? "text-white" : isDark ? "text-gray-300" : "text-gray-600"}`}
                     >
                       {tab.label}
                     </Text>
@@ -721,4 +687,3 @@ export default function SubAdminTeeBookingPage() {
     </>
   );
 }
-

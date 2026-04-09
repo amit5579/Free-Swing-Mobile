@@ -290,6 +290,7 @@ export default function subAdminsPage() {
                     setModalVisible={setModalVisible}
                     setIsEditMode={setIsEditMode}
                     setEditingAdmin={setEditingAdmin}
+                    fetchSubAdmin={fetchSubAdmin}
                     // setDeleteModalVisible={setDeleteModalVisible}
                   />
                 ))}
@@ -306,18 +307,35 @@ export default function subAdminsPage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text className="text-xl font-bold" style={{ color: isDark ? "white" : "black" }}>
+              <Text
+                className="text-xl font-bold"
+                style={{ color: isDark ? "white" : "black" }}
+              >
                 {isEditMode
                   ? `Edit Sub-Admin — ${editingAdmin?.username}`
                   : "Create Sub Admin"}
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
               </Pressable>
             </HStack>
 
@@ -466,7 +484,9 @@ export default function subAdminsPage() {
                           },
                         ]}
                         placeholderStyle={{ color: isDark ? "#777" : "#999" }}
-                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        selectedTextStyle={{
+                          color: isDark ? "white" : "black",
+                        }}
                         containerStyle={{
                           backgroundColor: isDark ? "#1a1a1a" : "#fff",
                           borderColor: isDark ? "#333" : "#d1d5db",
@@ -503,7 +523,12 @@ export default function subAdminsPage() {
                                 color={isSelected ? "#8bc34a" : undefined}
                               />
 
-                              <Text style={{ marginLeft: 10, color: isDark ? "white" : "black" }}>
+                              <Text
+                                style={{
+                                  marginLeft: 10,
+                                  color: isDark ? "white" : "black",
+                                }}
+                              >
                                 {item.label}
                               </Text>
                             </View>
@@ -524,10 +549,15 @@ export default function subAdminsPage() {
             {/* Buttons */}
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
+                style={[
+                  styles.cancelButton,
+                  { borderColor: isDark ? "#333" : "#d1d5db" },
+                ]}
                 onPress={() => setModalVisible(false)}
               >
-                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>
+                  Cancel
+                </ThemedText>
               </Pressable>
 
               <Pressable
@@ -552,12 +582,14 @@ function SubAdminCard({
   setModalVisible,
   setIsEditMode,
   setEditingAdmin,
+  fetchSubAdmin,
 }: any) {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const handleDelete = async (id: number) => {
     try {
       await deleteSubAdmin(id);
+      fetchSubAdmin();
     } catch (error) {
       console.log(error);
     }
@@ -568,7 +600,9 @@ function SubAdminCard({
         className="rounded-2xl p-4"
         style={{
           borderWidth: 1,
-          borderColor: isDark ? "#262626" : "#e5e5e5",
+          borderColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
         }}
       >
         <VStack className="gap-2">
@@ -644,8 +678,18 @@ function SubAdminCard({
         visible={deleteModalVisible}
         onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
             {/* FORM */}
             <VStack className="gap-3">
               <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
@@ -657,10 +701,15 @@ function SubAdminCard({
             {/* Buttons */}
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
+                style={[
+                  styles.cancelButton,
+                  { borderColor: isDark ? "#333" : "#d1d5db" },
+                ]}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>
+                  Cancel
+                </ThemedText>
               </Pressable>
 
               <Pressable

@@ -57,6 +57,23 @@ export default function SubAdminTournamentsPage() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [userId, setUserId] = useState<any>("");
 
+  // ── Colors ──
+  const colors = {
+    bg: isDark ? "#020617" : "#f8fafc",
+    cardBg: isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)",
+    cardBorder: isDark ? "#1e293b" : "#e2e8f0",
+    text: isDark ? "#f1f5f9" : "#0f172a",
+    subText: isDark ? "#94a3b8" : "#64748b",
+    dimText: isDark ? "#64748b" : "#94a3b8",
+    accent: "#84cc16",
+    accentSoft: isDark ? "rgba(132,204,22,0.15)" : "rgba(132,204,22,0.1)",
+    divider: isDark ? "#1e293b" : "#f1f5f9",
+    iconBg: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
+    modalBg: isDark ? "#1e293b" : "#ffffff",
+    inputBg: isDark ? "#0f172a" : "#f8fafc",
+    inputBorder: isDark ? "#334155" : "#cbd5e1",
+  };
+
   const {
     control,
     handleSubmit,
@@ -198,7 +215,7 @@ export default function SubAdminTournamentsPage() {
         value: item.courseId !== undefined ? item.courseId : item.coursed,
       }));
 
-      setTournaments(data);
+      setTournaments(data.filter((t: any) => t.creatorId == id));
       setCourses(formattedCourses);
     } catch (error) {
       console.error("Error fetching tournaments:", error);
@@ -242,7 +259,6 @@ export default function SubAdminTournamentsPage() {
           borderWidth: 1,
           borderRadius: 16,
           padding: 16,
-          marginBottom: 12,
           borderColor: isDark ? "#262626" : "#e5e5e5",
         }}
       >
@@ -340,19 +356,66 @@ export default function SubAdminTournamentsPage() {
               </>
             ) : (
               <>
-                {tournaments.map((tournament: any) => (
-                  <TournamentCard
-                    key={tournament.tournamentId}
-                    tournament={tournament}
-                    onDelete={onDelete}
-                    setIsEditMode={setIsEditMode}
-                    setEditingCourse={setEditingCourse}
-                    isEditMode={isEditMode}
-                    setModalVisible={setModalVisible}
-                    isDark={isDark}
-                    userId={userId}
-                  />
-                ))}
+                {tournaments.length == 0 ? (
+                  <VStack
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 60,
+                      paddingHorizontal: 24,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: colors.iconBg,
+                        padding: 18,
+                        borderRadius: 50,
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Ionicons
+                        name="trophy-outline"
+                        size={32}
+                        color={colors.subText}
+                      />
+                    </View>
+                    <ThemedText
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "600",
+                        color: colors.text,
+                        marginBottom: 6,
+                      }}
+                    >
+                      No Tournaments Found
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 14,
+                        color: colors.subText,
+                        textAlign: "center",
+                        lineHeight: 20,
+                      }}
+                    >
+                      You haven't created any tournaments yet. Tap "Create
+                      Tournament" to start managing your competitions.
+                    </ThemedText>
+                  </VStack>
+                ) : (
+                  tournaments.map((tournament: any) => (
+                    <TournamentCard
+                      key={tournament.tournamentId}
+                      tournament={tournament}
+                      onDelete={onDelete}
+                      setIsEditMode={setIsEditMode}
+                      setEditingCourse={setEditingCourse}
+                      isEditMode={isEditMode}
+                      setModalVisible={setModalVisible}
+                      isDark={isDark}
+                      userId={userId}
+                    />
+                  ))
+                )}
               </>
             )}
           </VStack>
@@ -739,175 +802,155 @@ function TournamentCard({
 
   return (
     <>
-      {userId == tournament?.creatorId && (
-        <>
-          <Box
+      <Box
+        style={[
+          styles.card,
+          {
+            borderColor: isDark ? "#262626" : "#e5e5e5",
+          },
+        ]}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.title}>
+              {tournament?.name || "No Name"}
+            </ThemedText>
+
+            <ThemedText style={styles.subtitle}>
+              {tournament?.course?.name || "No Course"}
+            </ThemedText>
+          </View>
+
+          {/* MORE MENU */}
+          <Pressable
+            onPress={() => setMenuVisible(true)}
+            style={({ pressed }) => [
+              styles.iconBtn,
+              { opacity: pressed ? 0.5 : 1 },
+            ]}
+          >
+            <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
+          </Pressable>
+        </View>
+
+        {/* DATES */}
+        <View style={styles.dateRow}>
+          <View>
+            <ThemedText style={styles.label}>Start</ThemedText>
+            <ThemedText style={styles.value}>
+              {formatDate(tournament?.startDate)}
+            </ThemedText>
+          </View>
+
+          <View>
+            <ThemedText style={styles.label}>End</ThemedText>
+            <ThemedText style={styles.value}>
+              {formatDate(tournament?.endDate)}
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* PRIMARY ACTIONS */}
+        <View style={styles.actions}>
+          <Pressable
+            onPress={() => {
+              setIsEditMode(true);
+              setEditingCourse(tournament);
+              setModalVisible(true);
+            }}
+            style={styles.actionBtn}
+            android_ripple={{ color: "#ddd" }}
+          >
+            <Ionicons name="create-outline" size={22} color="#6b7280" />
+            <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
+              Edit
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={styles.actionBtn}
+            android_ripple={{ color: "#ddd" }}
+            onPress={() => {
+              routePage.push(
+                `/(drawer)/(subAdmin)/(tabs)/tournaments/manageRoaster?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
+              );
+            }}
+          >
+            <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
+            <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
+              Roaster
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Box>
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
+          <View
             style={[
-              styles.card,
+              styles.menu,
               {
-                borderColor: isDark ? "#262626" : "#e5e5e5",
+                backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                borderColor: isDark ? "#333" : "#e5e5e5",
               },
             ]}
           >
-            {/* HEADER */}
-            <View style={styles.header}>
-              <View style={{ flex: 1 }}>
-                <ThemedText style={styles.title}>
-                  {tournament?.name || "No Name"}
-                </ThemedText>
-
-                <ThemedText style={styles.subtitle}>
-                  {tournament?.course?.name || "No Course"}
-                </ThemedText>
-              </View>
-
-              {/* MORE MENU */}
-              <Pressable
-                onPress={() => setMenuVisible(true)}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  { opacity: pressed ? 0.5 : 1 },
-                ]}
-              >
-                <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
-              </Pressable>
-            </View>
-
-            {/* DATES */}
-            <View style={styles.dateRow}>
-              <View>
-                <ThemedText style={styles.label}>Start</ThemedText>
-                <ThemedText style={styles.value}>
-                  {formatDate(tournament?.startDate)}
-                </ThemedText>
-              </View>
-
-              <View>
-                <ThemedText style={styles.label}>End</ThemedText>
-                <ThemedText style={styles.value}>
-                  {formatDate(tournament?.endDate)}
-                </ThemedText>
-              </View>
-            </View>
-
-            {/* PRIMARY ACTIONS */}
-            <View style={styles.actions}>
-              <Pressable
-                onPress={() => {
-                  setIsEditMode(true);
-                  setEditingCourse(tournament);
-                  setModalVisible(true);
-                }}
-                style={styles.actionBtn}
-                android_ripple={{ color: "#ddd" }}
-              >
-                <Ionicons name="create-outline" size={22} color="#6b7280" />
-                <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
-                  Edit
-                </ThemedText>
-              </Pressable>
-
-              <Pressable
-                style={styles.actionBtn}
-                android_ripple={{ color: "#ddd" }}
-                onPress={() => {
-                  routePage.push(
-                    `/(drawer)/(subAdmin)/(tabs)/tournaments/manageRoaster?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
-                  );
-                }}
-              >
-                <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
-                <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
-                  Roaster
-                </ThemedText>
-              </Pressable>
-            </View>
-          </Box>
-          <Modal
-            visible={menuVisible}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setMenuVisible(false)}
-          >
-            <Pressable
-              style={styles.overlay}
-              onPress={() => setMenuVisible(false)}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                routePage.push(
+                  `/(drawer)/(subAdmin)/(tabs)/tournaments/tournamentHistory?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
+                );
+              }}
             >
-              <View
-                style={[
-                  styles.menu,
-                  {
-                    backgroundColor: isDark ? "#1a1a1a" : "#fff",
-                    borderColor: isDark ? "#333" : "#e5e5e5",
-                  },
-                ]}
+              <Ionicons name="time-outline" size={20} color="#06b6d4" />
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
               >
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setMenuVisible(false);
-                    routePage.push(
-                      `/(drawer)/(subAdmin)/(tabs)/tournaments/tournamentHistory?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
-                    );
-                  }}
-                >
-                  <Ionicons name="time-outline" size={20} color="#06b6d4" />
-                  <ThemedText
-                    style={[
-                      styles.menuText,
-                      { color: isDark ? "white" : "#000" },
-                    ]}
-                  >
-                    History
-                  </ThemedText>
-                </TouchableOpacity>
+                History
+              </ThemedText>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setMenuVisible(false);
-                    routePage.push(
-                      `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}`,
-                    );
-                  }}
-                >
-                  <Ionicons
-                    name="stats-chart-outline"
-                    size={20}
-                    color="#f59e0b"
-                  />
-                  <ThemedText
-                    style={[
-                      styles.menuText,
-                      { color: isDark ? "white" : "#000" },
-                    ]}
-                  >
-                    Leaderboard
-                  </ThemedText>
-                </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                routePage.push(
+                  `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}`,
+                );
+              }}
+            >
+              <Ionicons name="stats-chart-outline" size={20} color="#f59e0b" />
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
+                Leaderboard
+              </ThemedText>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setMenuVisible(false);
-                    onDelete(tournament?.tournamentId);
-                  }}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                  <ThemedText
-                    style={[
-                      styles.menuText,
-                      { color: isDark ? "white" : "#000" },
-                    ]}
-                  >
-                    Delete
-                  </ThemedText>
-                </TouchableOpacity>
-              </View>
-            </Pressable>
-          </Modal>
-        </>
-      )}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                onDelete(tournament?.tournamentId);
+              }}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
+                Delete
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </>
   );
 }
@@ -950,7 +993,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
   },
   header: {
     flexDirection: "row",

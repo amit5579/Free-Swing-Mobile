@@ -26,8 +26,9 @@ export default function TournamentHistory() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, teeBoxId } = useLocalSearchParams();
-
+  const { tournamentId,tournamentName, teeBoxId,scoringType } = useLocalSearchParams();
+const formatScoringType = scoringType == "double-peoria" ? "Double Peoria" : scoringType == "stableford" ? "Stableford" : scoringType == "excluded" ? "Net Score Exclude Par 3" : scoringType == "standard" ? "Standard" : scoringType == "double-peoria-net" ? "Double Peoria Net" : "Net Score Include Par 3"
+// Net Score Include Par 3
   const [loading, setLoading] = useState(true);
 
   const [handicap, setHandicap] = useState(null);
@@ -136,8 +137,9 @@ export default function TournamentHistory() {
   const RenderHeader = () => {
     return (
       <>
+      <VStack className="mb-3">
         <HStack
-          className="px-3 pt-1 items-center"
+          className="px-3 items-center"
           style={{ justifyContent: "space-between" }}
         >
           {/* LEFT: Back button */}
@@ -159,11 +161,11 @@ export default function TournamentHistory() {
               lineHeight: 30,
             }}
           >
-            Scorecard
+            Scorecard : {tournamentName}
           </ThemedText>
 
           {/* RIGHT: Add Button */}
-          <View style={{ width: 40 }} />
+          {/* <View style={{ width: 40 }} /> */}
         </HStack>
         <ThemedText
           style={{
@@ -173,8 +175,11 @@ export default function TournamentHistory() {
             lineHeight: 30,
           }}
         >
-          (Net Score Exclude Par 3)
+          {/* (Net Score Exclude Par 3) */}
+                    {formatScoringType}
         </ThemedText>
+      </VStack>
+        
       </>
     );
   };
@@ -230,11 +235,12 @@ export default function TournamentHistory() {
     );
   };
 
-  const renderTotals = (label: string, data: any[]) => {
+  const renderTotals = (label: string, data: any[], keySuffix?: string) => {
     const t = calculateTotals(data);
 
     return (
       <HStack
+        key={`${label}-${keySuffix || ""}`}
         style={[
           styles.tableHeader,
           { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
@@ -409,16 +415,14 @@ export default function TournamentHistory() {
                   <>
                     {/* REAL DATA */}
                     {front9.map(renderRow)}
-                    {renderTotals("Front 9", front9)}
+                    {renderTotals("Front 9", front9, "f")}
 
                     {back9.map(renderRow)}
-                    {renderTotals("Back 9", back9)}
+                    {renderTotals("Back 9", back9, "b")}
 
-                    {renderTotals("Total", scorecardDetails || [])}
+                    {renderTotals("Total", scorecardDetails || [], "final")}
                   </>
                 )}
-                {/* Grand Total */}
-                {renderTotals("Total", scorecardDetails || [])}
               </View>
             </ScrollView>
 

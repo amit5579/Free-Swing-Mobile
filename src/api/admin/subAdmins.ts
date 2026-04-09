@@ -32,7 +32,15 @@ export const createSubAdmin = async (data: any) => {
 //     ]
 // }
 
-
+export const updateSubAdmin = async (userId: number, courseId: number) => {
+  try {
+    const response = await https.put(`SubAdmin/${userId}/courses`, { courseIds: courseId });
+    return response.data;
+  } catch (error) {
+    console.error("Update SubAdmin Error:", error);
+    throw error;
+  }
+};
 
 export const deleteSubAdmin = async (id: number) => {
   try {

@@ -12,14 +12,17 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
-import { getTournamentHistory, getTournamentHistoryByUserId } from "@/api/admin/tournaments";
+import {
+  getTournamentHistory,
+  getTournamentHistoryByUserId,
+} from "@/api/admin/tournaments";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function tournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
-  const { tournamentId } = useLocalSearchParams();
+  const { tournamentId , tournamentName} = useLocalSearchParams();
 
   const [history, setHistory] = useState<any>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +74,7 @@ export default function tournamentHistory() {
             lineHeight: 30,
           }}
         >
-          Scorecard (Net Score Include Par 3)
+          {tournamentName}'s History
         </ThemedText>
 
         {/* RIGHT: Add Button */}
@@ -99,7 +102,13 @@ export default function tournamentHistory() {
 
               {history.length == 0 && (
                 <VStack style={{ alignItems: "center", padding: 20 }}>
-                  <ThemedText style={{ textAlign: "center", fontSize: 16, fontWeight: "600" }}>
+                  <ThemedText
+                    style={{
+                      textAlign: "center",
+                      fontSize: 16,
+                      fontWeight: "600",
+                    }}
+                  >
                     No History found for this tournament.
                   </ThemedText>
                 </VStack>

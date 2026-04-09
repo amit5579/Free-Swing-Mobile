@@ -173,7 +173,6 @@ export default function TournamentsScreen() {
           padding: 16,
           borderWidth: 1,
           borderColor: "#8bc34a",
-          marginBottom: 12,
         }}
       >
         {/* Title */}
@@ -331,7 +330,7 @@ export default function TournamentsScreen() {
                         <Pressable
                           onPress={() =>
                             routePage.push(
-                              `/(drawer)/(user)/(tabs)/tournaments/tournamentHistory?tournamentId=${tournament.tournamentId}&teeBoxId=${tournament.teeBoxId}`,
+                              `/(drawer)/(user)/(tabs)/tournaments/tournamentHistory?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
                             )
                           }
                           className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"

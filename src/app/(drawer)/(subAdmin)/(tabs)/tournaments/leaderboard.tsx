@@ -49,6 +49,56 @@ export default function SubAdminLeaderboardPage() {
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ── Colors ──
+  const colors = {
+    text: isDark ? "#f1f5f9" : "#0f172a",
+    subText: isDark ? "#94a3b8" : "#64748b",
+    iconBg: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
+  };
+
+  const EmptyState = () => (
+    <VStack
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 60,
+        paddingHorizontal: 24,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: colors.iconBg,
+          padding: 18,
+          borderRadius: 50,
+          marginBottom: 16,
+        }}
+      >
+        <Ionicons name="stats-chart-outline" size={32} color={colors.subText} />
+      </View>
+      <ThemedText
+        style={{
+          fontSize: 18,
+          fontWeight: "600",
+          color: colors.text,
+          marginBottom: 6,
+        }}
+      >
+        Leaderboard Empty
+      </ThemedText>
+      <ThemedText
+        style={{
+          fontSize: 14,
+          color: colors.subText,
+          textAlign: "center",
+          lineHeight: 20,
+        }}
+      >
+        No scores have been submitted for this tournament yet. The leaderboard
+        will automatically populate as soon as players complete their rounds.
+      </ThemedText>
+    </VStack>
+  );
+
   useEffect(() => {
     const loadData = async () => {
       const saved = await AsyncStorage.getItem("selectedHoles");
@@ -497,14 +547,18 @@ export default function SubAdminLeaderboardPage() {
             <>
               {isDoublePreoria && <RenderSecretHoles />}
 
-              {leaderboard.map((player) => (
-                <PlayerCard
-                  key={player.userId}
-                  player={player}
-                  holes={holes}
-                  isDark={isDark}
-                />
-              ))}
+              {leaderboard.length === 0 ? (
+                <EmptyState />
+              ) : (
+                leaderboard.map((player) => (
+                  <PlayerCard
+                    key={player.userId}
+                    player={player}
+                    holes={holes}
+                    isDark={isDark}
+                  />
+                ))
+              )}
             </>
           )}
         </ScrollView>
