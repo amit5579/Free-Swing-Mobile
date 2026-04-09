@@ -105,3 +105,35 @@ export const getFeed = async (): Promise<FeedApi[]> => {
     return [];
   }
 };
+
+export const invitePlayer = async (data: any) => {
+  try {
+    const response = await https.post("/SubAdmin/invite-player", data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error inviting player:", error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const toggleBlockPlayer = async (id: number) => {
+  try {
+    const response = await https.put(`/SubAdmin/block-player/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error toggling block player:", error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const removePlayer = async (id: number) => {
+  try {
+    const response = await https.delete(`/SubAdmin/remove-player/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error removing player:", error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+

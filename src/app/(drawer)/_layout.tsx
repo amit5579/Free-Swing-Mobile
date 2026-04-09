@@ -6,8 +6,9 @@ import {
   Text,
   Image,
   StyleSheet,
-  useColorScheme,
+  ScrollView,
 } from "react-native";
+import { useColorScheme, useThemeControls } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -15,10 +16,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
 import { Linking } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 function CustomDrawerContent({ navigation }: any) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
+  const colorScheme = useColorScheme();
+  const { toggleColorScheme } = useThemeControls();
+  const isDark = colorScheme === "dark";
 
   const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -64,75 +67,63 @@ function CustomDrawerContent({ navigation }: any) {
   }, []);
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        {
-          backgroundColor: isDark ? "#121212" : "#e8f5e9",
-          borderTopLeftRadius: 32,
-          borderBottomLeftRadius: 32,
-          overflow: "hidden",
-        },
-      ]}
+    <LinearGradient
+      colors={isDark ? ["#121212", "#1a1a1a"] : ["#F1F8E9", "#DCEDC8"]}
+      style={styles.container}
     >
-      <View>
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.topSection}>
-          <View style={styles.avatarWrapper}>
-            {profile?.profilePictureUrl &&
-              profile.profilePictureUrl.trim() !== "" &&
-              profile.profilePictureUrl !== "null" &&
-              !imageError ? (
-              <Image
-                source={{
-                  uri: profile.profilePictureUrl.startsWith("http")
-                    ? profile.profilePictureUrl
-                    : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
-                }}
-                style={styles.avatar}
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.avatar,
-                  {
-                    backgroundColor: isDark ? "#333" : "#C5E1A5",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderWidth: 2,
-                    borderColor: "#8BC34A",
-                  },
-                ]}
-              >
-                <Text
-                  style={{
-                    color: isDark ? "#fff" : "#2E7D32",
-                    fontSize: 32,
-                    fontWeight: "bold",
+          <LinearGradient
+            colors={["#8BC34A", "#558b2f"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerCard}
+          >
+            <View style={styles.avatarWrapper}>
+              {profile?.profilePictureUrl &&
+                profile.profilePictureUrl.trim() !== "" &&
+                profile.profilePictureUrl !== "null" &&
+                !imageError ? (
+                <Image
+                  source={{
+                    uri: profile.profilePictureUrl.startsWith("http")
+                      ? profile.profilePictureUrl
+                      : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
                   }}
-                >
-                  {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
+                  style={styles.avatar}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitial}>
+                    {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
+                  </Text>
+                </View>
+              )}
+              {/* <LinearGradient
+                colors={["#FDD835", "#FBC02D"]}
+                style={styles.badge}
+              >
+                <Text style={styles.badgeText}>
+                  {isAdmin ? "Admin" : isSubAdmin ? "Sub Admin" : "User"}
                 </Text>
-              </View>
-            )}
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {isAdmin ? "Admin" : isSubAdmin ? "Sub Admin" : "User"}
+              </LinearGradient> */}
+            </View>
+
+            <View style={styles.headerInfo}>
+              <Text style={styles.userName}>{profile?.username || "Guest User"}</Text>
+              <Text style={styles.userRole}>
+                {isAdmin
+                  ? "Administrator"
+                  : isSubAdmin
+                    ? "Sub Administrator"
+                    : `Handicap: ${profile?.handicap || "0"}`}
               </Text>
             </View>
-          </View>
-
-          <Text style={styles.userName}>{profile?.username}</Text>
-          <Text style={styles.handicap}>
-            {isAdmin
-              ? "Administrator"
-              : isSubAdmin
-                ? "Sub Administrator"
-                : `Handicap: ${profile?.handicap || "0"}`}
-          </Text>
+          </LinearGradient>
         </View>
 
-        <View style={styles.drawerItems}>
+        <View style={styles.drawerItemsContainer}>
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -145,9 +136,21 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="shield-outline" size={26} color="#2e7d32" />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="shield-outline" size={22} color="#8bc34a" />
+                </View>
                 <Text style={styles.drawerText}>Admin Profile</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
             </>
           )}
 
@@ -163,36 +166,21 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons
-                  name="person-circle-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>Sub Admin Profile</Text>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="person-circle-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Profile</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
-
-            </>
-          )}
-
-          {!isAdmin && (
-            <>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.closeDrawer();
-                  requestAnimationFrame(() => {
-                    router.push("/(drawer)/(subAdmin)/(contactAdmin)");
-                  });
-                }}
-                style={styles.drawerItem}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>Contact Admin</Text>
-              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
             </>
           )}
 
@@ -208,13 +196,21 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons
-                  name="person-circle-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>User Profile</Text>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="person-circle-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Profile</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
 
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -226,31 +222,113 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons
-                  name="calendar-number-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="calendar-number-outline" size={22} color="#8bc34a" />
+                </View>
                 <Text style={styles.drawerText}>Tee Time Booking</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+            </>
+          )}
 
+          {!isAdmin && (
+            <>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    Linking.openURL(
-                      "https://www.randa.org/quiz/level/quiz-beginner",
-                    );
+                    router.push("/(drawer)/(user)/(contactAdmin)");
                   });
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="book-outline" size={26} color="#2e7d32" />
-                <Text style={styles.drawerText}>R & A Rules</Text>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Contact Admin</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
             </>
           )}
+
+          {!isAdmin && !isSubAdmin && (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="book-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>R & A Rules</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+            </>
+          )}
+
+          {/* {!isAdmin && (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Contact Admin</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+              </TouchableOpacity>
+              <View
+  style={[
+    styles.divider,
+    {
+      backgroundColor: isDark ? "#fff" : "#000",
+      opacity: isDark ? 0.2 : 0.08,
+    },
+  ]}
+/>
+            </>
+          )} */}
 
           {isAdmin && (
             <>
@@ -264,9 +342,21 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="people-outline" size={26} color="#2e7d32" />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="people-outline" size={22} color="#8bc34a" />
+                </View>
                 <Text style={styles.drawerText}>Sub Admins</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
 
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -278,9 +368,21 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="analytics-outline" size={26} color="#2e7d32" />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="analytics-outline" size={22} color="#8bc34a" />
+                </View>
                 <Text style={styles.drawerText}>Player Handicap</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
 
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -292,68 +394,108 @@ function CustomDrawerContent({ navigation }: any) {
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="bar-chart-outline" size={26} color="#2e7d32" />
-                <Text style={styles.drawerText}>Combined Leaderboards</Text>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="bar-chart-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Leaderboards</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
               <TouchableOpacity
-                onPress={
-                  () => {
-                    navigation.closeDrawer();
-                    requestAnimationFrame(() => {
-                      router.push("/(drawer)/(admin)/(feedbackInbox)");
-                    });
-                  }
-                }
-                style={styles.drawerItem}
-              >
-                <Ionicons
-                  name="mail-unread-outline"
-                  size={26}
-                  color="#2e7d32"
-                />
-                <Text style={styles.drawerText}>Feedback Inbox</Text>
-              </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.push("/(drawer)/(admin)/(importantUpdate)");
+                    router.push("/(drawer)/(admin)/(feedbackInbox)");
                   });
                 }}
                 style={styles.drawerItem}
               >
-                <Ionicons name="notifications-outline" size={26} color="#2e7d32" />
-                <Text style={styles.drawerText}>Important Updates</Text>
-              </TouchableOpacity> */}
+                <View style={styles.iconContainer}>
+                  <Ionicons name="mail-unread-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Feedback Inbox</Text>
+                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
             </>
           )}
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              // Wrap in setTimeout to prioritize touch feedback before the heavy theme re-render
+              setTimeout(() => {
+                toggleColorScheme();
+              }, 0);
+            }}
+            style={styles.drawerItem}
+          >
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name={isDark ? "sunny-outline" : "moon-outline"}
+                size={22}
+                color="#8bc34a"
+              />
+            </View>
+            <Text style={styles.drawerText}>{isDark ? "Light Mode" : "Dark Mode"}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color="#8bc34a"
+              style={styles.chevron}
+            />
+          </TouchableOpacity>
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor: isDark ? "#fff" : "#000",
+                opacity: isDark ? 0.2 : 0.08,
+              },
+            ]}
+          />
         </View>
-      </View>
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity
-          onPress={async () => {
-            await logout();
-            router.replace("/(auth)/login");
-          }}
-          style={styles.logoutButton}
-        >
-          <Ionicons name="log-out-outline" size={22} color="#fff" />
-          <Text style={[styles.drawerText, { color: "#fff" }]}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity
+            onPress={async () => {
+              await logout();
+              router.replace("/(auth)/login");
+            }}
+            style={styles.logoutButton}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#fff" />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 export default function DrawerLayout() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
     <Drawer
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={CustomDrawerContent}
       screenOptions={{
         headerShown: false,
         drawerPosition: "right",
@@ -376,82 +518,138 @@ export default function DrawerLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 10,
+    borderTopLeftRadius: 32,
+    borderBottomLeftRadius: 32,
+    overflow: "hidden",
   },
   topSection: {
+    padding: 16,
+    marginTop: 10,
+  },
+  headerCard: {
+    padding: 20,
+    borderRadius: 24,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   avatarWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#8bc34a",
-    justifyContent: "center",
-    alignItems: "center",
     position: "relative",
   },
   avatar: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.4)",
+  },
+  avatarPlaceholder: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.4)",
+  },
+  avatarInitial: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "bold",
   },
   badge: {
     position: "absolute",
     bottom: -5,
-    right: -5,
-    backgroundColor: "#8bc34a",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    right: -12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#fff",
   },
   badgeText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 10,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  headerInfo: {
+    marginLeft: 16,
+    flex: 1,
   },
   userName: {
-    marginTop: 12,
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#558b2f",
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.5,
   },
-  handicap: {
-    fontSize: 14,
-    color: "#4caf50",
-    marginTop: 4,
+  userRole: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 2,
+    fontWeight: "500",
   },
-  drawerItems: {
-    marginTop: 40,
+  drawerItemsContainer: {
+    flex: 1,
+    marginTop: 10,
+    paddingHorizontal: 16,
   },
   drawerItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    marginVertical: 6,
-    backgroundColor: "#8bc34a",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   drawerText: {
-    marginLeft: 12,
+    flex: 1,
+    marginLeft: 16,
     fontSize: 16,
     fontWeight: "600",
-    color: "#ffffff",
+    color: "#8bc34a",
+  },
+  chevron: {
+    opacity: 0.5,
+  },
+  divider: {
+    height: 1.5,
+    marginHorizontal: 4,
   },
   logoutContainer: {
-    marginBottom: 20,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(46, 125, 50, 0.05)",
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#8bc34a",
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 12,
-    justifyContent: "center",
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  logoutText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
   },
 });

@@ -45,23 +45,22 @@ const PlayerCard = ({
   return (
     <Box
       style={{
+        shadowColor: "#8BC34A",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: isDark ? 0.4 : 0.15,
+        shadowRadius: 14,
         backgroundColor: isDark
-          ? "rgba(26,26,26,0.4)"
-          : "rgba(255,255,255,0.35)",
-        borderRadius: 16,
-        borderLeftWidth: 4,
-        borderLeftColor: "#8BC34A",
-        borderTopWidth: isDark ? 1 : 0,
-        borderRightWidth: isDark ? 1 : 0,
-        borderBottomWidth: isDark ? 1 : 0,
-        borderColor: isDark ? "#8BC34A" : "transparent",
-        padding: 8,
-        marginBottom: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isDark ? 0.2 : 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+          ? "rgba(26,26,26,0.6)"
+          : "rgba(255,255,255,0.6)",
+        borderLeftWidth: 6,
+        borderLeftColor: !player.isBlocked ? "#8BC34A" : "#ef4444",
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: (player.isBlocked && isDark) ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
+        borderRadius: 22,
+        padding: 12,
+        marginBottom: 12,
         overflow: "hidden",
       }}
     >
@@ -307,15 +306,19 @@ export default function PlayerStatistics({
           <Box
             key={item}
             style={{
-              backgroundColor: isDark ? "rgba(26,26,26,0.4)" : "rgba(255,255,255,0.35)",
-              borderRadius: 20,
+              shadowColor: "#8BC34A",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: isDark ? 0.4 : 0.15,
+              shadowRadius: 14,
+              backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+              borderRadius: 22,
               borderLeftWidth: 6,
               borderLeftColor: "#8BC34A",
-              borderTopWidth: isDark ? 1.5 : 0,
-              borderRightWidth: isDark ? 1.5 : 0,
-              borderBottomWidth: isDark ? 1.5 : 0,
-              borderColor: isDark ? "#8BC34A" : "transparent",
-              padding: 16,
+              borderTopWidth: 1,
+              borderRightWidth: 1,
+              borderBottomWidth: 1,
+              borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+              padding: 12,
               marginBottom: 16,
             }}
           >

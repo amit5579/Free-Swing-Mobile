@@ -12,7 +12,11 @@ import {
     StyleSheet,
     ActivityIndicator,
     Alert,
+    BackHandler,
 } from "react-native";
+import { useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Skeleton } from "@/components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,6 +42,43 @@ const ScoreCard: React.FC = () => {
     useLayoutEffect(() => {
         navigation.setOptions({ headerShown: false });
     }, [navigation]);
+
+    const [role, setRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            const storedRole = await AsyncStorage.getItem("role");
+            setRole(storedRole);
+        };
+        fetchRole();
+    }, []);
+
+    const handleBack = useCallback(() => {
+        const normalizedRole = role?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
+        if (normalizedRole === "subadmin") {
+            router.navigate("/(drawer)/(subAdmin)/(tabs)/dashboard");
+        } else if (normalizedRole === "admin") {
+            router.navigate("/(drawer)/(admin)/(tabs)/dashboard");
+        } else {
+            router.navigate("/(drawer)/(user)/(tabs)/dashboard");
+        }
+    }, [role, router]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                handleBack();
+                return true;
+            };
+
+            const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                onBackPress
+            );
+
+            return () => backHandler.remove();
+        }, [handleBack])
+    );
 
     const [holes, setHoles] = useState<ScorecardHole[]>([]);
     const [textScores, setTextScores] = useState<Record<number, string>>({});
@@ -134,7 +175,7 @@ const ScoreCard: React.FC = () => {
                             // Then finish the round
                             await saveScorecardApi(scoreCard!);
                             Alert.alert("Success", "Round finished successfully", [
-                                { text: "OK", onPress: () => router.back() }
+                                { text: "OK", onPress: handleBack }
                             ]);
                         } catch (err) {
                             console.error(err);
@@ -315,7 +356,7 @@ const ScoreCard: React.FC = () => {
             <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "transparent" : "rgba(255,255,255,0.7)" }}>
                 <Watermark />
                 <Text style={{ color: "red" }}>{error}</Text>
-                <Pressable onPress={() => router.back()} className="mt-4 p-4 bg-[#8BC34A] rounded-full">
+                <Pressable onPress={handleBack} className="mt-4 p-4 bg-[#8BC34A] rounded-full">
                     <Text className="text-white font-bold">Go Back</Text>
                 </Pressable>
             </ThemedView>
@@ -330,7 +371,7 @@ const ScoreCard: React.FC = () => {
                 {/* Back + Title */}
                 <View className="flex-row items-center mb-4 mt-0">
                     <TouchableOpacity
-                        onPress={() => router.back()}
+                        onPress={handleBack}
                         className="bg-[#8BC34A] rounded-full p-2 w-10 h-10 items-center justify-center mr-3"
                         style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}
                     >

@@ -191,13 +191,13 @@ export default function SubAdminPlayersPage() {
     try {
 
 
-      if(isBlocked){
+      if (isBlocked) {
         await unblockPlayer(id);
         Toast.show({
           type: "success",
           text1: "Player unblocked successfully",
         });
-      }else{
+      } else {
         await blockPlayer(id);
         Toast.show({
           type: "success",
@@ -217,7 +217,7 @@ export default function SubAdminPlayersPage() {
     }
   };
 
-  
+
   // ── Date Formatting ──
   const formatDateDisplay = (dateStr: string) => {
     if (!dateStr) return "Select Date";
