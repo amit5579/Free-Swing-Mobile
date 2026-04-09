@@ -21,6 +21,7 @@ export type GameHistory = {
     net: number;
     parDiff: number;
     isTournament: boolean;
+    isDQ: boolean;
 };
 
 type HistoryTabProps = {
@@ -56,6 +57,7 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                 net: item.netScore,
                 parDiff: item.score - item.par,
                 isTournament: !!item.tournamentId,
+                isDQ: !!item.isDQ,
             }));
 
             setHistory(mapped);
@@ -88,14 +90,20 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                             key={key}
                             className="rounded-2xl mb-4"
                             style={{
+                                shadowColor: "#8BC34A",
+                                shadowOffset: { width: 0, height: 6 },
+                                shadowOpacity: isDark ? 0.4 : 0.15,
+                                shadowRadius: 14,
                                 backgroundColor: isDark
                                     ? "rgba(26,26,26,0.6)"
-                                    : "rgba(255,255,255,0.7)",
+                                    : "rgba(255,255,255,0.6)",
                                 borderLeftWidth: 6,
                                 borderLeftColor: "#8BC34A",
-                                borderWidth: 1,
-                                borderColor: "rgba(139, 195, 74, 0.3)",
-                                borderRadius: 20,
+                                borderTopWidth: 1,
+                                borderRightWidth: 1,
+                                borderBottomWidth: 1,
+                                borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                                borderRadius: 22,
                                 padding: 16,
                             }}
                         >
@@ -189,21 +197,20 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                             <Box
                                 className="rounded-2xl mb-4"
                                 style={{
-                                    shadowColor: "#000",
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: isDark ? 0.3 : 0.08,
-                                    shadowRadius: 10,
-                                    elevation: 4,
+                                    shadowColor: "#8BC34A",
+                                    shadowOffset: { width: 0, height: 6 },
+                                    shadowOpacity: isDark ? 0.4 : 0.15,
+                                    shadowRadius: 14,
                                     backgroundColor: isDark
                                         ? "rgba(26,26,26,0.6)"
-                                        : "rgba(255,255,255,0.7)",
+                                        : "rgba(255,255,255,0.6)",
                                     borderLeftWidth: 6,
-                                    borderLeftColor: "#8BC34A",
+                                    borderLeftColor: item.isDQ ? "#ef4444" : "#8BC34A",
                                     borderTopWidth: 1,
                                     borderRightWidth: 1,
                                     borderBottomWidth: 1,
-                                    borderColor: "rgba(139, 195, 74, 0.3)",
-                                    borderRadius: 20,
+                                    borderColor: item.isDQ && isDark ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
+                                    borderRadius: 22,
                                     overflow: "hidden",
                                 }}
                             >
@@ -219,25 +226,41 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                                 {item.course}
                                             </Text>
 
-                                            {item.isTournament && (
-                                                <Badge
-                                                    className="rounded-full px-3 py-1 self-start flex-row items-center border mt-1"
-                                                    style={{
-                                                        backgroundColor: isDark ? "#06B6D4" : "#22D3EE", // sky/cyan
-                                                        borderColor: isDark ? "#06B6D4" : "#22D3EE",     // same as bg
-                                                    }}
-                                                >
-                                                    <Ionicons
-                                                        name="trophy"
-                                                        size={12}
-                                                        color="#fff"
-                                                        style={{ marginRight: 4 }}
-                                                    />
-
-                                                    <BadgeText className="text-white text-xs">
-                                                        Tournament
-                                                    </BadgeText>
-                                                </Badge>
+                                            {(item.isTournament || item.isDQ) && (
+                                                <HStack space="xs" className="mt-1 flex-wrap">
+                                                    {item.isTournament && (
+                                                        <Badge
+                                                            className="rounded-full px-3 py-1 flex-row items-center border"
+                                                            style={{
+                                                                backgroundColor: isDark ? "#06B6D4" : "#22D3EE",
+                                                                borderColor: isDark ? "#06B6D4" : "#22D3EE",
+                                                            }}
+                                                        >
+                                                            <Ionicons
+                                                                name="trophy"
+                                                                size={11}
+                                                                color="#fff"
+                                                                style={{ marginRight: 4 }}
+                                                            />
+                                                            <BadgeText className="text-white text-[10px] font-bold">
+                                                                Tournament
+                                                            </BadgeText>
+                                                        </Badge>
+                                                    )}
+                                                    {item.isDQ && (
+                                                        <Badge
+                                                            className="rounded-full px-3 py-1 flex-row items-center border"
+                                                            style={{
+                                                                backgroundColor: "#ef4444",
+                                                                borderColor: "#ef4444",
+                                                            }}
+                                                        >
+                                                            <BadgeText className="text-white text-[10px] font-bold">
+                                                                DQ
+                                                            </BadgeText>
+                                                        </Badge>
+                                                    )}
+                                                </HStack>
                                             )}
                                         </VStack>
 

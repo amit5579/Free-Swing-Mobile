@@ -195,6 +195,17 @@ export default function SubAdminTabLayout() {
       />
 
       <Tabs.Screen
+        name="course/invite-marshal"
+        options={{
+          href: null,
+          tabBarStyle: { display: "none" },
+          headerShown: false,
+        }}
+      />
+
+
+
+      <Tabs.Screen
         name="teeTimeBooking/index"
         options={{
           title: "Tee Time",

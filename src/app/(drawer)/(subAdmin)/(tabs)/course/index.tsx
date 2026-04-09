@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   useColorScheme,
   View,
@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
+
 import Watermark from "@/components/watermark";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -18,20 +20,29 @@ import {
   getSubAdminPlayers,
   SubAdminCourse,
   UserApi,
+  invitePlayer,
+  toggleBlockPlayer,
+  removePlayer,
 } from "@/api/subAdmin/dashboard";
 
 const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
   <HStack
     style={{
       alignItems: "center",
-      marginBottom: 14,
+      marginBottom: 16,
       padding: 16,
       borderRadius: 22,
-      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff",
+      backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
       borderLeftWidth: 6,
       borderLeftColor: "#8BC34A",
-      borderWidth: 1,
-      borderColor: isDark ? "#2a2a2a" : "#e5e5e5",
+      borderTopWidth: 1,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+      shadowColor: "#8BC34A",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: isDark ? 0.4 : 0.15,
+      shadowRadius: 14,
     }}
   >
     <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
@@ -64,17 +75,18 @@ const PlayerRow = ({
         borderRadius: 22,
         backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
         borderLeftWidth: 6,
-        borderLeftColor: "#8BC34A",
+        borderLeftColor: isActive ? "#8BC34A" : "#EF4444",
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderBottomWidth: 1,
-        borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+        borderColor: isActive
+          ? (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0")
+          : (isDark ? "#EF4444" : "#FCA5A5"),
         marginBottom: 16,
-        shadowColor: "#8BC34A",
+        shadowColor: isActive ? "#8BC34A" : "#EF4444",
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: isDark ? 0.4 : 0.15,
         shadowRadius: 14,
-        elevation: 8,
       }}
     >
       <HStack style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -185,6 +197,7 @@ const PlayerRow = ({
 export default function SubAdminCoursePage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<UserApi[]>([]);
@@ -192,6 +205,12 @@ export default function SubAdminCoursePage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {
@@ -201,7 +220,7 @@ export default function SubAdminCoursePage() {
         getSubAdminPlayers(),
       ]);
       setPlayers(
-        playerData.filter((p) => p.role?.toLowerCase() === "coursemarshal")
+        playerData.filter((p: UserApi) => p.role?.toLowerCase() === "coursemarshal")
       );
     } catch (error) {
       console.error("Failed to fetch SubAdmin course data", error);
@@ -211,7 +230,7 @@ export default function SubAdminCoursePage() {
   };
 
   const handleToggleBlock = (id: number) => {
-    const player = players.find((p) => p.id === id);
+    const player = players.find((p: UserApi) => p.id === id);
     if (!player) return;
 
     Alert.alert(
@@ -225,8 +244,9 @@ export default function SubAdminCoursePage() {
           onPress: async () => {
             try {
               setLoading(true);
-              setPlayers((prev) =>
-                prev.map((p) =>
+              await toggleBlockPlayer(id);
+              setPlayers((prev: UserApi[]) =>
+                prev.map((p: UserApi) =>
                   p.id === id ? { ...p, isBlocked: !p.isBlocked } : p
                 )
               );
@@ -243,7 +263,7 @@ export default function SubAdminCoursePage() {
   };
 
   const handleRemove = (id: number) => {
-    const player = players.find((p) => p.id === id);
+    const player = players.find((p: UserApi) => p.id === id);
     if (!player) return;
 
     Alert.alert(
@@ -257,7 +277,8 @@ export default function SubAdminCoursePage() {
           onPress: async () => {
             try {
               setLoading(true);
-              setPlayers((prev) => prev.filter((p) => p.id !== id));
+              await removePlayer(id);
+              setPlayers((prev: UserApi[]) => prev.filter((p: UserApi) => p.id !== id));
               Alert.alert("Success", "Player removed successfully");
             } catch (error) {
               Alert.alert("Error", "Failed to remove player");
@@ -274,33 +295,51 @@ export default function SubAdminCoursePage() {
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
       <Watermark />
 
-      <VStack style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+      <VStack style={{ paddingHorizontal: 16, paddingBottom: 8, marginTop: 0 }}>
         <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
           <VStack>
-            <HStack style={{ alignItems: "center", gap: 8 }}>
+            <HStack style={{ alignItems: "center", gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{
+                  padding: 4,
+                  marginLeft: -4,
+                }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={isDark ? "#fff" : "#000"}
+                />
+              </TouchableOpacity>
               <Text style={{ fontSize: 24, fontWeight: "900", color: isDark ? "#fff" : "#111", letterSpacing: -0.5 }}>
                 Course Marshals
               </Text>
             </HStack>
-            <Text style={{ fontSize: 13, color: isDark ? "#aaa" : "#6b7280", marginTop: 2 }}>
-              Players assigned to manage your courses
-            </Text>
           </VStack>
-          <HStack
-            style={{
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#D1FAE5",
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 20,
-              borderWidth: isDark ? 1 : 0,
-              borderColor: isDark ? "rgba(255,255,255,0.1)" : "transparent",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="pulse" size={14} color={isDark ? "#8BC34A" : "#15803D"} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 13, fontWeight: "700", color: isDark ? "#8BC34A" : "#15803D" }}>
-              {loading ? "—" : players.length} Marshals
-            </Text>
+          <HStack style={{ gap: 8, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/course/invite-marshal" as any)}
+              style={{
+                backgroundColor: "#8BC34A",
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: "#8BC34A",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+              <Text style={{ fontSize: 14, fontWeight: "800", color: "#fff" }}>
+                Invite
+              </Text>
+            </TouchableOpacity>
           </HStack>
         </HStack>
       </VStack>
@@ -337,3 +376,4 @@ export default function SubAdminCoursePage() {
     </SafeAreaView>
   );
 }
+

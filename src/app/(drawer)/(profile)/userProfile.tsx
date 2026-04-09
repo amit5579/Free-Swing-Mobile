@@ -229,9 +229,9 @@ export default function UserProfile() {
                       </View>
                     </Pressable>
                     <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>{userProfile?.username}</ThemedText>
-                    <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
+                    {/* <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
                       <ThemedText style={{ fontSize: 14 }}>{userProfile?.role}</ThemedText>
-                    </Box>
+                    </Box> */}
                   </VStack>
                 </Box>
 
