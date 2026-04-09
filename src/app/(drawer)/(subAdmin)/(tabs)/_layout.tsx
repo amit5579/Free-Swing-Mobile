@@ -162,7 +162,7 @@ export default function SubAdminTabLayout() {
       />
 
       <Tabs.Screen
-        name="tournaments/index"
+        name="tournaments"
         options={{
           title: "",
           tabBarIcon: ({ focused }) => (

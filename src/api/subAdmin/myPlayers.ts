@@ -42,6 +42,17 @@ export const invitePlayer = async (data: any) => {
 }
 
 
+// get certificate by userId - User/2/certificate
+export const getPlayerCertificateById = async (userId: number) => {
+    try {
+        const response = await https.get(`User/${userId}/certificate`);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching certificate by userId Error:", error);
+        throw error;
+    }
+};
+
 // block player - SubAdmin/block-player/43
 export const blockPlayer = async (id: number) => {
     try {
@@ -72,6 +83,33 @@ export const deleteSubAdminPlayer = async (id: number) => {
         return response.data;
     } catch (error) {
         console.error("Error deleting player:", error);
+        throw error;
+    }
+}
+
+
+// get player game history - SubAdmin/my-players/4/history
+
+export const getPlayerGameHistory = async (id: number) => {
+    try {
+        const response = await https.get(`SubAdmin/my-players/${id}/history`);
+        // console.log("response", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching player game history:", error);
+        throw error;
+    }
+}
+
+
+// get player scorecard - scorecard/details/2260
+
+export const getPlayerScorecard = async (id: number) => {
+    try {
+        const response = await https.get(`scorecard/details/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching player scorecard:", error);
         throw error;
     }
 }

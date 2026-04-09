@@ -18,7 +18,7 @@ import { getScorecardById } from "@/api/admin/tournaments";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 
-const PlayerScorecard = () => {
+export default function SubAdminPlayerScorecard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
@@ -341,7 +341,6 @@ const PlayerScorecard = () => {
   );
 };
 
-export default PlayerScorecard;
 
 const styles = StyleSheet.create({
   indicatorContainer: {
