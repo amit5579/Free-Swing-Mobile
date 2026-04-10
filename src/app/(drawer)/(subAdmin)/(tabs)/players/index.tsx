@@ -133,10 +133,6 @@ export default function SubAdminPlayersPage() {
       setCourses(courseData);
     } catch (error) {
       console.error("Error fetching players:", error);
-      Toast.show({
-        type: "error",
-        text1: "Failed to load players",
-      });
     } finally {
       setLoading(false);
     }

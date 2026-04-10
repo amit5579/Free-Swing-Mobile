@@ -78,16 +78,7 @@ export default function adminCoursePage() {
         location: data.location,
         isPremium: data.isPremium,
       };
-
-      if (isEditMode) {
-        console.log("EDIT MODE");
-
-        // 👉 when backend ready
-        // await updateCourse(editingCourse.courseId, payload);
-      } else {
-        console.log("CREATE MODE");
-        await createCourse(payload);
-      }
+      await createCourse(payload);
 
       setModalVisible(false);
       reset();

@@ -127,7 +127,7 @@ export default function CombinedLeaderboardsPage() {
 
       // Sort by points desc
       const sorted = Object.values(merged).sort((a, b) => b.points - a.points);
-      console.log("[CombinedLeaderboards] merged entries:", sorted.length);
+      // console.log("[CombinedLeaderboards] merged entries:", sorted.length);
       setLeaderboard(sorted);
     } catch (error) {
       console.error("[CombinedLeaderboards] generateLeaderboard error:", error);
