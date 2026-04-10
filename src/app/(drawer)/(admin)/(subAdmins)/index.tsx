@@ -27,6 +27,7 @@ import {
   deleteSubAdmin,
   // getCourse,
   getSubAdminList,
+  updateSubAdmin,
 } from "@/api/admin/subAdmins";
 import { MultiSelect } from "react-native-element-dropdown";
 import { useForm } from "react-hook-form";
@@ -37,6 +38,7 @@ import { getCourse } from "@/api/admin/courses";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function subAdminsPage() {
   const colorScheme = useColorScheme();
@@ -83,22 +85,29 @@ export default function subAdminsPage() {
         mobileNumber: data.mobileNumber,
         courseIds: data.courseIds,
       };
-      // console.log("Payload:", payload);
-
-      //
-      if (isEditMode) {
-        console.log("EDIT MODE");
-
-        // 👉 later when backend works:
-        // await updateSubAdmin(editingAdmin.id, payload);
-      } else {
-        console.log("CREATE MODE");
+      if(isEditMode){
+        await updateSubAdmin(editingAdmin.id, payload);
+        setPageLoading(true);
+        setIsEditMode(false);
+        setEditingAdmin(null);
+        Toast.show({
+          type: "success",
+          text1: "Sub Admin updated successfully",
+        });
+      }else{
         await createSubAdmin(payload);
+        Toast.show({
+          type: "success",
+          text1: "Sub Admin created successfully",
+        });
       }
       setModalVisible(false);
       reset();
+      
       // setSelectedCourses([]);
       fetchSubAdmin();
+      setPageLoading(false);
+      
     } catch (error) {
       console.error("Failed to create sub admin", error);
     }
@@ -133,8 +142,6 @@ export default function subAdminsPage() {
 
   useEffect(() => {
     if (isEditMode && editingAdmin) {
-      console.log("SETTING EDIT DATA");
-
       reset({
         username: editingAdmin.username,
         email: editingAdmin.email,
@@ -142,10 +149,6 @@ export default function subAdminsPage() {
         mobileNumber: editingAdmin.mobileNumber,
         courseIds: editingAdmin.courses.map((c: any) => c.courseId),
       });
-
-      // setSelectedCourses(
-      //   editingAdmin.courses.map((c: any) => String(c.courseId)),
-      // );
     }
   }, [editingAdmin, isEditMode]);
 
@@ -287,6 +290,7 @@ export default function subAdminsPage() {
                     key={sbadmin.id}
                     sbadmin={sbadmin}
                     isDark={isDark}
+                    setPageLoading={setPageLoading}
                     setModalVisible={setModalVisible}
                     setIsEditMode={setIsEditMode}
                     setEditingAdmin={setEditingAdmin}
@@ -579,6 +583,7 @@ export default function subAdminsPage() {
 function SubAdminCard({
   sbadmin,
   isDark,
+  setPageLoading,
   setModalVisible,
   setIsEditMode,
   setEditingAdmin,
@@ -589,7 +594,13 @@ function SubAdminCard({
   const handleDelete = async (id: number) => {
     try {
       await deleteSubAdmin(id);
+      setPageLoading(true);
       fetchSubAdmin();
+      setPageLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Sub Admin deleted successfully",
+      });
     } catch (error) {
       console.log(error);
     }

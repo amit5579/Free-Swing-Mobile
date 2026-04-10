@@ -33,7 +33,7 @@ export default function FeedbackInboxPage() {
   const tabs = [
     { key: "all", label: "All", icon: "grid-outline" },
     { key: "open", label: "Open", icon: "people-outline" },
-    { key: "ongoing", label: "Ongoing", icon: "people-outline" },
+    { key: "InProgress", label: "Ongoing", icon: "people-outline" },
     { key: "resolved", label: "Resolved", icon: "people-outline" },
   ];
 
@@ -134,7 +134,7 @@ export default function FeedbackInboxPage() {
     const filteredData = feedbackData.filter((item: any) => {
       if (activeTab === "all") return true;
       if (activeTab === "open") return item.status === "Open";
-      if (activeTab === "ongoing") return item.status === "Ongoing";
+      if (activeTab === "InProgress") return item.status === "InProgress";
       if (activeTab === "resolved") return item.status === "Resolved";
     });
     if (isLoading) return <LoadingState />;
@@ -244,7 +244,7 @@ export default function FeedbackInboxPage() {
           <ScrollView>
             <VStack className="flex-1 p-4">
               {/* HEADER (FIXED) */}
-              <HStack className="items-center justify-between mb-4">
+              <HStack className="items-center justify-between mb-5">
                 <Pressable onPress={() => router.back()}>
                   <Ionicons name="arrow-back" size={24} color="#8bc34a" />
                 </Pressable>
@@ -253,7 +253,7 @@ export default function FeedbackInboxPage() {
                   style={{
                     fontSize: 20,
                     fontWeight: "700",
-                    color: isDark ? "#9ca3af" : "black",
+                    color: isDark ? "white" : "black",
                   }}
                 >
                   Feedback Inbox
@@ -289,7 +289,7 @@ export default function FeedbackInboxPage() {
                     fontSize: 15,
                     fontWeight: "700",
                     marginBottom: 4,
-                    color: isDark ? "#9ca3af" : "black",
+                    color: isDark ? "#ccd1dbff" : "black",
                   }}
                 >
                   Feedback & Requests
@@ -299,7 +299,7 @@ export default function FeedbackInboxPage() {
                 <Text
                   style={{
                     fontSize: 12,
-                    color: "#6b7280",
+                    color: "#ccd1dbff",
                     marginBottom: 12,
                   }}
                 >
@@ -316,7 +316,7 @@ export default function FeedbackInboxPage() {
                     {[
                       { label: "Total", value: feedbackData.length || 0 },
                       { label: "Open", value: feedbackData.filter((item: any) => item.status === "Open").length || 0 },
-                      { label: "Ongoing", value: feedbackData.filter((item: any) => item.status === "Ongoing").length || 0 },
+                      { label: "Ongoing", value: feedbackData.filter((item: any) => item.status === "InProgress").length || 0 },
                       { label: "Resolved", value: feedbackData.filter((item: any) => item.status === "Resolved").length || 0 },
                     ].map((item, index) => (
                       <Box
@@ -334,7 +334,7 @@ export default function FeedbackInboxPage() {
                         <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
                           {item.value}
                         </ThemedText>
-                        <Text style={{ fontSize: 11, color: "#6b7280" }}>
+                        <Text style={{ fontSize: 11, color: "#ccd1dbff" }}>
                           {item.label}
                         </Text>
                       </Box>
@@ -367,7 +367,7 @@ export default function FeedbackInboxPage() {
                   className="mr-1"
                 /> */}
                       <Text
-                        className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}
+                        className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-300" : "text-gray-600"}`}
                       >
                         {tab.label}
                       </Text>
@@ -388,7 +388,7 @@ export default function FeedbackInboxPage() {
                   {renderContent()}
                 </ScrollView>
               )}
-              {activeTab === "ongoing" && (
+              {activeTab === "InProgress" && (
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {renderContent()}
                 </ScrollView>
@@ -433,29 +433,44 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
         <HStack className="gap-3">
           <Box
             style={{
-              backgroundColor: item.status === "Bug" ? "#8BC34A" : "#8bc34a24",
+              backgroundColor:
+              //  item.status === "Bug" ? 
+              // "#8BC34A" : 
+              "#8bc34a24",
               paddingHorizontal: 10,
               paddingVertical: 5,
               borderRadius: 10,
             }}
           >
-            <Text style={{ color: item.status === "Bug" ? "#fff" : "#8BC34A" }}>
-              Bug
+            <Text style={{ color: 
+              
+              // item.status === "Bug" ? 
+              // "#fff"  :
+               "#8BC34A" 
+              }}>
+              {item.category}
             </Text>
           </Box>
           <Box
             style={{
               backgroundColor:
-                item.status === "Resolved" ? "#8BC34A" : "#8bc34a24",
+                // item.status === "Resolved" ? 
+                "#8BC34A" 
+                // : "#8bc34a24"
+                ,
               paddingHorizontal: 10,
               paddingVertical: 5,
               borderRadius: 10,
             }}
           >
             <Text
-              style={{ color: item.status === "Resolved" ? "#fff" : "#8BC34A" }}
+              style={{ color: 
+                // item.status === "Resolved" ? 
+                "#fff"
+                //  : "#8BC34A" 
+                }}
             >
-              Resolved
+              {item.status == "InProgress" ? "Ongoing" : item.status}
             </Text>
           </Box>
         </HStack>
@@ -473,17 +488,19 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
         <ThemedText style={{ fontSize: 12 }}>
           Submitted: {formatDateTime(item.createdAt)}
         </ThemedText>
-        <ThemedText style={{ fontSize: 12 }}>
-          Updated: {formatDateTime(item.updatedAt)}
-        </ThemedText>
+
+        {item.updatedAt == null ? ("") : ( <ThemedText style={{ fontSize: 12 }}>
+            Updated: {formatDateTime(item.updatedAt) || ""}
+          </ThemedText>)}
 
         {/* MESSAGE */}
         <Box
-          className="p-3 rounded-lg border border-neutral-200"
+          className="p-3 rounded-lg border"
           style={{
             backgroundColor: isDark
               ? "rgba(255,255,255,0.1)"
               : "rgba(229, 231, 235, 0.6)",
+              borderColor: isDark ? "#fff" : "#000",
           }}
         >
           <ThemedText style={{ fontSize: 13 }}>{item.message}</ThemedText>
@@ -502,22 +519,24 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
                 paddingHorizontal: 12,
                 height: 45,
                 marginTop: 6,
-                backgroundColor: isDark ? "#1a1a1a" : "#fff",
-                borderColor: isDark ? "#333" : "#ddd",
+                backgroundColor:  isDark
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(229, 231, 235, 0.6)",
+                borderColor: isDark ? "#fff" : "#000",
               },
             ]}
-            placeholderStyle={{ color: isDark ? "#777" : "#999" }}
-            selectedTextStyle={{ color: isDark ? "white" : "black" }}
+            placeholderStyle={{ color:  isDark ? "#fff" : "#000" }}
+            selectedTextStyle={{ color:  isDark ? "#fff" : "#000" }}
             containerStyle={{
               backgroundColor: isDark ? "#1a1a1a" : "#fff",
               borderColor: isDark ? "#333" : "#ddd",
             }}
-            itemTextStyle={{ color: isDark ? "white" : "black" }}
+            itemTextStyle={{ color:  isDark ? "#fff" : "#000" }}
             activeColor={isDark ? "#333" : "#f0f0f0"}
             data={[
               { label: "Open", value: "Open" },
               { label: "Resolved", value: "Resolved" },
-              { label: "Ongoing", value: "In Progress" },
+              { label: "Ongoing", value: "InProgress" },
             ]}
             labelField="label"
             valueField="value"
@@ -540,7 +559,10 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
             numberOfLines={3}
             style={{
               borderRadius: 7,
-              borderColor: "#e5e5e5",
+              borderColor: isDark ? "#fff" : "#000",
+              backgroundColor: isDark
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(229, 231, 235, 0.6)",
               borderWidth: 1,
               padding: 10,
               height: 80,

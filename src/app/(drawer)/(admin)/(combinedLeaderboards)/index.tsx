@@ -64,7 +64,7 @@ export default function CombinedLeaderboardsPage() {
     setLoadingTournaments(true);
     try {
       const data = await getTournaments();
-      console.log("[CombinedLeaderboards] tournaments:", data?.length);
+      // console.log("[CombinedLeaderboards] tournaments:", data?.length);
       setTournaments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("[CombinedLeaderboards] fetchTournaments error:", error);
@@ -214,17 +214,20 @@ export default function CombinedLeaderboardsPage() {
 
             {/* Selected tournament chips */}
             {selectedTournamentNames.length > 0 && (
-              <HStack className="flex-wrap gap-2 mt-3">
+              <>
+              <ThemedText style={{fontSize:16,fontWeight:"600",marginTop:10,marginBottom:5}}>Selected Tournaments:</ThemedText>
+               <HStack className="flex-wrap gap-2">
                 {selectedTournamentNames.map((name, i) => (
                   <View key={i} style={styles.chip}>
                     <Text style={styles.chipText}>{name}</Text>
                   </View>
                 ))}
-              </HStack>
+              </HStack></>
+             
             )}
 
             {/* Generate button */}
-            {selectedIds.length > 0 && (
+            {/* {selectedIds.length > 0 && (
               <Pressable
                 style={[
                   styles.generateButton,
@@ -241,7 +244,7 @@ export default function CombinedLeaderboardsPage() {
                   </Text>
                 )}
               </Pressable>
-            )}
+            )} */}
 
             {/* Loading state — skeleton cards */}
             {loadingLeaderboard && (

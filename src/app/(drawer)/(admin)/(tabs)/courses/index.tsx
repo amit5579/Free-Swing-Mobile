@@ -466,10 +466,10 @@ function CourseCardAdmin({
         <Box
           className="absolute top-3 right-3 px-3 py-1 rounded-full"
           style={{
-            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+            backgroundColor: isDark ? course.isPremium === false ? "#262626" : "#EFBF04" : "#e5e5e5",
           }}
         >
-          <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+          <ThemedText style={{ fontSize: 12, fontWeight: "600", color: course.isPremium === false ? "white" : "#3D2412" }}>
             {course.isPremium === false ? "Free" : "Premium"}
           </ThemedText>
         </Box>

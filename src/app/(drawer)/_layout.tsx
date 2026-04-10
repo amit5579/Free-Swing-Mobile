@@ -150,6 +150,7 @@ function CustomDrawerContent({ navigation }: any) {
                     opacity: isDark ? 0.2 : 0.08,
                   },
                 ]}
+    
               />
             </>
           )}

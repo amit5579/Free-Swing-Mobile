@@ -23,18 +23,20 @@ export const createSubAdmin = async (data: any) => {
 };
 
 
-// put / edit sub-admins details endpoint : SubAdmin/25/courses
+// put / edit sub-admins details endpoint : SubAdmin/1006
 // {
-//     "courseIds": [
-//         2,
-//         6,
-//         7
-//     ]
+//   courseIds: [20, 25]
+//   email: "narender@mandavconsultancy.com"
+//   mobileNumber: "821951103133"
+//   password: "dftyu"
+//   username: "Narender Sharmadfg"
 // }
 
-export const updateSubAdmin = async (userId: number, courseId: number) => {
+
+
+export const updateSubAdmin = async (subAdminId: number, data: any) => {
   try {
-    const response = await https.put(`SubAdmin/${userId}/courses`, { courseIds: courseId });
+    const response = await https.put(`SubAdmin/${subAdminId}`, data);
     return response.data;
   } catch (error) {
     console.error("Update SubAdmin Error:", error);
