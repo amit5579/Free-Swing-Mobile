@@ -93,7 +93,7 @@ export default function SubAdminContactAdminPage() {
   };
   const RenderHeader = () => (
     <HStack className="px-3 pt-5 items-center justify-between">
-      <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+      <Pressable onPress={() => routePage.push("/(drawer)/(subAdmin)/(tabs)/dashboard")} style={{ padding: 6 }}>
         <Ionicons
           name="arrow-back-outline"
           size={22}

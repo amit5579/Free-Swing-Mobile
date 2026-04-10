@@ -26,9 +26,21 @@ export default function TournamentHistory() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId,tournamentName, teeBoxId,scoringType } = useLocalSearchParams();
-const formatScoringType = scoringType == "double-peoria" ? "Double Peoria" : scoringType == "stableford" ? "Stableford" : scoringType == "excluded" ? "Net Score Exclude Par 3" : scoringType == "standard" ? "Standard" : scoringType == "double-peoria-net" ? "Double Peoria Net" : "Net Score Include Par 3"
-// Net Score Include Par 3
+  const { tournamentId, tournamentName, teeBoxId, scoringType } =
+    useLocalSearchParams();
+  const formatScoringType =
+    scoringType == "double-peoria"
+      ? "Double Peoria"
+      : scoringType == "stableford"
+        ? "Stableford"
+        : scoringType == "excluded"
+          ? "Net Score Exclude Par 3"
+          : scoringType == "standard"
+            ? "Standard"
+            : scoringType == "double-peoria-net"
+              ? "Double Peoria Net"
+              : "Net Score Include Par 3";
+  // Net Score Include Par 3
   const [loading, setLoading] = useState(true);
 
   const [handicap, setHandicap] = useState(null);
@@ -137,49 +149,48 @@ const formatScoringType = scoringType == "double-peoria" ? "Double Peoria" : sco
   const RenderHeader = () => {
     return (
       <>
-      <VStack className="mb-3">
-        <HStack
-          className="px-3 items-center"
-          style={{ justifyContent: "space-between" }}
-        >
-          {/* LEFT: Back button */}
-          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-            <Ionicons
-              name="arrow-back-outline"
-              size={22}
-              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-            />
-          </Pressable>
+        <VStack className="mb-3">
+          <HStack
+            className="px-3 items-center"
+            style={{ justifyContent: "space-between" }}
+          >
+            {/* LEFT: Back button */}
+            <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
+              <Ionicons
+                name="arrow-back-outline"
+                size={22}
+                color={colorScheme === "dark" ? "#ffffff" : "#020617"}
+              />
+            </Pressable>
 
-          {/* CENTER: Title */}
+            {/* CENTER: Title */}
+            <ThemedText
+              style={{
+                flex: 1,
+                fontSize: 20,
+                fontWeight: "700",
+                textAlign: "center",
+                lineHeight: 30,
+              }}
+            >
+              Scorecard : {tournamentName}
+            </ThemedText>
+
+            {/* RIGHT: Add Button */}
+            {/* <View style={{ width: 40 }} /> */}
+          </HStack>
           <ThemedText
             style={{
-              flex: 1,
-              fontSize: 20,
-              fontWeight: "700",
               textAlign: "center",
+              fontSize: 16,
+              fontWeight: "400",
               lineHeight: 30,
             }}
           >
-            Scorecard : {tournamentName}
+            {/* (Net Score Exclude Par 3) */}
+            {formatScoringType}
           </ThemedText>
-
-          {/* RIGHT: Add Button */}
-          {/* <View style={{ width: 40 }} /> */}
-        </HStack>
-        <ThemedText
-          style={{
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "400",
-            lineHeight: 30,
-          }}
-        >
-          {/* (Net Score Exclude Par 3) */}
-                    {formatScoringType}
-        </ThemedText>
-      </VStack>
-        
+        </VStack>
       </>
     );
   };
