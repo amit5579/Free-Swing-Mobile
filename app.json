@@ -26,10 +26,10 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff",
-          "resizeMode": "contain",
+          "resizeMode": "cover",
           "android": {
             "image": "./assets/FreeSwing.png",
-            "imageWidth": 1000
+            "imageWidth": 300
           }
         }
       ],
