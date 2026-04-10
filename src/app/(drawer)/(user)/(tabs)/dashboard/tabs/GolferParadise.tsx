@@ -53,8 +53,8 @@ const PostImage = ({ imageUrl, isDark, onImagePress }: { imageUrl: string; isDar
     }
 
     return (
-        <TouchableOpacity 
-            activeOpacity={0.9} 
+        <TouchableOpacity
+            activeOpacity={0.9}
             onPress={onImagePress}
             style={{ width: '100%', aspectRatio: 4 / 3, position: 'relative' }}
         >
@@ -503,7 +503,7 @@ export default function GolferParadise() {
                             </HStack>
                         </Box>
                     </KeyboardAvoidingView>
-            </Modal>
+                </Modal>
             )}
 
             {/* Full Image Preview Modal */}

@@ -5,6 +5,16 @@ import https from "./https";
 
 // getCourses - course?onlyWithSubAdmin=true
 
+export const getAllCourses = async () => {
+    try {
+        const response = await https.get(`course?onlyWithSubAdmin=false`);
+        // console.log("fffff",response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching sub admin courses Error:", error);
+        throw error;
+    }
+};
 export const getSubAdminCourses = async () => {
     try {
         const response = await https.get(`course?onlyWithSubAdmin=true`);
