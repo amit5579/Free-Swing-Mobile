@@ -542,10 +542,10 @@ export default function AllMembersPage() {
                               flexDirection: "row",
                               alignItems: "center",
                             }}
-                            // onPress={() => router.push(`/(drawer)/(admin)/(tabs)/allMembers/${member.id}`)}
-                            onPress={() => {
-                              Alert.alert("Coming Soon", "This feature is not available yet.");
-                            }}
+                            onPress={() => router.push(`/(drawer)/(admin)/(tabs)/allMembers/${member.id}`)}
+                          // onPress={() => {
+                          //   Alert.alert("Coming Soon", "This feature is not available yet.");
+                          // }}
                           >
                             <Ionicons name="eye-outline" size={16} color="#8BC34A" />
                             <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
