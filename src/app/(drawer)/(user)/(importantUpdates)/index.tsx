@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   Linking,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,8 @@ export default function ImportantUpdatesUser() {
   const [refreshing, setRefreshing] = useState(false);
   const [imageErrorMap, setImageErrorMap] = useState<{ [key: number]: boolean }>({});
   const [imageLoadingMap, setImageLoadingMap] = useState<{ [key: number]: boolean }>({});
+  const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
+  const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
 
   const router = useRouter();
   const isDark = useColorScheme() === "dark";
@@ -221,7 +224,17 @@ export default function ImportantUpdatesUser() {
                 )}
 
                 {item.mediaUrl && (
-                  <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative" }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const finalUrl = item.mediaUrl!.startsWith("http")
+                        ? item.mediaUrl!
+                        : `https://kolve18freeswing.com${item.mediaUrl}`;
+                      setFullImageUrl(finalUrl);
+                      setFullImageModalVisible(true);
+                    }}
+                    activeOpacity={0.9}
+                    style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative" }}
+                  >
                     {imageLoadingMap[item.id] !== false && (
                       <View
                         style={{
@@ -267,11 +280,12 @@ export default function ImportantUpdatesUser() {
                         }));
                       }}
                     />
-                  </View>
+                  {/* </View> */}
+                  </TouchableOpacity>
                 )}
 
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10, alignItems: "center" }}>
-                  
+
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="notifications" size={14} color="#8BC34A" />
                     <Text style={{ fontSize: 12, color: "#8BC34A", marginLeft: 4 }}>
@@ -288,6 +302,31 @@ export default function ImportantUpdatesUser() {
           )}
         </View>
       </ScrollView>
+
+      {/* Full Image Preview Modal */}
+      <Modal
+        visible={fullImageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setFullImageModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => setFullImageModalVisible(false)}
+            style={{ position: "absolute", top: 50, right: 20, zIndex: 10, padding: 10 }}
+          >
+            <Ionicons name="close-circle" size={42} color="white" />
+          </TouchableOpacity>
+
+          {fullImageUrl && (
+            <Image
+              source={{ uri: fullImageUrl }}
+              style={{ width: "100%", height: "80%" }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

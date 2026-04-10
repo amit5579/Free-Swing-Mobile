@@ -195,9 +195,6 @@ export default function AllMembersPage() {
         <>
           <HStack className="items-center justify-between mt-4 mb-6 px-4">
             <HStack className="items-center">
-              <Pressable onPress={() => router.back()}>
-                <Ionicons name="arrow-back-outline" size={24} color={isDark ? "#fff" : "#020617"} />
-              </Pressable>
               <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
                 All Members
               </ThemedText>
@@ -216,14 +213,6 @@ export default function AllMembersPage() {
         <>
           <HStack className="items-center justify-between mb-6 px-4">
             <HStack className="items-center">
-              <Pressable onPress={() => router.back()}>
-                <Ionicons
-                  name="arrow-back-outline"
-                  size={24}
-                  color={isDark ? "#fff" : "#020617"}
-                />
-              </Pressable>
-
               <ThemedText
                 style={{
                   fontSize: 20,
@@ -538,8 +527,32 @@ export default function AllMembersPage() {
                         </HStack>
 
                         <HStack
-                          style={{ marginTop: 24, justifyContent: "flex-end" }}
+                          style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}
                         >
+                          <TouchableOpacity
+                            // disabled={true}
+                            style={{
+                              // opacity: 0.5,
+                              paddingHorizontal: 16,
+                              paddingVertical: 10,
+                              borderRadius: 12,
+                              backgroundColor: "rgba(139,195,74,0.15)",
+                              borderWidth: 1,
+                              borderColor: "rgba(139,195,74,0.2)",
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                            // onPress={() => router.push(`/(drawer)/(admin)/(tabs)/allMembers/${member.id}`)}
+                            onPress={() => {
+                              Alert.alert("Coming Soon", "This feature is not available yet.");
+                            }}
+                          >
+                            <Ionicons name="eye-outline" size={16} color="#8BC34A" />
+                            <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
+                              View
+                            </ThemedText>
+                          </TouchableOpacity>
+
                           {member.isBlocked ? (
                             <>
                               <TouchableOpacity
@@ -547,7 +560,6 @@ export default function AllMembersPage() {
                                   paddingHorizontal: 16,
                                   paddingVertical: 10,
                                   borderRadius: 12,
-                                  marginRight: 15,
                                   backgroundColor: "rgba(239,68,68,0.1)",
                                   borderWidth: 1,
                                   borderColor: "rgba(239,68,68,0.2)",

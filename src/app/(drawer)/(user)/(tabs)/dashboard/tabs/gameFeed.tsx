@@ -307,7 +307,7 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
             <VStack>
                 {!searchQuery && (
                     <HStack
-                        className="mb-3 p-1 rounded-full"
+                        className="mb-4 mt-4 p-1 rounded-full"
                         style={{
                             backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(243, 244, 246, 0.8)",
                             borderWidth: 1,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -14,13 +14,20 @@ import {
   RefreshControl,
   StyleSheet,
   Linking,
-  BackHandler
+  BackHandler,
+  PanResponder,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { getUpdates, addUpdate, deleteUpdate, UpdateApi, getUserById } from "@/api/admin/dashboard";
+import { getSubAdminList } from "@/api/admin/subAdmins";
+import https from "@/api/https";
+import { ParadisePost } from "@/app/(drawer)/(user)/(tabs)/dashboard/tabs/GolferParadise";
 import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import { Skeleton } from "@/components/Skeleton";
@@ -38,37 +45,132 @@ export default function ManageImportantUpdates() {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>({});
+  const [updateImgErrorMap, setUpdateImgErrorMap] = useState<{ [key: number]: boolean }>({});
+  const [paradiseImgErrorMap, setParadiseImgErrorMap] = useState<{ [key: number]: boolean }>({});
   const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
 
   const [content, setContent] = useState("");
   const [image, setImage] = useState<any>(null);
   const [linkUrl, setLinkUrl] = useState("");
-  const [filter, setFilter] = useState<"mine" | "others">("mine");
+  const [filter, setFilter] = useState<"mine" | "subadmin" | "user">("mine");
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [subAdminIds, setSubAdminIds] = useState<Set<number>>(new Set());
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [paradisePosts, setParadisePosts] = useState<ParadisePost[]>([]);
+  const [paradiseCommentModalPostId, setParadiseCommentModalPostId] = useState<number | null>(null);
+  const [paradiseCommentTexts, setParadiseCommentTexts] = useState<Record<number, string>>({});
   const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
+  const [editingUpdateId, setEditingUpdateId] = useState<number | null>(null);
 
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const horizontalScrollRef = React.useRef<ScrollView>(null);
 
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy),
+      onPanResponderRelease: (_, gs) => {
+        const SWIPE_THRESHOLD = 50;
+        if (gs.dx < -SWIPE_THRESHOLD) {
+          if (filterRef.current === "mine") {
+            setFilter("subadmin");
+            horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
+          } else if (filterRef.current === "subadmin") {
+            setFilter("user");
+            horizontalScrollRef.current?.scrollTo({ x: width * 2, animated: true });
+          }
+        } else if (gs.dx > SWIPE_THRESHOLD) {
+          if (filterRef.current === "user") {
+            setFilter("subadmin");
+            horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
+          } else if (filterRef.current === "subadmin") {
+            setFilter("mine");
+            horizontalScrollRef.current?.scrollTo({ x: 0, animated: true });
+          }
+        }
+      },
+    })
+  ).current;
+
   const fetchUpdates = async (isRefreshing = false) => {
     try {
       if (!isRefreshing) setLoading(true);
-      const data = await getUpdates();
+      const [data, subAdmins, paradiseRes] = await Promise.all([
+        getUpdates(),
+        getSubAdminList(),
+        https.get("paradise?page=1&pageSize=50").catch(() => ({ data: [] })),
+      ]);
       const sortedData = [...data].sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+      const idSet = new Set<number>(
+        (subAdmins as { id: number }[]).map((sa) => sa.id)
+      );
+      setSubAdminIds(idSet);
       setUpdates(sortedData);
+      setParadisePosts(paradiseRes.data || []);
     } catch (err) {
       console.error("Failed to load updates:", err);
       Alert.alert("Error", "Failed to load updates.");
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleDeleteParadisePost = (postId: number) => {
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this user post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await https.delete(`paradise/${postId}`);
+              setParadisePosts((prev) => prev.filter((p) => p.id !== postId));
+            } catch (error) {
+              console.error("Delete paradise post error:", error);
+              Alert.alert("Error", "Failed to delete post.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleParadiseLike = async (postId: number) => {
+    try {
+      setParadisePosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, isLikedByMe: !p.isLikedByMe, likeCount: p.isLikedByMe ? p.likeCount - 1 : p.likeCount + 1 }
+            : p
+        )
+      );
+      await https.post(`paradise/like/${postId}`);
+    } catch (err) {
+      console.error("Like error:", err);
+    }
+  };
+
+  const handleParadiseAddComment = async (postId: number) => {
+    const text = paradiseCommentTexts[postId]?.trim();
+    if (!text) return;
+    try {
+      await https.post(`paradise/comment/${postId}`, { text });
+      setParadiseCommentTexts((prev) => ({ ...prev, [postId]: "" }));
+      const res = await https.get("paradise?page=1&pageSize=50").catch(() => ({ data: [] }));
+      setParadisePosts(res.data || []);
+    } catch (err) {
+      console.error("Comment error:", err);
     }
   };
 
@@ -158,24 +260,53 @@ export default function ManageImportantUpdates() {
       }
 
       if (image) {
-        formData.append("UpdateImage", {
-          uri: image.uri,
-          name: image.fileName || "update.jpg",
-          type: image.mimeType || "image/jpeg",
-        } as any);
+        // If image is a File/Asset object (newly picked)
+        if (image.uri) {
+          formData.append("UpdateImage", {
+            uri: image.uri,
+            name: image.fileName || "update.jpg",
+            type: image.mimeType || "image/jpeg",
+          } as any);
+        }
       }
 
-      await addUpdate(formData);
-      Alert.alert("Success", "Update posted successfully!");
+      if (editingUpdateId) {
+        // Assuming PUT /Updates/{id} is the update endpoint
+        await https.put(`/Updates/${editingUpdateId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Alert.alert("Success", "Update updated successfully!");
+      } else {
+        await addUpdate(formData);
+        Alert.alert("Success", "Update posted successfully!");
+      }
+
       setModalVisible(false);
       resetForm();
       fetchUpdates();
     } catch (error) {
-      console.error("Post Update Error:", error);
-      Alert.alert("Error", "Failed to post update. Please try again.");
+      console.error("Post/Update Error:", error);
+      Alert.alert("Error", `Failed to ${editingUpdateId ? "update" : "post"} update. Please try again.`);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (update: UpdateApi) => {
+    setEditingUpdateId(update.id);
+    setContent(update.content || "");
+    setLinkUrl(update.linkUrl || "");
+    if (update.mediaUrl) {
+      setImage({
+        uri: update.mediaUrl.startsWith("http")
+          ? update.mediaUrl
+          : `https://kolve18freeswing.com${update.mediaUrl}`,
+        isExisting: true
+      });
+    } else {
+      setImage(null);
+    }
+    setModalVisible(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -205,6 +336,7 @@ export default function ManageImportantUpdates() {
     setContent("");
     setImage(null);
     setLinkUrl("");
+    setEditingUpdateId(null);
   };
 
   const renderHeader = () => (
@@ -222,12 +354,15 @@ export default function ManageImportantUpdates() {
             Important Updates
           </Text>
           <Text className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-            Admin Control Panel
+            {userRole?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin" ? "Sub Admin Control Panel" : "Admin Control Panel"}
           </Text>
         </View>
       </View>
       <TouchableOpacity
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          resetForm();
+          setModalVisible(true);
+        }}
         className="bg-[#8BC34A] rounded-xl px-4 py-2 flex-row items-center"
       >
         <Ionicons name="add" size={18} color="white" />
@@ -287,12 +422,24 @@ export default function ManageImportantUpdates() {
             {new Date(update.createdAt).toLocaleString()}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => handleDelete(update.id)}
-          className="p-1"
-        >
-          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-        </TouchableOpacity>
+        <View className="flex-row items-center">
+          {filter === "mine" && (
+            <TouchableOpacity
+              onPress={() => handleEdit(update)}
+              className="p-1 mr-2"
+            >
+              <Ionicons name="create-outline" size={20} color="#8BC34A" />
+            </TouchableOpacity>
+          )}
+          {(filter === "mine" || (userRole?.toLowerCase() !== "subadmin" && userRole?.toLowerCase().replace(/[^a-z]/g, '') !== "subadmin")) && (
+            <TouchableOpacity
+              onPress={() => handleDelete(update.id)}
+              className="p-1"
+            >
+              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {update.content && (
@@ -350,7 +497,7 @@ export default function ManageImportantUpdates() {
               }))
             }
           /> */}
-          {imgErrorMap[update.id] ? (
+          {updateImgErrorMap[update.id] ? (
             // 🔴 FALLBACK UI
             <View
               style={{
@@ -383,7 +530,7 @@ export default function ManageImportantUpdates() {
                 setImgLoadingMap((prev) => ({ ...prev, [update.id]: false }))
               }
               onError={() =>
-                setImgErrorMap((prev) => ({
+                setUpdateImgErrorMap((prev) => ({
                   ...prev,
                   [update.id]: true,
                 }))
@@ -412,154 +559,378 @@ export default function ManageImportantUpdates() {
         <Watermark />
         {renderHeader()}
         {/* Filter Row */}
-        <View className="px-4 mb-4 flex-row">
-          <TouchableOpacity
-            onPress={() => {
-              setFilter("mine");
-              horizontalScrollRef.current?.scrollTo({ x: 0, animated: true });
-            }}
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              backgroundColor: filter === "mine" ? "#8BC34A" : (isDark ? "rgba(255,255,255,0.05)" : "#fff"),
-              borderRadius: 12,
-              alignItems: "center",
-              marginRight: 8,
-              borderWidth: 1,
-              borderColor: filter === "mine" ? "#8BC34A" : (isDark ? "#333" : "#eee"),
-            }}
+        <View className="px-4 mb-4">
+          <HStack
+            className="rounded-full p-1"
+            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
           >
-            <Text style={{ color: filter === "mine" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 13 }}>
-              My Updates
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setFilter("others");
-              horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
-            }}
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              backgroundColor: filter === "others" ? "#8BC34A" : (isDark ? "rgba(255,255,255,0.05)" : "#fff"),
-              borderRadius: 12,
-              alignItems: "center",
-              borderWidth: 1,
-              borderColor: filter === "others" ? "#8BC34A" : (isDark ? "#333" : "#eee"),
-            }}
-          >
-            <Text style={{ color: filter === "others" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 13 }}>
-              Others
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => fetchUpdates(true)}
-            style={{
-              marginLeft: 8,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
-              borderRadius: 12,
-              alignItems: "center",
-              borderWidth: 1,
-              borderColor: isDark ? "#333" : "#eee",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-            }}
-          >
-            <Ionicons name="sync" size={18} color="#8BC34A" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setFilter("mine");
+                horizontalScrollRef.current?.scrollTo({ x: 0, animated: true });
+              }}
+              className="flex-1 py-1.5 rounded-full items-center justify-center flex-row"
+              style={filter === "mine" ? { backgroundColor: "#8BC34A" } : {}}
+            >
+              <Ionicons
+                name="person-outline"
+                size={14}
+                color={filter === "mine" ? "#fff" : isDark ? "#aaa" : "#666"}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={{ color: filter === "mine" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }}>
+                My Updates
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setFilter("subadmin");
+                horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
+              }}
+              className="flex-1 py-1.5 rounded-full items-center justify-center flex-row"
+              style={filter === "subadmin" ? { backgroundColor: "#8BC34A" } : {}}
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={14}
+                color={filter === "subadmin" ? "#fff" : isDark ? "#aaa" : "#666"}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={{ color: filter === "subadmin" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }} numberOfLines={1} adjustsFontSizeToFit>
+                {userRole?.toLowerCase().includes("admin") && userRole?.toLowerCase().replace(/[^a-z]/g, '') !== "subadmin" ? "Sub Admin" : "Admin"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setFilter("user");
+                horizontalScrollRef.current?.scrollTo({ x: width * 2, animated: true });
+              }}
+              className="flex-1 py-1.5 rounded-full items-center justify-center flex-row"
+              style={filter === "user" ? { backgroundColor: "#8BC34A" } : {}}
+            >
+              <Ionicons
+                name="people-outline"
+                size={14}
+                color={filter === "user" ? "#fff" : isDark ? "#aaa" : "#666"}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={{ color: filter === "user" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }}>
+                Other
+              </Text>
+            </TouchableOpacity>
+          </HStack>
         </View>
 
-        <ScrollView
-          ref={horizontalScrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            const offsetX = e.nativeEvent.contentOffset.x;
-            if (offsetX >= width * 0.5) {
-              setFilter("others");
-            } else {
-              setFilter("mine");
-            }
-          }}
-          contentContainerStyle={{ width: width * 2 }}
-        >
-          {/* Page 1: My Updates */}
+
+        <View {...panResponder.panHandlers} style={{ flex: 1 }}>
           <ScrollView
-            style={{ width: width }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
-            }
+            ref={horizontalScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEnabled={false}
+            onMomentumScrollEnd={(e) => {
+              const offsetX = e.nativeEvent.contentOffset.x;
+              if (offsetX >= width * 1.5) {
+                setFilter("user");
+              } else if (offsetX >= width * 0.5) {
+                setFilter("subadmin");
+              } else {
+                setFilter("mine");
+              }
+            }}
+            contentContainerStyle={{ width: width * 3 }}
           >
-            <View className="px-4 pb-20 mt-2">
-              {updates
-                .filter((u) => {
-                  const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
-                  const current = normalize(currentUserName);
-                  const author = normalize(u.authorName);
-                  return author === current;
-                })
-                .length === 0 ? (
-                <View className="items-center justify-center mt-20 opacity-50">
-                  <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
-                  <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
-                    No personal updates yet
-                  </Text>
-                </View>
-              ) : (
-                updates
+            {/* Page 1: My Updates */}
+            <ScrollView
+              style={{ width: width }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+              }
+            >
+              <View className="px-4 pb-20 mt-2">
+                {updates
                   .filter((u) => {
                     const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
                     const current = normalize(currentUserName);
                     const author = normalize(u.authorName);
                     return author === current;
                   })
-                  .map((update) => renderUpdateCard(update))
-              )}
-            </View>
-          </ScrollView>
+                  .length === 0 ? (
+                  <View className="items-center justify-center mt-20 opacity-50">
+                    <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
+                    <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                      No personal updates yet
+                    </Text>
+                  </View>
+                ) : (
+                  updates
+                    .filter((u) => {
+                      const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
+                      const current = normalize(currentUserName);
+                      const author = normalize(u.authorName);
+                      return author === current;
+                    })
+                    .map((update) => renderUpdateCard(update))
+                )}
+              </View>
+            </ScrollView>
 
-          {/* Page 2: Others */}
-          <ScrollView
-            style={{ width: width }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
-            }
-          >
-            <View className="px-4 pb-20 mt-2">
-              {updates
-                .filter((u) => {
-                  const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
-                  const current = normalize(currentUserName);
-                  const author = normalize(u.authorName);
-                  return author !== current;
-                })
-                .length === 0 ? (
-                <View className="items-center justify-center mt-20 opacity-50">
-                  <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
-                  <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
-                    No community updates yet
-                  </Text>
-                </View>
-              ) : (
-                updates
-                  .filter((u) => {
-                    const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
-                    const current = normalize(currentUserName);
-                    const author = normalize(u.authorName);
-                    return author !== current;
-                  })
-                  .map((update) => renderUpdateCard(update))
-              )}
-            </View>
+            {/* Page 2: Sub Admin / Admin Updates */}
+            <ScrollView
+              style={{ width: width }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+              }
+            >
+              <View className="px-4 pb-20 mt-2">
+                {(() => {
+                  const isAdmin = userRole?.toLowerCase() === "admin";
+                  const isSubAdmin = userRole?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin";
+
+                  const filtered = updates.filter((u) => {
+                    const authorIsSubAdmin = subAdminIds.has(u.authorId);
+                    const authorIsMe = u.authorName?.toLowerCase().trim() === currentUserName?.toLowerCase().trim();
+
+                    if (isSubAdmin) {
+                      return !authorIsSubAdmin && !authorIsMe;
+                    } else {
+                      return authorIsSubAdmin && !authorIsMe;
+                    }
+                  });
+                  return filtered.length === 0 ? (
+                    <View className="items-center justify-center mt-20 opacity-50">
+                      <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
+                      <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                        No {isAdmin ? "sub admin" : "admin"} updates yet
+                      </Text>
+                    </View>
+                  ) : (
+                    filtered.map((update) => renderUpdateCard(update))
+                  );
+                })()}
+              </View>
+            </ScrollView>
+
+            <ScrollView
+              style={{ width: width }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+              }
+            >
+              <View className="px-4 pb-20 mt-2">
+                {paradisePosts.length === 0 ? (
+                  <View className="items-center justify-center mt-20 opacity-50">
+                    <Ionicons name="images-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
+                    <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                      No user posts yet
+                    </Text>
+                  </View>
+                ) : (
+                  paradisePosts.map((post) => (
+                    <View
+                      key={post.id}
+                      className="mb-5 rounded-2xl overflow-hidden"
+                      style={{
+                        backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.9)",
+                        borderWidth: 1,
+                        borderColor: "rgba(139,195,74,0.2)",
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center", padding: 14 }}>
+                        <View
+                          style={{
+                            width: 40, height: 40, borderRadius: 20,
+                            backgroundColor: isDark ? "#222" : "#eee",
+                            overflow: "hidden", borderWidth: 1, borderColor: "#8BC34A",
+                            justifyContent: "center", alignItems: "center",
+                          }}
+                        >
+                          {post.playerAvatar && post.playerAvatar !== "null" ? (
+                            <Image
+                              source={{ uri: post.playerAvatar.startsWith("http") ? post.playerAvatar : `https://kolve18freeswing.com${post.playerAvatar}` }}
+                              style={{ width: "100%", height: "100%" }}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <Text style={{ color: "#8BC34A", fontWeight: "bold", fontSize: 16 }}>
+                              {post.playerName?.charAt(0)?.toUpperCase() || "G"}
+                            </Text>
+                          )}
+                        </View>
+                        <View style={{ marginLeft: 12, flex: 1 }}>
+                          <Text style={{ fontSize: 13, fontWeight: "bold", color: isDark ? "#fff" : "#111" }}>
+                            {post.playerName}
+                          </Text>
+                          <Text style={{ fontSize: 10, color: isDark ? "#9CA3AF" : "#6B7280" }}>
+                            {new Date(post.createdAt).toLocaleDateString()} · {new Date(post.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </Text>
+                        </View>
+
+                        <TouchableOpacity
+                          onPress={() => handleDeleteParadisePost(post.id)}
+                          style={{
+                            padding: 6,
+                            backgroundColor: "rgba(239,68,68,0.1)",
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: "rgba(239,68,68,0.25)",
+                          }}
+                        >
+                          <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+
+                      {post.caption ? (
+                        <Text style={{ paddingHorizontal: 14, paddingBottom: 10, fontSize: 14, color: isDark ? "#E5E7EB" : "#374151" }}>
+                          {post.caption}
+                        </Text>
+                      ) : null}
+
+                      {/* Image */}
+                      {post.imageUrl ? (
+                        paradiseImgErrorMap[post.id] ? (
+                          <View
+                            style={{
+                              width: "100%",
+                              aspectRatio: 4 / 3,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                              borderTopWidth: 1,
+                              borderBottomWidth: 1,
+                              borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+                            }}
+                          >
+                            <Ionicons name="image-outline" size={36} color={isDark ? "#4B5563" : "#D1D5DB"} />
+                            <Text style={{ marginTop: 8, fontSize: 12, color: isDark ? "#6B7280" : "#9CA3AF" }}>
+                              Image unavailable
+                            </Text>
+                          </View>
+                        ) : (
+                        <TouchableOpacity
+                          activeOpacity={0.9}
+                          onPress={() => {
+                            const finalUrl = post.imageUrl!.startsWith("http")
+                              ? post.imageUrl!
+                              : `https://kolve18freeswing.com${post.imageUrl}`;
+                            setFullImageUrl(finalUrl);
+                            setFullImageModalVisible(true);
+                          }}
+                        >
+                          <Image
+                            source={{ uri: post.imageUrl.startsWith("http") ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}` }}
+                            style={{ width: "100%", aspectRatio: 4 / 3 }}
+                            resizeMode="cover"
+                            onError={() => setParadiseImgErrorMap((prev) => ({ ...prev, [post.id]: true }))}
+                          />
+                        </TouchableOpacity>
+                        )
+                      ) : null}
+
+
+                      {/* Footer — interactive likes & comments */}
+                      <View style={{ flexDirection: "row", paddingHorizontal: 14, paddingVertical: 10, gap: 20 }}>
+                        <TouchableOpacity
+                          onPress={() => handleParadiseLike(post.id)}
+                          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                        >
+                          <Ionicons name={post.isLikedByMe ? "heart" : "heart-outline"} size={18} color={post.isLikedByMe ? "#EF4444" : isDark ? "#D1D5DB" : "#4B5563"} />
+                          <Text style={{ fontSize: 12, color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.likeCount}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setParadiseCommentModalPostId(post.id)}
+                          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                        >
+                          <Ionicons name="chatbubble-outline" size={16} color={isDark ? "#D1D5DB" : "#4B5563"} />
+                          <Text style={{ fontSize: 12, color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.commentCount}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            </ScrollView>
           </ScrollView>
-        </ScrollView>
+        </View>
+
+        {/* Paradise Comments Modal */}
+        {paradiseCommentModalPostId && (
+          <Modal
+            visible={!!paradiseCommentModalPostId}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setParadiseCommentModalPostId(null)}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+            >
+              <Pressable style={{ flex: 1 }} onPress={() => setParadiseCommentModalPostId(null)} />
+              <View style={{ backgroundColor: isDark ? "#1A1A1A" : "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "80%" }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: isDark ? "#fff" : "#111" }}>Comments</Text>
+                  <TouchableOpacity onPress={() => setParadiseCommentModalPostId(null)} style={{ padding: 4, backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#F3F4F6", borderRadius: 12 }}>
+                    <Ionicons name="close" size={20} color={isDark ? "#fff" : "#6b7280"} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
+                  {(paradisePosts.find((p) => p.id === paradiseCommentModalPostId)?.comments?.length ?? 0) === 0 ? (
+                    <View style={{ paddingVertical: 40, alignItems: "center" }}>
+                      <Ionicons name="chatbubbles-outline" size={48} color={isDark ? "#333" : "#E5E7EB"} />
+                      <Text style={{ marginTop: 12, fontWeight: "600", color: isDark ? "#9CA3AF" : "#6B7280" }}>No comments yet.</Text>
+                    </View>
+                  ) : (
+                    paradisePosts.find((p) => p.id === paradiseCommentModalPostId)?.comments?.map((comment) => {
+                      const commenterName = comment.userName || comment.playerName || comment.user || "User";
+                      const commentText = comment.text || comment.comment || "";
+                      return (
+                        <View key={comment.id} style={{ flexDirection: "row", marginBottom: 16, alignItems: "flex-start" }}>
+                          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#333" : "#E5E7EB", justifyContent: "center", alignItems: "center", overflow: "hidden", borderWidth: 1.5, borderColor: "rgba(139,195,74,0.4)" }}>
+                            {(comment.playerAvatar && comment.playerAvatar !== "null") || (comment.profilePictureUrl && comment.profilePictureUrl !== "null") ? (
+                              <Image
+                                source={{ uri: ((comment.playerAvatar || comment.profilePictureUrl)!).startsWith("http") ? (comment.playerAvatar || comment.profilePictureUrl)! : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}` }}
+                                style={{ width: "100%", height: "100%" }}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <Text style={{ color: "#8BC34A", fontWeight: "bold", fontSize: 12 }}>{commenterName.charAt(0).toUpperCase()}</Text>
+                            )}
+                          </View>
+                          <View style={{ flex: 1, marginLeft: 10, padding: 10, borderRadius: 12, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB", borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+                            <Text style={{ fontWeight: "bold", fontSize: 12, color: isDark ? "#fff" : "#111" }}>{commenterName}</Text>
+                            <Text style={{ fontSize: 12, marginTop: 2, color: isDark ? "#D1D5DB" : "#4B5563" }}>{commentText}</Text>
+                            <Text style={{ fontSize: 10, marginTop: 4, color: isDark ? "#6B7280" : "#9CA3AF" }}>
+                              {new Date(comment.createdAt).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" })}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })
+                  )}
+                </ScrollView>
+                <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 24, alignItems: "center", gap: 10, borderTopWidth: 1, borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", backgroundColor: isDark ? "#1A1A1A" : "#fff" }}>
+                  <TextInput
+                    placeholder="Write a comment..."
+                    placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
+                    style={{ flex: 1, height: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6", color: isDark ? "#fff" : "#111", fontSize: 13 }}
+                    value={paradiseCommentTexts[paradiseCommentModalPostId] || ""}
+                    onChangeText={(val) => setParadiseCommentTexts((prev) => ({ ...prev, [paradiseCommentModalPostId!]: val }))}
+                  />
+                  <TouchableOpacity
+                    onPress={() => handleParadiseAddComment(paradiseCommentModalPostId)}
+                    style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#8BC34A", justifyContent: "center", alignItems: "center" }}
+                  >
+                    <Ionicons name="send" size={16} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </Modal>
+        )}
 
         <Modal
           animationType="slide"
@@ -577,7 +948,7 @@ export default function ManageImportantUpdates() {
               <VStack space="lg" className="p-6">
                 <HStack className="justify-between items-center mb-2">
                   <Text style={[styles.modalTitle, { color: isDark ? "#FFF" : "#000" }]}>
-                    New Update
+                    {editingUpdateId ? "Edit Update" : "New Update"}
                   </Text>
                   <TouchableOpacity onPress={() => setModalVisible(false)}>
                     <Ionicons name="close" size={28} color={isDark ? "#AAA" : "#666"} />
@@ -673,7 +1044,7 @@ export default function ManageImportantUpdates() {
                     {submitting ? (
                       <ActivityIndicator color="white" />
                     ) : (
-                      <Text className="text-white font-bold">Post Update</Text>
+                      <Text className="text-white font-bold">{editingUpdateId ? "Update" : "Post Update"}</Text>
                     )}
                   </Button>
                 </HStack>

@@ -296,7 +296,7 @@ export default function ShopScreen() {
     <ThemedView className="flex-1 self-center w-full max-w-[1200px]" style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}>
       <Watermark />
 
-      <VStack className="mx-5 mb-3">
+      <VStack className="mx-5 my-3">
         <HStack className="justify-between items-center w-full">
           <HStack className="items-center gap-2">
             <Ionicons name="storefront-outline" size={24} color="#8BC34A" />

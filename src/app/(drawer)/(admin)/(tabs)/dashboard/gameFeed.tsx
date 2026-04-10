@@ -160,7 +160,7 @@ const FeedCard = ({
               </Text>
               <HStack space="xs" className="items-center mt-0.5">
                 <Ionicons
-                  name="calendar-outline"
+                  name="calendar-outline"r
                   size={10}
                   color={isDark ? "#aaa" : "#9ca3af"}
                 />
@@ -388,7 +388,7 @@ const FeedCard = ({
               {card.isAuthenticated && (
                 <HStack space="xs" className="items-center ml-1">
                   <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
-                  <Text className="text-[10px] font-bold text-green-600">Auth</Text>
+                  <Text className="text-[10px] font-bold text-green-600">Verified</Text>
                 </HStack>
               )}
             </HStack>
@@ -515,7 +515,7 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
         const mappedCards: Scorecard[] = data.map((item: FeedApi) => ({
           id: item.roundRefId?.toString() || Math.random().toString(),
           playerName: item.playerName || "Unknown",
-          date: item.date || "",
+          date: item.date ? new Date(item.date).toLocaleDateString() : "Unknown",
           courseName: item.courseName,
           teeBoxName: item.teeBoxName,
           holes: item.holesPlayed || 0,
@@ -535,7 +535,6 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
         }));
         setCards(mappedCards);
 
-        // Auto-expand first card
         if (mappedCards.length > 0) {
           setExpandedId(mappedCards[0].id);
         }
@@ -576,7 +575,6 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
           text: "Verify",
           onPress: async () => {
             try {
-              // Optimistic UI update
               setCards((prev) =>
                 prev.map((c) =>
                   c.id === id
@@ -589,7 +587,6 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
                     : c
                 )
               );
-              // await verifyScoreApi(id);
             } catch (error) {
               console.error("verify score error:", error);
             }
@@ -671,7 +668,6 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
         </HStack>
       )}
 
-      {/* Empty state */}
       {cards.length === 0 && (
         <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center">
           <Text className="text-4xl">⛳</Text>
@@ -681,7 +677,6 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
         </Box>
       )}
 
-      {/* Cards List */}
       {cards
         .filter((c) => {
           const q = searchQuery.toLowerCase();
