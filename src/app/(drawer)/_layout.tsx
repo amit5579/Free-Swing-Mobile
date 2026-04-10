@@ -52,7 +52,8 @@ function CustomDrawerContent({ navigation }: any) {
   useEffect(() => {
     const loadRole = async () => {
       const storedRole = await AsyncStorage.getItem("role");
-      const normalizedRole = storedRole?.toLowerCase().replace(/[^a-z]/g, '') ?? "";
+      const normalizedRole =
+        storedRole?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
 
       if (normalizedRole === "admin") {
         setIsAdmin(true);
@@ -81,9 +82,9 @@ function CustomDrawerContent({ navigation }: any) {
           >
             <View style={styles.avatarWrapper}>
               {profile?.profilePictureUrl &&
-                profile.profilePictureUrl.trim() !== "" &&
-                profile.profilePictureUrl !== "null" &&
-                !imageError ? (
+              profile.profilePictureUrl.trim() !== "" &&
+              profile.profilePictureUrl !== "null" &&
+              !imageError ? (
                 <Image
                   source={{
                     uri: profile.profilePictureUrl.startsWith("http")
@@ -96,7 +97,9 @@ function CustomDrawerContent({ navigation }: any) {
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <Text style={styles.avatarInitial}>
-                    {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
+                    {profile?.username?.trim()
+                      ? profile.username.trim()[0].toUpperCase()
+                      : "U"}
                   </Text>
                 </View>
               )}
@@ -111,7 +114,9 @@ function CustomDrawerContent({ navigation }: any) {
             </View>
 
             <View style={styles.headerInfo}>
-              <Text style={styles.userName}>{profile?.username || "Guest User"}</Text>
+              <Text style={styles.userName}>
+                {profile?.username || "Guest User"}
+              </Text>
               <Text style={styles.userRole}>
                 {isAdmin
                   ? "Administrator"
@@ -140,7 +145,12 @@ function CustomDrawerContent({ navigation }: any) {
                   <Ionicons name="shield-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Profile</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -150,7 +160,6 @@ function CustomDrawerContent({ navigation }: any) {
                     opacity: isDark ? 0.2 : 0.08,
                   },
                 ]}
-    
               />
             </>
           )}
@@ -168,10 +177,53 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="person-circle-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Profile</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(subAdmin)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
+                </View>
+                <Text style={styles.drawerText}>Contact Admin</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -198,10 +250,19 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="person-circle-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Profile</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -224,40 +285,19 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="calendar-number-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="calendar-number-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Tee Time Booking</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
-              </TouchableOpacity>
-              <View
-                style={[
-                  styles.divider,
-                  {
-                    backgroundColor: isDark ? "#fff" : "#000",
-                    opacity: isDark ? 0.2 : 0.08,
-                  },
-                ]}
-              />
-            </>
-          )}
-
-          {!isAdmin && (
-            <>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.closeDrawer();
-                  requestAnimationFrame(() => {
-                    router.push("/(drawer)/(user)/(contactAdmin)");
-                  });
-                }}
-                style={styles.drawerItem}
-              >
-                <View style={styles.iconContainer}>
-                  <Ionicons name="chatbubble-ellipses-outline" size={22} color="#8bc34a" />
-                </View>
-                <Text style={styles.drawerText}>Contact Admin</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -273,12 +313,49 @@ function CustomDrawerContent({ navigation }: any) {
 
           {!isAdmin && !isSubAdmin && (
             <>
+              
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    Linking.openURL("https://www.randa.org/quiz/level/quiz-beginner");
+                    router.push("/(drawer)/(user)/(contactAdmin)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
+                </View>
+                <Text style={styles.drawerText}>Contact Admin</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    Linking.openURL(
+                      "https://www.randa.org/quiz/level/quiz-beginner",
+                    );
                   });
                 }}
                 style={styles.drawerItem}
@@ -287,7 +364,12 @@ function CustomDrawerContent({ navigation }: any) {
                   <Ionicons name="book-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>R & A Rules</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -347,7 +429,12 @@ function CustomDrawerContent({ navigation }: any) {
                   <Ionicons name="people-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Sub Admins</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -370,10 +457,19 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="analytics-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="analytics-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Player Handicap</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -396,10 +492,19 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="bar-chart-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="bar-chart-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Leaderboards</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -420,10 +525,19 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons name="mail-unread-outline" size={22} color="#8bc34a" />
+                  <Ionicons
+                    name="mail-unread-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
                 </View>
                 <Text style={styles.drawerText}>Feedback Inbox</Text>
-                <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
               <View
                 style={[
@@ -453,7 +567,9 @@ function CustomDrawerContent({ navigation }: any) {
                 color="#8bc34a"
               />
             </View>
-            <Text style={styles.drawerText}>{isDark ? "Light Mode" : "Dark Mode"}</Text>
+            <Text style={styles.drawerText}>
+              {isDark ? "Light Mode" : "Dark Mode"}
+            </Text>
             <Ionicons
               name="chevron-forward"
               size={18}

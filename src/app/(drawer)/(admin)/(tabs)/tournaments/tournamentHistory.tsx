@@ -96,8 +96,8 @@ export default function tournamentHistory() {
             ))
           ) : (
             <>
-              {history.map((item: any) => (
-                <HistoryCard key={item.id} item={item} isDark={isDark} />
+              {history.map((item: any, index: any) => (
+                <HistoryCard key={index} item={item} isDark={isDark} />
               ))}
 
               {history.length == 0 && (

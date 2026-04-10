@@ -93,7 +93,7 @@ export default function SubAdminContactAdminPage() {
   };
   const RenderHeader = () => (
     <HStack className="px-3 pt-5 items-center justify-between">
-      <Pressable onPress={() => routePage.push("/(drawer)/(subAdmin)/(tabs)/dashboard")} style={{ padding: 6 }}>
+      <Pressable onPress={() => routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")} style={{ padding: 6 }}>
         <Ionicons
           name="arrow-back-outline"
           size={22}
@@ -146,15 +146,6 @@ export default function SubAdminContactAdminPage() {
 
       <ThemedText style={{ marginTop: 6 }}>{item.message}</ThemedText>
     </Box>
-  );
-
-  const ContactButtonSkeleton = ({ isDark }: { isDark: boolean }) => (
-    <Skeleton
-      isDark={isDark}
-      height={50}
-      borderRadius={12}
-      style={{ marginBottom: 16 }}
-    />
   );
 
   const FeedbackCardSkeleton = ({ isDark }: { isDark: boolean }) => (
