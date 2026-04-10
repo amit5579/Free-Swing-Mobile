@@ -12,8 +12,8 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getLikedUsersApi, LikedUser } from "@/api/dashboard";
-import { Skeleton } from "@/components/Skeleton";
 import GolferParadise from "./GolferParadise";
+// import AllMembersPage from "../../(admin)/(tabs)/allMembers/index";
 
 export type Scorecard = {
     id: string;
@@ -272,7 +272,7 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
     const [activityModalVisible, setActivityModalVisible] = useState(false);
     const [likedUsers, setLikedUsers] = useState<LikedUser[]>([]);
     const [activityLoading, setActivityLoading] = useState(false);
-    const [subTab, setSubTab] = useState<'feed' | 'paradise'>('feed');
+    const [subTab, setSubTab] = useState<'feed' | 'paradise' | 'members'>('feed');
     const subTabScrollRef = useRef<ScrollView>(null);
     const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -280,12 +280,8 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
         setExpandedId(prev => (prev === id ? null : id));
     };
 
-    const handleSubTabChange = (tab: 'feed' | 'paradise') => {
+    const handleSubTabChange = (tab: 'feed' | 'paradise' | 'members') => {
         setSubTab(tab);
-        subTabScrollRef.current?.scrollTo({
-            x: tab === 'feed' ? 0 : SCREEN_WIDTH,
-            animated: true
-        });
     };
 
     const handleShowActivity = async (id: string) => {
@@ -320,8 +316,8 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                             style={{ backgroundColor: subTab === 'feed' ? '#8BC34A' : 'transparent' }}
                         >
                             <HStack space="xs" className="items-center">
-                                <Ionicons name="pulse" size={16} color={subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
-                                <Text className="font-bold text-sm" style={{ color: subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Game Feed</Text>
+                                <Ionicons name="pulse" size={14} color={subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                <Text className="font-bold text-[11px]" style={{ color: subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Game Feed</Text>
                             </HStack>
                         </Pressable>
                         <Pressable
@@ -330,8 +326,18 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                             style={{ backgroundColor: subTab === 'paradise' ? '#8BC34A' : 'transparent' }}
                         >
                             <HStack space="xs" className="items-center">
-                                <Ionicons name="trophy-outline" size={16} color={subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
-                                <Text className="font-bold text-sm" style={{ color: subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Golfer Paradise</Text>
+                                <Ionicons name="trophy-outline" size={14} color={subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                <Text className="font-bold text-[11px]" style={{ color: subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Golfer Paradise</Text>
+                            </HStack>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => handleSubTabChange('members')}
+                            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+                            style={{ backgroundColor: subTab === 'members' ? '#8BC34A' : 'transparent' }}
+                        >
+                            <HStack space="xs" className="items-center">
+                                <Ionicons name="people-outline" size={14} color={subTab === 'members' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                <Text className="font-bold text-[11px]" style={{ color: subTab === 'members' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Members</Text>
                             </HStack>
                         </Pressable>
                     </HStack>
@@ -360,9 +366,28 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                             />
                         ))}
                     </View>
-                ) : (
+                ) : subTab === 'paradise' ? (
                     <View style={{ width: SCREEN_WIDTH - 32, overflow: 'hidden' }}>
                         <GolferParadise />
+                    </View>
+                ) : (
+                    <View style={{ width: SCREEN_WIDTH - 32, padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+                        <Box
+                            className="p-8 rounded-3xl border items-center w-full"
+                            style={{
+                                backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)",
+                                borderColor: "rgba(139, 195, 74, 0.3)",
+                                borderWidth: 1,
+                            }}
+                        >
+                            <Box style={{ backgroundColor: '#8BC34A20', padding: 20, borderRadius: 40, marginBottom: 20 }}>
+                                <Ionicons name="people-outline" size={60} color="#8BC34A" />
+                            </Box>
+                            <Text className="text-2xl font-extrabold mb-2" style={{ color: isDark ? "#fff" : "#111" }}>Coming Soon!</Text>
+                            <Text className="text-center text-sm font-medium leading-5" style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
+                                We're building a new way for you to connect with other golfers. The Members directory will be available soon!
+                            </Text>
+                        </Box>
                     </View>
                 )}
             </VStack>
@@ -388,7 +413,7 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {activityLoading ? (
                                 <View style={{ padding: 40, alignItems: "center" }}>
-                                    <Skeleton isDark={isDark} width={50} height={50} borderRadius={25} />
+                                    {/* <Skeleton isDark={isDark} width={50} height={50} borderRadius={25} /> */}
                                     <Text className="mt-4" style={{ color: isDark ? "#aaa" : "#666" }}>Loading...</Text>
                                 </View>
                             ) : likedUsers.length === 0 ? (
