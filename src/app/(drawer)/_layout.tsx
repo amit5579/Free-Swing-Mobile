@@ -139,7 +139,7 @@ function CustomDrawerContent({ navigation }: any) {
                 <View style={styles.iconContainer}>
                   <Ionicons name="shield-outline" size={22} color="#8bc34a" />
                 </View>
-                <Text style={styles.drawerText}>Admin Profile</Text>
+                <Text style={styles.drawerText}>Profile</Text>
                 <Ionicons name="chevron-forward" size={18} color="#8bc34a" style={styles.chevron} />
               </TouchableOpacity>
               <View
@@ -439,7 +439,6 @@ function CustomDrawerContent({ navigation }: any) {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => {
-              // Wrap in setTimeout to prioritize touch feedback before the heavy theme re-render
               setTimeout(() => {
                 toggleColorScheme();
               }, 0);

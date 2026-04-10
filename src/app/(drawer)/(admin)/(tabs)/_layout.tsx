@@ -230,6 +230,15 @@ export default function AdminTabLayout() {
         }}
       />
 
+      <Tabs.Screen
+        name="allMembers/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+
 
       {/* <Tabs.Screen
         name="playerStatistics"

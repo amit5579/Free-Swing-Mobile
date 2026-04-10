@@ -126,7 +126,7 @@ export default function DashboardScreen() {
         const mappedCards: Scorecard[] = data.map((item: any) => ({
           id: item.roundRefId?.toString() || Math.random().toString(),
           playerName: item.playerName || "Unknown",
-          date: item.date || "",
+          date: item.date ? new Date(item.date).toLocaleDateString() : "",
           course: item.courseName,
           tee: item.teeBoxName,
           holes: item.holesPlayed || 0,
@@ -443,7 +443,7 @@ export default function DashboardScreen() {
                           {[
                             { label: "COURSES PLAYED", value: stats?.coursesPlayed ?? 0, icon: "location", color: "#FBBF24", badge: "Unique" },
                             { label: "AVG SCORE", value: stats?.averageScore ? stats.averageScore.toFixed(1) : 0, icon: "stats-chart-outline", color: "#06B6D4", badge: "Per 18" },
-                            { label: "BEST SCORE", value: stats?.bestScore ?? 0, icon: "star", color: "#FBBF24", badge: "PB" },
+                            { label: "BEST SCORE", value: stats?.bestScore ?? 0, icon: "star", color: "#FBBF24", badge: "PERSONAL BEST" },
                             { label: "HANDICAP INDEX", value: profile?.handicapIndex ?? 0, icon: "flag", color: "#EF4444", badge: "Index" },
                             { label: "HOME HANDICAP", value: profile?.handicap ?? 0, icon: "home", color: "#8BC34A", badge: "Local" },
                           ].map((stat, index) => (

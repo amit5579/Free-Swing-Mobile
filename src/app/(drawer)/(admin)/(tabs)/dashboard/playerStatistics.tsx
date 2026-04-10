@@ -17,6 +17,7 @@ import { VStack } from "@/components/vstack";
 import { Divider } from "@/components/divider";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
+import Watermark from "@/components/watermark";
 
 const PlayerCard = ({
   player,
@@ -50,8 +51,8 @@ const PlayerCard = ({
         shadowOpacity: isDark ? 0.4 : 0.15,
         shadowRadius: 14,
         backgroundColor: isDark
-          ? "rgba(26,26,26,0.6)"
-          : "rgba(255,255,255,0.6)",
+          ? "rgba(22, 22, 22, 0.7)"
+          : "rgba(255, 255, 255, 0.75)",
         borderLeftWidth: 6,
         borderLeftColor: !player.isBlocked ? "#8BC34A" : "#ef4444",
         borderTopWidth: 1,
@@ -302,6 +303,7 @@ export default function PlayerStatistics({
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2", paddingHorizontal: 16, paddingTop: 10 }}>
+        <Watermark />
         {[1, 2, 3, 4, 5].map((item, index) => (
           <Box
             key={item}
@@ -357,6 +359,7 @@ export default function PlayerStatistics({
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+      <Watermark />
       <FlatList
         data={players.filter(p => !searchQuery || p.username.toLowerCase().includes(searchQuery.toLowerCase()))}
         keyExtractor={(item) => item.id.toString()}
