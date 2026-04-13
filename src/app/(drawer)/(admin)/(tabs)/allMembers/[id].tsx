@@ -10,6 +10,7 @@ import {
   Dimensions,
   StyleSheet,
   Platform,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -54,8 +55,8 @@ export default function MemberProfilePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   
-  // Sections state
   const [sections, setSections] = useState({
     account: false,
     golf: false,
@@ -191,19 +192,24 @@ export default function MemberProfilePage() {
               backgroundColor: isDark ? "#000" : "#FFF",
             }}
           >
-            <Box style={{ width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", backgroundColor: isDark ? "#1A1A1A" : "#F0F0F0", justifyContent: "center", alignItems: "center" }}>
+            <TouchableOpacity 
+              activeOpacity={0.9} 
+              onPress={() => hasProfileImage && setImageModalVisible(true)}
+              style={{ width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", backgroundColor: isDark ? "#1A1A1A" : "#F0F0F0", justifyContent: "center", alignItems: "center" }}
+            >
               {hasProfileImage ? (
                   <Image 
                   source={{ uri: user.profilePictureUrl!.startsWith('http') ? user.profilePictureUrl! : `https://kolve18freeswing.com${user.profilePictureUrl}` }}
                   style={{ width: "100%", height: "100%" }}
                   onError={() => setImageError(true)}
+                  resizeMode="cover"
                   />
               ) : (
                   <Text style={{ fontSize: 28, fontWeight: "900", color: "#8BC34A" }}>
                   {user.username.charAt(0).toUpperCase()}
                   </Text>
               )}
-            </Box>
+            </TouchableOpacity>
           </Box>
           
           <VStack style={{ flex: 1 }}>
@@ -365,6 +371,30 @@ export default function MemberProfilePage() {
         </VStack>
 
       </ScrollView>
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" }}>
+          <TouchableOpacity 
+            style={{ position: "absolute", top: 50, right: 20, zIndex: 10, backgroundColor: "rgba(255,255,255,0.2)", padding: 8, borderRadius: 20 }}
+            onPress={() => setImageModalVisible(false)}
+          >
+            <Ionicons name="close" size={28} color="white" />
+          </TouchableOpacity>
+          
+          {user.profilePictureUrl && (
+            <Image 
+              source={{ uri: user.profilePictureUrl.startsWith('http') ? user.profilePictureUrl : `https://kolve18freeswing.com${user.profilePictureUrl}` }}
+              style={{ width: width, height: width, resizeMode: "contain" }}
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

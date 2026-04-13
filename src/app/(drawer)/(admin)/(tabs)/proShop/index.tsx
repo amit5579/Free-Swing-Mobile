@@ -66,7 +66,7 @@ export default function ProShop() {
 
   return (
     <SafeAreaView
-    edges={["left", "right"]}
+      edges={["left", "right"]}
       style={{
         flex: 1,
         backgroundColor: isDark ? "#000" : "#f2f2f2",
@@ -192,11 +192,11 @@ export default function ProShop() {
                   }}
                 >
                   <HStack space="md" className="items-center">
-                    <Box style={{ 
-                      width: 90, 
-                      height: 90, 
-                      backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
-                      borderRadius: 18, 
+                    <Box style={{
+                      width: 90,
+                      height: 90,
+                      backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
+                      borderRadius: 18,
                       overflow: 'hidden',
                       borderWidth: 2,
                       borderColor: "#8BC34A",
@@ -222,9 +222,9 @@ export default function ProShop() {
                             source={{ uri: item.imageUrl ? `https://kolve18freeswing.com${item.imageUrl}` : '' }}
                             style={{ width: '100%', height: '100%' }}
                             resizeMode="cover"
-                            onLoadStart={() => setImgLoadingMap(prev => ({...prev, [item.id]: true}))}
-                            onLoadEnd={() => setImgLoadingMap(prev => ({...prev, [item.id]: false}))}
-                            onError={() => setImgErrorMap(prev => ({...prev, [item.id]: true}))}
+                            onLoadStart={() => setImgLoadingMap(prev => ({ ...prev, [item.id]: true }))}
+                            onLoadEnd={() => setImgLoadingMap(prev => ({ ...prev, [item.id]: false }))}
+                            onError={() => setImgErrorMap(prev => ({ ...prev, [item.id]: true }))}
                           />
                         </>
                       )}
@@ -243,12 +243,12 @@ export default function ProShop() {
                         >
                           {item.name}
                         </ThemedText>
-                        
-                        <Box style={{ 
-                          backgroundColor: 'rgba(139,195,74,0.1)', 
-                          paddingHorizontal: 8, 
-                          paddingVertical: 2, 
-                          borderRadius: 6 
+
+                        <Box style={{
+                          backgroundColor: 'rgba(139,195,74,0.1)',
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 6
                         }}>
                           <ThemedText style={{ color: '#8bc34a', fontSize: 9, fontWeight: '800' }}>
                             STOCK
@@ -302,7 +302,7 @@ export default function ProShop() {
                           >
                             <Ionicons name="create-outline" size={16} color="#8bc34a" />
                           </TouchableOpacity>
-                          
+
                           <TouchableOpacity
                             onPress={() => handleDelete(item.id)}
                             style={{

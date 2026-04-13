@@ -27,6 +27,7 @@ export default function ResumeScorecard() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isStableford, setIsStableford] = useState(false);
 
     useEffect(() => {
         const fetchScorecard = async () => {
@@ -34,6 +35,10 @@ export default function ResumeScorecard() {
                 setLoading(true);
                 const data = await getScorecardDetails(id!);
                 setHoles(data);
+
+                // Determine if this is a Stableford/Tournament round
+                const showPts = data.some(h => h.tournamentId !== null);
+                setIsStableford(showPts);
 
                 const initialText: Record<number, string> = {};
                 data.forEach(h => {
@@ -73,8 +78,9 @@ export default function ResumeScorecard() {
         setHoles(prev => prev.map(h => {
             if (h.holeId === holeId) {
                 const strokes = calculateStrokes(handicap, h.handicap);
-                const netScore = score >= 0 ? score - strokes : 0;
-                return { ...h, score: score >= 0 ? score : 0, netScore };
+                const netScore = score > 0 ? score - strokes : 0;
+                const stablefordPoints = score > 0 ? Math.max(0, h.par - netScore + 2) : 0;
+                return { ...h, score: score >= 0 ? score : 0, netScore, stablefordPoints };
             }
             return h;
         }));
@@ -140,17 +146,18 @@ export default function ResumeScorecard() {
         }, 0);
 
     const sumNet = (arr: ScorecardHole[]) =>
-        arr.reduce((t, h) => {
-            // Recalculating net live requires handicap/SI logic, 
-            // for now we rely on the API provided netScore if no change
-            return t + (h.netScore || 0);
-        }, 0);
+        arr.reduce((t, h) => t + (h.score > 0 ? (h.netScore || 0) : 0), 0);
 
     const sumPar = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.par || 0), 0);
 
     const sumYardage = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.yardage || 0), 0);
+
+    const sumPts = (arr: ScorecardHole[]) => {
+        if (!isStableford) return 0;
+        return arr.reduce((t, h) => t + (h.score > 0 ? (h.stablefordPoints || 0) : 0), 0);
+    };
 
     if (loading) {
         return (
@@ -169,13 +176,18 @@ export default function ResumeScorecard() {
                     {/* Info Banner Skeleton */}
                     <Skeleton isDark={isDark} width="100%" height={56} borderRadius={12} style={{ marginBottom: 20 }} />
 
-                    {/* Table Header Skeleton - Match 6 columns */}
+                    {/* Table Header Skeleton - Match 7 columns */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
                         {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
                             <View key={i} className="flex-1 items-center">
                                 <Skeleton isDark={isDark} width={28} height={12} borderRadius={4} />
                             </View>
                         ))}
+                        {isStableford && (
+                            <View className="flex-1 items-center">
+                                <Skeleton isDark={isDark} width={28} height={12} borderRadius={4} />
+                            </View>
+                        )}
                     </View>
 
                     {/* Table Rows Skeleton */}
@@ -190,6 +202,7 @@ export default function ResumeScorecard() {
                                     <Skeleton isDark={isDark} width={46} height={36} borderRadius={8} />
                                 </View>
                                 <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>
+                                {isStableford && <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>}
                             </View>
                         ))}
                     </View>
@@ -339,7 +352,7 @@ export default function ResumeScorecard() {
 
                     <View className="flex-1">
                         <Text className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>
-                            Scorecard (Stableford)
+                            {isStableford ? "Scorecard (Stableford)" : "Scorecard"}
                         </Text>
                         <View className="flex-row items-center">
                             <Ionicons name="person-outline" size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
@@ -368,7 +381,7 @@ export default function ResumeScorecard() {
                 {/* 0th Element: Table Header (Sticky) */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`} style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}>
-                        {["Hole", "SI", "Yards", "Par", "Score ✎", "Net"].map((h) => (
+                        {["Hole", "SI", "Yards", "Par", "Score ✎", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
                             <Text key={h} className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>
                                 {h}
                             </Text>
@@ -407,8 +420,13 @@ export default function ResumeScorecard() {
                                 />
                             </View>
                             <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? h.netScore : "0"}
+                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
                             </Text>
+                            {isStableford && (
+                                <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                </Text>
+                            )}
                         </View>
                     ))}
                     {/* Front 9 Subtotal Row */}
@@ -419,6 +437,7 @@ export default function ResumeScorecard() {
                         <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(holes.slice(0, 9))}</Text>
                         <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(holes.slice(0, 9))}</Text>
                         <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(holes.slice(0, 9))}</Text>
+                        {isStableford && <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(holes.slice(0, 9))}</Text>}
                     </View>
                 </View>
 
@@ -455,8 +474,13 @@ export default function ResumeScorecard() {
                                     />
                                 </View>
                                 <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? h.netScore : "0"}
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
                                 </Text>
+                                {isStableford && (
+                                    <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                        {h.stablefordPoints || 0}
+                                    </Text>
+                                )}
                             </View>
                         ))}
                         {/* Back 9 Subtotal Row */}
@@ -467,6 +491,7 @@ export default function ResumeScorecard() {
                             <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(holes.slice(9, 18))}</Text>
                             <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(holes.slice(9, 18))}</Text>
                             <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(holes.slice(9, 18))}</Text>
+                            {isStableford && <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(holes.slice(9, 18))}</Text>}
                         </View>
                     </View>
                 )}
@@ -480,6 +505,7 @@ export default function ResumeScorecard() {
                         <Text className="flex-1 text-center font-bold text-white">{sumPar(holes)}</Text>
                         <Text className="flex-1 text-center font-bold text-white">{sumScores(holes)}</Text>
                         <Text className="flex-1 text-center font-bold text-white">{sumNet(holes)}</Text>
+                        {isStableford && <Text className="flex-1 text-center font-bold text-white">{sumPts(holes)}</Text>}
                     </View>
                 </View>
 
@@ -499,7 +525,6 @@ export default function ResumeScorecard() {
                     )}
                 </Pressable>
 
-                {/* Scorecard Legend */}
                 {(() => {
                     const scoreCounts: Record<string, number> = {
                         holeInOne: 0,

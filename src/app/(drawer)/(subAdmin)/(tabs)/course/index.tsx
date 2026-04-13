@@ -299,19 +299,6 @@ export default function SubAdminCoursePage() {
         <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
           <VStack>
             <HStack style={{ alignItems: "center", gap: 12 }}>
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={{
-                  padding: 4,
-                  marginLeft: -4,
-                }}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={isDark ? "#fff" : "#000"}
-                />
-              </TouchableOpacity>
               <Text style={{ fontSize: 24, fontWeight: "900", color: isDark ? "#fff" : "#111", letterSpacing: -0.5 }}>
                 Course Marshals
               </Text>

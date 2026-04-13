@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, useColorScheme, ActivityIndicator, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import { useRouter } from "expo-router";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
@@ -79,12 +80,13 @@ const PostImage = ({ imageUrl, isDark, onImagePress }: { imageUrl: string; isDar
 };
 
 export default function GolferParadise() {
+    const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const [posts, setPosts] = useState<ParadisePost[]>([]);
     const [loading, setLoading] = useState(true);
     const [caption, setCaption] = useState("");
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<any>(null);
     const [posting, setPosting] = useState(false);
     const [userAvatar, setUserAvatar] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("U");
@@ -133,7 +135,7 @@ export default function GolferParadise() {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+            setSelectedImage(result.assets[0]);
         }
     };
 
@@ -146,18 +148,16 @@ export default function GolferParadise() {
         try {
             setPosting(true);
             const formData = new FormData();
-            formData.append("Caption", caption);
+            formData.append("caption", caption);
 
             if (selectedImage) {
-                const filename = selectedImage.split('/').pop();
-                const match = /\.(\w+)$/.exec(filename || '');
-                const type = match ? `image/${match[1]}` : `image`;
-                formData.append("Image", { uri: selectedImage, name: filename, type } as any);
+                const uri = selectedImage.uri;
+                const filename = selectedImage.fileName || uri.split('/').pop() || "image.jpg";
+                const type = selectedImage.mimeType || "image/jpeg";
+                formData.append("image", { uri, name: filename, type } as any);
             }
 
-            await https.post("paradise", formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            await https.post("paradise", formData);
 
             setCaption("");
             setSelectedImage(null);
@@ -210,6 +210,10 @@ export default function GolferParadise() {
         } catch (error) {
             console.error("Comment error:", error);
         }
+    };
+
+    const handlePressProfile = (userId: number) => {
+        router.push(`/(drawer)/(user)/(tabs)/dashboard/tabs/${userId}`);
     };
 
     if (loading && posts.length === 0) {
@@ -268,9 +272,9 @@ export default function GolferParadise() {
                             value={caption}
                             onChangeText={setCaption}
                         />
-                        {selectedImage && (
+                        {selectedImage?.uri && (
                             <Box className="mt-2 rounded-xl overflow-hidden relative" style={{ height: 150 }}>
-                                <Image source={{ uri: selectedImage }} style={{ width: '100%', height: '100%' }} />
+                                <Image source={{ uri: selectedImage.uri }} style={{ width: '100%', height: '100%' }} />
                                 <TouchableOpacity
                                     onPress={() => setSelectedImage(null)}
                                     style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: 4 }}
@@ -317,7 +321,11 @@ export default function GolferParadise() {
                                 }}
                             >
                                 <HStack className="p-4 items-center justify-between">
-                                    <HStack className="items-center flex-1">
+                                    <TouchableOpacity 
+                                        activeOpacity={0.7}
+                                        onPress={() => handlePressProfile(post.userId)}
+                                        className="flex-row items-center flex-1"
+                                    >
                                         <Box
                                             style={{
                                                 width: 40,
@@ -333,17 +341,17 @@ export default function GolferParadise() {
                                                 <Image source={{ uri: post.playerAvatar.startsWith('http') ? post.playerAvatar : `https://kolve18freeswing.com${post.playerAvatar}` }} style={{ width: "100%", height: "100%" }} />
                                             ) : (
                                                 <Box className="items-center justify-center flex-1">
-                                                    <Text className="font-bold text-lg" style={{ color: "#8BC34A" }}>{post.playerName.charAt(0).toUpperCase()}</Text>
+                                                    <Text className="font-bold text-lg" style={{ color: "#8BC34A" }}>{post.playerName ? post.playerName.charAt(0).toUpperCase() : "?"}</Text>
                                                 </Box>
                                             )}
                                         </Box>
                                         <VStack className="ml-3 flex-1">
-                                            <Text className="font-bold text-base" style={{ color: isDark ? "#fff" : "#111" }}>{post.playerName}</Text>
+                                            <Text className="font-bold text-base" style={{ color: isDark ? "#fff" : "#111" }}>{post.playerName || "Unknown Golfer"}</Text>
                                             <Text className="text-[10px]" style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
-                                                {new Date(post.createdAt).toLocaleDateString()} • {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""} • {post.createdAt ? new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                                             </Text>
                                         </VStack>
-                                    </HStack>
+                                    </TouchableOpacity>
 
                                     <View style={{ position: 'relative', zIndex: 10 }}>
                                         <TouchableOpacity onPress={() => setActiveOptionsPostId(prev => prev === post.id ? null : post.id)} style={{ padding: 4 }}>
@@ -442,37 +450,46 @@ export default function GolferParadise() {
                                         const commenterName = comment.userName || comment.playerName || comment.user || "User";
                                         const commentText = comment.text || comment.comment || "";
                                         return (
-                                            <HStack key={comment.id} space="md" className="mb-4 items-start">
-                                                <Box
-                                                    style={{
-                                                        width: 36,
-                                                        height: 36,
-                                                        borderRadius: 18,
-                                                        backgroundColor: isDark ? "#333" : "#E5E7EB",
-                                                        justifyContent: "center",
-                                                        alignItems: "center",
-                                                        overflow: "hidden",
-                                                        borderWidth: 1.5,
-                                                        borderColor: "rgba(139,195,74,0.4)"
-                                                    }}
-                                                >
-                                                    {((comment.playerAvatar && comment.playerAvatar !== "null") || (comment.profilePictureUrl && comment.profilePictureUrl !== "null")) ? (
-                                                        <Image
-                                                            source={{ uri: (comment.playerAvatar || comment.profilePictureUrl)!.startsWith('http') ? (comment.playerAvatar || comment.profilePictureUrl)! : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}` }}
-                                                            style={{ width: "100%", height: "100%" }}
-                                                        />
-                                                    ) : (
-                                                        <Text className="font-bold text-xs" style={{ color: "#8BC34A" }}>
-                                                            {commenterName.charAt(0).toUpperCase()}
-                                                        </Text>
-                                                    )}
-                                                </Box>
-                                                <VStack className="flex-1 bg-transparent rounded-xl p-3 border" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB", borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
-                                                    <Text className="font-bold text-xs" style={{ color: isDark ? "#fff" : "#111" }}>{commenterName}</Text>
-                                                    <Text className="text-xs mt-1" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{commentText}</Text>
-                                                    <Text className="text-[10px] mt-2" style={{ color: isDark ? "#6B7280" : "#9CA3AF" }}>{new Date(comment.createdAt).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}</Text>
-                                                </VStack>
-                                            </HStack>
+                                            <TouchableOpacity 
+                                                key={comment.id} 
+                                                onPress={() => {
+                                                    setCommentModalPostId(null);
+                                                    handlePressProfile(comment.userId);
+                                                }}
+                                                activeOpacity={0.7}
+                                            >
+                                                <HStack space="md" className="mb-4 items-start">
+                                                    <Box
+                                                        style={{
+                                                            width: 36,
+                                                            height: 36,
+                                                            borderRadius: 18,
+                                                            backgroundColor: isDark ? "#333" : "#E5E7EB",
+                                                            justifyContent: "center",
+                                                            alignItems: "center",
+                                                            overflow: "hidden",
+                                                            borderWidth: 1.5,
+                                                            borderColor: "rgba(139,195,74,0.4)"
+                                                        }}
+                                                    >
+                                                        {((comment.playerAvatar && comment.playerAvatar !== "null") || (comment.profilePictureUrl && comment.profilePictureUrl !== "null")) ? (
+                                                            <Image
+                                                                source={{ uri: (comment.playerAvatar || comment.profilePictureUrl)!.startsWith('http') ? (comment.playerAvatar || comment.profilePictureUrl)! : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}` }}
+                                                                style={{ width: "100%", height: "100%" }}
+                                                            />
+                                                        ) : (
+                                                            <Text className="font-bold text-xs" style={{ color: "#8BC34A" }}>
+                                                                {commenterName.charAt(0).toUpperCase()}
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                    <VStack className="flex-1 bg-transparent rounded-xl p-3 border" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB", borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+                                                        <Text className="font-bold text-xs" style={{ color: isDark ? "#fff" : "#111" }}>{commenterName}</Text>
+                                                        <Text className="text-xs mt-1" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{commentText}</Text>
+                                                        <Text className="text-[10px] mt-2" style={{ color: isDark ? "#6B7280" : "#9CA3AF" }}>{new Date(comment.createdAt).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}</Text>
+                                                    </VStack>
+                                                </HStack>
+                                            </TouchableOpacity>
                                         );
                                     })
                                 )}

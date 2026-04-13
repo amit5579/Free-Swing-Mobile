@@ -811,23 +811,23 @@ export default function ManageImportantUpdates() {
                             </Text>
                           </View>
                         ) : (
-                        <TouchableOpacity
-                          activeOpacity={0.9}
-                          onPress={() => {
-                            const finalUrl = post.imageUrl!.startsWith("http")
-                              ? post.imageUrl!
-                              : `https://kolve18freeswing.com${post.imageUrl}`;
-                            setFullImageUrl(finalUrl);
-                            setFullImageModalVisible(true);
-                          }}
-                        >
-                          <Image
-                            source={{ uri: post.imageUrl.startsWith("http") ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}` }}
-                            style={{ width: "100%", aspectRatio: 4 / 3 }}
-                            resizeMode="cover"
-                            onError={() => setParadiseImgErrorMap((prev) => ({ ...prev, [post.id]: true }))}
-                          />
-                        </TouchableOpacity>
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            onPress={() => {
+                              const finalUrl = post.imageUrl!.startsWith("http")
+                                ? post.imageUrl!
+                                : `https://kolve18freeswing.com${post.imageUrl}`;
+                              setFullImageUrl(finalUrl);
+                              setFullImageModalVisible(true);
+                            }}
+                          >
+                            <Image
+                              source={{ uri: post.imageUrl.startsWith("http") ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}` }}
+                              style={{ width: "100%", aspectRatio: 4 / 3 }}
+                              resizeMode="cover"
+                              onError={() => setParadiseImgErrorMap((prev) => ({ ...prev, [post.id]: true }))}
+                            />
+                          </TouchableOpacity>
                         )
                       ) : null}
 

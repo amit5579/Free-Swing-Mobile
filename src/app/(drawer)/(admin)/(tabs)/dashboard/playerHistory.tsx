@@ -230,7 +230,7 @@ const HistoryCard = ({
                 <ThemedText
                   style={{ fontWeight: "900", fontSize: 16, color: "#EF4444" }}
                 >
-                  {item.par}
+                  {item.par >= 0 ? `+${item.par}` : item.par}
                 </ThemedText>
                 <ThemedText
                   style={{

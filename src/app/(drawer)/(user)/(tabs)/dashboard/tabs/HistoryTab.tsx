@@ -19,7 +19,7 @@ export type GameHistory = {
     course: string;
     score: number;
     net: number;
-    parDiff: number;
+    par: number;
     isTournament: boolean;
     isDQ: boolean;
 };
@@ -55,7 +55,7 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                 course: item.courseName,
                 score: item.score,
                 net: item.netScore,
-                parDiff: item.score - item.par,
+                par: item.par,
                 isTournament: !!item.tournamentId,
                 isDQ: !!item.isDQ,
             }));
@@ -278,7 +278,7 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                         {[
                                             { label: "SCORE", value: item.score, type: "normal" },
                                             { label: "NET", value: item.net, type: "green" },
-                                            { label: "PAR", value: item.parDiff, type: "par" },
+                                            { label: "PAR", value: item.par, type: "par" },
                                         ].map((s) => (
                                             <Box
                                                 key={s.label}
@@ -321,9 +321,11 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                                     }}
                                                 >
                                                     {s.type === "par"
-                                                        ? item.parDiff >= 0
-                                                            ? `+${item.parDiff}`
-                                                            : item.parDiff
+                                                        ? (item.score === 0 && item.net === 0) || item.par === 0
+                                                            ? "E"
+                                                            : item.par > 0
+                                                                ? `+${item.par}`
+                                                                : item.par
                                                         : s.value}
                                                 </Text>
                                             </Box>

@@ -85,6 +85,7 @@ const ScoreCard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isStableford, setIsStableford] = useState(false);
 
     useEffect(() => {
         const fetchScorecard = async () => {
@@ -92,6 +93,9 @@ const ScoreCard: React.FC = () => {
                 setLoading(true);
                 const data = await getScorecardDetails(scoreCard!);
                 setHoles(data);
+
+                const showPts = data.some(h => h.tournamentId !== null);
+                setIsStableford(showPts);
 
                 const initialText: Record<number, string> = {};
                 data.forEach(h => {
@@ -130,8 +134,9 @@ const ScoreCard: React.FC = () => {
         setHoles(prev => prev.map(h => {
             if (h.holeId === holeId) {
                 const strokes = calculateStrokes(displayHandicap, h.handicap);
-                const netScore = score >= 0 ? score - strokes : 0;
-                return { ...h, score: score >= 0 ? score : 0, netScore };
+                const netScore = score > 0 ? score - strokes : 0;
+                const stablefordPoints = score > 0 ? Math.max(0, h.par - netScore + 2) : 0;
+                return { ...h, score: score >= 0 ? score : 0, netScore, stablefordPoints };
             }
             return h;
         }));
@@ -145,10 +150,8 @@ const ScoreCard: React.FC = () => {
                 score: score === "" ? 0 : parseInt(score)
             }));
             await updateScorecardApi(scoreCard!, holeScores);
-            // Alert.alert("Success", "Scorecard updated successfully");
         } catch (err) {
             console.error(err);
-            // Alert.alert("Error", "Failed to save scorecard. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -165,14 +168,12 @@ const ScoreCard: React.FC = () => {
                     onPress: async () => {
                         try {
                             setSaving(true);
-                            // First save current scores
                             const holeScores = Object.entries(textScores).map(([holeId, score]) => ({
                                 holeId: parseInt(holeId),
                                 score: score === "" ? 0 : parseInt(score)
                             }));
                             await updateScorecardApi(scoreCard!, holeScores);
 
-                            // Then finish the round
                             await saveScorecardApi(scoreCard!);
                             Alert.alert("Success", "Round finished successfully", [
                                 { text: "OK", onPress: handleBack }
@@ -192,11 +193,15 @@ const ScoreCard: React.FC = () => {
     const sumScores = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.score || 0), 0);
     const sumNet = (arr: ScorecardHole[]) =>
-        arr.reduce((t, h) => t + (h.netScore || 0), 0);
+        arr.reduce((t, h) => t + (h.score && h.score > 0 ? (h.netScore || 0) : 0), 0);
     const sumYardage = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.yardage || 0), 0);
     const sumPar = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.par || 0), 0);
+    const sumPts = (arr: ScorecardHole[]) => {
+        if (!isStableford) return 0;
+        return arr.reduce((t, h) => t + (h.score && h.score > 0 ? (h.stablefordPoints || 0) : 0), 0);
+    };
 
     const front9 = holes.slice(0, 9);
     const back9 = holes.slice(9, 18);
@@ -205,7 +210,6 @@ const ScoreCard: React.FC = () => {
         if (rawValue === "" || rawValue === undefined || score === null) return null;
 
         if (score === 0) {
-            // Albatross: Double Dark Cyan Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -215,7 +219,6 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (score === 1) {
-            // Hole-in-One: Double Gold Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
@@ -228,7 +231,6 @@ const ScoreCard: React.FC = () => {
         const diff = score - par;
 
         if (diff === -3) {
-            // Albatross (if not already handled by score === 0 or score === 1)
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -238,7 +240,6 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (diff === -2) {
-            // Eagle: Double Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
@@ -248,7 +249,6 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (diff === -1) {
-            // Birdie: Single Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
@@ -256,11 +256,9 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (diff === 0) {
-            // Par: no indicator
             return null;
         }
         if (diff === 1) {
-            // Bogey: Single Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
@@ -268,7 +266,6 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (diff === 2) {
-            // Double Bogey: Double Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
@@ -278,8 +275,7 @@ const ScoreCard: React.FC = () => {
             );
         }
         if (diff === 3) {
-            // Triple Bogey: Triple Purple Square
-            return (
+                        return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
                         <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a" }]}>
@@ -317,9 +313,9 @@ const ScoreCard: React.FC = () => {
                     {/* Info Banner Skeleton */}
                     <Skeleton isDark={isDark} width="100%" height={56} borderRadius={12} style={{ marginBottom: 20 }} />
 
-                    {/* Table Header Skeleton - Match 6 columns */}
+                    {/* Table Header Skeleton - Match 7 columns */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
-                        {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
+                        {["Hole", "SI", "Yards", "Par", "Scor", "Net", "Pts"].map((_, i) => (
                             <View key={i} className="flex-1 items-center">
                                 <Skeleton isDark={isDark} width={28} height={12} borderRadius={4} />
                             </View>
@@ -338,6 +334,8 @@ const ScoreCard: React.FC = () => {
                                     <Skeleton isDark={isDark} width={46} height={36} borderRadius={8} />
                                 </View>
                                 <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>
+                                <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>
+                                {isStableford && <View className="flex-1 items-center"><Skeleton isDark={isDark} width={20} height={16} borderRadius={4} /></View>}
                             </View>
                         ))}
                     </View>
@@ -408,13 +406,7 @@ const ScoreCard: React.FC = () => {
                     )}
                 </View>
 
-                {/* Info banner */}
-                <View className={`p-3 rounded-xl border flex-row items-center ${isDark ? "bg-[#1A2E05] border-[#2e5209]" : "bg-green-50 border-green-200"}`}>
-                    <Ionicons name="pencil" size={18} color={isDark ? "#8BC34A" : "#4CAF50"} />
-                    <Text className={`ml-2 flex-1 text-sm font-medium ${isDark ? "text-[#8BC34A]" : "text-green-800"}`}>
-                        Tap on any score box below to edit the scorecard.
-                    </Text>
-                </View>
+                {/* Info banner removed in view mode */}
             </View>
 
             {/* ── Scrollable Table ── */}
@@ -429,8 +421,8 @@ const ScoreCard: React.FC = () => {
                         className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
                     >
-                        {["Hole", "SI", "Yards", "Par", "Score \u270E", "Net"].map((h) => (
-                            <Text key={h} className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>
+                        {["Hole", "SI", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
+                            <Text key={h} className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}>
                                 {h}
                             </Text>
                         ))}
@@ -458,9 +450,7 @@ const ScoreCard: React.FC = () => {
                                     style={{
                                         width: 50,
                                         height: 36,
-                                        backgroundColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"),
-                                        borderColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"),
-                                        borderWidth: 1,
+                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
                                         color: isDark ? "#fff" : "#000",
                                         textAlign: "center",
                                         borderRadius: 8,
@@ -470,16 +460,22 @@ const ScoreCard: React.FC = () => {
                                         fontWeight: "bold",
                                         fontSize: 14,
                                     }}
+                                    editable={!saving}
                                     keyboardType="numeric"
+                                    onChangeText={(text) => handleScoreChange(h.holeId, text)}
                                     value={textScores[h.holeId] || ""}
-                                    onChangeText={(val) => handleScoreChange(h.holeId, val)}
                                     placeholder="-"
                                     placeholderTextColor={isDark ? "#666" : "#999"}
                                 />
                             </View>
-                            <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? h.netScore : "0"}
+                            <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
+                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
                             </Text>
+                            {isStableford && (
+                                <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                </Text>
+                            )}
                         </View>
                     ))}
 
@@ -494,6 +490,7 @@ const ScoreCard: React.FC = () => {
                         <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(front9)}</Text>
                         <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(front9)}</Text>
                         <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(front9)}</Text>
+                        {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(front9)}</Text>}
                     </View>
 
                     {/* ── Back 9 holes (only if 18-hole round) ── */}
@@ -512,9 +509,7 @@ const ScoreCard: React.FC = () => {
                                     style={{
                                         width: 50,
                                         height: 36,
-                                        backgroundColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"),
-                                        borderColor: (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? "transparent" : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"),
-                                        borderWidth: 1,
+                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
                                         color: isDark ? "#fff" : "#000",
                                         textAlign: "center",
                                         borderRadius: 8,
@@ -524,16 +519,22 @@ const ScoreCard: React.FC = () => {
                                         fontWeight: "bold",
                                         fontSize: 14,
                                     }}
+                                    editable={!saving}
                                     keyboardType="numeric"
+                                    onChangeText={(text) => handleScoreChange(h.holeId, text)}
                                     value={textScores[h.holeId] || ""}
-                                    onChangeText={(val) => handleScoreChange(h.holeId, val)}
                                     placeholder="-"
                                     placeholderTextColor={isDark ? "#666" : "#999"}
                                 />
                             </View>
-                            <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ? h.netScore : "0"}
+                            <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
+                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
                             </Text>
+                            {isStableford && (
+                                <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                </Text>
+                            )}
                         </View>
                     ))}
 
@@ -549,6 +550,7 @@ const ScoreCard: React.FC = () => {
                             <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(back9)}</Text>
                             <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(back9)}</Text>
                             <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(back9)}</Text>
+                            {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(back9)}</Text>}
                         </View>
                     )}
 
@@ -560,26 +562,40 @@ const ScoreCard: React.FC = () => {
                         <Text className="flex-1 text-center font-bold text-xs text-white">{sumPar(holes)}</Text>
                         <Text className="flex-1 text-center font-black text-xs text-white">{sumScores(holes)}</Text>
                         <Text className="flex-1 text-center font-black text-xs text-white">{sumNet(holes)}</Text>
+                        {isStableford && <Text className="flex-1 text-center font-black text-xs text-white">{sumPts(holes)}</Text>}
                     </View>
                 </View>
 
-                {/* Finish Round Button */}
-                <Pressable
-                    onPress={handleFinishRound}
-                    disabled={saving}
-                    className={`mt-6 p-4 rounded-xl mb-4 flex-row justify-center items-center ${saving ? "bg-gray-500" : "bg-[#8BC34A]"}`}
-                >
-                    {saving ? (
-                        <ActivityIndicator color="white" />
-                    ) : (
-                        <>
-                            <Ionicons name="checkmark-done-outline" size={20} color="white" />
-                            <Text className="text-white font-bold ml-2 text-lg">Finish Round</Text>
-                        </>
-                    )}
-                </Pressable>
+                <View className="my-8 px-2">
+                    <TouchableOpacity
+                        onPress={handleFinishRound}
+                        disabled={saving}
+                        activeOpacity={0.8}
+                        style={{
+                            backgroundColor: "#8BC34A",
+                            paddingVertical: 16,
+                            borderRadius: 16,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            shadowColor: "#8BC34A",
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 12,
+                            elevation: 5,
+                            flexDirection: "row"
+                        }}
+                    >
+                        {saving ? (
+                            <ActivityIndicator color="white" size="small" />
+                        ) : (
+                            <>
+                                <Ionicons name="checkmark-circle-outline" size={22} color="white" style={{ marginRight: 8 }} />
+                                <Text className="text-white font-black text-lg tracking-tight">FINISH ROUND</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </View>
 
-                {/* ── Dynamic Legend with counts (same as editable view) ── */}
                 {(() => {
                     const scoreCounts: Record<string, number> = {
                         holeInOne: 0,

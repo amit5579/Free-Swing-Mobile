@@ -23,10 +23,11 @@ import Watermark from "@/components/watermark";
 
 import { UserIcon } from "lucide-react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { getUsers, UserListApi } from "@/api/admin/allMembers";
 import { Skeleton } from "@/components/Skeleton";
 
-export default function AllMembersPage() {
+export default function AllMembersScreen({ hideAdminControls = false }: { hideAdminControls?: boolean } = {}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -127,7 +128,7 @@ export default function AllMembersPage() {
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: isDark ? 0.4 : 0.15,
           shadowRadius: 14,
-          backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+          backgroundColor: isDark ? "rgba(26, 26, 26, 0.3)" : "rgba(255, 255, 255, 0.4)",
           borderRadius: 22,
           borderLeftWidth: 6,
           borderLeftColor: "#8BC34A",
@@ -140,6 +141,11 @@ export default function AllMembersPage() {
           overflow: "hidden",
         }}
       >
+        <BlurView
+          intensity={30}
+          tint={isDark ? "dark" : "light"}
+          style={StyleSheet.absoluteFill}
+        />
         <HStack className="items-center justify-between">
           <HStack className="items-center" style={{ flex: 1 }}>
 
@@ -185,11 +191,11 @@ export default function AllMembersPage() {
       edges={["left", "right"]}
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#000" : "#f2f2f2",
+        backgroundColor: hideAdminControls ? "transparent" : (isDark ? "#000" : "#f2f2f2"),
       }}
     >
 
-      <Watermark />
+      {!hideAdminControls && <Watermark />}
 
       {loading ? (
         <>
@@ -232,14 +238,14 @@ export default function AllMembersPage() {
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 14,
-                  backgroundColor: "rgba(139,195,74,0.15)",
+                  backgroundColor: "rgba(139,195,74,1)",
                 }}
               >
-                <Ionicons name="people-outline" size={16} color="#8BC34A" />
+                <Ionicons name="people-outline" size={16} color="#fff" />
 
                 <ThemedText
                   style={{
-                    color: "#8BC34A",
+                    color: "#fff",
                     fontWeight: "700",
                     marginLeft: 6,
                     fontSize: 14,
@@ -300,8 +306,8 @@ export default function AllMembersPage() {
                       shadowOpacity: isDark ? 0.4 : 0.15,
                       shadowRadius: 14,
                       backgroundColor: isDark
-                        ? "rgba(26, 26, 26, 0.6)"
-                        : "rgba(255, 255, 255, 0.6)",
+                        ? "rgba(26, 26, 26, 0.3)"
+                        : "rgba(255, 255, 255, 0.4)",
                       borderRadius: 22,
                       borderLeftWidth: 6,
                       borderLeftColor: member.isBlocked ? "#EF4444" : "#8BC34A",
@@ -314,6 +320,11 @@ export default function AllMembersPage() {
                       overflow: "hidden",
                     }}
                   >
+                    <BlurView
+                      intensity={25}
+                      tint={isDark ? "dark" : "light"}
+                      style={StyleSheet.absoluteFill}
+                    />
                     <Pressable onPress={() => toggleMember(member.id)}>
                       <HStack className="items-center justify-between">
                         <HStack className="items-center" style={{ flex: 1 }}>
@@ -415,36 +426,39 @@ export default function AllMembersPage() {
                         />
 
                         <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>EMAIL</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="mail-outline" size={14} color="#8BC34A" />
-                              {/* <ThemedText style={styles.cardValue} numberOfLines={1}>{member.email}</ThemedText> */}
-                              <ThemedText
-                                style={[styles.cardValue, { flex: 1 }]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                              >
-                                {member.email}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
+                          {!hideAdminControls && (
+                            <>
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>EMAIL</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="mail-outline" size={14} color="#8BC34A" />
+                                  <ThemedText
+                                    style={[styles.cardValue, { flex: 1 }]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                  >
+                                    {member.email}
+                                  </ThemedText>
+                                </HStack>
+                              </VStack>
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>MOBILE</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="call-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>{member.mobileNumber}</ThemedText>
-                            </HStack>
-                          </VStack>
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>MOBILE</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="call-outline" size={14} color="#8BC34A" />
+                                  <ThemedText style={styles.cardValue}>{member.mobileNumber}</ThemedText>
+                                </HStack>
+                              </VStack>
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>ROLE</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="person-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>{member.role}</ThemedText>
-                            </HStack>
-                          </VStack>
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>ROLE</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="person-outline" size={14} color="#8BC34A" />
+                                  <ThemedText style={styles.cardValue}>{member.role}</ThemedText>
+                                </HStack>
+                              </VStack>
+                            </>
+                          )}
 
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>INVITED BY</ThemedText>
@@ -464,175 +478,191 @@ export default function AllMembersPage() {
                             </HStack>
                           </VStack>
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>SLOPE / RATING</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="stats-chart-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>
-                                {member.slope || "N/A"} / {member.rating || "N/A"}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
+                          {!hideAdminControls && (
+                            <VStack style={{ width: "47%" }}>
+                              <ThemedText style={styles.cardLabel}>SLOPE / RATING</ThemedText>
+                              <HStack className="items-center" style={{ gap: 6 }}>
+                                <Ionicons name="stats-chart-outline" size={14} color="#8BC34A" />
+                                <ThemedText style={styles.cardValue}>
+                                  {member.slope || "N/A"} / {member.rating || "N/A"}
+                                </ThemedText>
+                              </HStack>
+                            </VStack>
+                          )}
 
                           <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>DECLARED HC / INDEX</ThemedText>
+                            <ThemedText style={styles.cardLabel}>
+                              {hideAdminControls ? "HC INDEX" : "DECLARED HC / INDEX"}
+                            </ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
                               <Ionicons name="ribbon-outline" size={14} color="#8BC34A" />
                               <ThemedText style={styles.cardValue}>
-                                {member.handicap} / {member.handicapIndex ?? "N/A"}
+                                {hideAdminControls
+                                  ? (member.handicapIndex ?? "N/A")
+                                  : `${member.handicap} / ${member.handicapIndex ?? "N/A"}`}
                               </ThemedText>
                             </HStack>
                           </VStack>
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>REVISED HC</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="checkmark-done-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={[styles.cardValue, { color: "#8BC34A", fontWeight: "800" }]}>
-                                {member.calculatedHandicap}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
-
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>DATE OF BIRTH</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="calendar-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>
-                                {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString() : "N/A"}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
-
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>AGE</ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="hourglass-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>
-                                {member.dateOfBirth ? (
-                                  (() => {
-                                    const birthDate = new Date(member.dateOfBirth);
-                                    const today = new Date();
-                                    let age = today.getFullYear() - birthDate.getFullYear();
-                                    const m = today.getMonth() - birthDate.getMonth();
-                                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                      age--;
-                                    }
-                                    return age >= 0 ? age : "N/A";
-                                  })()
-                                ) : "N/A"}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
-                        </HStack>
-
-                        <HStack
-                          style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}
-                        >
-                          <TouchableOpacity
-                            // disabled={true}
-                            style={{
-                              // opacity: 0.5,
-                              paddingHorizontal: 16,
-                              paddingVertical: 10,
-                              borderRadius: 12,
-                              backgroundColor: "rgba(139,195,74,0.15)",
-                              borderWidth: 1,
-                              borderColor: "rgba(139,195,74,0.2)",
-                              flexDirection: "row",
-                              alignItems: "center",
-                            }}
-                            onPress={() => router.push(`/(drawer)/(admin)/(tabs)/allMembers/${member.id}`)}
-                          // onPress={() => {
-                          //   Alert.alert("Coming Soon", "This feature is not available yet.");
-                          // }}
-                          >
-                            <Ionicons name="eye-outline" size={16} color="#8BC34A" />
-                            <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
-                              View
-                            </ThemedText>
-                          </TouchableOpacity>
-
-                          {member.isBlocked ? (
-                            <>
+                          {hideAdminControls && (
+                            <VStack style={{ width: "47%", justifyContent: "center", alignItems: "flex-end" }}>
                               <TouchableOpacity
                                 style={{
                                   paddingHorizontal: 16,
                                   paddingVertical: 10,
                                   borderRadius: 12,
-                                  backgroundColor: "rgba(239,68,68,0.1)",
-                                  borderWidth: 1,
-                                  borderColor: "rgba(239,68,68,0.2)",
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                }}
-                                onPress={() => handleDeny(member.id)}
-                              >
-                                <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
-                                <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#EF4444" }}>
-                                  Deny
-                                </ThemedText>
-                              </TouchableOpacity>
-
-                              <TouchableOpacity
-                                style={{
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  borderRadius: 12,
-                                  backgroundColor: "rgba(139,195,74,0.15)",
+                                  backgroundColor: "rgba(139,195,74,0.1)",
                                   borderWidth: 1,
                                   borderColor: "rgba(139,195,74,0.2)",
                                   flexDirection: "row",
                                   alignItems: "center",
                                 }}
-                                onPress={() => handleApprove(member.id)}
+                                onPress={() => router.push({
+                                  pathname: "/(drawer)/(user)/(tabs)/dashboard/tabs/[id]",
+                                  params: { id: member.id }
+                                } as any)}
                               >
-                                <Ionicons name="checkmark-circle-outline" size={16} color="#8BC34A" />
+                                <Ionicons name="eye-outline" size={16} color="#8BC34A" />
                                 <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
-                                  Approve
+                                  View Profile
                                 </ThemedText>
                               </TouchableOpacity>
+                            </VStack>
+                          )}
+
+                          {!hideAdminControls && (
+                            <>
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>REVISED HC</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="checkmark-done-outline" size={14} color="#8BC34A" />
+                                  <ThemedText style={[styles.cardValue, { color: "#8BC34A", fontWeight: "800" }]}>
+                                    {member.calculatedHandicap}
+                                  </ThemedText>
+                                </HStack>
+                              </VStack>
+
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>DATE OF BIRTH</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="calendar-outline" size={14} color="#8BC34A" />
+                                  <ThemedText style={styles.cardValue}>
+                                    {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString() : "N/A"}
+                                  </ThemedText>
+                                </HStack>
+                              </VStack>
+
+                              <VStack style={{ width: "47%" }}>
+                                <ThemedText style={styles.cardLabel}>AGE</ThemedText>
+                                <HStack className="items-center" style={{ gap: 6 }}>
+                                  <Ionicons name="hourglass-outline" size={14} color="#8BC34A" />
+                                  <ThemedText style={styles.cardValue}>
+                                    {member.dateOfBirth ? (
+                                      (() => {
+                                        const birthDate = new Date(member.dateOfBirth);
+                                        const today = new Date();
+                                        let age = today.getFullYear() - birthDate.getFullYear();
+                                        const m = today.getMonth() - birthDate.getMonth();
+                                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                          age--;
+                                        }
+                                        return age >= 0 ? age : "N/A";
+                                      })()
+                                    ) : "N/A"}
+                                  </ThemedText>
+                                </HStack>
+                              </VStack>
                             </>
-                          ) : (
-                            <TouchableOpacity
-                              style={{
-                                paddingHorizontal: 20,
-                                paddingVertical: 10,
-                                borderRadius: 12,
-                                backgroundColor: member.isBlocked
-                                  ? "rgba(34,197,94,0.1)"
-                                  : "rgba(239,68,68,0.15)",
-                                borderWidth: 1,
-                                borderColor: member.isBlocked
-                                  ? "rgba(34,197,94,0.2)"
-                                  : "rgba(239,68,68,0.2)",
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                              onPress={() => handleToggleBlock(member.id)}
-                            >
-                              <Ionicons
-                                name={
-                                  member.isBlocked
-                                    ? "checkmark-circle-outline"
-                                    : "ban-outline"
-                                }
-                                size={16}
-                                color={member.isBlocked ? "#22C55E" : "#EF4444"}
-                              />
-                              <ThemedText
-                                style={{
-                                  marginLeft: 6,
-                                  fontSize: 13,
-                                  fontWeight: "800",
-                                  color: member.isBlocked ? "#22C55E" : "#EF4444",
-                                }}
-                              >
-                                {member.isBlocked ? "Unblock" : "Block Member"}
-                              </ThemedText>
-                            </TouchableOpacity>
                           )}
                         </HStack>
+
+                        {!hideAdminControls && (
+                          <HStack
+                            style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}
+                          >
+                            <>
+                              {member.isBlocked ? (
+                                <>
+                                  <TouchableOpacity
+                                    style={{
+                                      paddingHorizontal: 16,
+                                      paddingVertical: 10,
+                                      borderRadius: 12,
+                                      backgroundColor: "rgba(239,68,68,0.1)",
+                                      borderWidth: 1,
+                                      borderColor: "rgba(239,68,68,0.2)",
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                    }}
+                                    onPress={() => handleDeny(member.id)}
+                                  >
+                                    <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+                                    <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#EF4444" }}>
+                                      Deny
+                                    </ThemedText>
+                                  </TouchableOpacity>
+
+                                  <TouchableOpacity
+                                    style={{
+                                      paddingHorizontal: 16,
+                                      paddingVertical: 10,
+                                      borderRadius: 12,
+                                      backgroundColor: "rgba(139,195,74,0.15)",
+                                      borderWidth: 1,
+                                      borderColor: "rgba(139,195,74,0.2)",
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                    }}
+                                    onPress={() => handleApprove(member.id)}
+                                  >
+                                    <Ionicons name="checkmark-circle-outline" size={16} color="#8BC34A" />
+                                    <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
+                                      Approve
+                                    </ThemedText>
+                                  </TouchableOpacity>
+                                </>
+                              ) : (
+                                <TouchableOpacity
+                                  style={{
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    borderRadius: 12,
+                                    backgroundColor: member.isBlocked
+                                      ? "rgba(34,197,94,0.1)"
+                                      : "rgba(239,68,68,0.15)",
+                                    borderWidth: 1,
+                                    borderColor: member.isBlocked
+                                      ? "rgba(34,197,94,0.2)"
+                                      : "rgba(239,68,68,0.2)",
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                  onPress={() => handleToggleBlock(member.id)}
+                                >
+                                  <Ionicons
+                                    name={
+                                      member.isBlocked
+                                        ? "checkmark-circle-outline"
+                                        : "ban-outline"
+                                    }
+                                    size={16}
+                                    color={member.isBlocked ? "#22C55E" : "#EF4444"}
+                                  />
+                                  <ThemedText
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 13,
+                                      fontWeight: "800",
+                                      color: member.isBlocked ? "#22C55E" : "#EF4444",
+                                    }}
+                                  >
+                                    {member.isBlocked ? "Unblock" : "Block Member"}
+                                  </ThemedText>
+                                </TouchableOpacity>
+                              )}
+                            </>
+                          </HStack>
+                        )}
                       </VStack>
                     )}
                   </Box>
