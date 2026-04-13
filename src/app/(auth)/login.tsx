@@ -18,6 +18,7 @@ import { AuthContext } from "@/context/AuthContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/schema/authSchemas";
+import { forgotPassword } from "@/api/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -459,19 +460,15 @@ export default function LoginScreen() {
                       setResetError("Passwords do not match");
                       return;
                     }
-                    try {
-                      setResetLoading(true);
-                      const response = await fetch("https://kolve18freeswing.com/api/Auth/forgot-password", {
-                        method: "POST",
-                        headers: { Accept: "application/json", "Content-Type": "application/json" },
-                        body: JSON.stringify({
+                      try {
+                        setResetLoading(true);
+                        await forgotPassword({
                           Email: resetEmail,
                           PhoneNumber: resetPhoneNumber,
                           Password: newPassword,
                           ConfirmPassword: confirmPassword,
-                        }),
-                      });
-                      if (response.ok) {
+                        });
+                        
                         Alert.alert("Success", "Successfully reset password!", [
                           { 
                             text: "OK", 
@@ -485,15 +482,12 @@ export default function LoginScreen() {
                             } 
                           }
                         ]);
-                      } else {
-                        const data = await response.json();
-                        setResetError(data.message || "Details not found.");
+                      } catch (error: any) {
+                        const errorMsg = error?.response?.data?.message || "Details not found or an unexpected error occurred.";
+                        setResetError(errorMsg);
+                      } finally {
+                        setResetLoading(false);
                       }
-                    } catch (error) {
-                      setResetError("An unexpected error occurred.");
-                    } finally {
-                      setResetLoading(false);
-                    }
                   }}
                   style={{
                     backgroundColor: "#8bc34a",

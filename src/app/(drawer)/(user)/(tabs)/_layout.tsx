@@ -239,6 +239,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="[id]"
+        options={{
+          href: null,
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+        }}
+      />
     </Tabs>
   );
 }

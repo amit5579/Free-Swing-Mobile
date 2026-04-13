@@ -1,39 +1,58 @@
-// // src/api/login.ts
-// import https from "./https";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import https from "./https";
 
-// export type UserType = {
-//   id: number;
-//   username: string;
-//   role: string;
-//   token: string;
-// };
+export interface LoginPayload {
+  Email: string;
+  Password: string;
+}
 
-// export const loginApi = async (email: string, password: string): Promise<UserType | null> => {
-//   try {
-//     const response = await https.post("/Auth/login", {
-//       Email: email.trim(),
-//       Password: password.trim(),
-//     });
+export interface ForgotPasswordPayload {
+  Email: string;
+  PhoneNumber: string;
+  Password: string;
+  ConfirmPassword: string;
+}
 
-//     const data = response.data;
+export interface RegisterPayload {
+  Username: string;
+  Email: string;
+  Password: string;
+  MobileNumber: string;
+  DateOfBirth?: string | null;
+  HomeCourse?: string | null;
+  MembershipNumber?: string | null;
+  TeeBox?: string | null;
+  Handicap?: string | null;
+  HandicapIndex?: string | null;
+  Slope?: string | null;
+  Rating?: string | null;
+}
 
-//     if (!data.token) return null;
+export const loginUser = async (payload: LoginPayload) => {
+  try {
+    const response = await https.post(`Auth/login`, payload);
+    return response.data;
+  } catch (error: any) {
+    console.error("Login Error:", error?.response?.data || error.message);
+    throw error;
+  }
+};
 
-//     const userData: UserType = {
-//       id: data.id,
-//       username: data.username,
-//       role: data.role,
-//       token: data.token,
-//     };
+export const forgotPassword = async (payload: ForgotPasswordPayload) => {
+  try {
+    const response = await https.post(`Auth/forgot-password`, payload);
+    return response.data;
+  } catch (error: any) {
+    console.error("forgotPassword Error:", error?.response?.data || error.message);
+    throw error;
+  }
+};
 
-//     // Save token & userId for persistence
-//     await AsyncStorage.setItem("token", data.token);
-//     await AsyncStorage.setItem("userId", data.id.toString());
-
-//     return userData;
-//   } catch (error) {
-//     console.log("❌ loginApi error:", error);
-//     return null;
-//   }
-// };
+export const registerUser = async (payload: RegisterPayload) => {
+  try {
+    const response = await https.post(`Auth/register`, payload);
+    return response.data;
+  } catch (error: any) {
+    console.error("Signup Error:", error?.response?.data || error.message);
+    throw error;
+  }
+};

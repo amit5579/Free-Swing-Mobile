@@ -15,6 +15,7 @@ import {
   View,
   TextInput,
   PanResponder,
+  Alert,
 } from "react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ import { HistoryTab } from "./tabs/HistoryTab";
 import { InProgressTab } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/gameFeed";
 import { getFeedApi, likeFeedApi } from "@/api/dashboard";
+import { verifyScoreApi } from "@/api/admin/dashboard";
 import { getScoreStats, ScoreStats } from "@/api/dashboard";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -140,6 +142,7 @@ export default function DashboardScreen() {
           isTournament: !!item.isTournament,
           isAuthenticated: item.isAuthenticated || false,
           authenticatedBy: item.authenticatedBy || null,
+          canAuthenticate: !!item.canAuthenticate,
           profileImage: item.playerAvatar,
           isDQ: !!item.isDQ,
         }));
@@ -173,6 +176,39 @@ export default function DashboardScreen() {
     } catch (error) {
       console.error("Like toggle error:", error);
     }
+  };
+
+  const handleVerify = async (id: string, playerName: string) => {
+    Alert.alert(
+      "Verify Round",
+      `Are you sure you want to authenticate ${playerName}'s round?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Authenticate",
+          onPress: async () => {
+            try {
+              await verifyScoreApi(id);
+              setCards((prev) =>
+                prev.map((card) =>
+                  card.id === id
+                    ? {
+                        ...card,
+                        isAuthenticated: true,
+                        authenticatedBy: "Authorized User",
+                      }
+                    : card
+                )
+              );
+              Alert.alert("Success", "Round authenticated successfully.");
+            } catch (err) {
+              console.error(err);
+              Alert.alert("Error", "Failed to authenticate round.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -215,41 +251,6 @@ export default function DashboardScreen() {
             </VStack>
           ) : (
             <>
-              {/* <Box
-              className="flex-row items-center px-4 mb-4 rounded-xl border h-11"
-              style={{
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
-                borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
-              }}
-            >
-              <Ionicons name="search-outline" size={18} color="#8BC34A" />
-              <TextInput
-                placeholder={
-                  activeTab === "overview"
-                    ? "Search game feed..."
-                    : activeTab === "progress"
-                      ? "Search in progress..."
-                      : "Search game history..."
-                }
-                placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                style={{
-                  flex: 1,
-                  marginLeft: 8,
-                  color: isDark ? "#fff" : "#111",
-                  fontSize: 14,
-                }}
-              />
-              {searchQuery !== "" && (
-                <Pressable onPress={() => setSearchQuery("")}>
-                  <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
-                </Pressable>
-              )}
-            </Box> */}
-
               <HStack
                 className="p-1 rounded-full"
                 style={{
@@ -487,20 +488,6 @@ export default function DashboardScreen() {
                           ))}
                         </HStack>
                       </ScrollView>
-
-                      {/* <HStack space="xs" className="justify-center items-center mt-2">
-                        {[0, 1].map((i) => (
-                          <Box
-                            key={i}
-                            style={{
-                              width: statsScrollIndex === i ? 20 : 6,
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: statsScrollIndex === i ? "#8BC34A" : (isDark ? "#4B5563" : "#D1D5DB")
-                            }}
-                          />
-                        ))}
-                      </HStack> */}
                     </VStack>
                   )}
                   {searchQuery !== "" && (
@@ -517,6 +504,7 @@ export default function DashboardScreen() {
                         c.course.toLowerCase().includes(searchQuery.toLowerCase())
                       )}
                       handleLike={handleLike}
+                      handleVerify={handleVerify}
                       searchQuery={searchQuery}
                       isSearchFocused={isSearchFocused}
                     />

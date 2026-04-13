@@ -10,7 +10,8 @@ export default function dashboardLayout() {
          headerShown: false
         }}
       /> */}
+      <Stack.Screen name="tabs/[id]" options={{ headerShown: false }} />
     </Stack>
-    
+
   );
 }

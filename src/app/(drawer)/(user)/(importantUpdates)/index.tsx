@@ -224,64 +224,77 @@ export default function ImportantUpdatesUser() {
                 )}
 
                 {item.mediaUrl && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      const finalUrl = item.mediaUrl!.startsWith("http")
-                        ? item.mediaUrl!
-                        : `https://kolve18freeswing.com${item.mediaUrl}`;
-                      setFullImageUrl(finalUrl);
-                      setFullImageModalVisible(true);
-                    }}
-                    activeOpacity={0.9}
-                    style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative" }}
-                  >
-                    {imageLoadingMap[item.id] !== false && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
-                          zIndex: 1,
+                  (() => {
+                    const finalUrl = item.mediaUrl.startsWith("http")
+                      ? item.mediaUrl
+                      : `https://kolve18freeswing.com${item.mediaUrl}`;
+
+                    if (imageErrorMap[item.id]) {
+                      return (
+                        <TouchableOpacity
+                          onPress={() => Linking.openURL(finalUrl)}
+                          className="flex-row items-center bg-[#8BC34A]/10 p-3 rounded-xl mb-3 border border-dashed border-[#8BC34A]/30"
+                        >
+                          <Ionicons name="image-outline" size={20} color="#8BC34A" />
+                          <View className="ml-3 flex-1">
+                            <Text className="text-[#8BC34A] font-bold text-sm">Image Attachment Available</Text>
+                            <Text className="text-[#8BC34A]/70 text-[10px]">Tap to view online</Text>
+                          </View>
+                          <Ionicons name="open-outline" size={16} color="#8BC34A" />
+                        </TouchableOpacity>
+                      );
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setFullImageUrl(finalUrl);
+                          setFullImageModalVisible(true);
                         }}
+                        activeOpacity={0.9}
+                        style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative", marginBottom: 12 }}
                       >
-                        <ActivityIndicator size="small" color="#8BC34A" />
-                      </View>
-                    )}
-                    <Image
-                      source={{
-                        uri:
-                          imageErrorMap[item.id] || !item.mediaUrl
-                            ? "https://images.unsplash.com/photo-1535131749006-b7f58c99034b"
-                            : item.mediaUrl.startsWith("http")
-                              ? item.mediaUrl
-                              : `https://kolve18freeswing.com${item.mediaUrl}`,
-                      }}
-                      style={{ width: "100%", height: "100%" }}
-                      resizeMode="cover"
-                      onLoad={() =>
-                        setImageLoadingMap((prev) => ({
-                          ...prev,
-                          [item.id]: false,
-                        }))
-                      }
-                      onError={() => {
-                        setImageErrorMap((prev) => ({
-                          ...prev,
-                          [item.id]: true,
-                        }));
-                        setImageLoadingMap((prev) => ({
-                          ...prev,
-                          [item.id]: false,
-                        }));
-                      }}
-                    />
-                  {/* </View> */}
-                  </TouchableOpacity>
+                        {imageLoadingMap[item.id] !== false && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
+                              zIndex: 1,
+                            }}
+                          >
+                            <ActivityIndicator size="small" color="#8BC34A" />
+                          </View>
+                        )}
+                        <Image
+                          source={{ uri: finalUrl }}
+                          style={{ width: "100%", height: "100%" }}
+                          resizeMode="cover"
+                          onLoad={() =>
+                            setImageLoadingMap((prev) => ({
+                              ...prev,
+                              [item.id]: false,
+                            }))
+                          }
+                          onError={() => {
+                            setImageErrorMap((prev) => ({
+                              ...prev,
+                              [item.id]: true,
+                            }));
+                            setImageLoadingMap((prev) => ({
+                              ...prev,
+                              [item.id]: false,
+                            }));
+                          }}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })()
                 )}
 
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10, alignItems: "center" }}>

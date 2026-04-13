@@ -160,7 +160,7 @@ const FeedCard = ({
               </Text>
               <HStack space="xs" className="items-center mt-0.5">
                 <Ionicons
-                  name="calendar-outline"r
+                  name="calendar-outline" r
                   size={10}
                   color={isDark ? "#aaa" : "#9ca3af"}
                 />
@@ -385,11 +385,24 @@ const FeedCard = ({
                 </Text>
               </Pressable>
 
-              {card.isAuthenticated && (
+              {card.isAuthenticated ? (
                 <HStack space="xs" className="items-center ml-1">
                   <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
                   <Text className="text-[10px] font-bold text-green-600">Verified</Text>
                 </HStack>
+              ) : (
+                <Button
+                  size="xs"
+                  disabled={card.isDQ || !card.canAuthenticate}
+                  className={`rounded-full px-2 ml-1 h-6 shadow-none ${(!card.isDQ && card.canAuthenticate) ? "opacity-100" : "opacity-40"}`}
+                  style={{ backgroundColor: isDark ? "rgba(139,195,74,0.1)" : "rgba(139,195,74,0.05)" }}
+                  onPress={() => handleVerifyCard(card.id, card.playerName)}
+                >
+                  <Ionicons name="shield-outline" size={10} color={(!card.isDQ && card.canAuthenticate) ? "#8BC34A" : (isDark ? "#9CA3AF" : "#6B7280")} />
+                  <ButtonText className="text-[10px] font-bold ml-1" style={{ color: (!card.isDQ && card.canAuthenticate) ? "#8BC34A" : (isDark ? "#9CA3AF" : "#6B7280") }}>
+                    Auth
+                  </ButtonText>
+                </Button>
               )}
             </HStack>
 
@@ -425,20 +438,6 @@ const FeedCard = ({
                 <ButtonText className="text-white text-[10px] font-extrabold ml-1">View</ButtonText>
               </Button>
 
-              {card.canAuthenticate && !card.isAuthenticated && (
-                <Button
-                  size="xs"
-                  variant="outline"
-                  className="rounded-full px-3 h-8 border"
-                  style={{
-                    borderColor: isDark ? "#fff" : "#8BC34A",
-                    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "transparent",
-                  }}
-                  onPress={() => handleVerifyCard(card.id, card.playerName)}
-                >
-                  <ButtonText className={`${isDark ? "text-white" : "text-green-600"} text-[10px] font-extrabold`}>Verify</ButtonText>
-                </Button>
-              )}
             </HStack>
           </HStack>
         </VStack>
@@ -683,18 +682,18 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
           return c.playerName.toLowerCase().includes(q) || c.courseName.toLowerCase().includes(q);
         })
         .map((card) => (
-        <FeedCard
-          key={card.id}
-          card={card}
-          isDark={isDark}
-          isExpanded={expandedId === card.id}
-          onToggle={() => toggleCard(card.id)}
-          handleLike={handleLike}
-          handleViewScorecard={handleViewScorecard}
-          handleVerifyCard={handleVerifyCard}
-          onActivity={handleShowActivity}
-        />
-      ))}
+          <FeedCard
+            key={card.id}
+            card={card}
+            isDark={isDark}
+            isExpanded={expandedId === card.id}
+            onToggle={() => toggleCard(card.id)}
+            handleLike={handleLike}
+            handleViewScorecard={handleViewScorecard}
+            handleVerifyCard={handleVerifyCard}
+            onActivity={handleShowActivity}
+          />
+        ))}
 
       {/* ACTIVITY MODAL */}
       <Modal
