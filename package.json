@@ -35,6 +35,7 @@
     "dotenv": "^17.3.1",
     "expo": "^55.0.9",
     "expo-asset": "~55.0.12",
+    "expo-blur": "~55.0.14",
     "expo-checkbox": "~55.0.3",
     "expo-constants": "~55.0.7",
     "expo-device": "~55.0.9",

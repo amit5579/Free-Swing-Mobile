@@ -1,6 +1,6 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loginUser } from "@/api/auth";
 
 type UserType = {
   id: number;
@@ -24,68 +24,37 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserType | null>(null);
 
-const login = async (email: string, password: string): Promise<UserType | null> => {
-  try {
-    // console.log("1️⃣ LOGIN FUNCTION STARTED");
-    // console.log("2️⃣ Email:", email);
-    // console.log("3️⃣ Password:", password);
-
-    // console.log("4️⃣ Sending API request...");
-
-    const response = await fetch("https://kolve18freeswing.com/api/Auth/login", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  const login = async (email: string, password: string): Promise<UserType | null> => {
+    try {
+      const data = await loginUser({
         Email: email.trim(),
         Password: password.trim(),
-      }),
-    });
+      });
 
-    // console.log("5️⃣ API request sent");
-    // console.log("6️⃣ Response status:", response.status);
+      if (!data?.token) {
+        return null;
+      }
 
-    const text = await response.text();
-    // console.log("7️⃣ Raw API response:", text);
+      const userData: UserType = {
+        id: data.id,
+        username: data.username,
+        role: data.role,
+        token: data.token,
+      };
 
-    const data = JSON.parse(text);
-    // console.log("8️⃣ Parsed JSON:", data);
+      setUser(userData);
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("userId", data.id.toString());
+      await AsyncStorage.setItem("role", data.role);
+      await AsyncStorage.setItem("username", data.username);
 
-    if (!data.token) {
-      console.log("9️⃣ Token not found in response");
+      return userData;
+
+    } catch (error) {
+      console.log("❌ LOGIN ERROR:", error);
       return null;
     }
-
-    // console.log("🔟 Token received:", data.token);
-
-    const userData: UserType = {
-      id: data.id,
-      username: data.username,
-      role: data.role,
-      token: data.token,
-    };
-
-    // console.log("1️⃣1️⃣ User data created:", userData);
-
-    // console.log("1️⃣2️⃣ Saving user in context...");
-    setUser(userData);
-
-    // console.log("1️⃣3️⃣ Saving token in AsyncStorage...");
-    await AsyncStorage.setItem("token", data.token);
-    await AsyncStorage.setItem("userId", data.id.toString());
-    await AsyncStorage.setItem("role", data.role);
-    await AsyncStorage.setItem("username", data.username);
-    // console.log("1️⃣4️⃣ Login successful");
-
-    return userData;
-
-  } catch (error) {
-    console.log("❌ LOGIN ERROR:", error);
-    return null;
-  }
-};
+  };
 
   const logout = async () => {
     setUser(null);

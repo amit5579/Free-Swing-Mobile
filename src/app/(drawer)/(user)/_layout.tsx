@@ -9,6 +9,7 @@ export default function UserLayout() {
             <Stack.Screen name="(teeTimeBooking)/index" options={{ headerShown: false }} />
             <Stack.Screen name="(contactAdmin)/index" options={{ headerShown: false }} />
             <Stack.Screen name="(importantUpdates)/index" options={{ headerShown: false }} />
+            <Stack.Screen name="allMembers/[id]" options={{ headerShown: false }} />
         </Stack>
     );
 }

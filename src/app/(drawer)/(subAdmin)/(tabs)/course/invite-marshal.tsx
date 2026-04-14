@@ -18,6 +18,9 @@ import Watermark from "@/components/watermark";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import { invitePlayer } from "@/api/subAdmin/dashboard";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { inviteMarshalSchema, InviteMarshalFormData } from "@/schema/marshalSchema";
 
 export default function InviteMarshalPage() {
   const colorScheme = useColorScheme();
@@ -25,30 +28,34 @@ export default function InviteMarshalPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    mobileNumber: "",
-    slope: "120",
-    rating: "68.8",
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<InviteMarshalFormData>({
+    resolver: zodResolver(inviteMarshalSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      mobileNumber: "",
+    },
   });
 
-  const handleInvite = async () => {
-    if (!formData.fullName || !formData.email || !formData.password) {
-      Alert.alert("Error", "Please fill all required fields (*)");
-      return;
-    }
+  const [slope] = useState("120");
+  const [rating] = useState("68.8");
 
+  const onSubmit = async (data: InviteMarshalFormData) => {
     try {
       setLoading(true);
       await invitePlayer({
-        username: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        mobileNumber: formData.mobileNumber,
-        slope: parseFloat(formData.slope),
-        rating: parseFloat(formData.rating),
+        username: data.fullName,
+        email: data.email,
+        password: data.password,
+        mobileNumber: data.mobileNumber || "",
+        slope: parseFloat(slope),
+        rating: parseFloat(rating),
         role: "CourseMarshal",
       });
       Alert.alert("Success", "Course Marshal invited successfully");
@@ -104,80 +111,112 @@ export default function InviteMarshalPage() {
           <VStack style={styles.card}>
             <VStack style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Full Name *</Text>
-              <TextInput
-                style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
-                placeholder="Enter full name"
-                placeholderTextColor={isDark ? "#555" : "#999"}
-                value={formData.fullName}
-                onChangeText={(text) => setFormData({ ...formData, fullName: text })}
+              <Controller
+                control={control}
+                name="fullName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.fullName ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    placeholder="Enter full name"
+                    placeholderTextColor={isDark ? "#555" : "#999"}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
               />
+              {errors.fullName && <Text style={styles.errorText}>{errors.fullName.message}</Text>}
             </VStack>
 
             <VStack style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Email *</Text>
-              <TextInput
-                style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
-                placeholder="email@example.com"
-                placeholderTextColor={isDark ? "#555" : "#999"}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={formData.email}
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.email ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    placeholder="email@example.com"
+                    placeholderTextColor={isDark ? "#555" : "#999"}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
               />
+              {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
             </VStack>
 
             <VStack style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Password *</Text>
-              <TextInput
-                style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
-                placeholder="Set password"
-                placeholderTextColor={isDark ? "#555" : "#999"}
-                secureTextEntry
-                value={formData.password}
-                onChangeText={(text) => setFormData({ ...formData, password: text })}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.password ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    placeholder="Set password"
+                    placeholderTextColor={isDark ? "#555" : "#999"}
+                    secureTextEntry
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
               />
+              {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
             </VStack>
 
             <VStack style={styles.inputGroup}>
               <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Mobile</Text>
-              <TextInput
-                style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
-                placeholder="Phone number"
-                placeholderTextColor={isDark ? "#555" : "#999"}
-                keyboardType="phone-pad"
-                value={formData.mobileNumber}
-                onChangeText={(text) => setFormData({ ...formData, mobileNumber: text })}
+              <Controller
+                control={control}
+                name="mobileNumber"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.mobileNumber ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    placeholder="Phone number"
+                    placeholderTextColor={isDark ? "#555" : "#999"}
+                    keyboardType="phone-pad"
+                    onBlur={onBlur}
+                    onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
+                    value={value}
+                  />
+                )}
               />
+              {errors.mobileNumber && <Text style={styles.errorText}>{errors.mobileNumber.message}</Text>}
             </VStack>
 
             <HStack style={{ gap: 12 }}>
-              <VStack style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Course Slope</Text>
+              <VStack style={[styles.inputGroup, { flex: 1 }]} pointerEvents="none">
+                <Text style={[styles.label, { color: isDark ? "rgba(170,170,170,0.5)" : "#999" }]}>Course Slope</Text>
                 <TextInput
-                  style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                  style={[styles.input, { color: isDark ? "#666" : "#888", borderColor: isDark ? "#222" : "#eee", backgroundColor: isDark ? "rgba(255,255,255,0.01)" : "#f9f9f9" }]}
                   placeholder="120"
-                  placeholderTextColor={isDark ? "#555" : "#999"}
+                  placeholderTextColor={isDark ? "#333" : "#ccc"}
                   keyboardType="numeric"
-                  value={formData.slope}
-                  onChangeText={(text) => setFormData({ ...formData, slope: text })}
+                  value={slope}
+                  editable={false}
                 />
               </VStack>
 
-              <VStack style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Course Rating</Text>
+              <VStack style={[styles.inputGroup, { flex: 1 }]} pointerEvents="none">
+                <Text style={[styles.label, { color: isDark ? "rgba(170,170,170,0.5)" : "#999" }]}>Course Rating</Text>
                 <TextInput
-                  style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: isDark ? "#333" : "#e0e0e0", backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                  style={[styles.input, { color: isDark ? "#666" : "#888", borderColor: isDark ? "#222" : "#eee", backgroundColor: isDark ? "rgba(255,255,255,0.01)" : "#f9f9f9" }]}
                   placeholder="68.8"
-                  placeholderTextColor={isDark ? "#555" : "#999"}
+                  placeholderTextColor={isDark ? "#333" : "#ccc"}
                   keyboardType="numeric"
-                  value={formData.rating}
-                  onChangeText={(text) => setFormData({ ...formData, rating: text })}
+                  value={rating}
+                  editable={false}
                 />
               </VStack>
             </HStack>
 
             <TouchableOpacity
-              onPress={handleInvite}
+              onPress={handleSubmit(onSubmit)}
               disabled={loading}
               style={[styles.submitButton, { opacity: loading ? 0.7 : 1 }]}
             >
@@ -216,6 +255,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   submitButton: {
     backgroundColor: "#8BC34A",
     height: 50,
@@ -235,3 +280,4 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
+

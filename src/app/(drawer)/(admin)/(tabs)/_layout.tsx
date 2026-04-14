@@ -238,8 +238,7 @@ export default function AdminTabLayout() {
           tabBarStyle: { display: "none" },
         }}
       />
-
-
+      
       {/* <Tabs.Screen
         name="playerStatistics"
         options={{

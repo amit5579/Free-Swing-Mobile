@@ -6,14 +6,15 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView, Dimensions } from "react-native";
+import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView, Dimensions, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef } from "react";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getLikedUsersApi, LikedUser } from "@/api/dashboard";
+import { verifyScoreApi } from "@/api/admin/dashboard";
 import GolferParadise from "./GolferParadise";
-// import AllMembersPage from "../../(admin)/(tabs)/allMembers/index";
+import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers";
 
 export type Scorecard = {
     id: string;
@@ -32,6 +33,7 @@ export type Scorecard = {
     isTournament: boolean;
     isAuthenticated: boolean;
     authenticatedBy: string | null;
+    canAuthenticate: boolean;
     profileImage?: string | null;
     isDQ: boolean;
 };
@@ -45,6 +47,7 @@ const FeedCard = ({
     isExpanded,
     onToggle,
     handleLike,
+    handleVerify,
     onActivity,
 }: {
     card: Scorecard;
@@ -52,6 +55,7 @@ const FeedCard = ({
     isExpanded: boolean;
     onToggle: () => void;
     handleLike: (id: string) => void;
+    handleVerify?: (id: string, playerName: string) => void;
     onActivity: (id: string) => void;
 }) => {
     const router = useRouter();
@@ -228,11 +232,24 @@ const FeedCard = ({
                                 <Ionicons name={card.isLiked ? "heart" : "heart-outline"} size={16} color={card.isLiked ? "#EF4444" : isDark ? "#fff" : "#6b7280"} />
                                 <Text className="text-xs font-semibold ml-1" style={{ color: isDark ? "#fff" : "#6b7280" }}>{card.likes}</Text>
                             </Pressable>
-                            {card.isAuthenticated && (
+                            {card.isAuthenticated ? (
                                 <HStack space="xs" className="items-center ml-1">
                                     <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
                                     <Text className="text-[10px] font-bold text-green-600">Verified</Text>
                                 </HStack>
+                            ) : (
+                                <Button
+                                    size="xs"
+                                    disabled={card.isDQ || !card.canAuthenticate}
+                                    className={`rounded-full px-2 ml-1 h-6 shadow-none ${(!card.isDQ && card.canAuthenticate) ? "opacity-100" : "opacity-40"}`}
+                                    style={{ backgroundColor: isDark ? "rgba(139,195,74,0.1)" : "rgba(139,195,74,0.05)" }}
+                                    onPress={() => handleVerify && handleVerify(card.id, card.playerName)}
+                                >
+                                    <Ionicons name="shield-outline" size={10} color={(!card.isDQ && card.canAuthenticate) ? "#8BC34A" : (isDark ? "#9CA3AF" : "#6B7280")} />
+                                    <ButtonText className="text-[10px] font-bold ml-1" style={{ color: (!card.isDQ && card.canAuthenticate) ? "#8BC34A" : (isDark ? "#9CA3AF" : "#6B7280") }}>
+                                        Auth
+                                    </ButtonText>
+                                </Button>
                             )}
                         </HStack>
 
@@ -261,11 +278,12 @@ const FeedCard = ({
 type OverviewTabProps = {
     cards: Scorecard[];
     handleLike: (id: string) => void;
+    handleVerify?: (id: string, playerName: string) => void;
     searchQuery?: string;
     isSearchFocused?: boolean;
 };
 
-export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocused = false }: OverviewTabProps) {
+export function OverviewTab({ cards, handleLike, handleVerify, searchQuery = "", isSearchFocused = false }: OverviewTabProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
     const [expandedId, setExpandedId] = useState<string | null>(cards.length > 0 ? cards[0].id : null);
@@ -362,6 +380,7 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                                 isExpanded={expandedId === card.id}
                                 onToggle={() => toggleCard(card.id)}
                                 handleLike={handleLike}
+                                handleVerify={handleVerify}
                                 onActivity={handleShowActivity}
                             />
                         ))}
@@ -371,8 +390,8 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                         <GolferParadise />
                     </View>
                 ) : (
-                    <View style={{ width: SCREEN_WIDTH - 32, padding: 40, alignItems: 'center', justifyContent: 'center' }}>
-                        <Box
+                    <View style={{ width: SCREEN_WIDTH - 32, overflow: 'hidden' }}>
+                        {/* <Box
                             className="p-8 rounded-3xl border items-center w-full"
                             style={{
                                 backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)",
@@ -387,7 +406,8 @@ export function OverviewTab({ cards, handleLike, searchQuery = "", isSearchFocus
                             <Text className="text-center text-sm font-medium leading-5" style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
                                 We're building a new way for you to connect with other golfers. The Members directory will be available soon!
                             </Text>
-                        </Box>
+                        </Box> */}
+                        <AllMembersScreen hideAdminControls={true} />
                     </View>
                 )}
             </VStack>

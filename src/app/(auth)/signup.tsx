@@ -16,6 +16,7 @@ import {
 import { Keyboard } from "react-native";
 import { useEffect } from "react";
 import { getAllCourses } from "@/api/teeTime";
+import { registerUser } from "@/api/auth";
 
 export default function SignupScreen() {
     const router = useRouter();
@@ -112,60 +113,35 @@ export default function SignupScreen() {
     const bgImage = require("/assets/golf-bgg.jpg");
 
     const handleSignup = async () => {
-        try {
-            console.log("🟢 Signup started");
+    try {
+        const payload = {
+            Username: name,
+            Email: email,
+            Password: password,
+            MobileNumber: mobile,
+            DateOfBirth: dob ? new Date(selectedDate).toISOString().split("T")[0] : null,
+            HomeCourse: course || null,
+            MembershipNumber: membershipNumber || null,
+            TeeBox: selectedTeeBox || null,
+            Handicap: hcp || null,
+            HandicapIndex: hIndex || null,
+            Slope: slope || null,
+            Rating: rating || null,
+        };
 
-            const payload = {
-                Username: name,
-                Email: email,
-                Password: password,
-                MobileNumber: mobile,
-                DateOfBirth: dob ? new Date(selectedDate).toISOString().split("T")[0] : null,
-                HomeCourse: course || null,
-                MembershipNumber: membershipNumber || null,
-                TeeBox: selectedTeeBox || null,
-                Handicap: hcp || null,
-                HandicapIndex: hIndex || null,
-                Slope: slope || null,
-                Rating: rating || null,
-            };
+        await registerUser(payload);
 
-            console.log("📦 Payload:", payload);
+        alert("Signup successful ✅");
 
-            const response = await fetch(
-                "https://kolve18freeswing.com/api/Auth/register",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify(payload),
-                }
-            );
+        router.replace({
+            pathname: "/login",
+            params: { email, password },
+        });
 
-            console.log("📡 Status:", response.status);
-
-            const data = await response.json();
-
-            console.log("📩 API Response:", data);
-
-            if (!response.ok) {
-                alert(data.message || "Signup failed");
-                return;
-            }
-
-            alert("Signup successful ✅");
-
-            router.replace({
-                pathname: "/login",
-                params: { email: email, password: password },
-            });
-
-        } catch (error) {
-            console.log("❌ Signup error:", error);
-        }
-    };
+    } catch (error: any) {
+        alert(error?.response?.data?.message || "Signup failed");
+    }
+};
 
     useEffect(() => {
         const showListener = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
@@ -268,6 +244,7 @@ export default function SignupScreen() {
                                     borderRadius: 14,
                                     paddingHorizontal: 16,
                                     height: 50,
+                                    marginBottom: 6,
                                     backgroundColor: "rgba(255,255,255,0.9)",
                                     color: "#000",
                                 }}
@@ -285,6 +262,7 @@ export default function SignupScreen() {
                                     borderRadius: 14,
                                     backgroundColor: "rgba(255,255,255,0.9)",
                                     height: 50,
+                                    marginBottom: 6,
                                     paddingHorizontal: 16,
                                 }}
                             >
@@ -347,6 +325,7 @@ export default function SignupScreen() {
                                     borderRadius: 14,
                                     paddingHorizontal: 16,
                                     height: 50,
+                                    marginBottom: 6,
                                     backgroundColor: "rgba(255,255,255,0.9)",
                                     color: "#000",
                                 }}
@@ -368,61 +347,19 @@ export default function SignupScreen() {
                                     borderRadius: 14,
                                     paddingHorizontal: 16,
                                     height: 50,
-                                    marginBottom: 20,
+                                    marginBottom: 6,
                                     backgroundColor: "rgba(255,255,255,0.9)",
                                     color: "#000",
                                 }}
                             />
 
-                            <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
-                                Home Course
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => setCourseModal(true)}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: "rgba(0,0,0,0.1)",
-                                    borderRadius: 14,
-                                    paddingHorizontal: 16,
-                                    height: 50,
-                                    width: "100%",
-                                    marginBottom: 20,
-                                    backgroundColor: "rgba(255,255,255,0.9)",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                }}
-                            >
-                                <Text style={{ color: course ? "#000" : "rgba(0,0,0,0.4)" }}>
-                                    {course || "Select Home Course"}
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color="rgba(0,0,0,0.4)" />
-                            </TouchableOpacity>
-
-                            {course !== "" && (
+                            {userType === "experienced" && (
                                 <>
                                     {/* <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
-                                        Membership Number (Optional)
+                                        Home Course
                                     </Text> */}
-                                    <TextInput
-                                        placeholder="Membership Number (Optional)"
-                                        placeholderTextColor="rgba(0,0,0,0.4)"
-                                        value={membershipNumber}
-                                        onChangeText={setMembershipNumber}
-                                        style={{
-                                            borderWidth: 1,
-                                            borderColor: "rgba(0,0,0,0.1)",
-                                            borderRadius: 14,
-                                            paddingHorizontal: 16,
-                                            height: 50,
-                                            marginBottom: 20,
-                                            backgroundColor: "rgba(255,255,255,0.9)",
-                                            color: "#000",
-                                        }}
-                                    />
-
                                     <TouchableOpacity
-                                        onPress={() => setTeeBoxModal(true)}
+                                        onPress={() => setCourseModal(true)}
                                         style={{
                                             borderWidth: 1,
                                             borderColor: "rgba(0,0,0,0.1)",
@@ -430,23 +367,65 @@ export default function SignupScreen() {
                                             paddingHorizontal: 16,
                                             height: 50,
                                             width: "100%",
-                                            marginBottom: 20,
+                                            marginBottom: 6,
                                             backgroundColor: "rgba(255,255,255,0.9)",
                                             flexDirection: "row",
                                             alignItems: "center",
                                             justifyContent: "space-between",
                                         }}
                                     >
-                                        <Text style={{ color: selectedTeeBox ? "#000" : "rgba(0,0,0,0.4)" }}>
-                                            {selectedTeeBox || "Select Tee Box"}
+                                        <Text style={{ color: course ? "#000" : "rgba(0,0,0,0.4)" }}>
+                                            {course || "Select Home Course"}
                                         </Text>
                                         <Ionicons name="chevron-down" size={20} color="rgba(0,0,0,0.4)" />
                                     </TouchableOpacity>
-                                </>
-                            )}
 
-                            {userType === "experienced" && (
-                                <>
+                                    {course !== "" && (
+                                        <>
+                                            {/* <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
+                                                Membership Number (Optional)
+                                            </Text> */}
+                                            <TextInput
+                                                placeholder="Membership Number (Optional)"
+                                                placeholderTextColor="rgba(0,0,0,0.4)"
+                                                value={membershipNumber}
+                                                onChangeText={setMembershipNumber}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: "rgba(0,0,0,0.1)",
+                                                    borderRadius: 14,
+                                                    paddingHorizontal: 16,
+                                                    height: 50,
+                                                    marginBottom: 6,
+                                                    backgroundColor: "rgba(255,255,255,0.9)",
+                                                    color: "#000",
+                                                }}
+                                            />
+
+                                            <TouchableOpacity
+                                                onPress={() => setTeeBoxModal(true)}
+                                                style={{
+                                                    borderWidth: 1,
+                                                    borderColor: "rgba(0,0,0,0.1)",
+                                                    borderRadius: 14,
+                                                    paddingHorizontal: 16,
+                                                    height: 50,
+                                                    width: "100%",
+                                                    marginBottom: 6,
+                                                    backgroundColor: "rgba(255,255,255,0.9)",
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between",
+                                                }}
+                                            >
+                                                <Text style={{ color: selectedTeeBox ? "#000" : "rgba(0,0,0,0.4)" }}>
+                                                    {selectedTeeBox || "Select Tee Box"}
+                                                </Text>
+                                                <Ionicons name="chevron-down" size={20} color="rgba(0,0,0,0.4)" />
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
+
                                     <View
                                         style={{ flexDirection: "row", justifyContent: "space-between" }}
                                     >
@@ -455,14 +434,6 @@ export default function SignupScreen() {
                                             value={hcp}
                                             onChangeText={setHcp}
                                             keyboardType="numeric"
-                                            // style={{
-                                            //     borderWidth: 1,
-                                            //     borderColor: "#d1d5db",
-                                            //     borderRadius: 6,
-                                            //     padding: 12,
-                                            //     width: "48%",
-                                            //     marginBottom: 16,
-                                            // }}
                                             style={{
                                                 borderWidth: 1,
                                                 borderColor: "rgba(0,0,0,0.1)",
@@ -470,7 +441,7 @@ export default function SignupScreen() {
                                                 paddingHorizontal: 16,
                                                 height: 50,
                                                 width: "48%",
-                                                marginBottom: 20,
+                                                marginBottom: 6,
                                                 backgroundColor: "rgba(255,255,255,0.9)",
                                                 color: "#000",
                                             }}
@@ -487,7 +458,7 @@ export default function SignupScreen() {
                                                 paddingHorizontal: 16,
                                                 height: 50,
                                                 width: "48%",
-                                                marginBottom: 20,
+                                                marginBottom: 6,
                                                 backgroundColor: "rgba(255,255,255,0.9)",
                                                 color: "#000",
                                             }}
@@ -509,7 +480,7 @@ export default function SignupScreen() {
                                                 paddingHorizontal: 16,
                                                 height: 50,
                                                 width: "48%",
-                                                marginBottom: 20,
+                                                marginBottom: 6,
                                                 backgroundColor: "rgba(255,255,255,0.9)",
                                                 color: "#000",
                                             }}
@@ -518,7 +489,7 @@ export default function SignupScreen() {
                                             placeholder="Rating"
                                             value={rating}
                                             onChangeText={setRating}
-                                            keyboardType="numeric"
+                                            keyboardType="decimal-pad"
                                             style={{
                                                 borderWidth: 1,
                                                 borderColor: "rgba(0,0,0,0.1)",
@@ -630,7 +601,7 @@ export default function SignupScreen() {
                                         onPress={() => {
                                             setCourse(item.name);
                                             setAvailableTeeBoxes(item.teeBoxes || []);
-                                            setSelectedTeeBox(""); // Reset tee box when course changes
+                                            setSelectedTeeBox(""); 
                                             setCourseModal(false);
                                         }}
                                     >
@@ -680,12 +651,15 @@ export default function SignupScreen() {
                                             borderBottomColor: "#eee",
                                         }}
                                         onPress={() => {
-                                            setSelectedTeeBox(item.name.charAt(0).toUpperCase() + item.name.slice(1).toLowerCase());
+                                            const formattedName = `${item.name} - ${item.color}`;
+                                            setSelectedTeeBox(formattedName);
+                                            setSlope(item.slope ? item.slope.toString() : "");
+                                            setRating(item.rating ? item.rating.toString() : "");
                                             setTeeBoxModal(false);
                                         }}
                                     >
                                         <Text style={{ fontSize: 16 }}>
-                                            {item.name.charAt(0).toUpperCase() + item.name.slice(1).toLowerCase()}
+                                            {item.name} - {item.color}
                                         </Text>
                                     </TouchableOpacity>
                                 ))
