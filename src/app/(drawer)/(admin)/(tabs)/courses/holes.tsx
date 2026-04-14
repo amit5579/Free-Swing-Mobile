@@ -177,6 +177,10 @@ export default function EditHolesPage() {
               <Box
                 key={hole.holeId}
                 className="p-4 rounded-xl border border-neutral-200 mb-3"
+                style = {{ backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",}}
               >
                 <VStack space="sm">
                   {/* Hole Title */}
@@ -199,9 +203,9 @@ export default function EditHolesPage() {
                   >
                     {/* PAR */}
                     <View style={{ width: "30%" }}>
-                      <Text style={{ fontSize: 11, marginBottom: 4 }}>
+                      <ThemedText style={{ fontSize: 11, marginBottom: 4 }}>
                         Par
-                      </Text>
+                      </ThemedText>
                       <TextInput
                         value={hole.par}
                         keyboardType="numeric"
@@ -221,9 +225,9 @@ export default function EditHolesPage() {
 
                     {/* HANDICAP */}
                     <View style={{ width: "30%" }}>
-                      <Text style={{ fontSize: 11, marginBottom: 4 }}>
+                      <ThemedText style={{ fontSize: 11, marginBottom: 4 }}>
                         Handicap
-                      </Text>
+                      </ThemedText>
                       <TextInput
                         value={hole.handicap}
                         keyboardType="numeric"
@@ -243,9 +247,9 @@ export default function EditHolesPage() {
 
                     {/* YARDAGE */}
                     <View style={{ width: "30%" }}>
-                      <Text style={{ fontSize: 11, marginBottom: 4 }}>
+                      <ThemedText style={{ fontSize: 11, marginBottom: 4 }}>
                         Yardage
-                      </Text>
+                      </ThemedText>
                       <TextInput
                         value={hole.yardage}
                         keyboardType="numeric"

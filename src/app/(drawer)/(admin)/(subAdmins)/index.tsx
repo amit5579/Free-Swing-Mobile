@@ -611,9 +611,10 @@ function SubAdminCard({
         className="rounded-2xl p-4"
         style={{
           borderWidth: 1,
-          borderColor: isDark
+          backgroundColor: isDark
             ? "rgba(15, 23, 42, 0.7)"
             : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
         }}
       >
         <VStack className="gap-2">

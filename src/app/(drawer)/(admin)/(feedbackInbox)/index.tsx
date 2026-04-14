@@ -87,7 +87,12 @@ export default function FeedbackInboxPage() {
               alignItems: "center",
             }}
           >
-            <Skeleton isDark={isDark} height={16} width={30} style={{ marginBottom: 4 }} />
+            <Skeleton
+              isDark={isDark}
+              height={16}
+              width={30}
+              style={{ marginBottom: 4 }}
+            />
             <Skeleton isDark={isDark} height={10} width={40} />
           </Box>
         ))}
@@ -267,7 +272,10 @@ export default function FeedbackInboxPage() {
                   padding: 14,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "#e5e7eb",
+                  backgroundColor: isDark
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
                   marginBottom: 16,
                 }}
               >
@@ -311,13 +319,34 @@ export default function FeedbackInboxPage() {
                   <StatsSkeleton />
                 ) : (
                   <HStack
-                    style={{ flexWrap: "wrap", justifyContent: "space-between" }}
+                    style={{
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                    }}
                   >
                     {[
                       { label: "Total", value: feedbackData.length || 0 },
-                      { label: "Open", value: feedbackData.filter((item: any) => item.status === "Open").length || 0 },
-                      { label: "Ongoing", value: feedbackData.filter((item: any) => item.status === "InProgress").length || 0 },
-                      { label: "Resolved", value: feedbackData.filter((item: any) => item.status === "Resolved").length || 0 },
+                      {
+                        label: "Open",
+                        value:
+                          feedbackData.filter(
+                            (item: any) => item.status === "Open",
+                          ).length || 0,
+                      },
+                      {
+                        label: "Ongoing",
+                        value:
+                          feedbackData.filter(
+                            (item: any) => item.status === "InProgress",
+                          ).length || 0,
+                      },
+                      {
+                        label: "Resolved",
+                        value:
+                          feedbackData.filter(
+                            (item: any) => item.status === "Resolved",
+                          ).length || 0,
+                      },
                     ].map((item, index) => (
                       <Box
                         key={index}
@@ -326,7 +355,7 @@ export default function FeedbackInboxPage() {
                           padding: 10,
                           borderRadius: 12,
                           borderWidth: 1,
-                          borderColor: isDark? "#262626" : "#e5e7eb",
+                          borderColor: isDark ? "#262626" : "#e5e7eb",
                           marginBottom: 8,
                           alignItems: "center",
                         }}
@@ -347,8 +376,9 @@ export default function FeedbackInboxPage() {
                 className="rounded-full p-1 mb-6"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(229, 231, 235, 0.6)",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
                 }}
               >
                 {tabs.map((tab) => {
@@ -428,47 +458,57 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
   }, [item]);
 
   return (
-    <Box className="p-4 rounded-xl border border-neutral-200 mb-4">
+    <Box
+      className="p-4 rounded-xl border border-neutral-200 mb-4"
+      style={{
+        backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+      }}
+    >
       <VStack space="sm">
         <HStack className="gap-3">
           <Box
             style={{
               backgroundColor:
-              //  item.status === "Bug" ? 
-              // "#8BC34A" : 
-              "#8bc34a24",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ color: 
-              
-              // item.status === "Bug" ? 
-              // "#fff"  :
-               "#8BC34A" 
-              }}>
-              {item.category}
-            </Text>
-          </Box>
-          <Box
-            style={{
-              backgroundColor:
-                // item.status === "Resolved" ? 
-                "#8BC34A" 
-                // : "#8bc34a24"
-                ,
+                //  item.status === "Bug" ?
+                // "#8BC34A" :
+                "#8bc34a24",
               paddingHorizontal: 10,
               paddingVertical: 5,
               borderRadius: 10,
             }}
           >
             <Text
-              style={{ color: 
-                // item.status === "Resolved" ? 
-                "#fff"
-                //  : "#8BC34A" 
-                }}
+              style={{
+                color:
+                  // item.status === "Bug" ?
+                  // "#fff"  :
+                  "#8BC34A",
+              }}
+            >
+              {item.category}
+            </Text>
+          </Box>
+          <Box
+            style={{
+              backgroundColor:
+                // item.status === "Resolved" ?
+                "#8BC34A",
+              // : "#8bc34a24"
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 10,
+            }}
+          >
+            <Text
+              style={{
+                color:
+                  // item.status === "Resolved" ?
+                  "#fff",
+                //  : "#8BC34A"
+              }}
             >
               {item.status == "InProgress" ? "Ongoing" : item.status}
             </Text>
@@ -489,18 +529,22 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
           Submitted: {formatDateTime(item.createdAt)}
         </ThemedText>
 
-        {item.updatedAt == null ? ("") : ( <ThemedText style={{ fontSize: 12 }}>
+        {item.updatedAt == null ? (
+          ""
+        ) : (
+          <ThemedText style={{ fontSize: 12 }}>
             Updated: {formatDateTime(item.updatedAt) || ""}
-          </ThemedText>)}
+          </ThemedText>
+        )}
 
         {/* MESSAGE */}
         <Box
           className="p-3 rounded-lg border"
           style={{
             backgroundColor: isDark
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(229, 231, 235, 0.6)",
-              borderColor: isDark ? "#fff" : "#000",
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
           }}
         >
           <ThemedText style={{ fontSize: 13 }}>{item.message}</ThemedText>
@@ -519,19 +563,19 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
                 paddingHorizontal: 12,
                 height: 45,
                 marginTop: 6,
-                backgroundColor:  isDark
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(229, 231, 235, 0.6)",
-                borderColor: isDark ? "#fff" : "#000",
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
               },
             ]}
-            placeholderStyle={{ color:  isDark ? "#fff" : "#000" }}
-            selectedTextStyle={{ color:  isDark ? "#fff" : "#000" }}
+            placeholderStyle={{ color: isDark ? "#fff" : "#000" }}
+            selectedTextStyle={{ color: isDark ? "#fff" : "#000" }}
             containerStyle={{
               backgroundColor: isDark ? "#1a1a1a" : "#fff",
               borderColor: isDark ? "#333" : "#ddd",
             }}
-            itemTextStyle={{ color:  isDark ? "#fff" : "#000" }}
+            itemTextStyle={{ color: isDark ? "#fff" : "#000" }}
             activeColor={isDark ? "#333" : "#f0f0f0"}
             data={[
               { label: "Open", value: "Open" },
@@ -559,10 +603,10 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
             numberOfLines={3}
             style={{
               borderRadius: 7,
-              borderColor: isDark ? "#fff" : "#000",
               backgroundColor: isDark
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(229, 231, 235, 0.6)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
+              borderColor: isDark ? "#1e293b" : "#e2e8f0",
               borderWidth: 1,
               padding: 10,
               height: 80,

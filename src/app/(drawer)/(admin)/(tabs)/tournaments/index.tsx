@@ -118,10 +118,10 @@ const [loading, setLoading] = useState(true);
       };
 
       if (isEditMode) {
-        console.log("UPDATE API", tournamentData);
+        // console.log("UPDATE API", tournamentData);
         await updateTournament(editingCourse.tournamentId, tournamentData);
       } else {
-        console.log("CREATE API", tournamentData);
+        // console.log("CREATE API", tournamentData);
         await createTournament(tournamentData);
       }
 
@@ -280,7 +280,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 
   return (
     <>
-      <ThemedView
+      <View
         style={{
           flex: 1,
         }}
@@ -315,7 +315,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
             }}
             className="flex-row items-center gap-1"
           >
-            <Ionicons name="add-outline" size={28} color="white" />
+            <Ionicons name="add" size={28} color="white" />
             <ThemedText style={{ color: "white", fontWeight: "600" }}>
               Create Tournament
             </ThemedText>
@@ -346,7 +346,7 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 
           </VStack>
         </ScrollView>
-      </ThemedView>
+      </View>
 
       {/* CREATE TOURNAMENT MODAL */}
       <Modal
@@ -742,8 +742,10 @@ function TournamentCard({
         style={[
           styles.card,
           {
-            // backgroundColor: isDark ? "#0f0f0f" : "#fff",
-            borderColor: isDark ? "#262626" : "#e5e5e5",
+ backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
           },
         ]}
       >
@@ -799,7 +801,7 @@ function TournamentCard({
             style={styles.actionBtn}
             android_ripple={{ color: "#ddd" }}
           >
-            <Ionicons name="create-outline" size={22} color="#6b7280" />
+            <Ionicons name="create" size={22} color="#6b7280" />
             <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
               Edit
             </ThemedText>
@@ -812,7 +814,7 @@ function TournamentCard({
               routePlayersPage(tournament?.tournamentId, tournament?.name)
             }
           >
-            <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
+            <Ionicons name="person-add" size={22} color="#3b82f6" />
             <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
               Manage
             </ThemedText>
@@ -839,7 +841,7 @@ function TournamentCard({
                 );
               }}
             >
-              <Ionicons name="time-outline" size={20} color="#06b6d4" />
+              <Ionicons name="time" size={20} color="#06b6d4" />
               <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 History
               </ThemedText>
@@ -854,7 +856,7 @@ function TournamentCard({
                 );
               }}
             >
-              <Ionicons name="stats-chart-outline" size={20} color="#f59e0b" />
+              <Ionicons name="stats-chart" size={20} color="#f59e0b" />
               <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 Leaderboard
               </ThemedText>
@@ -867,7 +869,7 @@ function TournamentCard({
                 onDelete(tournament?.tournamentId);
               }}
             >
-              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <Ionicons name="trash" size={20} color="#ef4444" />
               <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
                 Delete
               </ThemedText>

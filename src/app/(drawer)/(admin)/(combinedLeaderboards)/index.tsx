@@ -476,7 +476,10 @@ function CombinedPlayerCard({
     <View
       style={[
         cardStyles.card,
-        { borderColor: rank <= 3 ? rankColor : isDark ? "#333" : "#ddd" },
+        { borderColor: rank <= 3 ? rankColor : isDark ? "#333" : "#ddd", backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+ },
       ]}
     >
       {/* HEADER */}

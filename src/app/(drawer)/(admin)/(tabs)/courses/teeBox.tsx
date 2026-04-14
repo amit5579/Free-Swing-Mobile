@@ -274,20 +274,41 @@ export default function teeBoxPage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 17, fontWeight: "700", color: isDark ? "white" : "black" }}>
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "700",
+                  color: isDark ? "white" : "black",
+                }}
+              >
                 {isEditMode ? "Edit Tee Box" : "Add Tee Box"}
               </Text>
 
-              <Pressable onPress={() => {
-                setSelectedColor(null);
-                setModalVisible(false);
-              }}
+              <Pressable
+                onPress={() => {
+                  setSelectedColor(null);
+                  setModalVisible(false);
+                }}
               >
-                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
               </Pressable>
             </HStack>
 
@@ -501,7 +522,10 @@ function TeeCardAdmin({
       className="rounded-2xl p-5 relative"
       style={{
         borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
+        backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
       }}
     >
       {/* Color Badge */}
@@ -595,8 +619,17 @@ function TeeCardAdmin({
           }}
           className="flex-row items-center gap-1"
         >
-          <Ionicons name="pencil-outline" size={15} color={isDark? "#b2c1e0ff" : "#6b7280"} />
-          <ThemedText style={{ color: isDark? "#b2c1e0ff" : "#6b7280", fontWeight: "400" }}>
+          <Ionicons
+            name="pencil-outline"
+            size={15}
+            color={isDark ? "#b2c1e0ff" : "#6b7280"}
+          />
+          <ThemedText
+            style={{
+              color: isDark ? "#b2c1e0ff" : "#6b7280",
+              fontWeight: "400",
+            }}
+          >
             Edit
           </ThemedText>
         </Pressable>

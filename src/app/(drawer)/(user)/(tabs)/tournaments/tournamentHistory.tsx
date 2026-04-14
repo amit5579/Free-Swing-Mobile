@@ -10,7 +10,9 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getTournamentHistoryByUserId } from "@/api/admin/tournaments";
+import {
+  getTournamentHistoryByUserId,
+} from "@/api/admin/tournaments";
 
 import {
   getScorecardHandicap,
@@ -28,9 +30,10 @@ export default function TournamentHistory() {
 
   const { tournamentId, tournamentName, teeBoxId, scoringType } =
     useLocalSearchParams();
+
   const formatScoringType =
     scoringType == "double-peoria"
-      ? "Double Peoria"
+      ? "Net Score Include Par 3"
       : scoringType == "stableford"
         ? "Stableford"
         : scoringType == "excluded"
@@ -40,54 +43,140 @@ export default function TournamentHistory() {
             : scoringType == "double-peoria-net"
               ? "Double Peoria Net"
               : "Net Score Include Par 3";
+
+  useEffect(() => {
+    console.log("scoringType", scoringType);
+    console.log("formatScoringType", formatScoringType);
+  }, [scoringType, formatScoringType]);
   // Net Score Include Par 3
   const [loading, setLoading] = useState(true);
 
-  const [handicap, setHandicap] = useState(null);
+  const [handicap, setHandicap] = useState<any>(null);
 
   const [history, setTournamentHistory] = useState<any[]>([]); //contains  "isExcluded": true "scorecardId": 361,
   const [scorecardDetails, setScorecardDetails] = useState<any[]>([]);
+  useEffect(() => {
+    console.log("hhhhccc", handicap);
 
+  }, [handicap])
   // ── Helper Functions (Defined early to avoid hoisting issues) ──
-  const getScoreType = (score: number, par: number) => {
-    const diff = score - par;
-    if (score === 1) return "hole-in-one";
-    if (diff <= -3) return "albatross";
-    if (diff === -2) return "eagle";
-    if (diff === -1) return "birdie";
-    if (diff === 0) return "par";
-    if (diff === 1) return "bogey";
-    if (diff === 2) return "double";
-    if (diff === 3) return "triple";
-    return "quad";
-  };
 
-  const getScoreStyle = (type: string) => {
-    switch (type) {
-      case "hole-in-one":
-        return { borderColor: "#facc15", shape: "circle" };
-      case "albatross":
-        return { borderColor: "#0f766e", shape: "circle" };
-      case "eagle":
-        return { borderColor: "#166534", shape: "circle" };
-      case "birdie":
-        return { borderColor: "#16a34a", shape: "circle" };
-      case "par":
-        return { borderColor: "#9ca3af", shape: "square", dashed: true };
-      case "bogey":
-        return { borderColor: "#ef4444", shape: "square" };
-      case "double":
-        return { borderColor: "#dc2626", shape: "square" };
-      case "triple":
-        return { borderColor: "#7c3aed", shape: "square" };
-      default:
-        return { borderColor: "#000", shape: "square" };
+  // ── Score Indicator Helper ──
+  const renderScoreIndicator = (
+    score: number | string | null,
+    par: number,
+    dark: boolean,
+  ) => {
+    if (score === null || score === "" || score === undefined) return null;
+
+    const numericScore = Number(score);
+    const diff = numericScore - par;
+
+    // Hole-in-One
+    if (numericScore === 1) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleCircle, { borderColor: "#fbc02d" }]} />
+        </View>
+      );
     }
+
+    // Albatross (-3)
+    if (diff <= -3) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleCircle, { borderColor: "#00838f" }]} />
+        </View>
+      );
+    }
+
+    // Eagle (-2)
+    if (diff === -2) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
+        </View>
+      );
+    }
+
+    // Birdie (-1)
+    if (diff === -1) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleCircle, { borderColor: "#66bb6a" }]} />
+        </View>
+      );
+    }
+
+    // Par (0)
+    if (diff === 0) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: "#999",
+              borderRadius: 4,
+            }}
+          />
+        </View>
+      );
+    }
+
+    // Quadruple+ (>= +4)
+    if (diff >= 4) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={[
+              styles.singleSquare,
+              { borderColor: dark ? "#fff" : "#000" },
+            ]}
+          />
+        </View>
+      );
+    }
+
+    // Triple Bogey (+3)
+    if (diff === 3) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleSquare, { borderColor: "#8e24aa" }]}>
+            <View style={[styles.innerSquare, { borderColor: "#8e24aa" }]} />
+          </View>
+        </View>
+      );
+    }
+
+    // Double Bogey (+2)
+    if (diff === 2) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleSquare, { borderColor: "#e53935" }]}>
+            <View style={[styles.innerSquare, { borderColor: "#e53935" }]} />
+          </View>
+        </View>
+      );
+    }
+
+    // Bogey (+1)
+    if (diff === 1) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleSquare, { borderColor: "#e53935" }]} />
+        </View>
+      );
+    }
+
+    return null;
   };
 
   const getScoreLegendCounts = (holes: any[]) => {
-    const counts: any = {
-      "hole-in-one": 0,
+    const counts = {
+      holeInOne: 0,
       albatross: 0,
       eagle: 0,
       birdie: 0,
@@ -95,14 +184,50 @@ export default function TournamentHistory() {
       bogey: 0,
       double: 0,
       triple: 0,
-      quad: 0,
+      quadPlus: 0,
     };
 
     holes.forEach((h) => {
       if (!h.score && h.score !== 0) return;
-      const type = getScoreType(Number(h.score), Number(h.par));
-      if (counts[type] !== undefined) {
-        counts[type]++;
+
+      const score = Number(h.score);
+      const diff = score - h.par;
+
+      if (score === 1) {
+        counts.holeInOne++;
+        return;
+      }
+      if (diff === -3) {
+        counts.albatross++;
+        return;
+      }
+      if (diff === -2) {
+        counts.eagle++;
+        return;
+      }
+      if (diff === -1) {
+        counts.birdie++;
+        return;
+      }
+      if (diff === 0) {
+        counts.par++;
+        return;
+      }
+      if (diff === 1) {
+        counts.bogey++;
+        return;
+      }
+      if (diff === 2) {
+        counts.double++;
+        return;
+      }
+      if (diff === 3) {
+        counts.triple++;
+        return;
+      }
+      if (diff >= 4) {
+        counts.quadPlus++;
+        return;
       }
     });
 
@@ -148,138 +273,78 @@ export default function TournamentHistory() {
 
   const RenderHeader = () => {
     return (
-      <>
-        <VStack className="mb-3">
-          <HStack
-            className="px-3 items-center"
-            style={{ justifyContent: "space-between" }}
+      <View>
+        <HStack
+          className="px-3 items-center"
+          style={{ height: 60, justifyContent: "center" }}
+        >
+          <Pressable
+            onPress={() => routePage.back()}
+            style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
           >
-            {/* LEFT: Back button */}
-            <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-              <Ionicons
-                name="arrow-back-outline"
-                size={22}
-                color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-              />
-            </Pressable>
+            <Ionicons
+              name="arrow-back-outline"
+              size={24}
+              color={isDark ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
 
-            {/* CENTER: Title */}
-            <ThemedText
-              style={{
-                flex: 1,
-                fontSize: 20,
-                fontWeight: "700",
-                textAlign: "center",
-                lineHeight: 30,
-              }}
-            >
-              Scorecard : {tournamentName}
-            </ThemedText>
+          <ThemedText
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            {tournamentName}
+          </ThemedText>
+        </HStack>
 
-            {/* RIGHT: Add Button */}
-            {/* <View style={{ width: 40 }} /> */}
-          </HStack>
+        <VStack className="px-5 mb-2">
           <ThemedText
             style={{
               textAlign: "center",
-              fontSize: 16,
-              fontWeight: "400",
-              lineHeight: 30,
+              fontSize: 14,
+              opacity: 0.8,
+              marginBottom: 4,
             }}
           >
-            {/* (Net Score Exclude Par 3) */}
             {formatScoringType}
           </ThemedText>
+          <HStack className="justify-between items-center">
+            <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+              Declared HC: {handicap?.handicap || "-"}
+            </ThemedText>
+
+            {scoringType === "double-peoria" ||
+            scoringType === "double-peoria-net" ||
+            scoringType === "Net Score Include Par 3" ? (
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                DP HC: -
+              </ThemedText>
+            ) : null}
+          </HStack>
         </VStack>
-      </>
+      </View>
     );
   };
 
-  const renderRow = (item: any) => {
-    // ✅ ADD HERE
-    const type = getScoreType(item.score, item.par);
-    const styleConfig = getScoreStyle(type);
+  const isStableford = formatScoringType === "Stableford";
 
-    return (
-      <HStack
-        key={item.holeNumber}
-        style={styles.row}
-        // isDark = colorScheme === "dark"
-      >
-        <View style={styles.cell}>
-          <ThemedText>{item.holeNumber}</ThemedText>
-        </View>
+  const getTotals = (holes: any[]) => ({
+    yards: holes.reduce((sum, h) => sum + (Number(h.yardage) || 0), 0),
+    par: holes.reduce((sum, h) => sum + (Number(h.par) || 0), 0),
+    score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
+    net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
+    stableford: holes.reduce(
+      (sum, h) => sum + (Number(h.stablefordPoints) || 0),
+      0,
+    ),
+  });
 
-        <View style={styles.cell}>
-          <ThemedText>{item.handicap}</ThemedText>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{item.yardage}</ThemedText>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{item.par}</ThemedText>
-        </View>
-
-        {/* ✅ SCORE UI */}
-        <View style={styles.cell}>
-          <View
-            style={[
-              styles.scoreBox,
-              styleConfig.shape === "circle" && styles.circle,
-              styleConfig.shape === "square" && styles.square,
-              {
-                borderColor: styleConfig.borderColor,
-                borderStyle: styleConfig.dashed ? "dashed" : "solid",
-              },
-            ]}
-          >
-            <ThemedText style={{ fontWeight: "700" }}>{item.score}</ThemedText>
-          </View>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{item.netScore}</ThemedText>
-        </View>
-      </HStack>
-    );
-  };
-
-  const renderTotals = (label: string, data: any[], keySuffix?: string) => {
-    const t = calculateTotals(data);
-
-    return (
-      <HStack
-        key={`${label}-${keySuffix || ""}`}
-        style={[
-          styles.tableHeader,
-          { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
-        ]}
-      >
-        <View style={styles.cell}>
-          <ThemedText style={{ fontWeight: "700" }}>{label}</ThemedText>
-        </View>
-
-        <View style={styles.cell} />
-        <View style={styles.cell}>
-          <ThemedText>{t.yardage}</ThemedText>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{t.par}</ThemedText>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{t.score}</ThemedText>
-        </View>
-
-        <View style={styles.cell}>
-          <ThemedText>{t.net}</ThemedText>
-        </View>
-      </HStack>
-    );
-  };
+  const frontTotals = getTotals(scorecardDetails.slice(0, 9));
+  const backTotals = getTotals(scorecardDetails.slice(9, 18));
+  const grandTotals = getTotals(scorecardDetails);
 
   const front9 = scorecardDetails?.slice(0, 9) || [];
   const back9 = scorecardDetails?.slice(9, 18) || [];
@@ -297,9 +362,10 @@ export default function TournamentHistory() {
         acc.par += Number(item.par) || 0;
         acc.score += Number(item.score) || 0;
         acc.net += Number(item.netScore) || 0;
+        acc.stablefordPoints += Number(item.stablefordPoints) || 0;
         return acc;
       },
-      { yardage: 0, par: 0, score: 0, net: 0 },
+      { yardage: 0, par: 0, score: 0, net: 0, stablefordPoints: 0 },
     );
   };
 
@@ -308,58 +374,58 @@ export default function TournamentHistory() {
   const legendData = [
     {
       label: "Hole-in-One",
-      border: "#facc15",
+      border: "#fbc02d",
       type: "circle",
-      text: legendCounts["hole-in-one"] || "",
+      text: legendCounts.holeInOne || "",
     },
     {
       label: "Albatross",
-      border: "#0f766e",
+      border: "#00838f",
       type: "circle",
       text: legendCounts.albatross || "",
     },
     {
       label: "Eagle",
-      border: "#166534",
+      border: "#2e7d32",
       type: "circle",
       text: legendCounts.eagle || "",
     },
     {
       label: "Birdie",
-      border: "#16a34a",
+      border: "#66bb6a",
       type: "circle",
       text: legendCounts.birdie || "",
     },
     {
       label: "Par",
-      border: "#9ca3af",
+      border: "#999",
       type: "square",
       text: legendCounts.par || "",
       dashed: true,
     },
     {
       label: "Bogey",
-      border: "#ef4444",
+      border: "#e53935",
       type: "square",
       text: legendCounts.bogey || "",
     },
     {
       label: "Double Bogey",
-      border: "#dc2626",
-      type: "square",
+      border: "#e53935",
+      type: "double-square",
       text: legendCounts.double || "",
     },
     {
       label: "Triple Bogey",
-      border: "#7c3aed",
-      type: "square",
+      border: "#8e24aa",
+      type: "double-square",
       text: legendCounts.triple || "",
     },
     {
       label: "Quadruple Bogey+",
-      border: "#000",
+      border: isDark ? "#fff" : "#000",
       type: "square",
-      text: legendCounts.quad || "",
+      text: legendCounts.quadPlus || "",
     },
   ];
 
@@ -375,212 +441,505 @@ export default function TournamentHistory() {
     );
   };
 
-  const ScoreCircleSkeleton = ({ isDark }: { isDark: boolean }) => (
-    <Skeleton isDark={isDark} height={28} width={28} borderRadius={14} />
-  );
+  
 
   return (
     <>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.safeArea}>
-          <Watermark />
+      <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}>
+        <Watermark />
+        {/* Header */}
+        <RenderHeader />
 
-          {/* Header */}
-          <RenderHeader />
-          <ScrollView>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View>
-                {/* Header */}
-                <HStack
-                  // "#e5e7eb"
-                  style={[
-                    styles.tableHeader,
-                    { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" },
-                  ]}
-                >
-                  {["Hole", "Stroke\nIndex", "Yds", "Par", "Score", "Net"].map(
-                    (h) => (
-                      <View key={h} style={styles.cell}>
-                        <ThemedText
-                        // style={styles.headerText}
-                        >
-                          {h}
-                        </ThemedText>
-                      </View>
-                    ),
-                  )}
-                </HStack>
-                {loading ? (
-                  <>
-                    {/* Front 9 Skeleton */}
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <ScoreRowSkeleton key={`f-${i}`} isDark={isDark} />
-                    ))}
-
-                    {/* Back 9 Skeleton */}
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <ScoreRowSkeleton key={`b-${i}`} isDark={isDark} />
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    {/* REAL DATA */}
-                    {front9.map(renderRow)}
-                    {renderTotals("Front 9", front9, "f")}
-
-                    {back9.map(renderRow)}
-                    {renderTotals("Back 9", back9, "b")}
-
-                    {renderTotals("Total", scorecardDetails || [], "final")}
-                  </>
-                )}
-              </View>
-            </ScrollView>
-
-            <ThemedText className="mt-3">Scorecard Legend</ThemedText>
-
-            <VStack style={styles.legendRow}>
-              {legendData.map((item, index) => (
-                <ThemedView key={index} style={styles.legendItem}>
-                  <ThemedView
-                    style={[
-                      styles.icon,
-                      item.type === "circle" && styles.circle,
-                      item.type === "square" && styles.square,
-                      {
-                        borderColor: item.border,
-                        borderStyle: item.dashed ? "dashed" : "solid",
-                      },
-                    ]}
-                  >
-                    {item.text ? (
-                      <ThemedText style={styles.iconText}>
-                        {item.text}
-                      </ThemedText>
-                    ) : null}
-                  </ThemedView>
-
-                  <ThemedText style={styles.label}>{item.label}</ThemedText>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <VStack className="px-4 pt-2 pb-20">
+            <VStack className="gap-4">
+              {loading ? (
+                <ThemedView className="p-10 items-center">
+                  <ThemedText>Loading...</ThemedText>
                 </ThemedView>
-              ))}
+              ) : (
+                <>
+                  {/* CARD WRAPPER */}
+                  <VStack
+                    style={{
+                      backgroundColor: "transparent",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.12,
+                      shadowRadius: 6,
+                    }}
+                  >
+                    {/* 🔹 HEADER ROW */}
+                    <HStack
+                      style={{
+                        paddingVertical: 10,
+                        backgroundColor: isDark
+                          ? "rgba(38, 38, 38, 0.8)"
+                          : "rgba(243, 244, 246, 0.8)",
+                        borderBottomWidth: 1,
+                        borderColor: isDark ? "#444" : "#ddd",
+                      }}
+                    >
+                      {[
+                        "Hole",
+                        "Yards",
+                        "Par",
+                        "Score",
+                        "Net",
+                        isStableford && "Pts",
+                      ]
+                        .filter(Boolean)
+                        .map((item, i) => (
+                          <ThemedText
+                            key={i}
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontWeight: "600",
+                              fontSize: 13,
+                            }}
+                          >
+                            {item as string}
+                          </ThemedText>
+                        ))}
+                    </HStack>
+
+                    {/* 🔹 ROWS */}
+                    {scorecardDetails.length === 0 ? (
+                      <ThemedText className="p-10 textAlign-center">
+                        No games played in this tournament yet.
+                      </ThemedText>
+                    ) : (
+                      scorecardDetails.map((h: any, index: number) => (
+                        <View key={index}>
+                          <HStack
+                            style={{
+                              paddingVertical: 12,
+                              alignItems: "center",
+                              borderBottomWidth: 0.5,
+                              borderColor: isDark ? "#333" : "#eee",
+                            }}
+                          >
+                            {/* Hole Number */}
+                            <ThemedText style={{ flex: 1, textAlign: "center" }}>
+                              {h.holeNumber}
+                            </ThemedText>
+
+                            {/* Yardage */}
+                            <ThemedText
+                              style={{
+                                flex: 1,
+                                textAlign: "center",
+                                color: "#888",
+                              }}
+                            >
+                              {h.yardage}
+                            </ThemedText>
+
+                            {/* Par */}
+                            <ThemedText style={{ flex: 1, textAlign: "center" }}>
+                              {h.par}
+                            </ThemedText>
+
+                            {/* Score with indicator */}
+                            <View
+                              style={{
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {renderScoreIndicator(h.score, h.par, isDark)}
+                              <View
+                                style={{
+                                  position: "absolute",
+                                  width: 42,
+                                  height: 42,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    textAlign: "center",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {h.score}
+                                </ThemedText>
+                              </View>
+                            </View>
+
+                            {/* Net Score */}
+                            <ThemedText
+                              style={{
+                                flex: 1,
+                                textAlign: "center",
+                                fontWeight: "600",
+                                color: "#8BC34A",
+                              }}
+                            >
+                              {h.netScore ?? "-"}
+                            </ThemedText>
+
+                            {/* Stableford Points */}
+                            {isStableford && (
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {h.stablefordPoints ?? "-"}
+                              </ThemedText>
+                            )}
+                          </HStack>
+
+                          {/* FRONT 9 SUMMARY */}
+                          {index === 8 && (
+                            <HStack
+                              style={{
+                                backgroundColor: isDark
+                                  ? "rgba(38, 38, 38, 0.8)"
+                                  : "rgba(243, 244, 246, 0.8)",
+                                paddingVertical: 10,
+                                borderTopWidth: 1,
+                                borderColor: isDark ? "#444" : "#ddd",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  fontWeight: "700",
+                                  textAlign: "center",
+                                }}
+                              >
+                                Front 9
+                              </ThemedText>
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {frontTotals.yards}
+                              </ThemedText>
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {frontTotals.par}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {frontTotals.score}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {frontTotals.net}
+                              </ThemedText>
+                              {isStableford && (
+                                <ThemedText
+                                  style={{ flex: 1, textAlign: "center" }}
+                                >
+                                  {frontTotals.stableford}
+                                </ThemedText>
+                              )}
+                            </HStack>
+                          )}
+
+                          {/* BACK 9 SUMMARY */}
+                          {index === 17 && (
+                            <HStack
+                              style={{
+                                backgroundColor: isDark
+                                  ? "rgba(38, 38, 38, 0.8)"
+                                  : "rgba(243, 244, 246, 0.8)",
+                                paddingVertical: 10,
+                                borderTopWidth: 1,
+                                borderColor: isDark ? "#444" : "#ddd",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  fontWeight: "700",
+                                  textAlign: "center",
+                                }}
+                              >
+                                Back 9
+                              </ThemedText>
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {backTotals.yards}
+                              </ThemedText>
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {backTotals.par}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {backTotals.score}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {backTotals.net}
+                              </ThemedText>
+                              {isStableford && (
+                                <ThemedText
+                                  style={{ flex: 1, textAlign: "center" }}
+                                >
+                                  {backTotals.stableford}
+                                </ThemedText>
+                              )}
+                            </HStack>
+                          )}
+                        </View>
+                      ))
+                    )}
+                  </VStack>
+
+                  {/* GRAND TOTAL */}
+                  {scorecardDetails.length > 0 && (
+                    <HStack
+                      style={{
+                        marginTop: 10,
+                        paddingVertical: 14,
+                        backgroundColor: "#8BC34A",
+                        borderRadius: 12,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          color: "#fff",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Total
+                      </ThemedText>
+                      <ThemedText
+                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                      >
+                        {grandTotals.yards}
+                      </ThemedText>
+                      <ThemedText
+                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                      >
+                        {grandTotals.par}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          color: "#fff",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {grandTotals.score}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          color: "#fff",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {grandTotals.net}
+                      </ThemedText>
+                      {isStableford && (
+                        <ThemedText
+                          style={{
+                            flex: 1,
+                            textAlign: "center",
+                            color: "#fff",
+                          }}
+                        >
+                          {grandTotals.stableford}
+                        </ThemedText>
+                      )}
+                    </HStack>
+                  )}
+
+                  {/* SCORECARD LEGEND */}
+                  <VStack
+                    style={{
+                      marginTop: 25,
+                      padding: 16,
+                      borderRadius: 14,
+                      backgroundColor: "transparent",
+                      borderWidth: 1,
+                      borderColor: isDark ? "#444" : "#eee",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontWeight: "700",
+                        marginBottom: 16,
+                        fontSize: 15,
+                      }}
+                    >
+                      Scorecard Legend
+                    </ThemedText>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 12,
+                      }}
+                    >
+                      {legendData.map((item, index) => (
+                        <View
+                          key={index}
+                          style={{
+                            width: "30%",
+                            alignItems: "center",
+                            marginBottom: 10,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 32,
+                              height: 32,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginBottom: 4,
+                            }}
+                          >
+                            {/* Legend Icon Mapping */}
+                            {item.type === "circle" ? (
+                              <View
+                                style={[
+                                  styles.singleCircle,
+                                  { borderColor: item.border },
+                                ]}
+                              />
+                            ) : item.type === "square" ? (
+                              <View
+                                style={[
+                                  styles.singleSquare,
+                                  {
+                                    borderColor: item.border,
+                                    borderStyle: item.dashed
+                                      ? "dashed"
+                                      : "solid",
+                                    borderWidth: item.dashed ? 1 : 2,
+                                  },
+                                ]}
+                              />
+                            ) : (
+                              <View
+                                style={[
+                                  styles.doubleSquare,
+                                  { borderColor: item.border },
+                                ]}
+                              >
+                                <View
+                                  style={[
+                                    styles.innerSquare,
+                                    { borderColor: item.border },
+                                  ]}
+                                />
+                              </View>
+                            )}
+
+                            <View
+                              style={{
+                                position: "absolute",
+                                width: 32,
+                                height: 32,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{ fontSize: 11, fontWeight: "600" }}
+                              >
+                                {item.text}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <ThemedText
+                            style={{
+                              fontSize: 10,
+                              textAlign: "center",
+                              opacity: 0.8,
+                            }}
+                          >
+                            {item.label}
+                          </ThemedText>
+                        </View>
+                      ))}
+                    </View>
+                  </VStack>
+                </>
+              )}
             </VStack>
-          </ScrollView>
-        </ThemedView>
+          </VStack>
+        </ScrollView>
       </ThemedView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  indicatorContainer: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  singleCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  singleSquare: {
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    borderWidth: 2,
+  },
+  doubleSquare: {
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    borderWidth: 2,
+    padding: 3,
+  },
+  innerSquare: {
     flex: 1,
-    flexDirection: "row",
-    paddingHorizontal: 16,
+    borderRadius: 1,
+    borderWidth: 1,
   },
-
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.one,
-    // paddingBottom: BottomTabInset + Spacing.one,
-    maxWidth: MaxContentWidth,
-  },
-  createButton: {
-    backgroundColor: "#8bc34a",
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 7,
-  },
-  list: {
-    paddingTop: Spacing.four,
-    gap: Spacing.four,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    // backgroundColor: "#e5e7eb",
-    paddingVertical: 10,
-  },
-
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#e5e7eb",
     paddingVertical: 10,
   },
-
   cell: {
     width: 70,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  headerText: {
-    fontWeight: "700",
-    fontSize: 13,
-  },
-
-  // scoreCircle: {
-  //   width: 28,
-  //   height: 28,
-  //   borderRadius: 14,
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  // },
-  legendContainer: {
-    marginTop: 20,
-  },
-
-  legendTitle: {
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-
-  legendRow: {
-    marginTop: 20,
-    padding: 15,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  // container: {
-  //   marginTop: 20,
-  //   padding: 14,
-  //   borderRadius: 12,
-  // },
-
-  legendItem: {
-    width: "25%", // 4 items per row
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  icon: {
-    width: 28,
-    height: 28,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-
-  circle: {
-    borderRadius: 20,
-  },
-
-  square: {
-    borderRadius: 4,
-  },
-
-  iconText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  label: {
-    fontSize: 11,
-    textAlign: "center",
-  },
-  scoreBox: {
-    width: 28,
-    height: 28,
-    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },

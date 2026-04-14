@@ -44,6 +44,24 @@ export const getScorecardHandicap = async (teeBoxId: number) => {
         throw error;
     }
 }
+export const getSubScorecardHandicap = async (teeBoxId: number) => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+console.log("userId",userId);
+console.log("teeBoxId",teeBoxId);
+
+    if (!userId) {
+      throw new Error("User ID not found");
+    }
+        const response = await https.get(`scorecard/handicap/${userId}/${teeBoxId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Getting scorecard handicap Error:", error);
+        throw error;
+    }
+}
+
+
 
 // getScorecardOpen - all tables details
 // scorecard/open/tournamentId/userId

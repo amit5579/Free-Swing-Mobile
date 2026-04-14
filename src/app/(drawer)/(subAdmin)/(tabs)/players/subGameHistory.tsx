@@ -70,6 +70,8 @@ const [gameHistory, setGameHistory] = useState([]);
     try {
       setLoading(true);
       const response = await getPlayerGameHistory(Number(playerId));
+      // console.log(response);
+      
       setGameHistory(response || []);
     } catch (error) {
       console.error("Error fetching player game history:", error);

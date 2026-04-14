@@ -339,7 +339,7 @@ export default function SubAdminTournamentsPage() {
             }}
             className="flex-row items-center gap-1"
           >
-            <Ionicons name="add-outline" size={28} color="white" />
+            <Ionicons name="add" size={28} color="white" />
             <ThemedText style={{ color: "white", fontWeight: "600" }}>
               Create Tournament
             </ThemedText>
@@ -374,7 +374,7 @@ export default function SubAdminTournamentsPage() {
                       }}
                     >
                       <Ionicons
-                        name="trophy-outline"
+                        name="trophy"
                         size={32}
                         color={colors.subText}
                       />
@@ -806,8 +806,10 @@ function TournamentCard({
         style={[
           styles.card,
           {
-            borderColor: isDark ? "#262626" : "#e5e5e5",
-          },
+ backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",          },
         ]}
       >
         {/* HEADER */}
@@ -862,7 +864,7 @@ function TournamentCard({
             style={styles.actionBtn}
             android_ripple={{ color: "#ddd" }}
           >
-            <Ionicons name="create-outline" size={22} color="#6b7280" />
+            <Ionicons name="create" size={22} color="#6b7280" />
             <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
               Edit
             </ThemedText>
@@ -877,7 +879,7 @@ function TournamentCard({
               );
             }}
           >
-            <Ionicons name="person-add-outline" size={22} color="#3b82f6" />
+            <Ionicons name="person-add" size={22} color="#3b82f6" />
             <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
               Roaster
             </ThemedText>
@@ -909,7 +911,7 @@ function TournamentCard({
                 );
               }}
             >
-              <Ionicons name="time-outline" size={20} color="#06b6d4" />
+              <Ionicons name="time" size={20} color="#06b6d4" />
               <ThemedText
                 style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
               >
@@ -922,11 +924,11 @@ function TournamentCard({
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
-                  `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}`,
+                  `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}&secretHoles=${tournament?.secretHoles}`,
                 );
               }}
             >
-              <Ionicons name="stats-chart-outline" size={20} color="#f59e0b" />
+              <Ionicons name="stats-chart" size={20} color="#f59e0b" />
               <ThemedText
                 style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
               >
@@ -941,7 +943,7 @@ function TournamentCard({
                 onDelete(tournament?.tournamentId);
               }}
             >
-              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <Ionicons name="trash" size={20} color="#ef4444" />
               <ThemedText
                 style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
               >
@@ -1038,6 +1040,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
+    fontWeight: "700",
   },
   overlay: {
     flex: 1,

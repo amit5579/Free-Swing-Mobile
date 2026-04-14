@@ -87,9 +87,7 @@ export default function subAdminTournamentHistory() {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const data = await getTournamentHistory(Number(tournamentId));
-      const hData = await getTournamentHistoryByUserId(Number(tournamentId));
-      // console.log("hData", hData);
+      const data = await getTournamentHistory(Number(tournamentId));      // console.log("hData", hData);
       setHistory(data);
     } catch (error) {
       console.error("Error fetching history:", error);

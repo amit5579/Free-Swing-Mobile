@@ -12,7 +12,6 @@ import {
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { HStack } from "@/components/hstack";
@@ -25,16 +24,17 @@ import { useRouter } from "expo-router";
 import {
   createMiniTournament,
   getAllTournaments,
+  postAcceptanceWeiver,
 } from "@/api/admin/tournaments";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCourse } from "@/api/admin/courses";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { tournamentSchema } from "@/schema/adminSchemas";
-import { userTournamentSchema } from "@/schema/userSchemas";
+import { acceptanceWeiverSchema, AcceptanceWeiverType, miniTournamentSchema, MiniTournamentType } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
+import { getScorecardHandicap } from "@/api/scoreCard";
 
 export default function TournamentsScreen() {
   const colorScheme = useColorScheme();
@@ -42,8 +42,6 @@ export default function TournamentsScreen() {
   const routePage = useRouter();
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const [isMinor, setIsMinor] = useState(false);
-  const [accepted, setAccepted] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
@@ -57,26 +55,42 @@ export default function TournamentsScreen() {
   const [userId, setUserId] = useState<any>("");
 
   const [loading, setLoading] = useState(true);
+
+  const {
+    control: waiverControl,
+    handleSubmit: handleWaiverSubmit,
+    reset: resetWaiver,
+    watch: watchWaiver,
+    formState: { errors: waiverErrors },
+  } = useForm<AcceptanceWeiverType>({
+    resolver: zodResolver(acceptanceWeiverSchema),
+    defaultValues: {
+      isUnder18: false,
+      agreedToTerms: false,
+      parentGuardianName: "",
+      parentGuardianMobile: "",
+      parentGuardianRelation: "",
+    },
+  });
+
+  const selectedIsUnder18 = watchWaiver("isUnder18");
+
   const {
     control,
     handleSubmit,
     reset,
     watch,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(userTournamentSchema),
+  } = useForm<MiniTournamentType>({
+    resolver: zodResolver(miniTournamentSchema),
     defaultValues: {
       name: "",
-      courseId: 0,
-      scoringType: "",
-      teeBox: 0,
-      startDate: null,
-      endDate: null,
-      maxPlayers: 0,
-      description: "",
+      scoringType: "1",
+      maxPlayers: 4,
     },
   });
 
+  const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
       month: "short",
@@ -88,8 +102,9 @@ export default function TournamentsScreen() {
   const fetchTournaments = async () => {
     try {
       setLoading(true);
-
+// postAcceptanceWeiver (tournamentId: number, isUnder18: boolean, parentGuardianMobile: string, parentGuardianName: string, parentGuardianRelation: string)
       const response = await getAllTournaments();
+      
       const gc = await getCourse();
       setTournaments(response);
       setCourses(gc);
@@ -112,58 +127,98 @@ export default function TournamentsScreen() {
     fetchTournaments();
   }, []);
 
-
   useFocusEffect(
-  React.useCallback(() => {
-        fetchTournaments();
- // 🔥 refetch when screen is focused again
-  }, [])
-);
+    React.useCallback(() => {
+      fetchTournaments();
+      // 🔥 refetch when screen is focused again
+    }, []),
+  );
 
-
-  //  const userId = AsyncStorage.getItem("userId");
-  // console.log("uuuuuuuuu",userId, "type:", typeof(userId));
 
   const formatDate = (date: Date) => {
     return date.toISOString().split("T")[0];
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: MiniTournamentType) => {
     // console.log("FORM DATA:", data);
-    setTModalVisible(false);
-    const tournamentData = {
-      description: "",
-      endDate: formatDate(data.endDate),
-      maxPlayers: data.maxPlayers,
+    try {
+      setLoading(true);
+      const tournamentData = {
+        description: "",
+        endDate: formatDate(data.endDate),
+        maxPlayers: data.maxPlayers,
 
-      name: data.name,
-      scoringType: data.scoringType,
-      startDate: formatDate(data.startDate),
-      teeBoxId: data.teeBox,
+        name: data.name,
+        scoringType: data.scoringType,
+        startDate: formatDate(data.startDate),
+        teeBoxId: data.teeBox,
 
-      courseId: data.courseId,
-    };
-    // console.log("FINAL PAYLOAD:", tournamentData);
-    createMiniTournament(
-      tournamentData.courseId,
-      tournamentData.description,
-      tournamentData.endDate,
-      tournamentData.maxPlayers,
-      tournamentData.name,
-      tournamentData.scoringType,
-      tournamentData.startDate,
-      tournamentData.teeBoxId,
-    );
+        courseId: data.courseId,
+      };
+      // console.log("FINAL PAYLOAD:", tournamentData);
+      await createMiniTournament(
+        tournamentData.courseId,
+        tournamentData.description,
+        tournamentData.endDate,
+        tournamentData.maxPlayers,
+        tournamentData.name,
+        tournamentData.scoringType,
+        tournamentData.startDate,
+        tournamentData.teeBoxId,
+      );
 
-    Toast.show({
-      type: "success",
-      text1: "Tournament created successfully",
-    });
+      Toast.show({
+        type: "success",
+        text1: "Tournament created successfully",
+      });
 
-    fetchTournaments();
-    reset();
-    setModalVisible(false);
+      fetchTournaments();
+      reset();
+      setTModalVisible(false);
+    } catch (error) {
+      console.error("Create Tournament Error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to create tournament",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+
+  const handleAcceptanceWeiver = async (data: AcceptanceWeiverType) => {
+    if (!selectedTournament) return;
+    try {
+      setLoading(true);
+      await postAcceptanceWeiver(
+        selectedTournament.tournamentId,
+        data.isUnder18,
+        data.parentGuardianMobile || "",
+        data.parentGuardianName || "",
+        data.parentGuardianRelation || "",
+      );
+      
+      Toast.show({
+        type: "success",
+        text1: "Waiver accepted successfully",
+      });
+      setModalVisible(false);
+      resetWaiver();
+      routePage.push(
+        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${selectedTournament.tournamentId}&courseId=${selectedTournament.courseId}&teeBoxId=${selectedTournament.teeBoxId}&scoringType=${selectedTournament.scoringType}`,
+      );
+    } catch (error) {
+      console.error("Acceptance Waiver Error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to accept waiver",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
@@ -234,8 +289,8 @@ export default function TournamentsScreen() {
 
   return (
     <>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.safeArea}>
           <Watermark />
 
           {/* Header */}
@@ -274,7 +329,7 @@ export default function TournamentsScreen() {
               <>
                 {tournaments.map((tournament: any) => (
                   <React.Fragment key={tournament.tournamentId}>
-                    <Box key={tournament.tournamentId} style={styles.card}>
+                    <Box key={tournament.tournamentId} style={[styles.card,{borderColor: isDark ? "#1e293b" : "#e2e8f0",backgroundColor:isDark?"rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)"}]}>
                       <ThemedText style={styles.title}>
                         {tournament.name}
                       </ThemedText>
@@ -316,7 +371,7 @@ export default function TournamentsScreen() {
                         className="flex-row justify-center items-center gap-2 border border-[#f59e0b] p-2 rounded-lg"
                       >
                         <Ionicons
-                          name="stats-chart-outline"
+                          name="stats-chart"
                           size={23}
                           color="#f59e0b"
                         />
@@ -335,11 +390,7 @@ export default function TournamentsScreen() {
                           }
                           className="flex-row justify-center items-center gap-2 border border-[#06b6d4] p-2 rounded-lg"
                         >
-                          <Ionicons
-                            name="time-outline"
-                            size={23}
-                            color="#06b6d4"
-                          />
+                          <Ionicons name="time" size={23} color="#06b6d4" />
 
                           <ThemedText style={styles.outlineButtonText}>
                             My History
@@ -358,7 +409,7 @@ export default function TournamentsScreen() {
                           className="flex-row justify-center items-center gap-2 border border-[#0d6efd] p-2 rounded-lg"
                         >
                           <Ionicons
-                            name="create-outline"
+                            name="create"
                             size={23}
                             color="#0d6efd"
                           />
@@ -373,7 +424,16 @@ export default function TournamentsScreen() {
                         ""
                       ) : (
                         <Pressable
-                          onPress={() => setModalVisible(true)}
+                          onPress={() => {
+                            if (tournament.creatorId == null) {
+                              setSelectedTournament(tournament);
+                              setModalVisible(true);
+                            } else {
+                              routePage.push(
+                                `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
+                              );
+                            }
+                          }}
                           className="flex-row justify-center items-center gap-2  bg-[#8bc34a] p-2 rounded-lg"
                         >
                           <Ionicons name="play" size={23} color="white" />
@@ -382,473 +442,527 @@ export default function TournamentsScreen() {
                         </Pressable>
                       )}
                     </Box>
-
-                    {/* user agreement modal */}
-                    <Modal
-                      animationType="slide"
-                      transparent
-                      visible={isModalVisible}
-                      onRequestClose={() => setModalVisible(false)}
-                    >
-                      <View
-                        style={[
-                          styles.overlay,
-                          {
-                            backgroundColor: isDark
-                              ? "rgba(0,0,0,0.7)"
-                              : "rgba(0,0,0,0.5)",
-                          },
-                        ]}
+                    {tournament.creatorId == null && (
+                      <Modal
+                        animationType="slide"
+                        transparent
+                        visible={isModalVisible}
+                        onRequestClose={() => setModalVisible(false)}
                       >
                         <View
                           style={[
-                            styles.modalContainer,
-                            { backgroundColor: isDark ? "#121212" : "white" },
+                            styles.overlay,
+                            {
+                              backgroundColor: isDark
+                                ? "rgba(0,0,0,0.7)"
+                                : "rgba(0,0,0,0.5)",
+                            },
                           ]}
                         >
-                          {/* HEADER */}
-                          <HStack style={styles.header}>
-                            <Text style={styles.headerTitle}>
-                              IMPORTANT – LEGAL AGREEMENT
-                            </Text>
-                          </HStack>
-
-                          {/* BASIC INFO */}
-                          <VStack style={styles.infoBox}>
-                            <Text style={{ color: isDark ? "#eee" : "#000" }}>
-                              <Text
-                                style={[
-                                  styles.bold,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                Tournament Name:
-                              </Text>
-                              BMW
-                            </Text>
-                            <Text style={{ color: isDark ? "#eee" : "#000" }}>
-                              <Text
-                                style={[
-                                  styles.bold,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                Organized By:
-                              </Text>{" "}
-                              KOLVE18FREESWING LLP
-                            </Text>
-                            <Text style={{ color: isDark ? "#eee" : "#000" }}>
-                              <Text
-                                style={[
-                                  styles.bold,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                Effective Date:
-                              </Text>{" "}
-                              Auto-generated upon acceptance
-                            </Text>
-                          </VStack>
-
-                          {/* WARNING BOX */}
                           <View
                             style={[
-                              styles.warningBox,
-                              {
-                                backgroundColor: isDark ? "#3e2723" : "#fff3cd",
-                              },
+                              styles.modalContainer,
+                              { backgroundColor: isDark ? "#121212" : "white" },
                             ]}
                           >
-                            <Text
-                              style={[
-                                styles.warningText,
-                                { color: isDark ? "#ffe0b2" : "#854d0e" },
-                              ]}
-                            >
-                              Before completing your tournament registration,
-                              you must read and agree to this Liability Waiver.
-                            </Text>
-                          </View>
+                            {/* HEADER */}
+                            <HStack style={styles.header}>
+                              <Text style={styles.headerTitle}>
+                                IMPORTANT – LEGAL AGREEMENT
+                              </Text>
+                            </HStack>
 
-                          {/* WAIVER CONTENT */}
-                          <ScrollView showsVerticalScrollIndicator={false}>
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
+                            <VStack>
+                              <ThemedText
+                                style={{
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                  fontSize: 17,
+                                }}
                               >
-                                1. Assumption of Risk
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
+                                DIGITAL GOLF TOURNAMENT LIABILITY WAIVER
+                              </ThemedText>
+                              <ThemedText
+                                style={{ textAlign: "center", fontWeight: "600" }}
                               >
-                                I understand that participation in golf
-                                tournaments involves inherent risks including
-                                injury, collisions, equipment hazards and
-                                weather related risks.
-                              </Text>
+                                ASSUMPTION OF RISK & INDEMNITY AGREEMENT
+                              </ThemedText>
                             </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                2. Medical Fitness Declaration
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I declare that I am medically fit to participate
-                                in this tournament.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                3. Release of Liability
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I release the organizers and sponsors from any
-                                liability related to injuries, damages or losses
-                                arising from my participation.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                4. Indemnity
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I agree to indemnify the organizers against
-                                claims arising from my participation.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                5. Compliance With Rules
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I will comply with tournament rules and play
-                                fairly.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                6. Personal Property
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                The organizer is not responsible for lost or
-                                stolen property.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                7. Weather & Event Changes
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                The organizer may reschedule or cancel events
-                                due to weather or safety concerns.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                8. Photography & Media Consent
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I grant permission to use images or videos from
-                                the tournament for promotional use.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                9. Digital Scoring & Data Use
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                I agree that scores and tournament data may be
-                                stored digitally.
-                              </Text>
-                            </VStack>
-
-                            <VStack style={styles.section}>
-                              <Text
-                                style={[
-                                  styles.sectionTitle,
-                                  { color: isDark ? "white" : "black" },
-                                ]}
-                              >
-                                10. Governing Law
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.sectionText,
-                                  { color: isDark ? "#aaa" : "#555" },
-                                ]}
-                              >
-                                This agreement is governed by the laws of India.
-                              </Text>
-                            </VStack>
-                          </ScrollView>
-
-                          {/* DIGITAL ACCEPTANCE */}
-                          <View style={styles.acceptanceBox}>
-                            <Text
-                              style={[
-                                styles.acceptanceTitle,
-                                { color: isDark ? "white" : "black" },
-                              ]}
-                            >
-                              DIGITAL ACCEPTANCE
-                            </Text>
-
-                            {/* MINOR CHECKBOX */}
-                            <Pressable
-                              style={styles.checkboxRow}
-                              onPress={() => setIsMinor(!isMinor)}
-                            >
-                              <View
-                                style={[
-                                  styles.checkbox,
-                                  { borderColor: isDark ? "#444" : "#999" },
-                                  isMinor && styles.checkboxActive,
-                                ]}
-                              />
-                              <Text
-                                style={[
-                                  styles.checkboxText,
-                                  { color: isDark ? "#ccc" : "#000" },
-                                ]}
-                              >
-                                I am under 18 years of age
-                              </Text>
-                            </Pressable>
-
-                            {/* GUARDIAN FORM */}
-                            {isMinor && (
-                              <VStack style={styles.guardianForm}>
-                                <Text style={styles.formTitle}>
-                                  Parent / Guardian Details
+                            {/* BASIC INFO */}
+                            <VStack style={styles.infoBox}>
+                              <Text style={{ color: isDark ? "#eee" : "#000" }}>
+                                <Text
+                                  style={[
+                                    styles.bold,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  Tournament Name:
                                 </Text>
-                                <TextInput
-                                  placeholder="Name"
-                                  placeholderTextColor={
-                                    isDark ? "#777" : "#999"
-                                  }
+                                  {tournament.name}
+                              </Text>
+                              <Text style={{ color: isDark ? "#eee" : "#000" }}>
+                                <Text
                                   style={[
-                                    styles.input,
-                                    {
-                                      backgroundColor: isDark
-                                        ? "#1a1a1a"
-                                        : "#fff",
-                                    },
+                                    styles.bold,
+                                    { color: isDark ? "white" : "black" },
                                   ]}
-                                />
+                                >
+                                  Organized By:
+                                </Text>
+                                KOLVE18FREESWING LLP
+                              </Text>
+                              <Text style={{ color: isDark ? "#eee" : "#000" }}>
+                                <Text
+                                  style={[
+                                    styles.bold,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  Effective Date:
+                                </Text>
+                                [Auto-generated upon acceptance]
+                              </Text>
+                            </VStack>
 
-                                <TextInput
-                                  placeholder="Mobile Number"
-                                  placeholderTextColor={
-                                    isDark ? "#777" : "#999"
-                                  }
-                                  keyboardType="phone-pad"
-                                  style={[
-                                    styles.input,
-                                    {
-                                      backgroundColor: isDark
-                                        ? "#1a1a1a"
-                                        : "#fff",
-                                    },
-                                  ]}
-                                />
+                            {/* WARNING BOX */}
+                            <View
+                              style={[
+                                styles.warningBox,
+                                {
+                                  backgroundColor: isDark
+                                    ? "#3e2723"
+                                    : "#fff3cd",
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.warningText,
+                                  { color: isDark ? "#ffe0b2" : "#854d0e" },
+                                ]}
+                              >
+                                Before completing your tournament registration,
+                                you must read and agree to this Liability
+                                Waiver.
+                              </Text>
+                            </View>
 
-                                <TextInput
-                                  placeholder="Relation"
-                                  placeholderTextColor={
-                                    isDark ? "#777" : "#999"
-                                  }
+                            {/* WAIVER CONTENT */}
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                              <VStack style={styles.section}>
+                                <Text
                                   style={[
-                                    styles.input,
-                                    {
-                                      backgroundColor: isDark
-                                        ? "#1a1a1a"
-                                        : "#fff",
-                                    },
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
                                   ]}
-                                />
+                                >
+                                  1. Assumption of Risk
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I understand that participation in golf
+                                  tournaments involves inherent risks including
+                                  injury, collisions, equipment hazards and
+                                  weather related risks.
+                                </Text>
                               </VStack>
-                            )}
 
-                            {/* ACCEPT CHECKBOX */}
-                            <Pressable
-                              style={styles.checkboxRow}
-                              onPress={() => setAccepted(!accepted)}
-                            >
-                              <View
-                                style={[
-                                  styles.checkbox,
-                                  { borderColor: isDark ? "#444" : "#999" },
-                                  accepted && styles.checkboxActive,
-                                ]}
-                              />
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  2. Medical Fitness Declaration
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I declare that I am medically fit to
+                                  participate in this tournament.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  3. Release of Liability
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I release the organizers and sponsors from any
+                                  liability related to injuries, damages or
+                                  losses arising from my participation.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  4. Indemnity
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I agree to indemnify the organizers against
+                                  claims arising from my participation.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  5. Compliance With Rules
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I will comply with tournament rules and play
+                                  fairly.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  6. Personal Property
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  The organizer is not responsible for lost or
+                                  stolen property.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  7. Weather & Event Changes
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  The organizer may reschedule or cancel events
+                                  due to weather or safety concerns.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  8. Photography & Media Consent
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I grant permission to use images or videos
+                                  from the tournament for promotional use.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  9. Digital Scoring & Data Use
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  I agree that scores and tournament data may be
+                                  stored digitally.
+                                </Text>
+                              </VStack>
+
+                              <VStack style={styles.section}>
+                                <Text
+                                  style={[
+                                    styles.sectionTitle,
+                                    { color: isDark ? "white" : "black" },
+                                  ]}
+                                >
+                                  10. Governing Law
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.sectionText,
+                                    { color: isDark ? "#aaa" : "#555" },
+                                  ]}
+                                >
+                                  This agreement is governed by the laws of
+                                  India.
+                                </Text>
+                              </VStack>
+                            </ScrollView>
+
+                            {/* DIGITAL ACCEPTANCE */}
+                            <View style={styles.acceptanceBox}>
                               <Text
                                 style={[
-                                  styles.checkboxText,
-                                  { color: isDark ? "#ccc" : "#000" },
+                                  styles.acceptanceTitle,
+                                  { color: isDark ? "white" : "black" },
                                 ]}
                               >
-                                I confirm I have read and understood the waiver
+                                DIGITAL ACCEPTANCE
                               </Text>
-                            </Pressable>
-                            {/* ACCEPT CHECKBOX */}
-                            <Pressable
-                              style={styles.checkboxRow}
-                              onPress={() => {
-                                setAccepted(!accepted);
-                              }}
-                            >
-                              <View
-                                style={[
-                                  styles.checkbox,
-                                  { borderColor: isDark ? "#444" : "#999" },
-                                  accepted && styles.checkboxActive,
-                                ]}
+
+                              {/* MINOR CHECKBOX */}
+                              <Controller
+                                control={waiverControl}
+                                name="isUnder18"
+                                render={({ field: { onChange, value } }) => (
+                                  <Pressable
+                                    style={styles.checkboxRow}
+                                    onPress={() => onChange(!value)}
+                                  >
+                                    <View
+                                      style={[
+                                        styles.checkbox,
+                                        {
+                                          borderColor: isDark ? "#444" : "#999",
+                                          justifyContent: "center",
+                                          alignItems: "center",
+                                        },
+                                        value && styles.checkboxActive,
+                                      ]}
+                                    >
+                                      {value && (
+                                        <Ionicons
+                                          name="checkmark"
+                                          size={14}
+                                          color="white"
+                                        />
+                                      )}
+                                    </View>
+                                    <Text
+                                      style={[
+                                        styles.checkboxText,
+                                        { color: isDark ? "#ccc" : "#000" },
+                                      ]}
+                                    >
+                                      I am under 18 years of age
+                                    </Text>
+                                  </Pressable>
+                                )}
                               />
-                              <Text
-                                style={[
-                                  styles.checkboxText,
-                                  { color: isDark ? "#ccc" : "#000" },
-                                ]}
+
+                              {/* GUARDIAN FORM */}
+                              {selectedIsUnder18 && (
+                                <VStack style={styles.guardianForm}>
+                                  <ThemedText style={styles.formTitle}>
+                                    Parent / Guardian Details
+                                  </ThemedText>
+                                  <Controller
+                                    control={waiverControl}
+                                    name="parentGuardianName"
+                                    render={({ field: { onChange, value } }) => (
+                                      <TextInput
+                                        placeholder="Name"
+                                        placeholderTextColor={isDark ? "#fff" : "#999"}
+                                        style={[
+                                          styles.input,
+                                          { backgroundColor: isDark ? "#1a1a1a" : "#fff", color: isDark ? "#fff" : "#000", },
+                                        ]}
+                                        value={value}
+                                        onChangeText={onChange}
+                                      />
+                                    )}
+                                  />
+                                  {waiverErrors.parentGuardianName && (
+                                    <Text style={{ color: "red", fontSize: 12 }}>{waiverErrors.parentGuardianName.message}</Text>
+                                  )}
+
+                                  <Controller
+                                    control={waiverControl}
+                                    name="parentGuardianMobile"
+                                    render={({ field: { onChange, value } }) => (
+                                      <TextInput
+                                        placeholder="Mobile Number"
+                                        placeholderTextColor={isDark ? "#fff" : "#999"}
+                                        keyboardType="phone-pad"
+                                        style={[
+                                          styles.input,
+                                          { backgroundColor: isDark ? "#1a1a1a" : "#fff" , color: isDark ? "#fff" : "#000", },
+                                        ]}
+                                        value={value}
+                                        onChangeText={onChange}
+                                      />
+                                    )}
+                                  />
+                                  {waiverErrors.parentGuardianMobile && (
+                                    <Text style={{ color: "red", fontSize: 12 }}>{waiverErrors.parentGuardianMobile.message}</Text>
+                                  )}
+
+                                  <Controller
+                                    control={waiverControl}
+                                    name="parentGuardianRelation"
+                                    render={({ field: { onChange, value } }) => (
+                                      <TextInput
+                                        placeholder="Relation"
+                                        placeholderTextColor={isDark ? "#fff" : "#999"}
+                                        style={[
+                                          styles.input,
+                                          { backgroundColor: isDark ? "#1a1a1a" : "#fff", color: isDark ? "#fff" : "#000",  },
+                                        ]}
+                                        value={value}
+                                        onChangeText={onChange}
+                                      />
+                                    )}
+                                  />
+                                  {waiverErrors.parentGuardianRelation && (
+                                    <Text style={{ color: "red", fontSize: 12 }}>{waiverErrors.parentGuardianRelation.message}</Text>
+                                  )}
+                                </VStack>
+                              )}
+
+                              {/* ACCEPT CHECKBOX */}
+                              <Controller
+                                control={waiverControl}
+                                name="agreedToTerms"
+                                render={({ field: { onChange, value } }) => (
+                                  <Pressable
+                                    style={styles.checkboxRow}
+                                    onPress={() => onChange(!value)}
+                                  >
+                                    <View
+                                      style={[
+                                        styles.checkbox,
+                                        {
+                                          borderColor: isDark ? "#444" : "#999",
+                                          justifyContent: "center",
+                                          alignItems: "center",
+                                        },
+                                        value && styles.checkboxActive,
+                                      ]}
+                                    >
+                                      {value && (
+                                        <Ionicons
+                                          name="checkmark"
+                                          size={14}
+                                          color="white"
+                                        />
+                                      )}
+                                    </View>
+                                    <Text
+                                      style={[
+                                        styles.checkboxText,
+                                        { color: isDark ? "#ccc" : "#000" },
+                                      ]}
+                                    >
+                                      I confirm I have read and agree to the terms above.
+                                    </Text>
+                                  </Pressable>
+                                )}
+                              />
+                               {waiverErrors.agreedToTerms && (
+                                 <Text style={{ color: "red", fontSize: 12 }}>{waiverErrors.agreedToTerms.message}</Text>
+                               )}
+                            </View>
+
+                            {/* ACTION BUTTONS */}
+                            <HStack style={styles.buttonRow}>
+                              <Pressable
+                                onPress={() => {
+                                  setModalVisible(false);
+                                  reset();
+                                  Toast.show({
+                                    type: "error",
+                                    text1: "You must accept the waiver to play the game",
+                                  });
+                                }}
+                                style={styles.declineBtn}
                               >
-                                I agree to the terms above.
-                              </Text>
-                            </Pressable>
+                                <Text
+                                  style={{
+                                    color: "#e53935",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  DECLINE
+                                </Text>
+                              </Pressable>
+
+                              <Pressable
+                                onPress={handleWaiverSubmit(handleAcceptanceWeiver)}
+                                style={styles.acceptBtn}
+                              >
+                                <Text
+                                  style={{ color: "#fff", fontWeight: "600" }}
+                                >
+                                  I AGREE & REGISTER
+                                </Text>
+                              </Pressable>
+                            </HStack>
                           </View>
-
-                          {/* ACTION BUTTONS */}
-                          <HStack style={styles.buttonRow}>
-                            <Pressable
-                              onPress={() => {
-                                setModalVisible(false);
-                              }}
-                              style={styles.declineBtn}
-                            >
-                              <Text
-                                style={{ color: "#e53935", fontWeight: "600" }}
-                              >
-                                DECLINE
-                              </Text>
-                            </Pressable>
-
-                            <Pressable
-                              onPress={() => {
-                                setModalVisible(false);
-                                routePage.push(
-                                  `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
-                                );
-                              }}
-                              style={styles.acceptBtn}
-                            >
-                              <Text
-                                style={{ color: "#fff", fontWeight: "600" }}
-                              >
-                                I AGREE & REGISTER
-                              </Text>
-                            </Pressable>
-                          </HStack>
                         </View>
-                      </View>
-                    </Modal>
+                      </Modal>
+                    )}
                   </React.Fragment>
                 ))}
               </>
             )}
           </ScrollView>
-        </ThemedView>
-      </ThemedView>
+        </View>
+      </View>
 
       {/* Create mini tournament modal */}
       <Modal animationType="slide" transparent visible={tModalVisible}>
@@ -898,7 +1012,7 @@ export default function TournamentsScreen() {
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     placeholder="Enter Tournament Name"
-                    placeholderTextColor={isDark ? "#777" : "#999"}
+                    placeholderTextColor={isDark ? "#fff" : "#999"}
                     style={[
                       styles.input,
                       {
@@ -1040,7 +1154,7 @@ export default function TournamentsScreen() {
                         borderColor: isDark ? "#333" : "#ddd",
                       },
                     ]}
-                    placeholderStyle={{ color: isDark ? "#777" : "#999" }}
+                    placeholderStyle={{ color: isDark ? "#fff" : "#999" }}
                     selectedTextStyle={{ color: isDark ? "white" : "black" }}
                     containerStyle={{
                       backgroundColor: isDark ? "#1a1a1a" : "#fff",
@@ -1299,7 +1413,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: Spacing.four,
     gap: Spacing.two,
-    borderColor: "#8bc34a",
     borderWidth: 1,
   },
 
@@ -1448,6 +1561,7 @@ const styles = StyleSheet.create({
 
   checkboxActive: {
     backgroundColor: "#8bc34a",
+    borderColor: "#8bc34a",
   },
 
   checkboxText: {
@@ -1469,6 +1583,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 8,
     marginBottom: 6,
+    
   },
 
   buttonRow: {
