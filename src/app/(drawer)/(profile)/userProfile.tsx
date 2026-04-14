@@ -192,7 +192,7 @@ export default function UserProfile() {
               </>
             ) : (
               <>
-                <HStack className="items-center mb-6">
+                <HStack className="items-center my-6">
                   <Pressable onPress={() => router.back()} hitSlop={20}>
                     <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
                   </Pressable>

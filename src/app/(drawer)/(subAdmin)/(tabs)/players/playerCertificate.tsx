@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
 import {
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -16,13 +17,12 @@ import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useRef } from "react";
-import ViewShot from "react-native-view-shot";
+import ViewShot, { captureRef } from "react-native-view-shot";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Skeleton } from "@/components/Skeleton";
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
-import { generateCertificateHTML } from "@/utils/certificateTemplate";
 import { Image } from "expo-image";
 import { getPlayerCertificateById } from "@/api/subAdmin/myPlayers";
 
@@ -65,27 +65,78 @@ export default function PlayerCertificatePage() {
     loadWatermark();
   }, []);
 
-  const downloadCertificate = async () => {
-    try {
-      const html = generateCertificateHTML(userCertificate, watermarkBase64);
-      if (!html) return;
-      await Print.printAsync({ html });
-    } catch (error) {
-      console.log("Download Error:", error);
-    }
-  };
+ const downloadCertificate = async () => {
+     try {
+       if (!certificateRef.current) return;
+ 
+       const base64 = await captureRef(certificateRef, {
+         format: "png",
+         quality: 1,
+         result: "base64",
+         width: 2000, // HD Resolution
+       });
+ 
+       const html = `
+         <html>
+           <head>
+             <style>
+               @page { size: auto; margin: 0mm; }
+               body { margin: 0; padding: 50px 0; background-color: white; display: flex; justify-content: center; align-items: flex-start; }
+               img { width: 100%; height: auto; max-width: 90vw; max-height: 90vh; object-fit: contain; }
+             </style>
+           </head>
+           <body>
+             <img src="data:image/png;base64,${base64}" />
+           </body>
+         </html>
+       `;
+ 
+       await Print.printAsync({ html });
+     } catch (error) {
+       console.log("Download Error:", error);
+       Alert.alert("Error", "Could not generate certificate download.");
+     }
+   };
+ 
 
   const shareCertificate = async () => {
-    try {
-      const html = generateCertificateHTML(userCertificate, watermarkBase64);
-      if (!html) return;
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: 'Share Handicap Certificate' });
-    } catch (error) {
-      console.log("Share Error:", error);
-    }
-  };
-
+     try {
+       if (!certificateRef.current) return;
+ 
+       const base64 = await captureRef(certificateRef, {
+         format: "png",
+         quality: 1,
+         result: "base64",
+         width: 2000, // HD Resolution
+       });
+ 
+       const html = `
+         <html>
+           <head>
+             <style>
+               @page { size: auto; margin: 0mm; }
+               body { margin: 0; padding: 50px 0; background-color: white; display: flex; justify-content: center; align-items: flex-start; }
+               img { width: 100%; height: auto; max-width: 90vw; max-height: 90vh; object-fit: contain; }
+             </style>
+           </head>
+           <body>
+             <img src="data:image/png;base64,${base64}" />
+           </body>
+         </html>
+       `;
+ 
+       const { uri: pdfUri } = await Print.printToFileAsync({ html });
+       await Sharing.shareAsync(pdfUri, {
+         UTI: '.pdf',
+         mimeType: 'application/pdf',
+         dialogTitle: 'Share Handicap Certificate'
+       });
+     } catch (error) {
+       console.log("Share Error:", error);
+       Alert.alert("Error", "Could not generate certificate for sharing.");
+     }
+   };
+ 
   const CertificateSkeleton = () => {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
@@ -162,7 +213,7 @@ export default function PlayerCertificatePage() {
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
       <ThemedView className="flex-1 px-5">
-        <HStack className="justify-between items-center my-5">
+        <HStack className="justify-between items-center my-2">
           <Pressable onPress={() => router.back()} hitSlop={20} style={{ padding: 10, borderRadius: 50, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9" }}>
             <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
           </Pressable>

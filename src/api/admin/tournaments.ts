@@ -36,7 +36,7 @@ export const getAllTournaments = async () => {
 export const createTournament = async (tournamentData: any) => {
     try {
         const response = await https.post(`Tournament`, tournamentData);
-        console.log("Created Tournament:", response.data);
+        // console.log("Created Tournament:", response.data);
         return response.data;
     } catch (error) {
         console.error("Create Tournament Error:", error);
@@ -92,6 +92,24 @@ export const deleteTournament = async (tournamentId: number) => {
     }
 };
 
+// Acceptance weiver post Tournament/42/accept-waiver
+// isUnder18 : trueparentGuardianMobile: "999999999"parentGuardianName: "Amit"parentGuardianRelation: "Brother"userAgent: userId: 2version: "v1.0"
+export const postAcceptanceWeiver = async (tournamentId: number, isUnder18: boolean, parentGuardianMobile: string, parentGuardianName: string, parentGuardianRelation: string) => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.post(`Tournament/${tournamentId}/accept-waiver`, { isUnder18, parentGuardianMobile, parentGuardianName, parentGuardianRelation, userId});
+        // console.log("Acceptance Weiver:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Acceptance Weiver Error:", error);
+        throw error;
+    }
+};
+
+
 // get all players User/list
 
 export const getAllPlayers = async () => {
@@ -134,12 +152,33 @@ export const addPlayerToTournament = async (tournamentId: number, userId: number
     }
 };
 
+// compare toggle player - Tournament/43/players
+
+export const getAddedPlayers = async (tournamentId: number) => {
+    try {
+        const response = await https.get(`Tournament/${tournamentId}/players`);
+        // console.log("Compare toggle player:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Compare toggle player Error:", error);
+        throw error;
+    }
+};
+
 // Remove player from tournament: Tournament/13/players/27
 
-export const removePlayerFromTournament = async (tournamentId: any, userId: any) => {
+export const removePlayerFromTournament = async (tournamentId: any, userId?: number) => {
     try {
-        const response = await https.delete(`Tournament/${tournamentId}/players/${userId}`);
-        // console.log("Removed Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
+        let finalUserId = userId;
+        if (!finalUserId) {
+            finalUserId = Number(await AsyncStorage.getItem("userId"));
+        }
+        
+        if (!finalUserId) {
+            throw new Error("User ID not found");
+        }
+        const response = await https.delete(`Tournament/${tournamentId}/players/${finalUserId}`);
+        // console.log("Removed Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", finalUserId);
         return response.data;
     } catch (error) {
         console.error("Removed tournament players Error:", error);
@@ -186,21 +225,21 @@ export const getTournamentHistoryByUserId = async (tournamentId: number) => {
 // tournament-scorecard
 // get handicap by user id and tournament id - scorecard/handicap/2/2
 
-export const getHandicap = async (tournamentId: number) => {
-    try {
-        const userId = await AsyncStorage.getItem("userId");
+// export const getHandicap = async (tournamentId: number) => {
+//     try {
+//         const userId = await AsyncStorage.getItem("userId");
 
-        if (!userId) {
-            throw new Error("User ID not found in storage");
-        }
-        const response = await https.get(`scorecard/handicap/${userId}/${tournamentId}`);
-        // console.log("Fetching handicap:", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Fetching handicap Error:", error);
-        throw error;
-    }
-};
+//         if (!userId) {
+//             throw new Error("User ID not found in storage");
+//         }
+//         const response = await https.get(`scorecard/handicap/${userId}/${tournamentId}`);
+//         // console.log("Fetching handicap:", response.data);
+//         return response.data;
+//     } catch (error) {
+//         console.error("Fetching handicap Error:", error);
+//         throw error;
+//     }
+// };
 
 
 // get scorecard by id - scorecard/details/1
@@ -276,6 +315,23 @@ export const addUsersToTournament = async (tournamentId: number) => {
     }
 };
 
+
+// remove from tournament - Tournament/43/players/2
+
+export const removeFromTournament = async (tournamentId: number) => {
+    try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await https.delete(`Tournament/${tournamentId}/players/${userId}`);
+        // console.log("Removed from tournament:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Removed from tournament Error:", error);
+        throw error;
+    }
+};
 
 
 // post secret holes : Tournament/14/secret-holes payload : [1,2,3,4,5,6,7,8,9,10,11,12]

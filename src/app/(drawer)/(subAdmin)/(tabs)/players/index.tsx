@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Modal,
   Pressable,
@@ -78,6 +78,10 @@ export default function SubAdminPlayersPage() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "All" | "Active" | "Blocked"
+  >("All");
 
   // ── Colors ──
   const colors = {
@@ -142,6 +146,23 @@ export default function SubAdminPlayersPage() {
     fetchPlayers();
   }, []);
 
+  const filteredPlayers = useMemo(() => {
+    return players.filter((player) => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        player.username.toLowerCase().includes(searchLower) ||
+        player.email.toLowerCase().includes(searchLower) ||
+        (player.membershipNo && player.membershipNo.toLowerCase().includes(searchLower)) && player.role != "CourseMarshal";
+
+      const matchesStatus =
+        statusFilter === "All" && player.role != "CourseMarshal"||
+        (statusFilter === "Active" && !player.isBlocked && player.role != "CourseMarshal") ||
+        (statusFilter === "Blocked" && player.isBlocked && player.role != "CourseMarshal");
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [players, searchQuery, statusFilter]);
+
   useFocusEffect(
     React.useCallback(() => {
       fetchPlayers();
@@ -185,8 +206,6 @@ export default function SubAdminPlayersPage() {
 
   const handleBlockPlayer = async (id: number, isBlocked: boolean) => {
     try {
-
-
       if (isBlocked) {
         await unblockPlayer(id);
         Toast.show({
@@ -212,7 +231,6 @@ export default function SubAdminPlayersPage() {
       setLoading(false);
     }
   };
-
 
   // ── Date Formatting ──
   const formatDateDisplay = (dateStr: string) => {
@@ -541,7 +559,9 @@ export default function SubAdminPlayersPage() {
                 text1: "Handicap Certificate",
                 text2: `Viewing certificate for ${item.username}`,
               });
-              routePage.push(`/(drawer)/(subAdmin)/(tabs)/players/playerCertificate?userId=${item.id}`)
+              routePage.push(
+                `/(drawer)/(subAdmin)/(tabs)/players/playerCertificate?userId=${item.id}`,
+              );
             }}
           />
           <ActionButton
@@ -641,7 +661,7 @@ export default function SubAdminPlayersPage() {
           >
             {loading
               ? "Loading..."
-              : `${players.length} player${players.length !== 1 ? "s" : ""}`}
+              : `${filteredPlayers.length} player${filteredPlayers.length !== 1 ? "s" : ""}`}
           </ThemedText>
         </VStack>
 
@@ -660,7 +680,7 @@ export default function SubAdminPlayersPage() {
               borderRadius: 10,
             }}
           >
-            <Ionicons name="person-add-outline" size={18} color="#fff" />
+            <Ionicons name="person-add" size={18} color="#fff" />
             <ThemedText
               style={{
                 color: "#fff",
@@ -675,6 +695,74 @@ export default function SubAdminPlayersPage() {
         </HStack>
       </View>
 
+      {/* ─── Search & Filters ─── */}
+      <VStack className="px-4 mt-4">
+        <Box
+          className="flex-row items-center px-4 rounded-xl border"
+          style={{
+            height: 48,
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(255,255,255,0.9)",
+            borderColor: colors.cardBorder,
+          }}
+        >
+          <Ionicons name="search" size={20} color={colors.accent} />
+          <TextInput
+            style={{
+              flex: 1,
+              marginLeft: 10,
+              color: colors.text,
+              fontSize: 15,
+            }}
+            placeholder="Search by name, email, membership..."
+            placeholderTextColor={colors.subText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={20} color={colors.subText} />
+            </Pressable>
+          )}
+        </Box>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 14 }}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {["All", "Active", "Blocked"].map((status) => {
+            const isSelected = statusFilter === status;
+            return (
+              <Pressable
+                key={status}
+                onPress={() => setStatusFilter(status as any)}
+                style={{
+                  paddingHorizontal: 13,
+                  paddingVertical: 5,
+                  borderRadius: 20,
+                  backgroundColor: isSelected ? colors.accent : colors.cardBg,
+                  borderWidth: 1,
+                  borderColor: isSelected ? colors.accent : colors.cardBorder,
+                }}
+              >
+                <ThemedText
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: isSelected ? "#fff" : colors.subText,
+                  }}
+                >
+                  {status}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </VStack>
+
       {/* ─── List ─── */}
       {loading ? (
         <FlatList
@@ -686,9 +774,61 @@ export default function SubAdminPlayersPage() {
         />
       ) : players.length === 0 ? (
         <EmptyState />
+      ) : filteredPlayers.length === 0 ? (
+        <VStack
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 60,
+            paddingHorizontal: 24,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.iconBg,
+              padding: 18,
+              borderRadius: 50,
+              marginBottom: 16,
+            }}
+          >
+            <Ionicons name="search" size={32} color={colors.subText} />
+          </View>
+          <ThemedText
+            style={{
+              fontSize: 18,
+              fontWeight: "600",
+              color: colors.text,
+              marginBottom: 6,
+            }}
+          >
+            No Results Found
+          </ThemedText>
+          <ThemedText
+            style={{
+              fontSize: 14,
+              color: colors.subText,
+              textAlign: "center",
+              lineHeight: 20,
+            }}
+          >
+            We couldn't find any players matching "{searchQuery}" in{" "}
+            {statusFilter} status.
+          </ThemedText>
+          <Pressable
+            onPress={() => {
+              setSearchQuery("");
+              setStatusFilter("All");
+            }}
+            style={{ marginTop: 20 }}
+          >
+            <ThemedText style={{ color: colors.accent, fontWeight: "600" }}>
+              Clear all filters
+            </ThemedText>
+          </Pressable>
+        </VStack>
       ) : (
         <FlatList
-          data={players}
+          data={filteredPlayers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderPlayerCard}
           contentContainerStyle={styles.listContent}
@@ -756,7 +896,8 @@ export default function SubAdminPlayersPage() {
                 lineHeight: 20,
               }}
             >
-              Are you sure you want to remove player "{playerToDelete?.username}"?
+              Are you sure you want to remove player "{playerToDelete?.username}
+              "?
             </ThemedText>
 
             <View

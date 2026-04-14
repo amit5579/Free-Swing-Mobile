@@ -22,7 +22,7 @@ export default function tournamentHistory() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
-  const { tournamentId , tournamentName} = useLocalSearchParams();
+  const { tournamentId, tournamentName } = useLocalSearchParams();
 
   const [history, setHistory] = useState<any>([]);
   const [loading, setLoading] = useState(true);
@@ -185,7 +185,10 @@ function HistoryCard({ item, isDark }: any) {
     <Box
       style={{
         borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
+        backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
         borderRadius: 14,
         padding: 16,
       }}

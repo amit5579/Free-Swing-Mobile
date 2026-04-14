@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
   View,
-  ViewStyle,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -183,7 +181,7 @@ export default function LeaderboardPage() {
 
     const border = isDark ? "#334155" : "#d1d5db";
 
-    const secondaryText = isDark ? "#94a3b8" : "#6b7280";
+    const secondaryText = isDark ? "#e7f0fcff" : "#6b7280";
 
     const HoleBox = ({ number, par }: { number: any; par: any }) => {
       const isSelected =
@@ -261,7 +259,7 @@ export default function LeaderboardPage() {
                     ? "rgba(15, 23, 42, 0.7)"
                     : "rgba(255, 255, 255, 0.7)",
 
-            opacity: isDisabled ? 0.5 : 1,
+            opacity: isDisabled ? 0.7 : 1,
 
             justifyContent: "center",
             alignItems: "center",
@@ -272,7 +270,7 @@ export default function LeaderboardPage() {
             style={{
               fontSize: 14,
               fontWeight: "700",
-              color: isDark ? "#f1f5f9" : "#020617",
+              color: isDark ? "#ffffffff" : "#020617",
             }}
           >
             {number}
@@ -432,7 +430,7 @@ export default function LeaderboardPage() {
                 color: "#ffffff",
               }}
             >
-              Calculate Double Peoria
+              Apply Peoria Formula
             </Text>
           </Pressable>
         </View>
@@ -522,245 +520,496 @@ export default function LeaderboardPage() {
       </View>
     );
   };
+
+  const RANK_WIDTH = 40;
+  const PLAYER_WIDTH = 90;
+  const HCP_WIDTH = 50;
+  const HOLE_WIDTH = 35;
+  const TOTAL_WIDTH = 45;
+  const STAT_WIDTH = 55;
+
+  const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
+
+  const rightContentWidth = useMemo(() => {
+    const holeCols = HOLE_WIDTH * 18;
+    const totals = TOTAL_WIDTH * 2;
+    const stats = STAT_WIDTH * 6; // GROSS, NET, PTS, EGL, BRD, PAR
+    return holeCols + totals + stats;
+  }, []);
+
+  const TableHeaderLeft = () => (
+    <HStack
+      style={{
+        height: 45,
+        width: LEFT_FIXED_WIDTH,
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        borderRightWidth: 1,
+        borderColor: isDark ? "#334155" : "#e2e8f0",
+      }}
+    >
+      <ThemedText style={[styles.headerText, { width: RANK_WIDTH }]}>
+        RNK
+      </ThemedText>
+      <ThemedText
+        style={[
+          styles.headerText,
+          { width: PLAYER_WIDTH, textAlign: "left", paddingLeft: 10 },
+        ]}
+      >
+        PLAYER
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: HCP_WIDTH }]}>
+        HCP
+      </ThemedText>
+    </HStack>
+  );
+
+  const TableHeaderRight = () => (
+    <HStack
+      style={{
+        height: 45,
+        width: rightContentWidth,
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+      }}
+    >
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText key={i} style={[styles.headerText, { width: HOLE_WIDTH }]}>
+          {i + 1}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        OUT
+      </ThemedText>
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText
+          key={i + 9}
+          style={[styles.headerText, { width: HOLE_WIDTH }]}
+        >
+          {i + 10}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        IN
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        GROSS
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        NET
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        PTS
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        EGL
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        BRD
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        PAR
+      </ThemedText>
+    </HStack>
+  );
+
+  const InfoRowLeft = ({ label }: { label: string }) => (
+    <HStack
+      style={{
+        height: 40,
+        width: LEFT_FIXED_WIDTH,
+        borderBottomWidth: 1,
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+        borderRightWidth: 1,
+        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+      }}
+    >
+      <View style={{ width: RANK_WIDTH }} />
+      <ThemedText style={[styles.infoLabel, { width: PLAYER_WIDTH }]}>
+        {label}
+      </ThemedText>
+      <View style={{ width: HCP_WIDTH }} />
+    </HStack>
+  );
+
+  const InfoRowRight = ({ data, type }: { data: any[]; type: "par" | "si" }) => (
+    <HStack
+      style={{
+        height: 40,
+        width: rightContentWidth,
+        borderBottomWidth: 1,
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+      }}
+    >
+      {data.slice(0, 9).map((h, i) => (
+        <ThemedText
+          key={i}
+          style={[styles.infoCellText, { width: HOLE_WIDTH }]}
+        >
+          {type === "par" ? h.par : h.handicap}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      {data.slice(9, 18).map((h, i) => (
+        <ThemedText
+          key={i}
+          style={[styles.infoCellText, { width: HOLE_WIDTH }]}
+        >
+          {type === "par" ? h.par : h.handicap}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      <ThemedText
+        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      <View style={{ width: STAT_WIDTH * 5 }} />
+    </HStack>
+  );
+
+  const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    return (
+      <HStack
+        style={{
+          height: 50,
+          width: LEFT_FIXED_WIDTH,
+          backgroundColor: rowBg,
+          borderBottomWidth: 0.5,
+          borderColor: isDark ? "#333" : "#eee",
+          borderRightWidth: 1,
+        }}
+      >
+        <ThemedText
+          style={[styles.cellText, { width: RANK_WIDTH, fontWeight: "600" }]}
+        >
+          {player.rank || "-"}
+        </ThemedText>
+        <ThemedText
+          numberOfLines={1}
+          style={[
+            styles.cellText,
+            {
+              width: PLAYER_WIDTH,
+              textAlign: "left",
+              paddingLeft: 10,
+              fontWeight: "600",
+            },
+          ]}
+        >
+          {player.playerName}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: HCP_WIDTH }]}>
+          {player.handicap}
+        </ThemedText>
+      </HStack>
+    );
+  };
+
+  const PlayerRowRight = ({ player, index }: { player: any; index: number }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    return (
+      <HStack
+        style={{
+          height: 50,
+          width: rightContentWidth,
+          backgroundColor: rowBg,
+          borderBottomWidth: 0.5,
+          borderColor: isDark ? "#333" : "#eee",
+        }}
+      >
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 1];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.front9}
+        </ThemedText>
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 10];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.back9}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}>
+          {player.gross}
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: STAT_WIDTH, fontWeight: "800", color: "#3b82f6" },
+          ]}
+        >
+          {player.net}
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: STAT_WIDTH, fontWeight: "800", color: "#16a34a" },
+          ]}
+        >
+          {player.points}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.eagles}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.birdies}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.pars}
+        </ThemedText>
+      </HStack>
+    );
+  };
+
+  const TableLoadingSkeleton = () => {
+    const rows = 8;
+
+    return (
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
+        <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+          {/* Left fixed skeleton */}
+          <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+            <View
+              style={{
+                height: 45,
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                borderRightWidth: 1,
+                borderColor: isDark ? "#334155" : "#e2e8f0",
+                justifyContent: "center",
+                paddingHorizontal: 10,
+              }}
+            >
+              <Skeleton isDark={isDark} height={12} width={120} />
+            </View>
+            {Array.from({ length: rows }).map((_, i) => (
+              <HStack
+                key={i}
+                style={{
+                  height: 50,
+                  borderBottomWidth: 0.5,
+                  borderColor: isDark ? "#333" : "#eee",
+                  borderRightWidth: 1,
+                  paddingHorizontal: 8,
+                  alignItems: "center",
+                  gap: 8,
+                  backgroundColor:
+                    i % 2 === 0
+                      ? isDark
+                        ? "#0f172a"
+                        : "#fff"
+                      : isDark
+                        ? "#1e293b"
+                        : "#f8fafc",
+                }}
+              >
+                <Skeleton isDark={isDark} height={12} width={20} />
+                <Skeleton isDark={isDark} height={12} width={60} />
+                <Skeleton isDark={isDark} height={12} width={25} />
+              </HStack>
+            ))}
+          </VStack>
+
+          {/* Right scrollable skeleton */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <VStack style={{ width: rightContentWidth }}>
+              <View
+                style={{
+                  height: 45,
+                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                  justifyContent: "center",
+                  paddingHorizontal: 10,
+                }}
+              >
+                <Skeleton isDark={isDark} height={12} width={220} />
+              </View>
+
+              {Array.from({ length: rows }).map((_, r) => (
+                <HStack
+                  key={r}
+                  style={{
+                    height: 50,
+                    borderBottomWidth: 0.5,
+                    borderColor: isDark ? "#333" : "#eee",
+                    backgroundColor:
+                      r % 2 === 0
+                        ? isDark
+                          ? "#0f172a"
+                          : "#fff"
+                        : isDark
+                          ? "#1e293b"
+                          : "#f8fafc",
+                    paddingHorizontal: 6,
+                    alignItems: "center",
+                  }}
+                >
+                  {Array.from({ length: 10 }).map((__, c) => (
+                    <View
+                      key={c}
+                      style={{
+                        width: c === 9 ? TOTAL_WIDTH : HOLE_WIDTH,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Skeleton isDark={isDark} height={12} width={18} />
+                    </View>
+                  ))}
+                  <View style={{ width: 12 }} />
+                  <Skeleton isDark={isDark} height={12} width={260} />
+                </HStack>
+              ))}
+            </VStack>
+          </ScrollView>
+        </HStack>
+      </ScrollView>
+    );
+  };
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
         <RenderHeader />
         <Watermark />
 
-        <ScrollView contentContainerStyle={{ padding: 12 }}>
+        <View style={{ flex: 1, paddingHorizontal: 12 }}>
           {loading ? (
-            <>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <LeaderboardCardSkeleton key={i} isDark={isDark} />
-              ))}
-            </>
+            <TableLoadingSkeleton />
           ) : (
-            <>
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
               {isDoublePreoria && <RenderSecretHoles />}
 
-              {leaderboard.map((player) => (
-                <PlayerCard
-                  key={player.userId}
-                  player={player}
-                  holes={holes}
-                  isDark={isDark}
-                />
-              ))}
-            </>
+              <HStack
+                style={{
+                  borderTopWidth: 1,
+                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  marginTop: isDoublePreoria ? 8 : 0,
+                }}
+              >
+                {/* Fixed left block */}
+                <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+                  <TableHeaderLeft />
+                  {holes.length > 0 && (
+                    <>
+                      <InfoRowLeft label="COURSE PAR" />
+                      <InfoRowLeft label="STROKE INDEX" />
+                    </>
+                  )}
+                  {leaderboard.map((player, idx) => (
+                    <PlayerRowLeft key={player.userId} player={player} index={idx} />
+                  ))}
+                </VStack>
+
+                {/* Horizontally scrollable right block */}
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <VStack style={{ width: rightContentWidth }}>
+                    <TableHeaderRight />
+                    {holes.length > 0 && (
+                      <>
+                        <InfoRowRight data={holes} type="par" />
+                        <InfoRowRight data={holes} type="si" />
+                      </>
+                    )}
+                    {leaderboard.map((player, idx) => (
+                      <PlayerRowRight key={player.userId} player={player} index={idx} />
+                    ))}
+                  </VStack>
+                </ScrollView>
+              </HStack>
+            </ScrollView>
           )}
-        </ScrollView>
+        </View>
       </ThemedView>
     </>
   );
 }
 
-function PlayerCard({ player, holes, isDark }: any) {
-  return (
-    <View style={[styles.card, { borderColor: isDark ? "#333" : "#ddd" }]}>
-      {/* HEADER */}
-      <HStack style={styles.header}>
-        <View style={styles.rank}>
-          <ThemedText style={{ fontWeight: "700" }}>
-            {player.rank || "-"}
-          </ThemedText>
-        </View>
-
-        <VStack style={{ flex: 1 }}>
-          <ThemedText style={styles.name}>{player.playerName}</ThemedText>
-          <ThemedText style={styles.sub}>HC: {player.handicap}</ThemedText>
-        </VStack>
-
-        <VStack style={{ alignItems: "flex-end" }}>
-          <ThemedText style={styles.points}>{player.points}</ThemedText>
-          <ThemedText style={styles.sub}>PTS</ThemedText>
-        </VStack>
-      </HStack>
-
-      {/* HOLES GRID */}
-      <View style={{ marginTop: 10 }}>
-        {/* FRONT 9 */}
-        <HStack style={styles.gridRow}>
-          {Array.from({ length: 9 }).map((_, i) => {
-            const holeNum = i + 1;
-            const score = player.holeScores?.[holeNum];
-
-            return (
-              <View key={holeNum} style={styles.gridCell}>
-                <ThemedText style={styles.holeNumber}>{holeNum}</ThemedText>
-                <View
-                  style={[
-                    styles.scoreCircle,
-                    getScoreStyle(score, holes[i]?.par),
-                  ]}
-                >
-                  <ThemedText>{score ?? "-"}</ThemedText>
-                </View>
-                <ThemedText>{holes[i]?.par}</ThemedText>
-              </View>
-            );
-          })}
-        </HStack>
-
-        {/* BACK 9 */}
-        <HStack style={styles.gridRow}>
-          {Array.from({ length: 9 }).map((_, i) => {
-            const holeNum = i + 10;
-            const score = player.holeScores?.[holeNum];
-
-            return (
-              <View key={holeNum} style={styles.gridCell}>
-                <ThemedText style={styles.holeNumber}>{holeNum}</ThemedText>
-                <View
-                  style={[
-                    styles.scoreCircle,
-                    getScoreStyle(score, holes[i + 9]?.par),
-                  ]}
-                >
-                  <ThemedText>{score ?? "-"}</ThemedText>
-                </View>
-                <ThemedText>{holes[i + 9]?.par}</ThemedText>
-              </View>
-            );
-          })}
-        </HStack>
-      </View>
-
-      {/* STATS */}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          marginTop: 12,
-          rowGap: 12,
-        }}
-      >
-        {[
-          { label: "OUT", value: player.front9 },
-          { label: "IN", value: player.back9 },
-          { label: "GROSS", value: player.gross },
-          { label: "NET", value: player.net },
-          { label: "PTS", value: player.points },
-          { label: "Birdies", value: player.birdies },
-          { label: "Pars", value: player.pars },
-          { label: "Eagles", value: player.eagles },
-        ]
-          .filter((s) => s.value !== undefined && s.value !== null)
-          .map((stat, idx) => (
-            <Stat key={idx} label={stat.label} value={stat.value} />
-          ))}
-      </View>
-    </View>
-  );
-}
-
-function Stat({ label, value }: any) {
-  return (
-    <VStack style={styles.stat}>
-      <ThemedText style={styles.statValue}>{value ?? "-"}</ThemedText>
-      <ThemedText style={styles.statLabel}>{label}</ThemedText>
-    </VStack>
-  );
-}
-
-function getScoreStyle(score: number, par: number): ViewStyle {
-  if (!score || !par) return {};
-
-  const diff = score - par;
-
-  if (diff <= -2) return { borderColor: "#166534", borderWidth: 2 }; // eagle
-  if (diff === -1) return { borderColor: "#16a34a", borderWidth: 2 }; // birdie
-  if (diff === 0)
-    return { borderColor: "#9ca3af", borderStyle: "dashed", borderWidth: 1 };
-  if (diff === 1) return { borderColor: "#ef4444", borderWidth: 2 };
-  if (diff >= 2) return { borderColor: "#dc2626", borderWidth: 2 };
-
-  return {};
-}
-
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 12,
+  headerText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center",
+    opacity: 0.8,
+    lineHeight: 45,
   },
-
-  header: {
-    alignItems: "center",
+  cellText: {
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 50,
   },
-
-  rank: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#84cc16",
+  infoCellText: {
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 40,
+    opacity: 0.6,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "left",
+    paddingLeft: 10,
+    lineHeight: 40,
+    color: "#84cc16",
+  },
+  cell: {
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
-  },
-
-  name: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-
-  sub: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-
-  points: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#16a34a",
-  },
-
-  holeCell: {
-    alignItems: "center",
-    marginRight: 10,
-  },
-
-  holeNumber: {
-    fontSize: 11,
-    opacity: 0.6,
-  },
-
-  scoreCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    marginTop: 4,
-  },
-
-  summary: {
-    marginTop: 12,
-    justifyContent: "space-between",
-  },
-
-  stat: {
-    alignItems: "center",
-    minWidth: "18%",
-  },
-
-  statValue: {
-    fontWeight: "700",
-  },
-
-  statLabel: {
-    fontSize: 11,
-    opacity: 0.6,
-  },
-  gridRow: {
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  gridCell: {
-    alignItems: "center",
-    flex: 1,
   },
 });

@@ -93,7 +93,12 @@ export default function SubAdminContactAdminPage() {
   };
   const RenderHeader = () => (
     <HStack className="px-3 pt-5 items-center justify-between">
-      <Pressable onPress={() => routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")} style={{ padding: 6 }}>
+      <Pressable
+        onPress={() =>
+          routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")
+        }
+        style={{ padding: 6 }}
+      >
         <Ionicons
           name="arrow-back-outline"
           size={22}
@@ -128,16 +133,30 @@ export default function SubAdminContactAdminPage() {
       <HStack className="items-center justify-between mb-2">
         <ThemedText style={{ fontWeight: "600" }}>{item.subject}</ThemedText>
 
-        <View
-          style={{
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 8,
-            backgroundColor: "#facc15",
-          }}
-        >
-          <ThemedText style={{ fontSize: 12 }}>{item.status}</ThemedText>
-        </View>
+        <HStack className="gap-3">
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "rgba(59, 57, 30, 0.5)",
+            }}
+          >
+            <ThemedText style={{ fontSize: 12, color: "#facc15" }}>
+              {item.category}
+            </ThemedText>
+          </View>
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "#facc15",
+            }}
+          >
+            <ThemedText style={{ fontSize: 12 }}>{item.status}</ThemedText>
+          </View>
+        </HStack>
       </HStack>
 
       <ThemedText style={{ fontSize: 13, opacity: 0.7 }}>
@@ -145,6 +164,22 @@ export default function SubAdminContactAdminPage() {
       </ThemedText>
 
       <ThemedText style={{ marginTop: 6 }}>{item.message}</ThemedText>
+
+      <HStack className="gap-3 my-3 w-full">
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "rgba(123, 124, 48, 0.5)",
+            }}
+          >
+            <ThemedText style={{ fontSize: 13, fontWeight: 700, color: "#facc15" }}>
+              Admin Response
+            </ThemedText>
+            <ThemedText style={{fontSize: 13}}>{item.adminResponse}</ThemedText>
+          </View>
+          </HStack>
     </Box>
   );
 

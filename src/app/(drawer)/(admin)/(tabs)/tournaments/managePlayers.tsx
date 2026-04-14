@@ -21,8 +21,8 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 
-
-{/* <Ionicons
+{
+  /* <Ionicons
                   name={
                     isLoading
                       ? "hourglass-outline"
@@ -33,9 +33,8 @@ import Toast from "react-native-toast-message";
                   size={20}
                   color="#fff"
                   style={{ marginBottom: 4 }}
-                /> */}
-
-
+                /> */
+}
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -75,7 +74,7 @@ export default function managePlayers() {
   async function handleRemove(userId: any) {
     try {
       // console.log("Removing player:", { tournamentId, userId });
-      await removePlayerFromTournament(tournamentId, userId);
+      await removePlayerFromTournament(tournamentId);
 
       setTournamentPlayers((prev: any) =>
         prev.filter((p: any) => p.userId !== userId),
@@ -86,7 +85,7 @@ export default function managePlayers() {
       });
     } catch (err) {
       console.log("Remove player error:", err);
-    }finally {
+    } finally {
       setLoadActions(false);
     }
   }
@@ -277,7 +276,10 @@ function PlayerCard({
     <Box
       style={{
         borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
+        backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
         borderRadius: 14,
         padding: 16,
       }}
@@ -317,7 +319,7 @@ function PlayerCard({
                   fontWeight: "600",
                 }}
               >
-                {loadActions ? "Removing..." :"X Remove"}
+                {loadActions ? "Removing..." : "X Remove"}
               </ThemedText>
             </Pressable>
           ) : (

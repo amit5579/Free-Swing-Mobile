@@ -4,17 +4,13 @@ import {
   StyleSheet,
   useColorScheme,
   View,
-  FlatList,
   ScrollView,
-  TouchableOpacity,
   Text,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
-import { Box } from "@/components/box";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -25,6 +21,7 @@ import Toast from "react-native-toast-message";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getPlayerScorecard } from "@/api/subAdmin/myPlayers";
+import { getSubScorecardHandicap } from "@/api/scoreCard";
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function SubAdminGameHistoryScoreCard() {
@@ -33,7 +30,10 @@ export default function SubAdminGameHistoryScoreCard() {
   const routePage = useRouter();
     const {scorecardId} = useLocalSearchParams();
     const[scorecard,setScorecard] = useState<any>(null);
+    const [handicap, setHandicap] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const renderScoring = (scorecard && scorecard.length > 0) ? (scorecard[0].stablefordPoints == null && scorecard[0].isExcluded == false ? "Net Score Include Par 3" : scorecard[0].stablefordPoints == null && scorecard[0].isExcluded == true ? "Net Score Exclude Par 3" : "Stableford") : "";
 
   // ── Colors ──
   const colors = {
@@ -91,11 +91,17 @@ export default function SubAdminGameHistoryScoreCard() {
         </View>
       );
     }
-    if (diff === 0) return null; // Par
-    if (diff === 1) { // Bogey
+    if (diff === 1) return (
+      <View style={styles.indicatorContainer}>
+        <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
+      </View>
+    );
+    
+    // Par
+    if (diff === 0) {
       return (
         <View style={styles.indicatorContainer}>
-          <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
+          <View style={ { width: 32, height: 32, borderStyle: "dashed", borderWidth: 1.5, borderColor: "#9CA3AF" }} />
         </View>
       );
     }
@@ -133,9 +139,15 @@ export default function SubAdminGameHistoryScoreCard() {
   const fetchScorecard = async () => {
     try {
       const response =  await getPlayerScorecard(Number(scorecardId))
-    //   console.log("rrrr",response);
-      
-setScorecard(response);
+      const rsc = await getSubScorecardHandicap(response[0].teeBoxId);
+      // {handicap: 8, handicapIndex: 9.5, slope: 102, rating: 71.6, par: 72}
+// console.log("rsc",rsc);
+
+      setScorecard(response);
+      setHandicap(rsc);
+
+     
+
     } catch (error) {
       console.error("Error fetching players:", error);
       Toast.show({
@@ -147,6 +159,7 @@ setScorecard(response);
     }
   };
 
+  
   useEffect(() => {
     
     fetchScorecard();
@@ -313,7 +326,6 @@ setScorecard(response);
             Scorecard
           </ThemedText>
         </HStack>
-
         {/* <HStack className="justify-between px-5 items-center mb-2">
             <View style={{ flex: 1 }}>
               <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
@@ -326,6 +338,12 @@ setScorecard(response);
               </ThemedText>
             )}
           </HStack> */}
+         <ThemedText style={{textAlign: "center"}}>({renderScoring})</ThemedText>
+
+          <HStack className="justify-between mx-5 my-2">
+            <ThemedText>Decleared HC: {handicap?.handicap}</ThemedText>
+            <ThemedText>DP HC: -</ThemedText>
+          </HStack>
       </View>
     );
   };

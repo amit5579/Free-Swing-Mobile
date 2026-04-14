@@ -242,7 +242,10 @@ function CourseCard({ course, isDark }: any) {
         className="rounded-2xl p-5 relative"
         style={{
           borderWidth: 1,
-          borderColor: isDark ? "#262626" : "#e5e5e5",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
         }}
       >
         {/* Free Badge */}

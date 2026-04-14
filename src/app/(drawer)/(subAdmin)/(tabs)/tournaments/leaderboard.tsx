@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -32,8 +32,24 @@ export default function SubAdminLeaderboardPage() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, tournamentName, teeboxId, scoringType } =
+  const { tournamentId, tournamentName, teeboxId, scoringType, secretHoles } =
     useLocalSearchParams();
+
+  const strSecretHoles =
+    typeof secretHoles === "string"
+      ? secretHoles
+      : Array.isArray(secretHoles)
+        ? secretHoles[0]
+        : undefined;
+
+  const savedSecretHoles = useMemo(() => {
+    return strSecretHoles
+      ? strSecretHoles
+          .split(",")
+          .filter((h) => h.trim() !== "")
+          .map(Number)
+      : [];
+  }, [strSecretHoles]);
 
   const isDoublePreoria =
     scoringType === "double-peoria" ||
@@ -55,6 +71,39 @@ export default function SubAdminLeaderboardPage() {
     subText: isDark ? "#94a3b8" : "#64748b",
     iconBg: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
   };
+
+  const getScoringLabel = (scoringType: any) => {
+    switch (scoringType) {
+      case "double-peoria-stableford":
+        return "Double Peoria Stableford";
+      case "double-peoria":
+        return "Double Peoria Net";
+      case "double-peoria-net":
+        return "Double Peoria Net";
+      case "stableford":
+        return "Stableford";
+      case "excluded":
+        return "Practice Round";
+      default:
+        return "Gross / Net";
+    }
+  };
+
+  const RANK_WIDTH = 40;
+  const PLAYER_WIDTH = 90;
+  const HCP_WIDTH = 50;
+  const HOLE_WIDTH = 35;
+  const TOTAL_WIDTH = 45;
+  const STAT_WIDTH = 55;
+
+  const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
+
+  const rightContentWidth = useMemo(() => {
+    const holeCols = HOLE_WIDTH * 18;
+    const totals = TOTAL_WIDTH * 2;
+    const stats = STAT_WIDTH * 6; // GROSS, NET, PTS, EGL, BRD, PAR
+    return holeCols + totals + stats;
+  }, []);
 
   const EmptyState = () => (
     <VStack
@@ -122,9 +171,14 @@ export default function SubAdminLeaderboardPage() {
 
   const onSubmit = async () => {
     try {
-      // const secretHoles = holes.filter((hole: any) => hole.isSelected).map((hole: any) => hole.holeNumber);
-      const allSelectedHoles = [...selectedFront, ...selectedBack];
-      await postSecretHoles(Number(tournamentId), allSelectedHoles)
+      const allSelectedHoles = [
+        ...selectedFront,
+        ...selectedBack,
+        ...savedSecretHoles.filter(
+          (h) => !selectedFront.includes(h) && !selectedBack.includes(h),
+        ),
+      ];
+      await postSecretHoles(Number(tournamentId), allSelectedHoles);
       // console.log("selectedHoles", allSelectedHoles);
       Toast.show({
         type: "success",
@@ -158,7 +212,7 @@ export default function SubAdminLeaderboardPage() {
   const RenderHeader = () => {
     return (
       <HStack
-        className="px-3 pt-5 pb-3 items-center"
+        className="px-3 items-center mt-3"
         style={{ justifyContent: "space-between" }}
       >
         {/* LEFT: Back button */}
@@ -182,6 +236,7 @@ export default function SubAdminLeaderboardPage() {
             style={{
               fontSize: 20,
               fontWeight: "700",
+              lineHeight: 30,
             }}
           >
             Leaderboard:
@@ -213,6 +268,362 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
+  const RenderStatsSection = () => {
+    const isDark = colorScheme === "dark";
+    const secondaryText = isDark ? "#94a3b8" : "#64748b";
+
+    return (
+      <View style={{ paddingHorizontal: 3, paddingVertical: 8 }}>
+        {/* TOP TAGS */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginHorizontal: 10,
+          }}
+        >
+          {/* Left Tag */}
+          <View
+            style={{
+              backgroundColor: isDark ? "#134e4a" : "#d1fae5",
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 20,
+            }}
+          >
+            <ThemedText
+              style={{
+                fontSize: 10,
+                fontWeight: "600",
+                color: isDark ? "#5eead4" : "#065f46",
+              }}
+            >
+              TOURNAMENT SCOREBOARD
+            </ThemedText>
+          </View>
+
+          {/* Right Badge */}
+          <View
+            style={{
+              backgroundColor: isDark ? "#1e40af" : "#e0f2fe",
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 20,
+            }}
+          >
+            <ThemedText
+              style={{
+                fontSize: 10,
+                fontWeight: "600",
+                color: isDark ? "#93c5fd" : "#0369a1",
+              }}
+            >
+              {getScoringLabel(scoringType as string)}
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* SUBTITLE */}
+        <ThemedText
+          style={{
+            fontSize: 12,
+            color: secondaryText,
+            marginVertical: 14,
+            marginHorizontal: 10,
+          }}
+        >
+          Hole-by-hole scoring with cleaner front nine, back nine, totals, and
+          player stat sections.
+        </ThemedText>
+      </View>
+    );
+  };
+
+  const TableHeaderLeft = () => (
+    <HStack
+      style={{
+        height: 45,
+        width: LEFT_FIXED_WIDTH,
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        borderRightWidth: 1,
+        borderColor: isDark ? "#334155" : "#e2e8f0",
+      }}
+    >
+      <ThemedText style={[styles.headerText, { width: RANK_WIDTH }]}>
+        RNK
+      </ThemedText>
+      <ThemedText
+        style={[
+          styles.headerText,
+          { width: PLAYER_WIDTH, textAlign: "left", paddingLeft: 10 },
+        ]}
+      >
+        PLAYER
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: HCP_WIDTH }]}>
+        HCP
+      </ThemedText>
+    </HStack>
+  );
+
+  const TableHeaderRight = () => (
+    <HStack
+      style={{
+        height: 45,
+        width: rightContentWidth,
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+      }}
+    >
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText key={i} style={[styles.headerText, { width: HOLE_WIDTH }]}>
+          {i + 1}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        OUT
+      </ThemedText>
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText
+          key={i + 9}
+          style={[styles.headerText, { width: HOLE_WIDTH }]}
+        >
+          {i + 10}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        IN
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        GROSS
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        NET
+      </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+      >
+        PTS
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        EGL
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        BRD
+      </ThemedText>
+      <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
+        PAR
+      </ThemedText>
+    </HStack>
+  );
+
+  const InfoRowLeft = ({ label }: { label: string }) => (
+    <HStack
+      style={{
+        height: 40,
+        width: LEFT_FIXED_WIDTH,
+        borderBottomWidth: 1,
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+        borderRightWidth: 1,
+        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+      }}
+    >
+      <View style={{ width: RANK_WIDTH }} />
+      <ThemedText style={[styles.infoLabel, { width: PLAYER_WIDTH }]}>
+        {label}
+      </ThemedText>
+      <View style={{ width: HCP_WIDTH }} />
+    </HStack>
+  );
+
+  const InfoRowRight = ({ data, type }: { data: any[]; type: "par" | "si" }) => (
+    <HStack
+      style={{
+        height: 40,
+        width: rightContentWidth,
+        borderBottomWidth: 1,
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+      }}
+    >
+      {data.slice(0, 9).map((h, i) => (
+        <ThemedText
+          key={i}
+          style={[styles.infoCellText, { width: HOLE_WIDTH }]}
+        >
+          {type === "par" ? h.par : h.handicap}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      {data.slice(9, 18).map((h, i) => (
+        <ThemedText
+          key={i}
+          style={[styles.infoCellText, { width: HOLE_WIDTH }]}
+        >
+          {type === "par" ? h.par : h.handicap}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      <ThemedText
+        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      <View style={{ width: STAT_WIDTH * 5 }} />
+    </HStack>
+  );
+
+  const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    return (
+      <HStack
+        style={{
+          height: 50,
+          width: LEFT_FIXED_WIDTH,
+          backgroundColor: rowBg,
+          borderBottomWidth: 0.5,
+          borderColor: isDark ? "#333" : "#eee",
+          borderRightWidth: 1,
+        }}
+      >
+        <ThemedText
+          style={[styles.cellText, { width: RANK_WIDTH, fontWeight: "600" }]}
+        >
+          {player.rank || "-"}
+        </ThemedText>
+        <ThemedText
+          numberOfLines={1}
+          style={[
+            styles.cellText,
+            {
+              width: PLAYER_WIDTH,
+              textAlign: "left",
+              paddingLeft: 10,
+              fontWeight: "600",
+            },
+          ]}
+        >
+          {player.playerName}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: HCP_WIDTH }]}>
+          {player.handicap}
+        </ThemedText>
+      </HStack>
+    );
+  };
+
+  const PlayerRowRight = ({ player, index }: { player: any; index: number }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    return (
+      <HStack
+        style={{
+          height: 50,
+          width: rightContentWidth,
+          backgroundColor: rowBg,
+          borderBottomWidth: 0.5,
+          borderColor: isDark ? "#333" : "#eee",
+        }}
+      >
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 1];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.front9}
+        </ThemedText>
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 10];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.back9}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}>
+          {player.gross}
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: STAT_WIDTH, fontWeight: "800", color: "#3b82f6" },
+          ]}
+        >
+          {player.net}
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: STAT_WIDTH, fontWeight: "800", color: "#16a34a" },
+          ]}
+        >
+          {player.points}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.eagles}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.birdies}
+        </ThemedText>
+        <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
+          {player.pars}
+        </ThemedText>
+      </HStack>
+    );
+  };
+
   const RenderSecretHoles = () => {
     const isDark = colorScheme === "dark";
 
@@ -220,7 +631,7 @@ export default function SubAdminLeaderboardPage() {
    
     const border = isDark ? "#334155" : "#d1d5db";
 
-    const secondaryText = isDark ? "#94a3b8" : "#6b7280";
+    const secondaryText = isDark ? "#e7f0fcff" : "#6b7280";
 
     const HoleBox = ({ number, par }: { number: any; par: any }) => {
       const isSelected =
@@ -228,18 +639,28 @@ export default function SubAdminLeaderboardPage() {
           ? selectedFront.includes(number)
           : selectedBack.includes(number);
 
-          const isDisabled =
-  (number <= 9 && selectedFront.length >= 6 && !selectedFront.includes(number)) ||
-  (number > 9 && selectedBack.length >= 6 && !selectedBack.includes(number));
+      const isDisabled =
+        (number <= 9 &&
+          selectedFront.length >= 6 &&
+          !selectedFront.includes(number) &&
+          !savedSecretHoles.includes(number)) ||
+        (number > 9 &&
+          selectedBack.length >= 6 &&
+          !selectedBack.includes(number) &&
+          !savedSecretHoles.includes(number)) ||
+        (savedSecretHoles.length > 0 && !savedSecretHoles.includes(number));
 
       return (
         <Pressable
-        disabled={isDisabled}
+          disabled={isDisabled}
           onPress={() => {
             const isFront = number <= 9;
 
             if (isFront) {
-              if (selectedFront.includes(number)) {
+              if (
+                selectedFront.includes(number) ||
+                savedSecretHoles.includes(number)
+              ) {
                 // remove
                 setSelectedFront((prev) => prev.filter((h) => h !== number));
               } else {
@@ -253,7 +674,10 @@ export default function SubAdminLeaderboardPage() {
                 setSelectedFront((prev) => [...prev, number]);
               }
             } else {
-              if (selectedBack.includes(number)) {
+              if (
+                selectedBack.includes(number) ||
+                savedSecretHoles.includes(number)
+              ) {
                 setSelectedBack((prev) => prev.filter((h) => h !== number));
               } else {
                 if (selectedBack.length >= 6) {
@@ -268,34 +692,35 @@ export default function SubAdminLeaderboardPage() {
             }
           }}
           style={{
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: border,
+            width: 60,
+            height: 60,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: border,
 
-    backgroundColor: isSelected
-      ? "#8bc34a"
-      : isDisabled
-        ? isDark
-          ? "rgba(100, 116, 139, 0.3)"
-          : "rgba(203, 213, 225, 0.5)"
-        : isDark
-          ? "rgba(15, 23, 42, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
+            backgroundColor:
+              isSelected || savedSecretHoles.includes(number)
+                ? "#8bc34a"
+                : isDisabled
+                  ? isDark
+                    ? "rgba(100, 116, 139, 0.3)"
+                    : "rgba(203, 213, 225, 0.5)"
+                  : isDark
+                    ? "rgba(33, 45, 73, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
 
-    opacity: isDisabled ? 0.5 : 1,
+            opacity: isDisabled ? 0.7 : 1,
 
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 4,
-  }}
+            justifyContent: "center",
+            alignItems: "center",
+            margin: 4,
+          }}
         >
           <ThemedText
             style={{
               fontSize: 14,
               fontWeight: "700",
-              color: isDark ? "#f1f5f9" : "#020617",
+              color: isDark ? "#ffffffff" : "#020617",
             }}
           >
             {number}
@@ -379,52 +804,6 @@ export default function SubAdminLeaderboardPage() {
           ))}
         </View>
 
-        {/* FOOTER */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 16,
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Button */}
-          <Pressable
-            onPress={() =>
-               {
-                const allSelectedHoles = [...selectedFront, ...selectedBack];
-                const lessHoles = allSelectedHoles.length !== 12;
-                if(lessHoles){
-                  setDisabledSubmit(true);
-                  Toast.show({
-                    type: "error",
-                    text1: "Please select 6 holes from front and 6 holes from back",
-                  });
-                  return;
-                }
-                else{
-                  setDisabledSubmit(false);
-                }
-              onSubmit()}}
-              disabled = {disabledSubmit}
-            style={{
-              backgroundColor: disabledSubmit ? "#aad37bff" : "#8bc34a",
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              borderRadius: 10,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "600",
-                color: "#ffffff",
-              }}
-            >
-              Calculate Double Peoria
-            </Text>
-          </Pressable>
-
           {/* Selected text */}
           <ThemedText
             style={{
@@ -440,339 +819,268 @@ export default function SubAdminLeaderboardPage() {
                 fontWeight: "500",
               }}
             >
-              {selectedFront.length}/6 Front | {selectedBack.length}/6 Back{" "}
+              {selectedFront.length ||
+                savedSecretHoles.filter((h: any) => h <= 9).length}
+              /6 Front |{" "}
+              {selectedBack.length ||
+                savedSecretHoles.filter((h: any) => h > 9).length}
+              /6 Back{" "}
             </ThemedText>
           </ThemedText>
+
+        {/* FOOTER */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 7,
+            justifyContent: "flex-end",
+          }}
+        >
+          {/* Button */}
+          <Pressable
+            onPress={() => {
+              const allSelectedHoles = [
+                ...selectedFront,
+                ...selectedBack,
+                ...savedSecretHoles.filter(
+                  (h) =>
+                    !selectedFront.includes(h) && !selectedBack.includes(h),
+                ),
+              ];
+              const frontCount =
+                selectedFront.length ||
+                savedSecretHoles.filter((h) => h <= 9).length;
+              const backCount =
+                selectedBack.length ||
+                savedSecretHoles.filter((h) => h > 9).length;
+
+              if (frontCount !== 6 || backCount !== 6) {
+                setDisabledSubmit(true);
+                Toast.show({
+                  type: "error",
+                  text1: "Please select 6 holes from front and 6 holes from back",
+                });
+                return;
+              } else {
+                setDisabledSubmit(false);
+              }
+              onSubmit();
+            }}
+            disabled={disabledSubmit}
+            style={{
+              backgroundColor: disabledSubmit ? "#aad37bff" : "#8bc34a",
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              borderRadius: 10,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color: "#ffffff",
+              }}
+            >
+              Apply Peoria Formula
+            </Text>
+          </Pressable>
+
         </View>
       </View>
     );
   };
 
-  const LeaderboardCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+  const TableLoadingSkeleton = () => {
+    const rows = 8;
+
     return (
-      <View
-        style={{
-          borderWidth: 1,
-          borderRadius: 14,
-          padding: 12,
-          marginBottom: 12,
-          borderColor: isDark ? "#333" : "#ddd",
-        }}
-      >
-        {/* HEADER */}
-        <HStack style={{ alignItems: "center" }}>
-          <Skeleton isDark={isDark} height={30} width={30} borderRadius={15} />
-
-          <VStack style={{ flex: 1, marginLeft: 10 }}>
-            <Skeleton isDark={isDark} height={14} width="60%" />
-            <Skeleton
-              isDark={isDark}
-              height={10}
-              width="40%"
-              style={{ marginTop: 4 }}
-            />
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
+        <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+          {/* Left fixed skeleton */}
+          <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+            <View
+              style={{
+                height: 45,
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                borderRightWidth: 1,
+                borderColor: isDark ? "#334155" : "#e2e8f0",
+                justifyContent: "center",
+                paddingHorizontal: 10,
+              }}
+            >
+              <Skeleton isDark={isDark} height={12} width={120} />
+            </View>
+            {Array.from({ length: rows }).map((_, i) => (
+              <HStack
+                key={i}
+                style={{
+                  height: 50,
+                  borderBottomWidth: 0.5,
+                  borderColor: isDark ? "#333" : "#eee",
+                  borderRightWidth: 1,
+                  paddingHorizontal: 8,
+                  alignItems: "center",
+                  gap: 8,
+                  backgroundColor:
+                    i % 2 === 0
+                      ? isDark
+                        ? "#0f172a"
+                        : "#fff"
+                      : isDark
+                        ? "#1e293b"
+                        : "#f8fafc",
+                }}
+              >
+                <Skeleton isDark={isDark} height={12} width={20} />
+                <Skeleton isDark={isDark} height={12} width={60} />
+                <Skeleton isDark={isDark} height={12} width={25} />
+              </HStack>
+            ))}
           </VStack>
 
-          <VStack>
-            <Skeleton isDark={isDark} height={14} width={30} />
-            <Skeleton
-              isDark={isDark}
-              height={10}
-              width={20}
-              style={{ marginTop: 4 }}
-            />
-          </VStack>
-        </HStack>
+          {/* Right scrollable skeleton */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <VStack style={{ width: rightContentWidth }}>
+              <View
+                style={{
+                  height: 45,
+                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                  justifyContent: "center",
+                  paddingHorizontal: 10,
+                }}
+              >
+                <Skeleton isDark={isDark} height={12} width={220} />
+              </View>
 
-        {/* GRID (18 holes feel) */}
-        <View style={{ marginTop: 10 }}>
-          {[1, 2].map((row) => (
-            <HStack key={row} style={{ marginBottom: 8 }}>
-              {Array.from({ length: 9 }).map((_, i) => (
-                <Skeleton
-                  key={i}
-                  isDark={isDark}
-                  height={28}
-                  width={28}
-                  borderRadius={14}
-                  style={{ marginRight: 6 }}
-                />
+              {Array.from({ length: rows }).map((_, r) => (
+                <HStack
+                  key={r}
+                  style={{
+                    height: 50,
+                    borderBottomWidth: 0.5,
+                    borderColor: isDark ? "#333" : "#eee",
+                    backgroundColor:
+                      r % 2 === 0
+                        ? isDark
+                          ? "#0f172a"
+                          : "#fff"
+                        : isDark
+                          ? "#1e293b"
+                          : "#f8fafc",
+                    paddingHorizontal: 6,
+                    alignItems: "center",
+                  }}
+                >
+                  {Array.from({ length: 10 }).map((__, c) => (
+                    <View
+                      key={c}
+                      style={{
+                        width: c === 9 ? TOTAL_WIDTH : HOLE_WIDTH,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Skeleton isDark={isDark} height={12} width={18} />
+                    </View>
+                  ))}
+                  <View style={{ width: 12 }} />
+                  <Skeleton isDark={isDark} height={12} width={260} />
+                </HStack>
               ))}
-            </HStack>
-          ))}
-        </View>
-
-        {/* SUMMARY */}
-        <HStack style={{ marginTop: 12 }}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton
-              key={i}
-              isDark={isDark}
-              height={14}
-              width="18%"
-              style={{ marginRight: 6 }}
-            />
-          ))}
+            </VStack>
+          </ScrollView>
         </HStack>
-
-        {/* EXTRA */}
-        <HStack style={{ marginTop: 8 }}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton
-              key={i}
-              isDark={isDark}
-              height={14}
-              width="30%"
-              style={{ marginRight: 6 }}
-            />
-          ))}
-        </HStack>
-      </View>
+      </ScrollView>
     );
   };
   return (
-    <>
-      <ThemedView style={{ flex: 1 }}>
-        <RenderHeader />
-        <Watermark />
+    <ThemedView style={{ flex: 1 }}>
+      <RenderHeader />
+      <Watermark />
 
-        <ScrollView contentContainerStyle={{ padding: 12 }}>
-          {loading ? (
-            <>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <LeaderboardCardSkeleton key={i} isDark={isDark} />
-              ))}
-            </>
+      {loading ? (
+        <TableLoadingSkeleton />
+      ) : (
+        <ScrollView style={{ flex: 1, marginBottom:30 }}>
+          <RenderStatsSection />
+
+          {isDoublePreoria && <RenderSecretHoles />}
+
+          {leaderboard.length === 0 ? (
+            <EmptyState />
           ) : (
-            <>
-              {isDoublePreoria && <RenderSecretHoles />}
+            <HStack
+              style={{
+                borderTopWidth: 1,
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+              }}
+            >
+              {/* LEFT FIXED */}
+              <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+                <TableHeaderLeft />
+                <InfoRowLeft label="PAR" />
+                <InfoRowLeft label="SI" />
+                {leaderboard.map((p, i) => (
+                  <PlayerRowLeft key={p.userId} player={p} index={i} />
+                ))}
+              </VStack>
 
-              {leaderboard.length === 0 ? (
-                <EmptyState />
-              ) : (
-                leaderboard.map((player) => (
-                  <PlayerCard
-                    key={player.userId}
-                    player={player}
-                    holes={holes}
-                    isDark={isDark}
-                  />
-                ))
-              )}
-            </>
+              {/* RIGHT SCROLLABLE */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <VStack style={{ width: rightContentWidth }}>
+                  <TableHeaderRight />
+                  <InfoRowRight data={holes} type="par" />
+                  <InfoRowRight data={holes} type="si" />
+                  {leaderboard.map((p, i) => (
+                    <PlayerRowRight key={p.userId} player={p} index={i} />
+                  ))}
+                </VStack>
+              </ScrollView>
+            </HStack>
           )}
         </ScrollView>
-      </ThemedView>
-    </>
+      )}
+    </ThemedView>
   );
 }
 
-function PlayerCard({ player, holes, isDark }: any) {
-  return (
-    <View style={[styles.card, { borderColor: isDark ? "#333" : "#ddd" }]}>
-      {/* HEADER */}
-      <HStack style={styles.header}>
-        <View style={styles.rank}>
-          <ThemedText style={{ fontWeight: "700" }}>
-            {player.rank || "-"}
-          </ThemedText>
-        </View>
-
-        <VStack style={{ flex: 1 }}>
-          <ThemedText style={styles.name}>{player.playerName}</ThemedText>
-          <ThemedText style={styles.sub}>HC: {player.handicap}</ThemedText>
-        </VStack>
-
-        <VStack style={{ alignItems: "flex-end" }}>
-          <ThemedText style={styles.points}>{player.points}</ThemedText>
-          <ThemedText style={styles.sub}>PTS</ThemedText>
-        </VStack>
-      </HStack>
-
-      {/* HOLES GRID */}
-      <View style={{ marginTop: 10 }}>
-        {/* FRONT 9 */}
-        <HStack style={styles.gridRow}>
-          {Array.from({ length: 9 }).map((_, i) => {
-            const holeNum = i + 1;
-            const score = player.holeScores?.[holeNum];
-
-            return (
-              <View key={holeNum} style={styles.gridCell}>
-                <ThemedText style={styles.holeNumber}>{holeNum}</ThemedText>
-                <View
-                  style={[
-                    styles.scoreCircle,
-                    getScoreStyle(score, holes[i]?.par),
-                  ]}
-                >
-                  <ThemedText>{score ?? "-"}</ThemedText>
-                </View>
-                <ThemedText>{holes[i]?.par}</ThemedText>
-              </View>
-            );
-          })}
-        </HStack>
-
-        {/* BACK 9 */}
-        <HStack style={styles.gridRow}>
-          {Array.from({ length: 9 }).map((_, i) => {
-            const holeNum = i + 10;
-            const score = player.holeScores?.[holeNum];
-
-            return (
-              <View key={holeNum} style={styles.gridCell}>
-                <ThemedText style={styles.holeNumber}>{holeNum}</ThemedText>
-                <View
-                  style={[
-                    styles.scoreCircle,
-                    getScoreStyle(score, holes[i + 9]?.par),
-                  ]}
-                >
-                  <ThemedText>{score ?? "-"}</ThemedText>
-                </View>
-                <ThemedText>{holes[i + 9]?.par}</ThemedText>
-              </View>
-            );
-          })}
-        </HStack>
-      </View>
-
-      {/* STATS */}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          marginTop: 12,
-          rowGap: 12,
-        }}
-      >
-        {[
-          { label: "OUT", value: player.front9 },
-          { label: "IN", value: player.back9 },
-          { label: "GROSS", value: player.gross },
-          { label: "NET", value: player.net },
-          { label: "PTS", value: player.points },
-          { label: "Birdies", value: player.birdies },
-          { label: "Pars", value: player.pars },
-          { label: "Eagles", value: player.eagles },
-        ]
-          .filter((s) => s.value !== undefined && s.value !== null)
-          .map((stat, idx) => (
-            <Stat key={idx} label={stat.label} value={stat.value} />
-          ))}
-      </View>
-    </View>
-  );
-}
-
-function Stat({ label, value }: any) {
-  return (
-    <VStack style={styles.stat}>
-      <ThemedText style={styles.statValue}>{value ?? "-"}</ThemedText>
-      <ThemedText style={styles.statLabel}>{label}</ThemedText>
-    </VStack>
-  );
-}
-
-function getScoreStyle(score: number, par: number): ViewStyle {
-  if (!score || !par) return {};
-
-  const diff = score - par;
-
-  if (diff <= -2) return { borderColor: "#166534", borderWidth: 2 }; // eagle
-  if (diff === -1) return { borderColor: "#16a34a", borderWidth: 2 }; // birdie
-  if (diff === 0)
-    return { borderColor: "#9ca3af", borderStyle: "dashed", borderWidth: 1 };
-  if (diff === 1) return { borderColor: "#ef4444", borderWidth: 2 };
-  if (diff >= 2) return { borderColor: "#dc2626", borderWidth: 2 };
-
-  return {};
-}
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 12,
+  headerText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#64748b",
+    textAlign: "center",
+    textAlignVertical: "center",
+    height: 45,
+    lineHeight: 45,
   },
-
-  header: {
-    alignItems: "center",
-  },
-
-  rank: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#84cc16",
+  cell: {
+    height: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
   },
-
-  name: {
-    fontSize: 16,
-    fontWeight: "700",
+  cellText: {
+    fontSize: 13,
+    textAlign: "center",
+    textAlignVertical: "center",
+    height: 50,
+    lineHeight: 50,
   },
-
-  sub: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-
-  points: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#16a34a",
-  },
-
-  holeCell: {
-    alignItems: "center",
-    marginRight: 10,
-  },
-
-  holeNumber: {
+  infoLabel: {
     fontSize: 11,
-    opacity: 0.6,
-  },
-
-  scoreCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    marginTop: 4,
-  },
-
-  summary: {
-    marginTop: 12,
-    justifyContent: "space-between",
-  },
-
-  stat: {
-    alignItems: "center",
-    minWidth: "18%",
-  },
-
-  statValue: {
     fontWeight: "700",
+    color: "#64748b",
+    textAlign: "left",
+    paddingLeft: 10,
+    height: 40,
+    lineHeight: 40,
   },
-
-  statLabel: {
+  infoCellText: {
     fontSize: 11,
-    opacity: 0.6,
-  },
-  gridRow: {
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  gridCell: {
-    alignItems: "center",
-    flex: 1,
+    color: "#64748b",
+    textAlign: "center",
+    height: 40,
+    lineHeight: 40,
   },
 });

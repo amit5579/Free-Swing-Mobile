@@ -566,7 +566,10 @@ export default function ScoreCardUserPage() {
                             paddingVertical: 12,
                             alignItems: "center",
                             borderBottomWidth: 0.5,
-                            borderColor: isDark ? "#333" : "#eee",
+                            backgroundColor: isDark
+                              ? "rgba(15, 23, 42, 0.7)"
+                              : "rgba(255, 255, 255, 0.7)",
+                            borderColor: isDark ? "#1e293b" : "#e2e8f0",
                           }}
                         >
                           <ThemedText style={{ flex: 1, textAlign: "center" }}>
@@ -879,9 +882,11 @@ export default function ScoreCardUserPage() {
                       marginTop: 25,
                       padding: 16,
                       borderRadius: 14,
-                      backgroundColor: "transparent",
                       borderWidth: 1,
-                      borderColor: isDark ? "#eee" : "#333",
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
                     }}
                   >
                     <ThemedText

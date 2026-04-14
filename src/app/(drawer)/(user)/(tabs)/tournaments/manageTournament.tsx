@@ -1,4 +1,5 @@
-import { addUsersToTournament, getMembersList } from "@/api/admin/tournaments";
+import { getAddedPlayers, addPlayerToTournament, getMembersList, removePlayerFromTournament } from "@/api/admin/tournaments";
+import Toast from "react-native-toast-message";
 import { HStack } from "@/components/hstack";
 import { Skeleton } from "@/components/Skeleton";
 import { ThemedText } from "@/components/themed-text";
@@ -19,25 +20,60 @@ export default function ManageTournament() {
   const { tournamentId, tournamentName } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [addedPlayers, setAddedPlayers] = useState<any>([]);
   const [search, setSearch] = useState("");
 
-  const addUsers = async () => {
+  const handleAddPlayer = async (userId: number) => {
     try {
-      const members = await addUsersToTournament(Number(tournamentId));
-      console.log("Adding user to tournament:", members);
+      setLoading(true);
+      await addPlayerToTournament(Number(tournamentId), userId);
+      setAddedPlayers((prev: any[]) => [...prev, { userId, id: userId }]); // Optimistic update or at least tracking
+      Toast.show({
+        type: "success",
+        text1: "Player added successfully",
+      });
     } catch (error) {
       console.error("Adding user to tournament Error:", error);
-      throw error;
+      Toast.show({
+        type: "error",
+        text1: "Failed to add player",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemovePlayer = async (userId: number) => {
+    try {
+      setLoading(true);
+      await removePlayerFromTournament(Number(tournamentId), userId);
+      setAddedPlayers((prev: any[]) => prev.filter((p: any) => p.userId !== userId && p.id !== userId));
+      Toast.show({
+        type: "success",
+        text1: "Player removed successfully",
+      });
+    } catch (error) {
+      console.error("Removing user from tournament Error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to remove player",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
-
       const membersData = await getMembersList();
+       const addedPlayersData = await getAddedPlayers(Number(tournamentId));
+      //  console.log("addedPlayersData",addedPlayersData);
+       
       setMembers(membersData);
+      setAddedPlayers(addedPlayersData);
+
       // console.log("Fetching Tournament players list:", members);
     } catch (error) {
       console.error("Fetching tournament players Error:", error);
@@ -46,6 +82,8 @@ export default function ManageTournament() {
       setLoading(false);
     }
   };
+
+ 
 
   useEffect(() => {
     fetchMembers();
@@ -112,7 +150,7 @@ export default function ManageTournament() {
           )}
         </HStack>
 
-        {/* RIGHT: Add Button */}
+        {/* RIGHT*/}
         <View style={{ width: 40 }} />
       </HStack>
     );
@@ -243,23 +281,42 @@ export default function ManageTournament() {
                         </View>
 
                         {/* RIGHT SIDE BUTTON */}
-                        <Pressable
-                          className="flex-row items-center gap-1 border border-blue-500 px-3 py-1 rounded-md"
-                          style={{ borderColor: "#3b82f6" }}
-                          onPress={() => addUsers()}
-                        >
-                          <Ionicons
-                            name="person-add-outline"
-                            size={16}
-                            color="#3b82f6"
-                          />
-
-                          <ThemedText
-                            style={{ color: "#3b82f6", fontSize: 13 }}
+                        {addedPlayers.some((p: any) => p.userId === user.id || p.id === user.id) ? (
+                          <Pressable
+                            className="flex-row items-center gap-1 border border-red-500 px-3 py-1 rounded-md"
+                            style={{ borderColor: "#ef4444" }}
+                            onPress={() => handleRemovePlayer(user.id)}
                           >
-                            Add
-                          </ThemedText>
-                        </Pressable>
+                            <Ionicons
+                              name="person-remove"
+                              size={15}
+                              color="#ef4444"
+                            />
+                            <ThemedText
+                              style={{ color: "#ef4444", fontSize: 13, fontWeight: "700" }}
+                            >
+                              Remove
+                            </ThemedText>
+                          </Pressable>
+                        ) : (
+                          <Pressable
+                            className="flex-row items-center gap-1 border border-blue-500 px-3 py-1 rounded-md"
+                            style={{ borderColor: "#3b82f6" }}
+                            onPress={() => handleAddPlayer(user.id)}
+                          >
+                            <Ionicons
+                              name="person-add"
+                              size={15}
+                              color="#3b82f6"
+                            />
+                            <ThemedText
+                              style={{ color: "#3b82f6", fontSize: 13, fontWeight: "700" }}
+                            >
+                              Add
+                            </ThemedText>
+                          </Pressable>
+                        )}
+                      
                       </HStack>
                     </View>
                   ))

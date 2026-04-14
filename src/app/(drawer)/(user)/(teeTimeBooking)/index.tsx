@@ -262,8 +262,10 @@ export default function TeeTimeBookingPage() {
           borderRadius: 14,
           padding: 14,
           borderWidth: 1,
-          borderColor: isDark ? "#1e293b" : "#ffffff",
-          // backgroundColor: isDark ? "#1e293b" : "#ffffff",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
           shadowColor: "#000",
           shadowOpacity: isDark ? 0.2 : 0.05,
           // borderRadius: 6,
@@ -530,8 +532,9 @@ export default function TeeTimeBookingPage() {
             <ThemedView
               style={{
                 backgroundColor: isDark
-                  ? "rgba(255,255,255,0.1)"
-                  : "rgba(229, 231, 235, 0.6)",
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
                 paddingVertical: 10,
                 paddingHorizontal: 16,
               }}
@@ -651,9 +654,10 @@ export default function TeeTimeBookingPage() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.1)"
-                  : "rgba(229, 231, 235, 0.6)",
+                 backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
               }}
             >
               {tabs.map((tab) => {

@@ -57,3 +57,53 @@ export const tournamentSchema = z
     message: "End date must be after start date",
     path: ["endDate"],
   })
+
+
+export const acceptanceWeiverSchema = z.object({
+  isUnder18: z.boolean(),
+  parentGuardianMobile: z.string().optional(),
+  parentGuardianName: z.string().optional(),
+  parentGuardianRelation: z.string().optional(),
+  agreedToTerms: z.boolean().refine(val => val === true, "You must agree to the terms"),
+}).superRefine((data, ctx) => {
+  if (data.isUnder18) {
+    if (!data.parentGuardianName || data.parentGuardianName.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Parent Guardian Name must be at least 3 characters",
+        path: ["parentGuardianName"],
+      });
+    }
+    if (!data.parentGuardianMobile || data.parentGuardianMobile.length < 10) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid Phone Number",
+        path: ["parentGuardianMobile"],
+      });
+    }
+    if (!data.parentGuardianRelation || data.parentGuardianRelation.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Parent Guardian Relation must be at least 3 characters",
+        path: ["parentGuardianRelation"],
+      });
+    }
+  }
+});
+
+export type AcceptanceWeiverType = z.infer<typeof acceptanceWeiverSchema>;
+
+export const miniTournamentSchema = z.object({
+  name: z.string().min(3, "Tournament Name must be at least 3 characters"),
+  courseId: z.number({ message: "Select a course" }).min(1, "Select a course"),
+  teeBox: z.number({ message: "Select a tee box" }).min(1, "Select a tee box"),
+  scoringType: z.string().min(1, "Select a scoring type"),
+  maxPlayers: z.number().min(1, "Select max players"),
+  startDate: z.date({ message: "Start Date is required" }),
+  endDate: z.date({ message: "End Date is required" }),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "End date must be after start date",
+  path: ["endDate"],
+});
+
+export type MiniTournamentType = z.infer<typeof miniTournamentSchema>;

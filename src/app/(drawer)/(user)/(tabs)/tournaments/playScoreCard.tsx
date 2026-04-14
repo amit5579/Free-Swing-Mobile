@@ -53,6 +53,22 @@ export default function PlayScoreCard() {
 
   const isStandard = scoringType === "standard" || scoringType === "Standard";
 
+  const renderScoringType =
+    scoringType === "stableford" || scoringType === "Stableford"
+      ? "Stableford"
+      : scoringType === "double-peoria" ||
+          scoringType === "Double-Peoria" ||
+          scoringType === "double-peoria-stableford" ||
+          scoringType === "Double-Peoria-Stableford" ||
+          scoringType === "double-peoria-net" ||
+          scoringType === "Double-Peoria-Net"
+        ? "Net Score Include Par 3"
+        : scoringType === "excluded" || scoringType === "Excluded"
+          ? "Net Score Excluded Par 3"
+          : scoringType === "standard" || scoringType === "Standard"
+            ? "Standard"
+            : "Net Score Include Par 3";
+
   const fetchScoreCard = async () => {
     try {
       setLoading(true);
@@ -409,19 +425,15 @@ export default function PlayScoreCard() {
             Scorecard
           </ThemedText>
         </HStack>
-
-        {/* <HStack className="justify-between px-5 items-center mb-2">
-          <View style={{ flex: 1 }}>
-            <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-              {scoringType ? `(${scoringType})` : "(Net Score)"}
-            </ThemedText>
-          </View>
-          {handicap !== null && handicap !== undefined && (
-            <ThemedText style={{ fontWeight: "600" }}>
-              Handicap: {typeof handicap === "object" ? JSON.stringify(handicap) : handicap}
-            </ThemedText>
-          )}
-        </HStack> */}
+        <ThemedText
+          style={{ textAlign: "center", fontSize: 16, fontWeight: "600" }}
+        >
+          ({renderScoringType})
+        </ThemedText>
+        <HStack className="justify-between mx-3">
+          <ThemedText>Decleared HC: {handicap.handicap}</ThemedText>
+          <ThemedText>DP HC:-</ThemedText>
+        </HStack>
       </View>
     );
   };
@@ -453,7 +465,7 @@ export default function PlayScoreCard() {
                     {/* 🔹 HEADER ROW */}
                     <HStack
                       style={{
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         backgroundColor: isDark
                           ? "rgba(38, 38, 38, 0.8)"
                           : "rgba(243, 244, 246, 0.8)",
