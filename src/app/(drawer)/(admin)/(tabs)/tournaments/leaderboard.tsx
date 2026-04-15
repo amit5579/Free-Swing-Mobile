@@ -86,7 +86,6 @@ export default function LeaderboardPage() {
         ),
       ];
       await postSecretHoles(Number(tournamentId), allSelectedHoles);
-      // console.log("selectedHoles", allSelectedHoles);
       Toast.show({
         type: "success",
         text1: "Double Peoria Handicap calculated successfully",
@@ -961,7 +960,7 @@ export default function LeaderboardPage() {
                 <ScrollView horizontal showsHorizontalScrollIndicator>
                   <VStack style={{ width: rightContentWidth }}>
                     <TableHeaderRight />
-                    {holes.length > 0 && (
+                    {holes && (
                       <>
                         <InfoRowRight data={holes} type="par" />
                         <InfoRowRight data={holes} type="si" />
@@ -973,6 +972,9 @@ export default function LeaderboardPage() {
                   </VStack>
                 </ScrollView>
               </HStack>
+               {leaderboard.length ==0 && (
+                      <ThemedText style={{textAlign:"center" , marginTop: 3}}>No Players or scores available yet.</ThemedText>
+                    )}
             </ScrollView>
           )}
         </View>

@@ -21,20 +21,6 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 
-{
-  /* <Ionicons
-                  name={
-                    isLoading
-                      ? "hourglass-outline"
-                      : isBooked
-                        ? "close-circle"
-                        : "add-circle-sharp"
-                  }
-                  size={20}
-                  color="#fff"
-                  style={{ marginBottom: 4 }}
-                /> */
-}
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -53,10 +39,6 @@ export default function managePlayers() {
     try {
       await addPlayerToTournament(tournamentId, userId);
       setLoadActions(true);
-      // console.log("ADD payload:", {
-      //   tournamentId: tournamentId,
-      //   userId: userId,
-      // });
       // update UI instantly
       setTournamentPlayers((prev: any) => [...prev, { userId }]);
 
@@ -66,15 +48,19 @@ export default function managePlayers() {
       });
     } catch (err) {
       console.log(err);
+       Toast.show({
+        type: "error",
+        text1: "Failed to add Player",
+      });
     } finally {
       setLoadActions(false);
     }
   };
 
-  async function handleRemove(userId: any) {
+  async function handleRemove(tournamentId: number, userId: number) {
     try {
       // console.log("Removing player:", { tournamentId, userId });
-      await removePlayerFromTournament(tournamentId);
+      await removePlayerFromTournament(tournamentId, userId);
 
       setTournamentPlayers((prev: any) =>
         prev.filter((p: any) => p.userId !== userId),
@@ -310,7 +296,7 @@ function PlayerCard({
 
           {isInTournament ? (
             <Pressable
-              onPress={() => handleRemove(player.id)}
+              onPress={() => handleRemove(Number(tournamentId), Number(player.id))}
               style={[styles.button, styles.removeButton]}
             >
               <ThemedText
@@ -324,7 +310,7 @@ function PlayerCard({
             </Pressable>
           ) : (
             <Pressable
-              onPress={() => handleAdd(Number(tournamentId), player.id)}
+              onPress={() => handleAdd(Number(tournamentId), Number(player.id))}
               style={[styles.button, styles.addButton]}
             >
               <ThemedText

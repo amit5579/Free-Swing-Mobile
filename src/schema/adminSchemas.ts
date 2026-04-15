@@ -31,8 +31,15 @@ export const courseSchema = z.object({
 export const teeBoxSchema = z.object({
   name: z.string().min(3, "Tee Box Name must be at least 3 characters"),
   color: z.string().min(3, "Color must be at least 3 characters"),
-  rating: z.number(),
-  slope: z.number()
+  rating: z.coerce
+    .number()
+    .min(0, "Rating must be at least 0")
+    .max(100, "Rating cannot exceed 100"),
+  slope: z.coerce
+    .number()
+    .min(50, "Slope must be at least 50")
+    .max(155, "Slope cannot exceed 155")
+    .int("Slope must be a whole number"),
 });
 
 export const tournamentSchema = z
@@ -106,4 +113,4 @@ export const miniTournamentSchema = z.object({
   path: ["endDate"],
 });
 
-export type MiniTournamentType = z.infer<typeof miniTournamentSchema>;
+export type MiniTournamentType = z.infer<typeof miniTournamentSchema>;

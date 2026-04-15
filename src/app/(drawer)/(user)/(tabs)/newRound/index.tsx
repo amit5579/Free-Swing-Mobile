@@ -252,7 +252,7 @@ function CourseCard({ course, isDark }: any) {
         <Box
           className="absolute top-3 right-3 px-3 py-1 rounded-full"
           style={{
-            backgroundColor: isDark ? "#262626" : "#e5e5e5",
+            backgroundColor: course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
           }}
         >
           <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>

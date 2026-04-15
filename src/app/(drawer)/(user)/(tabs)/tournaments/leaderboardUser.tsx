@@ -840,6 +840,11 @@ export default function LeaderboardUser() {
             </HStack>
           </ScrollView>
         )}
+        {leaderboard.length == 0 && (
+          <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
+            No Players or scores available yet.
+          </ThemedText>
+        )}
       </View>
     </ThemedView>
   );

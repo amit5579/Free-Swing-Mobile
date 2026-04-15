@@ -20,6 +20,7 @@ import { getHolesByTeeBox, updateHoles } from "@/api/admin/courses";
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function EditHolesPage() {
   const colorScheme = useColorScheme();
@@ -31,7 +32,7 @@ export default function EditHolesPage() {
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ FETCH DATA
+  //  FETCH DATA
   const fetchHoles = async () => {
     try {
       setLoading(true);
@@ -70,9 +71,17 @@ export default function EditHolesPage() {
           hole.yardage
         );
       }
+      Toast.show({
+        type: "success",
+        text1: "Holes updated successfully",
+      });
     fetchHoles();
     } catch (error) {
       console.error("Error saving holes:", error);
+       Toast.show({
+        type: "error",
+        text1: "Failed to update Holes",
+      });
     } finally {
       setLoading(false);
     }
