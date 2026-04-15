@@ -22,11 +22,12 @@ import { Text } from "@/components/text";
 import { ThemedView } from "@/components/themed-view";
 import { TextInput } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { getTeeBox } from "@/api/admin/courses";
+import { createTeeBox, deleteTeeBox, getTeeBox, updateTeeBox } from "@/api/admin/courses";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teeBoxSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function teeBoxPage() {
   const colorScheme = useColorScheme();
@@ -50,6 +51,8 @@ export default function teeBoxPage() {
     reset,
   } = useForm({
     resolver: zodResolver(teeBoxSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       name: "",
       color: "",
@@ -73,6 +76,64 @@ export default function teeBoxPage() {
       setLoading(false);
     }
   };
+
+const onSubmit = async (data: any, teeBoxId?: number) => { 
+  const payloadData = {
+     name: data.name,
+      color: data.color,
+      rating: data.rating,
+      slope: data.slope,
+  }
+  try {
+    if (isEditMode == true) {
+      await updateTeeBox(teeBoxId as number, payloadData)
+      Toast.show({
+        type: "success",
+        text1: "Teebox updated successfully",
+      });
+      // await updateTeeBox(courseId, data) ;
+      // Toast.show({
+      //         type: "success",
+      //         text1: "Teebox updated successfully",
+      //       });
+    }else{
+      await createTeeBox(courseId as string, payloadData) ;
+      Toast.show({
+              type: "success",
+              text1: "Teebox created successfully",
+            });
+    }
+     
+  } catch (error) {
+    console.error("Error creating tee box:", error);
+Toast.show({
+  type:"error",
+  text1:"Failed to create teebox"
+})
+  }
+  finally{
+    fetchTeeDetails();
+    setModalVisible(false);
+  }
+}
+
+const handleDelete = async (teeBoxId: number) => {
+  try {
+    await deleteTeeBox(teeBoxId);
+    Toast.show({
+      type: "success",
+      text1: "Teebox deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting tee box:", error);
+    Toast.show({
+      type: "error",
+      text1: "Failed to delete teebox",
+    });
+  } finally{
+    fetchTeeDetails();
+  }
+}
 
   useEffect(() => {
     if (isEditMode && editingCourse) {
@@ -256,6 +317,7 @@ export default function teeBoxPage() {
                       key={tee.id}
                       tee={tee}
                       isDark={isDark}
+                      handleDelete={handleDelete}
                       openModal={() => setModalVisible(true)}
                       setIsEditMode={setIsEditMode}
                       setEditingCourse={setEditingCourse}
@@ -421,9 +483,9 @@ export default function teeBoxPage() {
                       />
                     )}
                   />
-                  {errors.color && (
+                  {errors.rating && (
                     <Text style={styles.errorText}>
-                      *{errors.color.message}
+                      *{errors.rating.message}
                     </Text>
                   )}
                 </VStack>
@@ -452,9 +514,9 @@ export default function teeBoxPage() {
                       />
                     )}
                   />
-                  {errors.color && (
+                  {errors.slope && (
                     <Text style={styles.errorText}>
-                      *{errors.color.message}
+                      *{errors.slope.message}
                     </Text>
                   )}
                 </VStack>
@@ -482,7 +544,18 @@ export default function teeBoxPage() {
               </Pressable>
 
               <Pressable
-                onPress={() => setModalVisible(false)}
+                onPress={() => {
+                  const teeboxId = editingCourse?.teeBoxId ?? editingCourse?.id;
+                  handleSubmit(
+                    (data) => onSubmit(data, teeboxId),
+                    () => {
+                      Toast.show({
+                        type: "error",
+                        text1: "Please fix the highlighted fields",
+                      });
+                    }
+                  )();
+                }}
                 style={styles.startButton}
               >
                 <ThemedText style={{ color: "white", fontWeight: "600" }}>
@@ -502,6 +575,7 @@ export default function teeBoxPage() {
 function TeeCardAdmin({
   tee,
   isDark,
+  handleDelete,
   openModal,
   setIsEditMode,
   setEditingCourse,
@@ -562,7 +636,7 @@ function TeeCardAdmin({
 
       {/* tee Name */}
       <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
-        {tee.color}
+        {tee.name}
       </ThemedText>
 
       {/* Location */}
@@ -635,7 +709,9 @@ function TeeCardAdmin({
         </Pressable>
 
         {/* Delete */}
-        <Pressable className="flex-row items-center gap-1">
+        <Pressable 
+        onPress={() => handleDelete(tee.id)}
+        className="flex-row items-center gap-1">
           <Ionicons name="trash-outline" size={15} color="#ef4444" />
           <ThemedText style={{ color: "#ef4444", fontWeight: "400" }}>
             Delete

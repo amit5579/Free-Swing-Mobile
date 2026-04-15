@@ -444,7 +444,13 @@ export default function SubAdminLeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowRight = ({ data, type }: { data: any[]; type: "par" | "si" }) => (
+  const InfoRowRight = ({
+    data,
+    type,
+  }: {
+    data: any[];
+    type: "par" | "si";
+  }) => (
     <HStack
       style={{
         height: 40,
@@ -465,7 +471,9 @@ export default function SubAdminLeaderboardPage() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       {data.slice(9, 18).map((h, i) => (
         <ThemedText
@@ -478,7 +486,9 @@ export default function SubAdminLeaderboardPage() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       <ThemedText
         style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
@@ -536,7 +546,13 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const PlayerRowRight = ({ player, index }: { player: any; index: number }) => {
+  const PlayerRowRight = ({
+    player,
+    index,
+  }: {
+    player: any;
+    index: number;
+  }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? isDark
@@ -592,7 +608,9 @@ export default function SubAdminLeaderboardPage() {
         >
           {player.back9}
         </ThemedText>
-        <ThemedText style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}>
+        <ThemedText
+          style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}
+        >
           {player.gross}
         </ThemedText>
         <ThemedText
@@ -628,7 +646,7 @@ export default function SubAdminLeaderboardPage() {
     const isDark = colorScheme === "dark";
 
     if (!holes || holes.length === 0) return null;
-   
+
     const border = isDark ? "#334155" : "#d1d5db";
 
     const secondaryText = isDark ? "#e7f0fcff" : "#6b7280";
@@ -741,8 +759,6 @@ export default function SubAdminLeaderboardPage() {
     const frontNine = holes.slice(0, 9);
     const backNine = holes.slice(9, 18);
 
-   
-
     return (
       <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
         {/* HEADER */}
@@ -804,29 +820,29 @@ export default function SubAdminLeaderboardPage() {
           ))}
         </View>
 
-          {/* Selected text */}
+        {/* Selected text */}
+        <ThemedText
+          style={{
+            fontSize: 13,
+            fontWeight: "500",
+          }}
+        >
+          Selected:
           <ThemedText
             style={{
               fontSize: 13,
+              color: "#ef4444",
               fontWeight: "500",
             }}
           >
-            Selected:
-            <ThemedText
-              style={{
-                fontSize: 13,
-                color: "#ef4444",
-                fontWeight: "500",
-              }}
-            >
-              {selectedFront.length ||
-                savedSecretHoles.filter((h: any) => h <= 9).length}
-              /6 Front |{" "}
-              {selectedBack.length ||
-                savedSecretHoles.filter((h: any) => h > 9).length}
-              /6 Back{" "}
-            </ThemedText>
+            {selectedFront.length ||
+              savedSecretHoles.filter((h: any) => h <= 9).length}
+            /6 Front |{" "}
+            {selectedBack.length ||
+              savedSecretHoles.filter((h: any) => h > 9).length}
+            /6 Back{" "}
           </ThemedText>
+        </ThemedText>
 
         {/* FOOTER */}
         <View
@@ -859,7 +875,8 @@ export default function SubAdminLeaderboardPage() {
                 setDisabledSubmit(true);
                 Toast.show({
                   type: "error",
-                  text1: "Please select 6 holes from front and 6 holes from back",
+                  text1:
+                    "Please select 6 holes from front and 6 holes from back",
                 });
                 return;
               } else {
@@ -885,7 +902,6 @@ export default function SubAdminLeaderboardPage() {
               Apply Peoria Formula
             </Text>
           </Pressable>
-
         </View>
       </View>
     );
@@ -895,8 +911,16 @@ export default function SubAdminLeaderboardPage() {
     const rows = 8;
 
     return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
-        <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        <HStack
+          style={{
+            borderTopWidth: 1,
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          }}
+        >
           {/* Left fixed skeleton */}
           <VStack style={{ width: LEFT_FIXED_WIDTH }}>
             <View
@@ -1001,7 +1025,7 @@ export default function SubAdminLeaderboardPage() {
       {loading ? (
         <TableLoadingSkeleton />
       ) : (
-        <ScrollView style={{ flex: 1, marginBottom:30 }}>
+        <ScrollView style={{ flex: 1, marginBottom: 30 }}>
           <RenderStatsSection />
 
           {isDoublePreoria && <RenderSecretHoles />}
@@ -1038,12 +1062,16 @@ export default function SubAdminLeaderboardPage() {
               </ScrollView>
             </HStack>
           )}
+          {leaderboard.length == 0 && (
+            <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
+              No Players or scores available yet.
+            </ThemedText>
+          )}
         </ScrollView>
       )}
     </ThemedView>
   );
 }
-
 
 const styles = StyleSheet.create({
   headerText: {

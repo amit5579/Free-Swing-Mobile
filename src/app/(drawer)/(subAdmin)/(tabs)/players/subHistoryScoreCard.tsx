@@ -33,6 +33,10 @@ export default function SubAdminGameHistoryScoreCard() {
     const [handicap, setHandicap] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+
+  useEffect(() => {
+    console.log("handicap", handicap);
+  }, [handicap]);
   const renderScoring = (scorecard && scorecard.length > 0) ? (scorecard[0].stablefordPoints == null && scorecard[0].isExcluded == false ? "Net Score Include Par 3" : scorecard[0].stablefordPoints == null && scorecard[0].isExcluded == true ? "Net Score Exclude Par 3" : "Stableford") : "";
 
   // ── Colors ──

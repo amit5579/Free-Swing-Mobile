@@ -41,7 +41,7 @@ import Toast from "react-native-toast-message";
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -95,7 +95,7 @@ const [loading, setLoading] = useState(true);
         boxes.map((b) => ({
           label: b.name,
           value: b.teeBoxId,
-        }))
+        })),
       );
     });
   }, [watchedCourseId?.[0]]);
@@ -114,7 +114,7 @@ const [loading, setLoading] = useState(true);
         startDate: formatDate(data.startDate),
         endDate: formatDate(data.endDate),
         description: data.description || "",
-        creatorId: 1, 
+        creatorId: 1,
       };
 
       if (isEditMode) {
@@ -126,21 +126,24 @@ const [loading, setLoading] = useState(true);
       }
 
       await fetchTournaments();
-      
+
       Toast.show({
         type: "success",
-        text1: isEditMode ? "Tournament updated successfully" : "Tournament created successfully",
+        text1: isEditMode
+          ? "Tournament updated successfully"
+          : "Tournament created successfully",
       });
       setModalVisible(false);
     } catch (error) {
       console.error("Submission error:", error);
       Toast.show({
         type: "error",
-        text1: isEditMode ? "Tournament update failed" : "Tournament creation failed",
+        text1: isEditMode
+          ? "Tournament update failed"
+          : "Tournament creation failed",
       });
     }
   };
-
 
   const onDelete = async (id: number) => {
     try {
@@ -157,10 +160,10 @@ const [loading, setLoading] = useState(true);
         text1: "Tournament deletion failed",
       });
     }
-  }
+  };
   const fetchTournaments = async () => {
     try {
-          setLoading(true);
+      setLoading(true);
 
       const data = await getTournaments();
       const courseData = await getCourse();
@@ -178,22 +181,22 @@ const [loading, setLoading] = useState(true);
       // console.log("Formatted Courses:", formattedCourses);
     } catch (error) {
       console.error("Error fetching tournaments:", error);
-    }finally {
-    setLoading(false);
-  }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {    
+  useEffect(() => {
     fetchTournaments();
   }, []);
 
-   useFocusEffect(
+  useFocusEffect(
     React.useCallback(() => {
-          fetchTournaments();
-   // 🔥 refetch when screen is focused again
-    }, [])
+      fetchTournaments();
+      // 🔥 refetch when screen is focused again
+    }, []),
   );
-  
+
   useEffect(() => {
     if (!isEditMode || !editingCourse || !editingCourse.name) return;
 
@@ -212,71 +215,70 @@ const [loading, setLoading] = useState(true);
     });
   }, [isEditMode, editingCourse, courses]);
 
-const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
-  return (
-    <Box
-      style={{
-        borderWidth: 1,
-        borderRadius: 16,
-        padding: 16,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
-      }}
-    >
-      {/* HEADER */}
-      <HStack style={{ justifyContent: "space-between" }}>
-        <View style={{ flex: 1 }}>
-          <Skeleton isDark={isDark} height={16} width="60%" />
-          <Skeleton
-            isDark={isDark}
-            height={12}
-            width="40%"
-            style={{ marginTop: 6 }}
-          />
-        </View>
-
-        <Skeleton isDark={isDark} height={20} width={20} />
-      </HStack>
-
-      {/* DATES */}
-      <HStack style={{ justifyContent: "space-between", marginTop: 12 }}>
-        <VStack>
-          <Skeleton isDark={isDark} height={10} width={40} />
-          <Skeleton
-            isDark={isDark}
-            height={12}
-            width={80}
-            style={{ marginTop: 4 }}
-          />
-        </VStack>
-
-        <VStack>
-          <Skeleton isDark={isDark} height={10} width={40} />
-          <Skeleton
-            isDark={isDark}
-            height={12}
-            width={80}
-            style={{ marginTop: 4 }}
-          />
-        </VStack>
-      </HStack>
-
-      {/* ACTIONS */}
-      <HStack
+  const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <Box
         style={{
-          justifyContent: "space-around",
-          marginTop: 16,
-          borderTopWidth: 1,
+          borderWidth: 1,
+          borderRadius: 16,
+          padding: 16,
           borderColor: isDark ? "#262626" : "#e5e5e5",
-          paddingTop: 10,
         }}
       >
-        <Skeleton isDark={isDark} height={14} width={50} />
-        <Skeleton isDark={isDark} height={14} width={60} />
-      </HStack>
-    </Box>
-  );
-};
+        {/* HEADER */}
+        <HStack style={{ justifyContent: "space-between" }}>
+          <View style={{ flex: 1 }}>
+            <Skeleton isDark={isDark} height={16} width="60%" />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width="40%"
+              style={{ marginTop: 6 }}
+            />
+          </View>
 
+          <Skeleton isDark={isDark} height={20} width={20} />
+        </HStack>
+
+        {/* DATES */}
+        <HStack style={{ justifyContent: "space-between", marginTop: 12 }}>
+          <VStack>
+            <Skeleton isDark={isDark} height={10} width={40} />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width={80}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+
+          <VStack>
+            <Skeleton isDark={isDark} height={10} width={40} />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width={80}
+              style={{ marginTop: 4 }}
+            />
+          </VStack>
+        </HStack>
+
+        {/* ACTIONS */}
+        <HStack
+          style={{
+            justifyContent: "space-around",
+            marginTop: 16,
+            borderTopWidth: 1,
+            borderColor: isDark ? "#262626" : "#e5e5e5",
+            paddingTop: 10,
+          }}
+        >
+          <Skeleton isDark={isDark} height={14} width={50} />
+          <Skeleton isDark={isDark} height={14} width={60} />
+        </HStack>
+      </Box>
+    );
+  };
 
   return (
     <>
@@ -324,26 +326,28 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">
-{loading ? (
-  <>
-    {Array.from({ length: 4 }).map((_, i) => (
-      <TournamentCardSkeleton key={i} isDark={isDark} />
-    ))}
-  </>
-) : (
-  <>{tournaments.map((tournament: any) => (
-              <TournamentCard
-                key={tournament.tournamentId}
-                tournament={tournament}
-                onDelete={onDelete}
-                setIsEditMode={setIsEditMode}
-                setEditingCourse={setEditingCourse}
-                isEditMode={isEditMode}
-                setModalVisible={setModalVisible}
-                isDark={isDark}
-              />
-            ))}</>)}
-
+            {loading ? (
+              <>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <TournamentCardSkeleton key={i} isDark={isDark} />
+                ))}
+              </>
+            ) : (
+              <>
+                {tournaments.map((tournament: any) => (
+                  <TournamentCard
+                    key={tournament.tournamentId}
+                    tournament={tournament}
+                    onDelete={onDelete}
+                    setIsEditMode={setIsEditMode}
+                    setEditingCourse={setEditingCourse}
+                    isEditMode={isEditMode}
+                    setModalVisible={setModalVisible}
+                    isDark={isDark}
+                  />
+                ))}
+              </>
+            )}
           </VStack>
         </ScrollView>
       </View>
@@ -360,8 +364,18 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
           setEditingCourse(null);
         }}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
             <HStack className="justify-between items-center mb-4">
               <ThemedText style={{ fontSize: 17, fontWeight: "700" }}>
                 {isEditMode ? "Edit Tournament" : "Create Tournament"}
@@ -375,7 +389,11 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                   setEditingCourse(null);
                 }}
               >
-                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
               </Pressable>
             </HStack>
 
@@ -422,8 +440,12 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                             borderColor: isDark ? "#333" : "#9ca3af",
                           },
                         ]}
-                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
-                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        placeholderStyle={{
+                          color: isDark ? "#777" : "#9ca3af",
+                        }}
+                        selectedTextStyle={{
+                          color: isDark ? "white" : "black",
+                        }}
                         containerStyle={{
                           backgroundColor: isDark ? "#1a1a1a" : "#fff",
                           borderColor: isDark ? "#333" : "#9ca3af",
@@ -459,8 +481,12 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                             borderColor: isDark ? "#333" : "#9ca3af",
                           },
                         ]}
-                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
-                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        placeholderStyle={{
+                          color: isDark ? "#777" : "#9ca3af",
+                        }}
+                        selectedTextStyle={{
+                          color: isDark ? "white" : "black",
+                        }}
                         containerStyle={{
                           backgroundColor: isDark ? "#1a1a1a" : "#fff",
                           borderColor: isDark ? "#333" : "#9ca3af",
@@ -468,17 +494,17 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={
-                        //   [
-                        //   { label: "red", value: "1" },
-                        //   { label: "blue", value: "2" },
-                        //   { label: "black", value: "3" },
-                        //   { label: "white", value: "4" },
-                        //   { label: "gold", value: "5" },
-                        //   { label: "green", value: "6" },
-                        //   { label: "silver", value: "7" },
-                        // ]
-                        teeBox
-                      }
+                          //   [
+                          //   { label: "red", value: "1" },
+                          //   { label: "blue", value: "2" },
+                          //   { label: "black", value: "3" },
+                          //   { label: "white", value: "4" },
+                          //   { label: "gold", value: "5" },
+                          //   { label: "green", value: "6" },
+                          //   { label: "silver", value: "7" },
+                          // ]
+                          teeBox
+                        }
                         labelField="label"
                         valueField="value"
                         placeholder="Select Tee Box"
@@ -509,8 +535,12 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                             borderColor: isDark ? "#333" : "#9ca3af",
                           },
                         ]}
-                        placeholderStyle={{ color: isDark ? "#777" : "#9ca3af" }}
-                        selectedTextStyle={{ color: isDark ? "white" : "black" }}
+                        placeholderStyle={{
+                          color: isDark ? "#777" : "#9ca3af",
+                        }}
+                        selectedTextStyle={{
+                          color: isDark ? "white" : "black",
+                        }}
                         containerStyle={{
                           backgroundColor: isDark ? "#1a1a1a" : "#fff",
                           borderColor: isDark ? "#333" : "#9ca3af",
@@ -518,9 +548,9 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={[
-                          { label: "Standard (Gross/Net)", value: 1 },
+                          { label: "Net Score (Inclued Par 3)", value: 1 },
+                          { label: "Net Score (Exclude Par 3)", value: 3 },
                           { label: "Stableford", value: 2 },
-                          { label: "Excluded(practice)", value: 3 },
                           { label: "DP Gross / Net", value: 4 },
                           { label: "DP Stableford", value: 5 },
                         ]}
@@ -534,7 +564,10 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                   />
                   {errors.scoringType && (
                     <Text style={{ color: "red" }}>
-                      *{errors.scoringType.message || (errors.scoringType as any)?.[0]?.message || "Invalid input"}
+                      *
+                      {errors.scoringType.message ||
+                        (errors.scoringType as any)?.[0]?.message ||
+                        "Invalid input"}
                     </Text>
                   )}
                 </VStack>
@@ -656,7 +689,10 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
 
             <HStack className="justify-end mt-6 gap-3">
               <Pressable
-                style={[styles.cancelButton, { borderColor: isDark ? "#333" : "#d1d5db" }]}
+                style={[
+                  styles.cancelButton,
+                  { borderColor: isDark ? "#333" : "#d1d5db" },
+                ]}
                 onPress={() => {
                   setModalVisible(false);
                   reset();
@@ -664,7 +700,9 @@ const TournamentCardSkeleton = ({ isDark }: { isDark: boolean }) => {
                   setEditingCourse(null);
                 }}
               >
-                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>Cancel</ThemedText>
+                <ThemedText style={{ color: isDark ? "#ccc" : "#374151" }}>
+                  Cancel
+                </ThemedText>
               </Pressable>
 
               <Pressable
@@ -727,25 +765,16 @@ function TournamentCard({
     </TouchableOpacity>
   );
 
-  // const onSubmit = (data: any) => {
-  //   if (isEditMode) {
-  //     console.log("UPDATE API", data);
-  //   } else {
-  //     console.log("CREATE API", data);
-  //   }
-
-  //   setModalVisible(false);
-  // };
   return (
     <>
       <Box
         style={[
           styles.card,
           {
- backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+            backgroundColor: isDark
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
           },
         ]}
       >
@@ -830,7 +859,15 @@ function TournamentCard({
         onRequestClose={() => setMenuVisible(false)}
       >
         <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View style={[styles.menu, { backgroundColor: isDark ? "#1a1a1a" : "#fff", borderColor: isDark ? "#333" : "#e5e5e5" }]}>
+          <View
+            style={[
+              styles.menu,
+              {
+                backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                borderColor: isDark ? "#333" : "#e5e5e5",
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -842,7 +879,9 @@ function TournamentCard({
               }}
             >
               <Ionicons name="time" size={20} color="#06b6d4" />
-              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
                 History
               </ThemedText>
             </TouchableOpacity>
@@ -857,7 +896,9 @@ function TournamentCard({
               }}
             >
               <Ionicons name="stats-chart" size={20} color="#f59e0b" />
-              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
                 Leaderboard
               </ThemedText>
             </TouchableOpacity>
@@ -870,7 +911,9 @@ function TournamentCard({
               }}
             >
               <Ionicons name="trash" size={20} color="#ef4444" />
-              <ThemedText style={[styles.menuText, { color: isDark ? "white" : "#000" }]}>
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
                 Delete
               </ThemedText>
             </TouchableOpacity>
@@ -930,12 +973,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-  
-
-    // shadowColor: "#000",
-    // shadowOpacity: 0.08,
-    // shadowRadius: 6,
-    // elevation: 3,
   },
 
   header: {

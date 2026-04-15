@@ -78,6 +78,41 @@ export const getHolesByTeeBox = async (teeboxId: string) => {
     }
 };
 
+// create tee box - courseadmin/10/teebox
+// {name: "pulse", color: "Gold", rating: 5, slope: 7}
+
+export const createTeeBox = async (courseId: string, data: any) => {
+    try {
+        const response = await https.post(`courseadmin/${courseId}/teebox`, data)
+        return response.data;
+    } catch (error) {
+        console.error("Creating tee box Error:", error);
+        throw error;
+    }
+}
+
+// update teebox - courseadmin/teebox/31
+// color : "Gold" courseId: 10 holes: [] isPredefined: false name: "xpulse" rating: 7 scorecards: null slope: 9 teeBoxId: 31 tournaments: []
+export const updateTeeBox = async(teeboxId: number, data: any) => {
+    try {
+        const response = await https.put(`courseadmin/teebox/${teeboxId}`, data)
+        return response.data;
+    } catch (error) {
+        console.error("Updating tee box Error:", error);
+        throw error;
+    }
+}
+
+// delete teebox - courseadmin/teebox/31
+export const deleteTeeBox = async (teeboxId: number) => {
+    try {
+        const response = await https.delete(`courseadmin/teebox/${teeboxId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Deleting tee box Error:", error);
+        throw error;
+    }
+}
 
 // update holes by holeId = courseadmin/hole/463 payload = {handicap: 13 holeId: 463 holeNumber: 13 par: 4 teeBoxId: 26 yardage: 400}
 

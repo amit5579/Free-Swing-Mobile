@@ -35,16 +35,11 @@ export default function ContactAdminPage() {
   const [modalVisible, setModalVisible] = useState(false);
 
   // Dummy feedback history (replace with API)
-  const [feedbacks, setFeedbacks] = useState<any[]>([
-    // {
-    //   id: "1",
-    //   category: "bug",
-    //   status: "open",
-    //   subject: "bugchecktest",
-    //   message: "testing the contact admin flow with bug category.",
-    //   date: "Mar 25, 2026",
-    // },
-  ]);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  // useEffect(() => {
+  // console.log("ffff",feedbacks);
+
+  // },[])
 
   // FORM
   const {
@@ -91,6 +86,7 @@ export default function ContactAdminPage() {
       hour12: true,
     });
   };
+
   const RenderHeader = () => (
     <HStack className="px-3 pt-5 items-center justify-between">
       <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
@@ -125,19 +121,33 @@ export default function ContactAdminPage() {
           : "rgba(241, 245, 249, 0.6)",
       }}
     >
-      <HStack className="items-center justify-between mb-2">
+      <HStack className="justify-between">
         <ThemedText style={{ fontWeight: "600" }}>{item.subject}</ThemedText>
 
-        <View
-          style={{
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 8,
-            backgroundColor: "#facc15",
-          }}
-        >
-          <ThemedText style={{ fontSize: 12 }}>{item.status}</ThemedText>
-        </View>
+        <HStack className="items-center justify-end gap-3 mb-2">
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "rgba(59, 57, 30, 0.5)",
+            }}
+          >
+            <ThemedText style={{ fontSize: 12, color: "#facc15" }}>
+              {item.category}
+            </ThemedText>
+          </View>
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "#facc15",
+            }}
+          >
+            <ThemedText style={{ fontSize: 12 }}>{item.status == "InProgress" ? "In Progress" : item.status}</ThemedText>
+          </View>
+        </HStack>
       </HStack>
 
       <ThemedText style={{ fontSize: 13, opacity: 0.7 }}>
@@ -227,11 +237,11 @@ export default function ContactAdminPage() {
               Track the latest status and any admin reply.
             </ThemedText>
 
-            <HStack className="justify-end mb-3 ">
+            <HStack className="justify-end mb-3">
               <Box className="border border-gray-400 rounded-full px-3 py-1">
                 <ThemedText>
                   {feedbacks.length}
-                  {feedbacks.length == 1 ? "item" : "items"}
+                  {feedbacks.length == 1 ? " item" : " items"}
                 </ThemedText>
               </Box>
             </HStack>

@@ -77,7 +77,6 @@ export default function tournamentHistory() {
           {tournamentName}'s History
         </ThemedText>
 
-        {/* RIGHT: Add Button */}
         <View style={{ width: 40 }} />
       </HStack>
       <Watermark />
@@ -213,8 +212,8 @@ function HistoryCard({ item, isDark }: any) {
                 fontSize: 12,
               }}
             >
-              {/* {item.excluded} */}
-              Standard
+              {item.isExcluded ? "Excluded" : "Standard"}
+              {/* Standard */}
             </ThemedText>
           </Box>
         </HStack>
