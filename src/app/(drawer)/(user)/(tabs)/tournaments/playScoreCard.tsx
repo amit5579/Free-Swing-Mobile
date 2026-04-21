@@ -10,13 +10,11 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ScrollView } from "react-native-gesture-handler";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
   getScorecardHandicap,
@@ -24,6 +22,7 @@ import {
   saveScoreCard,
 } from "@/api/scoreCard";
 import Toast from "react-native-toast-message";
+import { Box } from "@/components/box";
 
 export default function PlayScoreCard() {
   const colorScheme = useColorScheme();
@@ -126,6 +125,20 @@ export default function PlayScoreCard() {
       hole.handicap,
     );
 
+
+  const  calculateStrokesReceived = (strokeIndex: number) => {
+    const handicapValue = handicap.userHandicap;
+    let strokes = 0;
+ 
+    if (handicapValue > 0) {
+      strokes = Math.floor(handicapValue / 18);
+      const remainder = handicapValue % 18;
+      if (strokeIndex <= remainder) {
+        strokes++;
+      }
+    }
+    return strokes;
+  }
     // Excluded logic
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
@@ -164,8 +177,13 @@ export default function PlayScoreCard() {
     }
 
     const numericValue = Number(value);
-    if (numericValue > 25) {
-      Toast.show({ type: "error", text1: "Max score is 25" });
+    if (numericValue > 15) {
+      Toast.show({ type: "error", text1: "Maximum score per hole is 15." });
+      setScoreCard((prev: any[]) =>
+        prev.map((hole) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
+        ),
+      );
       return;
     }
 
@@ -200,7 +218,7 @@ export default function PlayScoreCard() {
         counts.holeInOne++;
         return;
       }
-      if (diff === -3) {
+      if (score === -0) {
         counts.albatross++;
         return;
       }
@@ -239,6 +257,7 @@ export default function PlayScoreCard() {
 
   // ── Totals helper ──
   const getTotals = (holes: any[]) => ({
+    strokeIndex: "",
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
@@ -272,15 +291,25 @@ export default function PlayScoreCard() {
   }));
 
   // ── Finish Round ──
-  const handleFinishRound = () => {
-    saveScoreCard(payload);
-
-    setVisible(false);
+  const handleFinishRound = async() => {
+    try {
+      setVisible(false);
+    await saveScoreCard(payload);
     Toast.show({
       type: "success",
       text1: "Round Finished",
       text2: "Score submitted successfully",
     });
+    routePage.back();
+  }catch(error){
+    console.log("Error finishing round",error);
+    setVisible(false);
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: "Failed to finish round",
+    });
+  }
   };
 
   // ── Score indicator ──
@@ -398,11 +427,10 @@ export default function PlayScoreCard() {
 
   // ── Header ──
   const renderHeader = () => {
-    return (
-      <View>
+    return (<><View style={{ paddingTop: 10 }}>
         <HStack
           className="px-3 items-center"
-          style={{ height: 60, justifyContent: "center" }}
+          style={{ height: 30, justifyContent: "center" }}
         >
           <Pressable
             onPress={() => routePage.back()}
@@ -425,16 +453,26 @@ export default function PlayScoreCard() {
             Scorecard
           </ThemedText>
         </HStack>
-        <ThemedText
-          style={{ textAlign: "center", fontSize: 16, fontWeight: "600" }}
+       
+        <HStack className="justify-between m-3">
+           <ThemedText
+          style={{ fontSize: 13, opacity: 0.8 }}
         >
           ({renderScoringType})
         </ThemedText>
-        <HStack className="justify-between mx-3">
-          <ThemedText>Decleared HC: {handicap.handicap}</ThemedText>
-          <ThemedText>DP HC:-</ThemedText>
+          <Box
+            style={{
+              padding: 8,
+              backgroundColor: "#8bc34a",
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight:700 }}>Handicap: {handicap.handicap}</Text>
+          </Box>
         </HStack>
       </View>
+      </>
+      
     );
   };
 
@@ -454,7 +492,10 @@ export default function PlayScoreCard() {
                   {/* CARD WRAPPER */}
                   <VStack
                     style={{
-                      backgroundColor: "transparent",
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
                       borderRadius: 14,
                       overflow: "hidden",
                       shadowColor: "#000",
@@ -475,6 +516,7 @@ export default function PlayScoreCard() {
                     >
                       {[
                         "Hole",
+                        "Stroke\nIndex",
                         "Yards",
                         "Par",
                         "Score",
@@ -521,6 +563,15 @@ export default function PlayScoreCard() {
                               color: "#888",
                             }}
                           >
+                            {h.strokeIndex}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              color: "#888",
+                            }}
+                          >
                             {h.yardage}
                           </ThemedText>
 
@@ -551,8 +602,9 @@ export default function PlayScoreCard() {
                               style={{
                                 width: 42,
                                 height: 42,
-                                borderRadius: 0,
-                                borderWidth: 0,
+                                borderRadius: 5,
+                                borderColor: "#b9b9b9ff",
+                                borderWidth: 1,
                                 backgroundColor: "transparent",
                                 textAlign: "center",
                                 color: isDark ? "#fff" : "#000",
@@ -603,6 +655,14 @@ export default function PlayScoreCard() {
                               }}
                             >
                               Front 9
+                            </ThemedText>
+                            <ThemedText
+                              style={{
+                                flex: 1,
+                                textAlign: "center",
+                              }}
+                            >
+                              {frontTotals.strokeIndex}
                             </ThemedText>
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}
@@ -662,6 +722,14 @@ export default function PlayScoreCard() {
                               }}
                             >
                               Back 9
+                            </ThemedText>
+                            <ThemedText
+                              style={{
+                                flex: 1,
+                                textAlign: "center",
+                              }}
+                            >
+                              {backTotals.strokeIndex}
                             </ThemedText>
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}
@@ -804,9 +872,11 @@ export default function PlayScoreCard() {
                       marginTop: 25,
                       padding: 16,
                       borderRadius: 14,
-                      backgroundColor: "transparent",
+                      backgroundColor: isDark
+                        ? "rgba(38, 38, 38, 0.8)"
+                        : "rgba(243, 244, 246, 0.8)",
                       borderWidth: 1,
-                      borderColor: isDark ? "#eee" : "#333",
+                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
                     }}
                   >
                     <ThemedText

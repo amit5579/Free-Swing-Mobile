@@ -1,5 +1,7 @@
+// strokeIndex
 import { getScoreCardDetails } from "@/api/newRound";
 import { saveScoreCard } from "@/api/scoreCard";
+import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { ThemedText } from "@/components/themed-text";
 import { VStack } from "@/components/vstack";
@@ -137,7 +139,7 @@ export default function ScoreCardUserPage() {
       }
 
       // 🟦 Albatross (-3)
-      if (diff === -3) {
+      if (score === 0) {
         counts.albatross++;
         return;
       }
@@ -195,6 +197,7 @@ export default function ScoreCardUserPage() {
   const legendCounts = getScoreLegendCounts(processedAllHoles);
 
   const getTotals = (holes: any[]) => ({
+    strokeIndex: "",
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
@@ -227,14 +230,25 @@ export default function ScoreCardUserPage() {
     teeBoxId: Number(teeBoxId),
   }));
 
-  const handleFinishRound = () => {
-    setVisible(false);
-    saveScoreCard(payload);
+  const handleFinishRound = async() => {
+    try {
+      setVisible(false);
+   await saveScoreCard(payload);
     Toast.show({
       type: "success",
       text1: "Round Finished",
       text2: "Score submitted successfully",
     });
+    routePage.push("/(drawer)/(user)/(tabs)/dashboard");
+  }catch(error){
+    console.error("Error finishing round:", error);
+    setVisible(false);
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: "Failed to finish round",
+    });
+  }
   };
 
   useEffect(() => {
@@ -273,8 +287,13 @@ export default function ScoreCardUserPage() {
     if (numericValue > 15) {
       Toast.show({
         type: "error",
-        text1: "Max score is 15",
+        text1: "Maximum score per hole is 15.",
       });
+      setScoreCardDetails((prev: any[]) =>
+        prev.map((hole) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
+        ),
+      );
       return;
     }
 
@@ -427,8 +446,8 @@ export default function ScoreCardUserPage() {
   };
 
   const renderHeader = () => {
-    return (
-      <View style={{ paddingTop: 10 }}>
+    return (<>
+    <View style={{ paddingTop: 10 }}>
         <HStack
           className="px-3 items-center"
           style={{ height: 60, justifyContent: "center" }}
@@ -480,11 +499,19 @@ export default function ScoreCardUserPage() {
               </ThemedText>
             )}
           </View>
-          <ThemedText style={{ fontWeight: "600" }}>
-            Handicap: {handicap}
-          </ThemedText>
+          <Box
+            style={{
+              padding: 8,
+              backgroundColor: "#8bc34a",
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight:700 }}>Handicap: {handicap}</Text>
+          </Box>
         </HStack>
       </View>
+      </>
+     
     );
   };
 
@@ -536,6 +563,7 @@ export default function ScoreCardUserPage() {
                     >
                       {[
                         "Hole",
+                        "Stroke\nIndex",
                         "Yards",
                         "Par",
                         "Score",
@@ -574,6 +602,9 @@ export default function ScoreCardUserPage() {
                         >
                           <ThemedText style={{ flex: 1, textAlign: "center" }}>
                             {h.holeNumber}
+                          </ThemedText>
+                          <ThemedText style={{ flex: 1, textAlign: "center" }}>
+                            {h.strokeIndex}
                           </ThemedText>
 
                           <ThemedText
@@ -677,6 +708,11 @@ export default function ScoreCardUserPage() {
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}
                             >
+                              {frontTotals.strokeIndex}
+                            </ThemedText>
+                            <ThemedText
+                              style={{ flex: 1, textAlign: "center" }}
+                            >
                               {frontTotals.yards}
                             </ThemedText>
 
@@ -738,6 +774,11 @@ export default function ScoreCardUserPage() {
                               Back 9
                             </ThemedText>
 
+                            <ThemedText
+                              style={{ flex: 1, textAlign: "center" }}
+                            >
+                              {backTotals.strokeIndex}
+                            </ThemedText>     
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}
                             >

@@ -22,6 +22,8 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
+import { Badge, BadgeText } from "@/components/badge";
+import { Divider } from "@/components/divider";
 
 import {
   createTournament,
@@ -157,8 +159,19 @@ export default function SubAdminTournamentsPage() {
         creatorId: Number(userId) || 1,
       };
 
+      const updatedData = {
+        courseId: data.courseId[0],
+        endDate: data.endDate,
+        name: data.name,
+        scoringType: scoringMap[data.scoringType[0]] || "standard",
+        startDate: formatDate(data.startDate),
+        teeBoxId: data.teeColor[0],
+        tournamentId: editingCourse.tournamentId,
+      };
       if (isEditMode) {
-        await updateTournament(editingCourse.tournamentId, tournamentData);
+        console.log();
+
+        await updateTournament(editingCourse.tournamentId, updatedData);
       } else {
         await createTournament(tournamentData);
       }
@@ -174,6 +187,7 @@ export default function SubAdminTournamentsPage() {
       setModalVisible(false);
     } catch (error) {
       console.error("Submission error:", error);
+      setModalVisible(false);
       Toast.show({
         type: "error",
         text1: isEditMode
@@ -373,11 +387,7 @@ export default function SubAdminTournamentsPage() {
                         marginBottom: 16,
                       }}
                     >
-                      <Ionicons
-                        name="trophy"
-                        size={32}
-                        color={colors.subText}
-                      />
+                      <Ionicons name="trophy" size={32} color={"#8bc34a"} />
                     </View>
                     <ThemedText
                       style={{
@@ -605,12 +615,11 @@ export default function SubAdminTournamentsPage() {
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
                         data={[
-                          { label: "Standard (Gross/Net)", value: 1 },
-                          { label: "Stableford", value: 2 },
-                          { label: "Excluded (Practice)", value: 3 },
-                          { label: "Double Peoria", value: 4 },
-                          { label: "Double Peoria Net", value: 5 },
-                          { label: "Double Peoria Stableford", value: 6 },
+                          { label: "Net Score (Include Par 3)", value: 1 },
+                          { label: "Net Score (Exclude Par 3)", value: 2 },
+                          { label: "Stableford", value: 3 },
+                          { label: "Double Peoria Gross / Net", value: 4 },
+                          { label: "Double Peoria Stableford", value: 5 },
                         ]}
                         labelField="label"
                         valueField="value"
@@ -806,85 +815,138 @@ function TournamentCard({
         style={[
           styles.card,
           {
- backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",          },
+            backgroundColor: isDark
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          },
         ]}
       >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <ThemedText style={styles.title}>
+        {/* Header Section */}
+        <HStack className="justify-between items-start mb-2">
+          <VStack style={{ flex: 1 }}>
+            <ThemedText
+              style={{
+                fontSize: 18,
+                fontWeight: "800",
+                marginBottom: 2,
+              }}
+            >
               {tournament?.name || "No Name"}
             </ThemedText>
-
-            <ThemedText style={styles.subtitle}>
+            <ThemedText
+              style={{
+                fontSize: 13,
+                opacity: 0.6,
+                fontWeight: "600",
+                color: "#8bc34a",
+              }}
+            >
               {tournament?.course?.name || "No Course"}
             </ThemedText>
-          </View>
+          </VStack>
 
-          {/* MORE MENU */}
-          <Pressable
-            onPress={() => setMenuVisible(true)}
-            style={({ pressed }) => [
-              styles.iconBtn,
-              { opacity: pressed ? 0.5 : 1 },
-            ]}
-          >
-            <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
-          </Pressable>
-        </View>
+          <HStack className="items-center gap-2">
+            <View style={styles.iconContainer}>
+              <Ionicons name="trophy" size={20} color="#8bc34a" />
+            </View>
+            <Pressable
+              onPress={() => setMenuVisible(true)}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                { opacity: pressed ? 0.5 : 1 },
+              ]}
+            >
+              <Ionicons name="ellipsis-vertical" size={22} color="#6b7280" />
+            </Pressable>
+          </HStack>
+        </HStack>
 
-        {/* DATES */}
-        <View style={styles.dateRow}>
-          <View>
-            <ThemedText style={styles.label}>Start</ThemedText>
-            <ThemedText style={styles.value}>
-              {formatDate(tournament?.startDate)}
-            </ThemedText>
-          </View>
+        <Divider className="my-2 opacity-50" />
 
-          <View>
-            <ThemedText style={styles.label}>End</ThemedText>
-            <ThemedText style={styles.value}>
-              {formatDate(tournament?.endDate)}
-            </ThemedText>
-          </View>
-        </View>
+        {/* Info Row: Dates */}
+        <HStack
+          className="p-3 rounded-xl mb-4 mt-2"
+          style={{
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(0,0,0,0.03)",
+            justifyContent: "space-between",
+          }}
+        >
+          <HStack className="items-center gap-2">
+            <Ionicons name="calendar-outline" size={16} color="#8bc34a" />
+            <VStack>
+              <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
+                START
+              </ThemedText>
+              <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+                {formatDate(tournament?.startDate)}
+              </ThemedText>
+            </VStack>
+          </HStack>
 
-        {/* PRIMARY ACTIONS */}
-        <View style={styles.actions}>
+          <HStack className="items-center gap-2">
+            <Ionicons name="time-outline" size={16} color="#ef4444" />
+            <VStack>
+              <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
+                END
+              </ThemedText>
+              <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+                {formatDate(tournament?.endDate)}
+              </ThemedText>
+            </VStack>
+          </HStack>
+        </HStack>
+
+        {/* Primary Actions Section */}
+        <HStack className="gap-2 mt-2">
           <Pressable
             onPress={() => {
               setIsEditMode(true);
               setEditingCourse(tournament);
               setModalVisible(true);
             }}
-            style={styles.actionBtn}
-            android_ripple={{ color: "#ddd" }}
+            className="flex-1 flex-row justify-center items-center gap-2 border border-slate-400 py-2.5 rounded-xl"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
-            <Ionicons name="create" size={22} color="#6b7280" />
-            <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
+            <Ionicons
+              name="create"
+              size={18}
+              color={isDark ? "#94a3b8" : "#64748b"}
+            />
+            <ThemedText
+              style={{
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "700",
+                fontSize: 13,
+              }}
+            >
               Edit
             </ThemedText>
           </Pressable>
 
           <Pressable
-            style={styles.actionBtn}
-            android_ripple={{ color: "#ddd" }}
             onPress={() => {
               routePage.push(
                 `/(drawer)/(subAdmin)/(tabs)/tournaments/manageRoaster?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
               );
             }}
+            className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl shadow-sm"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.9 : 1,
+            })}
           >
-            <Ionicons name="person-add" size={22} color="#3b82f6" />
-            <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
+            <Ionicons name="person-add" size={18} color="white" />
+            <ThemedText
+              style={{ color: "white", fontWeight: "700", fontSize: 13 }}
+            >
               Roaster
             </ThemedText>
           </Pressable>
-        </View>
+        </HStack>
       </Box>
       <Modal
         visible={menuVisible}
@@ -1061,5 +1123,13 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: 14,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "rgba(139, 195, 74, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -68,7 +68,7 @@ export const createMiniTournament = async (courseId: number, description: string
 
 // Update Tournament Tournament/16
 
-export const updateTournament = async (tournamentId: number, tournamentData: any) => {
+export const updateTournament = async ( tournamentData: any , tournamentId: number) => {
     try {
         const response = await https.put(`Tournament/${tournamentId}`, tournamentData);
         console.log("Updated Tournament:", response.data);

@@ -309,7 +309,7 @@ export default function SubAdminPlayersPage() {
           marginBottom: 16,
         }}
       >
-        <Ionicons name="people-outline" size={32} color={colors.subText} />
+        <Ionicons name="people" size={32} color={"#8bc34a"} />
       </View>
       <ThemedText
         style={{

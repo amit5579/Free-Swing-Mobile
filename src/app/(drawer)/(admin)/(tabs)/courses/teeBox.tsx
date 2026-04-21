@@ -22,7 +22,12 @@ import { Text } from "@/components/text";
 import { ThemedView } from "@/components/themed-view";
 import { TextInput } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { createTeeBox, deleteTeeBox, getTeeBox, updateTeeBox } from "@/api/admin/courses";
+import {
+  createTeeBox,
+  deleteTeeBox,
+  getTeeBox,
+  updateTeeBox,
+} from "@/api/admin/courses";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teeBoxSchema } from "@/schema/adminSchemas";
@@ -77,63 +82,61 @@ export default function teeBoxPage() {
     }
   };
 
-const onSubmit = async (data: any, teeBoxId?: number) => { 
-  const payloadData = {
-     name: data.name,
+  const onSubmit = async (data: any, teeBoxId?: number) => {
+    const payloadData = {
+      name: data.name,
       color: data.color,
       rating: data.rating,
       slope: data.slope,
-  }
-  try {
-    if (isEditMode == true) {
-      await updateTeeBox(teeBoxId as number, payloadData)
+    };
+    try {
+      if (isEditMode == true) {
+        await updateTeeBox(teeBoxId as number, payloadData);
+        Toast.show({
+          type: "success",
+          text1: "Teebox updated successfully",
+        });
+        // await updateTeeBox(courseId, data) ;
+        // Toast.show({
+        //         type: "success",
+        //         text1: "Teebox updated successfully",
+        //       });
+      } else {
+        await createTeeBox(courseId as string, payloadData);
+        Toast.show({
+          type: "success",
+          text1: "Teebox created successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating tee box:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to create teebox",
+      });
+    } finally {
+      fetchTeeDetails();
+      setModalVisible(false);
+    }
+  };
+
+  const handleDelete = async (teeBoxId: number) => {
+    try {
+      await deleteTeeBox(teeBoxId);
       Toast.show({
         type: "success",
-        text1: "Teebox updated successfully",
+        text1: "Teebox deleted successfully",
       });
-      // await updateTeeBox(courseId, data) ;
-      // Toast.show({
-      //         type: "success",
-      //         text1: "Teebox updated successfully",
-      //       });
-    }else{
-      await createTeeBox(courseId as string, payloadData) ;
+    } catch (error) {
+      console.error("Error deleting tee box:", error);
       Toast.show({
-              type: "success",
-              text1: "Teebox created successfully",
-            });
+        type: "error",
+        text1: "Failed to delete teebox",
+      });
+    } finally {
+      fetchTeeDetails();
     }
-     
-  } catch (error) {
-    console.error("Error creating tee box:", error);
-Toast.show({
-  type:"error",
-  text1:"Failed to create teebox"
-})
-  }
-  finally{
-    fetchTeeDetails();
-    setModalVisible(false);
-  }
-}
-
-const handleDelete = async (teeBoxId: number) => {
-  try {
-    await deleteTeeBox(teeBoxId);
-    Toast.show({
-      type: "success",
-      text1: "Teebox deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting tee box:", error);
-    Toast.show({
-      type: "error",
-      text1: "Failed to delete teebox",
-    });
-  } finally{
-    fetchTeeDetails();
-  }
-}
+  };
 
   useEffect(() => {
     if (isEditMode && editingCourse) {
@@ -312,6 +315,50 @@ const handleDelete = async (teeBoxId: number) => {
                 </>
               ) : (
                 <>
+                  {teeBox?.length === 0 && (
+                    <VStack
+                      style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 60,
+                        paddingHorizontal: 24,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: isDark
+                            ? "rgba(30,41,59,0.5)"
+                            : "rgba(241,245,249,0.8)",
+                          padding: 18,
+                          borderRadius: 50,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <Ionicons name="apps" size={32} color={"#8bc34a"} />
+                      </View>
+                      <ThemedText
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "600",
+                          color: isDark ? "#f1f5f9" : "#0f172a",
+                          marginBottom: 6,
+                        }}
+                      >
+                        No Tee Box Found
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontSize: 14,
+                          color: isDark ? "#94a3b8" : "#64748b",
+                          textAlign: "center",
+                          lineHeight: 20,
+                        }}
+                      >
+                        You haven't created any tee box yet. Tap "Add
+                        Tee Box" to start managing your tee box.
+                      </ThemedText>
+                    </VStack>
+                  )}
                   {teeBox?.map((tee: any) => (
                     <TeeCardAdmin
                       key={tee.id}
@@ -553,7 +600,7 @@ const handleDelete = async (teeBoxId: number) => {
                         type: "error",
                         text1: "Please fix the highlighted fields",
                       });
-                    }
+                    },
                   )();
                 }}
                 style={styles.startButton}
@@ -709,9 +756,10 @@ function TeeCardAdmin({
         </Pressable>
 
         {/* Delete */}
-        <Pressable 
-        onPress={() => handleDelete(tee.id)}
-        className="flex-row items-center gap-1">
+        <Pressable
+          onPress={() => handleDelete(tee.id)}
+          className="flex-row items-center gap-1"
+        >
           <Ionicons name="trash-outline" size={15} color="#ef4444" />
           <ThemedText style={{ color: "#ef4444", fontWeight: "400" }}>
             Delete

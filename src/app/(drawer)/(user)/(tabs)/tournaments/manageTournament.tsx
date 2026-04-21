@@ -1,4 +1,9 @@
-import { getAddedPlayers, addPlayerToTournament, getMembersList, removePlayerFromTournament } from "@/api/admin/tournaments";
+import {
+  getAddedPlayers,
+  addPlayerToTournament,
+  getMembersList,
+  removePlayerFromTournament,
+} from "@/api/admin/tournaments";
 import Toast from "react-native-toast-message";
 import { HStack } from "@/components/hstack";
 import { Skeleton } from "@/components/Skeleton";
@@ -9,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import { useEffect, useState } from "react";
-import { Pressable, TextInput, useColorScheme, View } from "react-native";
+import { Pressable, Text, TextInput, useColorScheme, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 export default function ManageTournament() {
@@ -48,7 +53,9 @@ export default function ManageTournament() {
     try {
       setLoading(true);
       await removePlayerFromTournament(Number(tournamentId), userId);
-      setAddedPlayers((prev: any[]) => prev.filter((p: any) => p.userId !== userId && p.id !== userId));
+      setAddedPlayers((prev: any[]) =>
+        prev.filter((p: any) => p.userId !== userId && p.id !== userId),
+      );
       Toast.show({
         type: "success",
         text1: "Player removed successfully",
@@ -68,9 +75,9 @@ export default function ManageTournament() {
     try {
       setLoading(true);
       const membersData = await getMembersList();
-       const addedPlayersData = await getAddedPlayers(Number(tournamentId));
+      const addedPlayersData = await getAddedPlayers(Number(tournamentId));
       //  console.log("addedPlayersData",addedPlayersData);
-       
+
       setMembers(membersData);
       setAddedPlayers(addedPlayersData);
 
@@ -82,8 +89,6 @@ export default function ManageTournament() {
       setLoading(false);
     }
   };
-
- 
 
   useEffect(() => {
     fetchMembers();
@@ -101,7 +106,7 @@ export default function ManageTournament() {
   const RenderHeader = () => {
     return (
       <HStack
-        className="px-3 pt-5 pb-3 items-center"
+        className="px-3 mt-3 items-center"
         style={{ justifyContent: "space-between" }}
       >
         {/* LEFT: Back button */}
@@ -213,26 +218,45 @@ export default function ManageTournament() {
             {loading ? (
               <SearchSkeleton isDark={isDark} />
             ) : (
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: isDark ? "#374151" : "#e5e7eb",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <TextInput
-                  placeholder="Search users by name or email..."
-                  placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
-                  value={search}
-                  onChangeText={setSearch}
+              <>
+                <HStack className="bg-[#e0f2fe] border border-[#7dd3fc] rounded-lg p-3 items-start gap-2 mb-2">
+                  {/* Icon */}
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={18}
+                    color="#0284c7"
+                  />
+
+                  {/* Text */}
+                  <Text className="flex-1 text-[13px] text-[#0369a1] leading-5">
+                    You are the creator of this tournament. You can add up to{" "}
+                    <Text className="font-semibold">4 members</Text>.
+                  </Text>
+                </HStack>
+                <View
                   style={{
-                    color: isDark ? "#fff" : "#000",
+                    borderWidth: 1,
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                    backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderRadius: 10,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginBottom: 12,
                   }}
-                />
-              </View>
+                >
+                  <TextInput
+                    placeholder="Search users by name or email..."
+                    placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
+                    value={search}
+                    onChangeText={setSearch}
+                    style={{
+                      color: isDark ? "#fff" : "#000",
+                    }}
+                  />
+                </View>
+              </>
             )}
 
             {loading ? (
@@ -244,7 +268,7 @@ export default function ManageTournament() {
             ) : (
               <>
                 {/* ❌ No Users Found */}
-                {isSearching && dataToShow.length === 0 ? (
+                {isSearching || dataToShow.length === 0 ? (
                   <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
                     No users found
                   </ThemedText>
@@ -254,7 +278,10 @@ export default function ManageTournament() {
                       key={user.id}
                       style={{
                         borderWidth: 1,
-                        borderColor: isDark ? "#374151" : "#e5e7eb",
+                        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                        backgroundColor: isDark
+                          ? "rgba(15, 23, 42, 0.7)"
+                          : "rgba(255, 255, 255, 0.7)",
                         borderRadius: 12,
                         padding: 12,
                         marginBottom: 10,
@@ -281,7 +308,9 @@ export default function ManageTournament() {
                         </View>
 
                         {/* RIGHT SIDE BUTTON */}
-                        {addedPlayers.some((p: any) => p.userId === user.id || p.id === user.id) ? (
+                        {addedPlayers.some(
+                          (p: any) => p.userId === user.id || p.id === user.id,
+                        ) ? (
                           <Pressable
                             className="flex-row items-center gap-1 border border-red-500 px-3 py-1 rounded-md"
                             style={{ borderColor: "#ef4444" }}
@@ -293,7 +322,11 @@ export default function ManageTournament() {
                               color="#ef4444"
                             />
                             <ThemedText
-                              style={{ color: "#ef4444", fontSize: 13, fontWeight: "700" }}
+                              style={{
+                                color: "#ef4444",
+                                fontSize: 13,
+                                fontWeight: "700",
+                              }}
                             >
                               Remove
                             </ThemedText>
@@ -310,19 +343,22 @@ export default function ManageTournament() {
                               color="#3b82f6"
                             />
                             <ThemedText
-                              style={{ color: "#3b82f6", fontSize: 13, fontWeight: "700" }}
+                              style={{
+                                color: "#3b82f6",
+                                fontSize: 13,
+                                fontWeight: "700",
+                              }}
                             >
                               Add
                             </ThemedText>
                           </Pressable>
                         )}
-                      
                       </HStack>
                     </View>
                   ))
                 )}
                 {/* ✅ Done Button */}
-                {isSearching && dataToShow.length === 0 ? (
+                {/* {isSearching && dataToShow.length === 0 ? (
                   ""
                 ) : (
                   <Pressable
@@ -338,7 +374,7 @@ export default function ManageTournament() {
                   >
                     <ThemedText>Done</ThemedText>
                   </Pressable>
-                )}
+                )} */}
               </>
             )}
           </ScrollView>
