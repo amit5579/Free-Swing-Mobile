@@ -109,17 +109,17 @@ export default function FeedbackInboxPage() {
           marginTop: 80,
         }}
       >
-        <Ionicons name="cube-outline" size={40} color="#9ca3af" />
+        <Ionicons name="cube-outline" size={40} color="#8bc34a" />
 
-        <Text
+        <ThemedText
           style={{
             marginTop: 10,
             fontWeight: "600",
-            fontSize: 14,
+            fontSize: 17,
           }}
         >
           No feedback in this view
-        </Text>
+        </ThemedText>
 
         <Text
           style={{
@@ -282,7 +282,7 @@ export default function FeedbackInboxPage() {
                 {/* Badge */}
                 <Text
                   style={{
-                    fontSize: 10,
+                    fontSize: 13,
                     fontWeight: "600",
                     color: "#8BC34A",
                     marginBottom: 6,
@@ -294,7 +294,7 @@ export default function FeedbackInboxPage() {
                 {/* Title */}
                 <Text
                   style={{
-                    fontSize: 15,
+                    fontSize: 17,
                     fontWeight: "700",
                     marginBottom: 4,
                     color: isDark ? "#ccd1dbff" : "black",
@@ -307,7 +307,7 @@ export default function FeedbackInboxPage() {
                 <Text
                   style={{
                     fontSize: 12,
-                    color: "#ccd1dbff",
+                    color: isDark ? "#ccd1dbff" : "black",
                     marginBottom: 12,
                   }}
                 >
@@ -360,12 +360,12 @@ export default function FeedbackInboxPage() {
                           alignItems: "center",
                         }}
                       >
-                        <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+                        <ThemedText style={{ fontSize: 19, fontWeight: "700" }}>
                           {item.value}
                         </ThemedText>
-                        <Text style={{ fontSize: 11, color: "#ccd1dbff" }}>
+                        <ThemedText style={{ fontSize: 11 }}>
                           {item.label}
-                        </Text>
+                        </ThemedText>
                       </Box>
                     ))}
                   </HStack>
@@ -379,6 +379,7 @@ export default function FeedbackInboxPage() {
                     ? "rgba(15, 23, 42, 0.7)"
                     : "rgba(255, 255, 255, 0.7)",
                   borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  borderWidth: 1,
                 }}
               >
                 {tabs.map((tab) => {

@@ -23,6 +23,8 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
+import { Badge, BadgeText } from "@/components/badge";
+import { Divider } from "@/components/divider";
 import {
   createTournament,
   deleteTournament,
@@ -37,6 +39,7 @@ import { tournamentSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function adminTournamentsPage() {
   const colorScheme = useColorScheme();
@@ -54,6 +57,7 @@ export default function adminTournamentsPage() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [userId, setUserId] = useState<any>("");
 
   const {
     control,
@@ -77,11 +81,12 @@ export default function adminTournamentsPage() {
   const watchedCourseId = watch("courseId");
 
   const scoringMap: any = {
-    1: "netScore",
+    1: "standard",
     2: "stableford",
-    3: "practice",
-    4: "double-peoria-net",
-    5: "double-peoria-stableford",
+    3: "excluded",
+    4: "double-peoria",
+    5: "double-peoria-net",
+    6: "double-peoria-stableford",
   };
 
   useEffect(() => {
@@ -110,16 +115,25 @@ export default function adminTournamentsPage() {
         name: data.name,
         courseId: data.courseId[0],
         teeBoxId: data.teeColor[0],
-        scoringType: scoringMap[data.scoringType[0]] || "netScore",
+        scoringType: scoringMap[data.scoringType[0]] || "standard",
         startDate: formatDate(data.startDate),
         endDate: formatDate(data.endDate),
         description: data.description || "",
-        creatorId: 1,
+        creatorId: Number(userId) || 1,
       };
-
+      const updatedData = {
+        courseId: data.courseId[0],
+        endDate: formatDate(data.endDate),
+        name: data.name,
+        scoringType: scoringMap[data.scoringType[0]] || "standard",
+        startDate: formatDate(data.startDate),
+        teeBoxId: data.teeColor[0],
+        tournamentId: editingCourse.tournamentId,
+        description: data.description || "",
+      };
       if (isEditMode) {
-        // console.log("UPDATE API", tournamentData);
-        await updateTournament(editingCourse.tournamentId, tournamentData);
+        console.log("UPDATE API", tournamentData);
+        await updateTournament(updatedData, editingCourse.tournamentId);
       } else {
         // console.log("CREATE API", tournamentData);
         await createTournament(tournamentData);
@@ -135,6 +149,7 @@ export default function adminTournamentsPage() {
       });
       setModalVisible(false);
     } catch (error) {
+      setModalVisible(false);
       console.error("Submission error:", error);
       Toast.show({
         type: "error",
@@ -164,7 +179,8 @@ export default function adminTournamentsPage() {
   const fetchTournaments = async () => {
     try {
       setLoading(true);
-
+      const id = await AsyncStorage.getItem("userId");
+      if (id) setUserId(id);
       const data = await getTournaments();
       const courseData = await getCourse();
 
@@ -176,9 +192,6 @@ export default function adminTournamentsPage() {
 
       setTournaments(data);
       setCourses(formattedCourses);
-      // setScoringTypes(formattedScoringType);
-      // console.log("Tournaments:", tournaments);
-      // console.log("Formatted Courses:", formattedCourses);
     } catch (error) {
       console.error("Error fetching tournaments:", error);
     } finally {
@@ -334,18 +347,63 @@ export default function adminTournamentsPage() {
               </>
             ) : (
               <>
-                {tournaments.map((tournament: any) => (
-                  <TournamentCard
-                    key={tournament.tournamentId}
-                    tournament={tournament}
-                    onDelete={onDelete}
-                    setIsEditMode={setIsEditMode}
-                    setEditingCourse={setEditingCourse}
-                    isEditMode={isEditMode}
-                    setModalVisible={setModalVisible}
-                    isDark={isDark}
-                  />
-                ))}
+                {tournaments.length == 0 ? (
+                  <VStack
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 60,
+                      paddingHorizontal: 24,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: isDark
+                          ? "rgba(30,41,59,0.5)"
+                          : "rgba(241,245,249,0.8)",
+                        padding: 18,
+                        borderRadius: 50,
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Ionicons name="trophy" size={32} color={"#8bc34a"} />
+                    </View>
+                    <ThemedText
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "600",
+                        color: isDark ? "#f1f5f9" : "#0f172a",
+                        marginBottom: 6,
+                      }}
+                    >
+                      No Tournaments Found
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 14,
+                        color: isDark ? "#94a3b8" : "#64748b",
+                        textAlign: "center",
+                        lineHeight: 20,
+                      }}
+                    >
+                      You haven't created any tournaments yet. Tap "Create
+                      Tournament" to start managing your competitions.
+                    </ThemedText>
+                  </VStack>
+                ) : (
+                  tournaments.map((tournament: any) => (
+                    <TournamentCard
+                      key={tournament.tournamentId}
+                      tournament={tournament}
+                      onDelete={onDelete}
+                      setIsEditMode={setIsEditMode}
+                      setEditingCourse={setEditingCourse}
+                      isEditMode={isEditMode}
+                      setModalVisible={setModalVisible}
+                      isDark={isDark}
+                    />
+                  ))
+                )}
               </>
             )}
           </VStack>
@@ -778,77 +836,133 @@ function TournamentCard({
           },
         ]}
       >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <ThemedText style={styles.title}>
+        {/* Header Section */}
+        <HStack className="justify-between items-start mb-2">
+          <VStack style={{ flex: 1 }}>
+            <ThemedText
+              style={{
+                fontSize: 18,
+                fontWeight: "800",
+                marginBottom: 2,
+              }}
+            >
               {tournament?.name || "No Name"}
             </ThemedText>
-
-            <ThemedText style={styles.subtitle}>
+            <ThemedText
+              style={{
+                fontSize: 13,
+                opacity: 0.6,
+                fontWeight: "600",
+                color: "#8bc34a",
+              }}
+            >
               {tournament?.course?.name || "No Course"}
             </ThemedText>
-          </View>
+          </VStack>
 
-          {/* MORE MENU */}
-          <Pressable
-            onPress={() => setMenuVisible(true)}
-            style={({ pressed }) => [
-              styles.iconBtn,
-              { opacity: pressed ? 0.5 : 1 },
-            ]}
-          >
-            <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
-          </Pressable>
-        </View>
+          <HStack className="items-center gap-2">
+            <View style={styles.iconContainer}>
+              <Ionicons name="trophy" size={20} color="#8bc34a" />
+            </View>
+            <Pressable
+              onPress={() => setMenuVisible(true)}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                { opacity: pressed ? 0.5 : 1 },
+              ]}
+            >
+              <Ionicons name="ellipsis-vertical" size={22} color="#6b7280" />
+            </Pressable>
+          </HStack>
+        </HStack>
 
-        {/* DATES */}
-        <View style={styles.dateRow}>
-          <View>
-            <ThemedText style={styles.label}>Start</ThemedText>
-            <ThemedText style={styles.value}>
-              {formatDate(tournament?.startDate)}
-            </ThemedText>
-          </View>
+        {/* Info Row: Dates */}
+        <HStack
+          className="p-3 rounded-xl mb-4 mt-2"
+          style={{
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(0,0,0,0.03)",
+            justifyContent: "space-between",
+          }}
+        >
+          <HStack className="items-center gap-2">
+            <Ionicons name="calendar-outline" size={16} color="#8bc34a" />
+            <VStack>
+              <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
+                START
+              </ThemedText>
+              <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+                {formatDate(tournament?.startDate)}
+              </ThemedText>
+            </VStack>
+          </HStack>
 
-          <View>
-            <ThemedText style={styles.label}>End</ThemedText>
-            <ThemedText style={styles.value}>
-              {formatDate(tournament?.endDate)}
-            </ThemedText>
-          </View>
-        </View>
+          <HStack className="items-center gap-2">
+            <Ionicons name="time-outline" size={16} color="#ef4444" />
+            <VStack>
+              <ThemedText style={{ fontSize: 10, opacity: 0.5 }}>
+                END
+              </ThemedText>
+              <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+                {formatDate(tournament?.endDate)}
+              </ThemedText>
+            </VStack>
+          </HStack>
+        </HStack>
+        <Divider
+          style={{
+            marginVertical: 4,
+            backgroundColor: isDark ? "#333" : "#F0F0F0",
+          }}
+        />
 
-        {/* PRIMARY ACTIONS */}
-        <View style={styles.actions}>
+        {/* Primary Actions Section */}
+        <HStack className="gap-2 mt-2">
           <Pressable
             onPress={() => {
               setIsEditMode(true);
               setEditingCourse(tournament);
               setModalVisible(true);
             }}
-            style={styles.actionBtn}
-            android_ripple={{ color: "#ddd" }}
+            className="flex-1 flex-row justify-center items-center gap-2 border border-slate-400 py-2.5 rounded-xl"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
-            <Ionicons name="create" size={22} color="#6b7280" />
-            <ThemedText style={[styles.actionText, { color: "#6b7280" }]}>
+            <Ionicons
+              name="create"
+              size={18}
+              color={isDark ? "#94a3b8" : "#64748b"}
+            />
+            <ThemedText
+              style={{
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "700",
+                fontSize: 13,
+              }}
+            >
               Edit
             </ThemedText>
           </Pressable>
 
           <Pressable
-            style={styles.actionBtn}
-            android_ripple={{ color: "#ddd" }}
             onPress={() =>
               routePlayersPage(tournament?.tournamentId, tournament?.name)
             }
+            className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl shadow-sm"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.9 : 1,
+            })}
           >
-            <Ionicons name="person-add" size={22} color="#3b82f6" />
-            <ThemedText style={[styles.actionText, { color: "#3b82f6" }]}>
+            <Ionicons name="person-add" size={18} color="white" />
+            <ThemedText
+              style={{ color: "white", fontWeight: "700", fontSize: 13 }}
+            >
               Manage
             </ThemedText>
           </Pressable>
-        </View>
+        </HStack>
       </Box>
 
       {/* MODAL MENU */}
@@ -1053,5 +1167,13 @@ const styles = StyleSheet.create({
 
   menuText: {
     fontSize: 14,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "rgba(139, 195, 74, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

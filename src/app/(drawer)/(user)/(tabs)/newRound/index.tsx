@@ -255,7 +255,7 @@ function CourseCard({ course, isDark }: any) {
             backgroundColor: course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
           }}
         >
-          <ThemedText style={{ fontSize: 12, fontWeight: "600" }}>
+          <ThemedText style={{ fontSize: 12, fontWeight: "600", color:course.isPremium? "#3D2412" : "#fff" }}>
             {course.isPremium === false ? "Free" : "Premium"}
           </ThemedText>
         </Box>
@@ -568,10 +568,6 @@ function CourseCard({ course, isDark }: any) {
                 onPress={
                   // handleSubmit(onSubmit)
                   () => {
-                    Toast.show({
-                      type: "error",
-                      text1: "Maximum score per hole is 15",
-                    });
                     setHandicapView(false);
                     setModalVisible(false);
                     routePage.push(

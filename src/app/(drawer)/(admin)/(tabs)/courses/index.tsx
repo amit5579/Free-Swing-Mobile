@@ -16,7 +16,6 @@ import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
 import { Modal, Pressable, useColorScheme, View } from "react-native";
 
-import { Divider } from "@/components/divider";
 import { Text } from "@/components/text";
 import { TextInput } from "react-native";
 import { ThemedView } from "@/components/themed-view";
@@ -28,6 +27,7 @@ import { createCourse, deleteCourse } from "@/api/admin/courses";
 import { getCourse } from "@/api/admin/courses";
 import { courseSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import { Badge, BadgeText } from "@/components/badge";
 export default function adminCoursePage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -276,16 +276,37 @@ export default function adminCoursePage() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
+        <View
+          style={[
+            styles.overlay,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#121212" : "#fff" },
+            ]}
+          >
             {/* Header */}
             <HStack className="justify-between items-center mb-4">
-              <Text style={{ fontSize: 18, fontWeight: "700", lineHeight: 27, color: isDark ? "white" : "black" }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "700",
+                  lineHeight: 27,
+                  color: isDark ? "white" : "black",
+                }}
+              >
                 {isEditMode ? "Edit Course" : "Add Course"}
               </Text>
 
               <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} color={isDark ? "white" : "black"} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "white" : "black"}
+                />
               </Pressable>
             </HStack>
 
@@ -447,7 +468,7 @@ function CourseCardAdmin({
   return (
     <>
       <Box
-        className="rounded-2xl p-5 relative"
+        className="rounded-3xl p-5 relative"
         style={{
           borderWidth: 1,
           backgroundColor: isDark
@@ -456,67 +477,80 @@ function CourseCardAdmin({
           borderColor: isDark ? "#1e293b" : "#e2e8f0",
         }}
       >
-        {/* Free Badge */}
-        <Box
-          className="absolute top-3 right-3 px-3 py-1 rounded-full"
-          style={{
-            backgroundColor: course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
-          }}
-        >
-          <ThemedText style={{ fontSize: 12, fontWeight: "600", color: course.isPremium === false ? "white" : "#3D2412" }}>
-            {course.isPremium === false ? "Free" : "Premium"}
-          </ThemedText>
-        </Box>
-
-        {/* Flag */}
-        <HStack className="mb-3">
-          <Svg width={28} height={28} viewBox="0 0 448 512">
-            <Path
-              fill="#8bc34a"
-              d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V480c0 17.7 14.3 32 32 32s32-14.3 32-32V358.4l62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30V65.1c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4V32z"
-            />
-          </Svg>
-        </HStack>
-
-        {/* Course Name */}
-        <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
-          {course.name}
-          {/* {courseList.name} */}
-        </ThemedText>
-
-        {/* Location */}
-        <HStack className="items-center mt-2">
-          <Ionicons name="location-outline" size={18} color="#ef4444" />
-          <ThemedText
+        {/* Header Section with Badge */}
+        <HStack className="justify-between items-start mb-4">
+          <View style={styles.iconContainer}>
+            <Svg width={24} height={24} viewBox="0 0 448 512">
+              <Path
+                fill="#8bc34a"
+                d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V480c0 17.7 14.3 32 32 32s32-14.3 32-32V358.4l62.7-18.8c41.9-12.6 87.1-8.7 126.2 10.9 42.7 21.4 92.5 24 137.2 7.2l37.1-13.9c12.5-4.7 20.8-16.6 20.8-30V65.1c0-23-24.2-38-44.8-27.7l-11.8 5.9c-44.9 22.5-97.8 22.5-142.8 0-36.4-18.2-78.3-21.8-117.2-10.1L64 54.4V32z"
+              />
+            </Svg>
+          </View>
+          <Badge
+            action={course.isPremium ? "warning" : "muted"}
+            variant="solid"
             style={{
-              marginLeft: 6,
-              fontSize: 14,
-              opacity: 0.7,
+              backgroundColor: course.isPremium ? "#EFBF04" : "#94a3b8",
+              borderRadius: 12,
+              paddingHorizontal: 10,
             }}
           >
-            {course.location}
-            {/* course location */}
-          </ThemedText>
+            <BadgeText
+              style={{
+                color: course.isPremium ? "#3D2412" : "#fff",
+                fontWeight: "700",
+                fontSize: 10,
+              }}
+            >
+              {course.isPremium ? "PREMIUM" : "FREE"}
+            </BadgeText>
+          </Badge>
         </HStack>
 
+        {/* Course Info */}
+        <VStack className="mb-4">
+          <ThemedText
+            style={{ fontSize: 20, fontWeight: "800", marginBottom: 4 }}
+          >
+            {course.name}
+          </ThemedText>
+          <HStack className="items-center">
+            <Ionicons name="location" size={16} color="#ef4444" />
+            <ThemedText
+              style={{
+                marginLeft: 4,
+                fontSize: 14,
+                opacity: 0.7,
+                fontWeight: "500",
+              }}
+            >
+              {course.location}
+            </ThemedText>
+          </HStack>
+        </VStack>
+
+        {/* Primary Action */}
         <Pressable
           onPress={() => routeTeeBox(course.courseId)}
-          className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
+          className="rounded-xl py-3 items-center border border-[#8bc34a] flex-row justify-center gap-2 mb-2"
           style={({ pressed }) => ({
             backgroundColor: pressed ? "#8bc34a" : "transparent",
+            borderWidth: 1.5,
           })}
         >
           {({ pressed }) => (
             <>
               <Ionicons
                 name={pressed ? "apps" : "apps-outline"}
-                size={18}
+                size={20}
                 color={pressed ? "white" : "#8bc34a"}
               />
               <ThemedText
                 style={{
                   color: pressed ? "white" : "#8bc34a",
-                  fontWeight: "600",
+                  fontWeight: "700",
+                  fontSize: 15,
                 }}
               >
                 Manage Tees
@@ -525,82 +559,146 @@ function CourseCardAdmin({
           )}
         </Pressable>
 
-        <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
-
-        {/* Edit / Delete Actions */}
-        <HStack className="justify-between">
-          {/* Edit */}
+        {/* Secondary Actions Bar */}
+        <HStack
+          className="justify-between items-center mt-3 pt-3"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: isDark ? "#334155" : "#f1f5f9",
+          }}
+        >
           <Pressable
             onPress={() => {
               setEditingCourse(course);
               setIsEditMode(true);
               openModal();
             }}
-            className="flex-row items-center gap-1"
+            className="flex-row items-center gap-2 flex-1 justify-center mt-3"
           >
-            <Ionicons name="pencil-outline" size={15} color={isDark? "#b2c1e0ff" : "#6b7280"} />
-            <ThemedText style={{ color:isDark? "#b2c1e0ff" : "#6b7280", fontWeight: "400" }}>
+            <Ionicons
+              name="pencil"
+              size={16}
+              color={isDark ? "#94a3b8" : "#64748b"}
+            />
+            <ThemedText
+              style={{
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "600",
+              }}
+            >
               Edit
             </ThemedText>
           </Pressable>
 
-          {/* Delete */}
-          <Pressable
-            onPress={() => {
-              setDeleteModalVisible(true);
+          <View
+            style={{
+              width: 1,
+              height: 20,
+              backgroundColor: isDark ? "#334155" : "#f1f5f9",
             }}
-            className="flex-row items-center gap-1"
+          />
+
+          <Pressable
+            onPress={() => setDeleteModalVisible(true)}
+            className="flex-row items-center gap-2 flex-1 justify-center "
           >
-            <Ionicons name="trash-outline" size={15} color="#ef4444" />
-            <ThemedText style={{ color: "#ef4444", fontWeight: "400" }}>
+            <Ionicons name="trash" size={16} color="#ef4444" />
+            <ThemedText style={{ color: "#ef4444", fontWeight: "600" }}>
               Delete
             </ThemedText>
           </Pressable>
         </HStack>
       </Box>
 
+      {/* Delete Confirmation Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent
         visible={deleteModalVisible}
         onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={[styles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)" }]}>
-          <View style={[styles.modalContainer, { backgroundColor: isDark ? "#121212" : "#fff" }]}>
-            {/* FORM */}
-            <VStack className="gap-3">
-              <ThemedText
-                style={{ fontSize: 16, fontWeight: "700", textAlign: "center" }}
-              >
-                Delete Course
-              </ThemedText>
-              <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-                Are you sure you want to delete this course?
-              </ThemedText>
-            </VStack>
-
-            {/* Buttons */}
-            <HStack className="justify-end mt-6 gap-3">
-              <Pressable
-                style={styles.cancelButton}
-                onPress={() => setDeleteModalVisible(false)}
-              >
-                <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  setDeleteModalVisible(false);
-                  onDelete(course.courseId);
+        <View style={styles.overlay}>
+          <Box
+            style={[
+              styles.modalContainer,
+              { backgroundColor: isDark ? "#1e293b" : "#ffffff" },
+            ]}
+          >
+            <VStack className="items-center gap-4">
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
-                style={styles.createButton}
               >
-                <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                  Yes, I'm sure
+                <Ionicons name="alert-circle" size={40} color="#ef4444" />
+              </View>
+              <VStack className="items-center gap-1">
+                <ThemedText style={{ fontSize: 20, fontWeight: "700" }}>
+                  Delete Course?
                 </ThemedText>
-              </Pressable>
-            </HStack>
-          </View>
+                <ThemedText style={{ textAlign: "center", opacity: 0.7 }}>
+                  Are you sure you want to delete "{course.name}"? This action
+                  cannot be undone.
+                </ThemedText>
+              </VStack>
+
+              <HStack className="w-full gap-3 mt-2">
+                <Pressable
+                  style={[
+                    styles.cancelButton,
+                    {
+                      flex: 1,
+                      backgroundColor: "transparent",
+                      borderWidth: 1,
+                      borderColor: "#d1d5db",
+                    },
+                  ]}
+                  onPress={() => setDeleteModalVisible(false)}
+                >
+                  <ThemedText
+                    style={{
+                      color: isDark ? "#fff" : "#374151",
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    Cancel
+                  </ThemedText>
+                </Pressable>
+
+                <Pressable
+                  style={{
+                    flex: 1,
+                    paddingHorizontal: 7,
+                    paddingVertical: 5,
+                    borderRadius: 7,
+                    backgroundColor: "#ef4444",
+                    alignItems:"center",
+                    justifyContent:"center"
+                  }}
+                  onPress={() => {
+                    setDeleteModalVisible(false);
+                    onDelete(course.courseId);
+                  }}
+                >
+                  <ThemedText
+                    style={{
+                      color: "white",
+                      fontWeight: "700",
+                      textAlign: "center",
+                    }}
+                  >
+                    Delete
+                  </ThemedText>
+                </Pressable>
+              </HStack>
+            </VStack>
+          </Box>
         </View>
       </Modal>
     </>
@@ -707,5 +805,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginTop: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(139, 195, 74, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

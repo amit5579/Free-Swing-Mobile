@@ -22,6 +22,8 @@ import { Divider } from "@/components/divider";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { ThemedView } from "@/components/themed-view";
+import { Avatar, AvatarFallbackText } from "@/components/avatar";
+import { Badge, BadgeText } from "@/components/badge";
 import {
   createSubAdmin,
   deleteSubAdmin,
@@ -85,7 +87,7 @@ export default function subAdminsPage() {
         mobileNumber: data.mobileNumber,
         courseIds: data.courseIds,
       };
-      if(isEditMode){
+      if (isEditMode) {
         await updateSubAdmin(editingAdmin.id, payload);
         setPageLoading(true);
         setIsEditMode(false);
@@ -94,7 +96,7 @@ export default function subAdminsPage() {
           type: "success",
           text1: "Sub Admin updated successfully",
         });
-      }else{
+      } else {
         await createSubAdmin(payload);
         Toast.show({
           type: "success",
@@ -103,11 +105,10 @@ export default function subAdminsPage() {
       }
       setModalVisible(false);
       reset();
-      
+
       // setSelectedCourses([]);
       fetchSubAdmin();
       setPageLoading(false);
-      
     } catch (error) {
       console.error("Failed to create sub admin", error);
     }
@@ -158,7 +159,10 @@ export default function subAdminsPage() {
         className="rounded-2xl p-4"
         style={{
           borderWidth: 1,
-          borderColor: isDark ? "#262626" : "#e5e5e5",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
           marginBottom: 12,
         }}
       >
@@ -285,19 +289,53 @@ export default function subAdminsPage() {
               </>
             ) : (
               <>
-                {subAdminList.map((sbadmin: any) => (
-                  <SubAdminCard
-                    key={sbadmin.id}
-                    sbadmin={sbadmin}
-                    isDark={isDark}
-                    setPageLoading={setPageLoading}
-                    setModalVisible={setModalVisible}
-                    setIsEditMode={setIsEditMode}
-                    setEditingAdmin={setEditingAdmin}
-                    fetchSubAdmin={fetchSubAdmin}
-                    // setDeleteModalVisible={setDeleteModalVisible}
-                  />
-                ))}
+                {subAdminList.length == 0 ? (
+                  <VStack
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: 80,
+                    }}
+                  >
+                    <Ionicons name="cube-outline" size={40} color="#8bc34a" />
+
+                    <ThemedText
+                      style={{
+                        marginTop: 10,
+                        fontWeight: "600",
+                        fontSize: 17,
+                      }}
+                    >
+                      No Sub Admins found
+                    </ThemedText>
+
+                    <Text
+                      style={{
+                        marginTop: 6,
+                        fontSize: 12,
+                        color: "#6b7280",
+                        textAlign: "center",
+                      }}
+                    >
+                      You haven't created any Sub Admin yet. Tap "Create Sub
+                      Admin" to start managing your Sub Admins.
+                    </Text>
+                  </VStack>
+                ) : (
+                  subAdminList.map((sbadmin: any) => (
+                    <SubAdminCard
+                      key={sbadmin.id}
+                      sbadmin={sbadmin}
+                      isDark={isDark}
+                      setPageLoading={setPageLoading}
+                      setModalVisible={setModalVisible}
+                      setIsEditMode={setIsEditMode}
+                      setEditingAdmin={setEditingAdmin}
+                      fetchSubAdmin={fetchSubAdmin}
+                      // setDeleteModalVisible={setDeleteModalVisible}
+                    />
+                  ))
+                )}
               </>
             )}
           </VStack>
@@ -605,80 +643,168 @@ function SubAdminCard({
       console.log(error);
     }
   };
+
+  const getInitials = (name: string) => {
+    if (!name) return "SA";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
   return (
     <>
       <Box
-        className="rounded-2xl p-4"
-        style={{
-          borderWidth: 1,
-          backgroundColor: isDark
-            ? "rgba(15, 23, 42, 0.7)"
-            : "rgba(255, 255, 255, 0.7)",
-          borderColor: isDark ? "#1e293b" : "#e2e8f0",
-        }}
+        style={[
+          styles.card,
+          {
+            borderWidth: 1,
+            backgroundColor: isDark
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          },
+        ]}
       >
-        <VStack className="gap-2">
-          <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
-            {sbadmin.username}
-          </ThemedText>
-
-          <ThemedText style={{ opacity: 0.7 }}>{sbadmin.email}</ThemedText>
-
-          <ThemedText style={{ opacity: 0.7 }}>
-            {sbadmin.mobileNumber}
-          </ThemedText>
-
-          {/* Courses */}
-          <Box className="flex-row flex-wrap mt-2 gap-2">
-            <ThemedText style={{ fontWeight: "600", width: "100%" }}>
-              Courses:
-            </ThemedText>
-
-            {sbadmin.courses?.map((course: any, index: number) => (
-              <Box key={index} style={styles.courseBadge}>
-                <ThemedText style={{ color: "#8bc34a", fontSize: 12 }}>
-                  {course.name}
-                </ThemedText>
-              </Box>
-            ))}
-          </Box>
-
-          {/* Players */}
-          <HStack className="items-center mt-2 gap-2">
-            <ThemedText style={{ fontWeight: "600" }}>Players:</ThemedText>
-
-            <Box style={styles.playerBadge}>
-              <ThemedText style={{ color: "#8bc34a" }}>
-                {sbadmin.playerCount}
+        <VStack className="gap-4">
+          {/* Header Section: Avatar + Name + Basic Info */}
+          <HStack className="items-center gap-3">
+            <Avatar size="md" style={{ backgroundColor: "#8bc34a" }}>
+              <AvatarFallbackText>
+                {getInitials(sbadmin.username)}
+              </AvatarFallbackText>
+            </Avatar>
+            <VStack style={{ flex: 1 }}>
+              <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+                {sbadmin.username}
               </ThemedText>
-            </Box>
+              <HStack className="items-center gap-1">
+                <Ionicons
+                  name="mail"
+                  size={12}
+                  color={isDark ? "#94a3b8" : "#64748b"}
+                />
+                <ThemedText
+                  style={{
+                    fontSize: 13,
+                    color: isDark ? "#94a3b8" : "#64748b",
+                  }}
+                >
+                  {sbadmin.email}
+                </ThemedText>
+              </HStack>
+            </VStack>
           </HStack>
 
-          <Divider className="my-2" />
+          {/* Details Section */}
+          <VStack className="gap-3">
+            <HStack className="items-center gap-2">
+              <View style={styles.iconContainer}>
+                <Ionicons name="call" size={14} color="#8bc34a" />
+              </View>
+              <ThemedText style={{ fontSize: 14 }}>
+                {sbadmin.mobileNumber}
+              </ThemedText>
+            </HStack>
 
-          {/* Actions */}
-          <HStack className="justify-between">
-            <Pressable
+            <Divider style={{ opacity: 0.5 }} />
+
+            {/* Courses & Players Row */}
+            <HStack className="justify-between items-start">
+              <VStack className="gap-2" style={{ flex: 1 }}>
+                <ThemedText
+                  style={{ fontSize: 12, fontWeight: "600", opacity: 0.6 }}
+                >
+                  COURSES
+                </ThemedText>
+                <HStack className="flex-wrap gap-2">
+                  {sbadmin.courses?.length > 0 ? (
+                    sbadmin.courses?.map((course: any, index: number) => (
+                      <Badge
+                        key={index}
+                        size="sm"
+                        action="success"
+                        variant="outline"
+                        style={{ borderColor: "#8bc34a" }}
+                      >
+                        <BadgeText style={{ fontSize: 10, color: "#8bc34a" }}>
+                          {course.name}
+                        </BadgeText>
+                      </Badge>
+                    ))
+                  ) : (
+                    <ThemedText style={{ fontSize: 12, opacity: 0.5 }}>
+                      None
+                    </ThemedText>
+                  )}
+                </HStack>
+              </VStack>
+
+              <VStack className="items-end gap-2" style={{ marginLeft: 10 }}>
+                <ThemedText
+                  style={{ fontSize: 12, fontWeight: "600", opacity: 0.6 }}
+                >
+                  PLAYERS
+                </ThemedText>
+                <Badge
+                  action="info"
+                  variant="solid"
+                  style={{ borderRadius: 12 }}
+                >
+                  <BadgeText
+                    style={{
+                      color: isDark ? "white" : "black",
+                      fontWeight: "600",
+                      fontSize: 17,
+                    }}
+                  >
+                    {sbadmin.playerCount}
+                  </BadgeText>
+                </Badge>
+              </VStack>
+            </HStack>
+          </VStack>
+
+          {/* Action Bar */}
+          <HStack
+            className="justify-between items-center"
+            style={[
+              styles.actionBar,
+              { borderTopColor: isDark ? "#334155" : "#f1f5f9" },
+            ]}
+          >
+            <TouchableOpacity
               onPress={() => {
                 setIsEditMode(true);
                 setEditingAdmin(sbadmin);
                 setModalVisible(true);
               }}
-              className="flex-row items-center gap-1"
+              style={styles.actionButton}
             >
-              <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
+              <Ionicons name="pencil" size={16} color="#3b82f6" />
+              <ThemedText style={{ color: "#3b82f6", fontWeight: "600" }}>
+                Edit
+              </ThemedText>
+            </TouchableOpacity>
 
-              <ThemedText style={{ color: "#3b82f6" }}>Edit</ThemedText>
-            </Pressable>
+            <View
+              style={{
+                width: 1,
+                height: "60%",
+                backgroundColor: isDark ? "#334155" : "#f1f5f9",
+              }}
+            />
 
-            <Pressable
+            <TouchableOpacity
               onPress={() => setDeleteModalVisible(true)}
-              className="flex-row items-center gap-1"
+              style={styles.actionButton}
             >
-              <Ionicons name="trash-outline" size={16} color="#ef4444" />
-
-              <ThemedText style={{ color: "#ef4444" }}>Delete</ThemedText>
-            </Pressable>
+              <Ionicons name="trash" size={16} color="#ef4444" />
+              <ThemedText style={{ color: "#ef4444", fontWeight: "600" }}>
+                Delete
+              </ThemedText>
+            </TouchableOpacity>
           </HStack>
         </VStack>
       </Box>
@@ -798,5 +924,32 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginTop: 3,
+  },
+  card: {
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  iconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(139, 195, 74, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionBar: {
+    paddingTop: 12,
+    marginTop: 8,
+    borderTopWidth: 1,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 4,
   },
 });

@@ -212,6 +212,54 @@ export default function CombinedLeaderboardsPage() {
               </Text>
             </Pressable>
 
+{/* Empty state */}
+{selectedTournamentNames.length === 0 && (
+    <VStack
+                                    style={{
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      paddingVertical: 60,
+                                      paddingHorizontal: 24,
+                                    }}
+                                  >
+                                    <View
+                                      style={{
+                                        backgroundColor: isDark
+                                          ? "rgba(30,41,59,0.5)"
+                                          : "rgba(241,245,249,0.8)",
+                                        padding: 18,
+                                        borderRadius: 50,
+                                        marginBottom: 16,
+                                      }}
+                                    >
+                                      <Ionicons
+                                        name="trophy"
+                                        size={32}
+                                        color={"#8bc34a"}
+                                      />
+                                    </View>
+                                    <ThemedText
+                                      style={{
+                                        fontSize: 18,
+                                        fontWeight: "600",
+                                        color: isDark ? "#f1f5f9" : "#0f172a",
+                                        marginBottom: 6,
+                                      }}
+                                    >
+No Leaderboard Generated
+                                    </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        fontSize: 14,
+                                        color: isDark ? "#94a3b8" : "#64748b",
+                                        textAlign: "center",
+                                        lineHeight: 20,
+                                      }}
+                                    >
+                                      Select tournaments from above and generate the combined standings.
+                                    </ThemedText>
+                                  </VStack>
+)}
             {/* Selected tournament chips */}
             {selectedTournamentNames.length > 0 && (
               <>

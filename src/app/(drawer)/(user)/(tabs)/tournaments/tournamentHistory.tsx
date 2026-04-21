@@ -320,7 +320,7 @@ export default function TournamentHistory() {
             scoringType === "double-peoria-net" ||
             scoringType === "Net Score Include Par 3" ? (
               <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
-                DP HC: -
+                DP HC: {getTotals(scorecardDetails).sumDoublePieora > 0 ? getTotals(scorecardDetails).sumDoublePieora : "NIL"}
               </ThemedText>
             ) : null}
           </HStack>
@@ -340,7 +340,9 @@ export default function TournamentHistory() {
       (sum, h) => sum + (Number(h.stablefordPoints) || 0),
       0,
     ),
+    sumDoublePieora: holes.reduce((sum, h) => sum + (Number(h.score) - Number(h.netScore)) || 0, 0),
   });
+  // const sumDoublePieora = sumScores(scorecardDetails) - sumNet(scorecardDetails);
 
   const frontTotals = getTotals(scorecardDetails.slice(0, 9));
   const backTotals = getTotals(scorecardDetails.slice(9, 18));
@@ -429,20 +431,7 @@ export default function TournamentHistory() {
     },
   ];
 
-  const ScoreRowSkeleton = ({ isDark }: { isDark: boolean }) => {
-    return (
-      <HStack style={styles.row}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <View key={i} style={styles.cell}>
-            <Skeleton isDark={isDark} height={14} width={30} borderRadius={6} />
-          </View>
-        ))}
-      </HStack>
-    );
-  };
-
-  
-
+ 
   return (
     <>
       <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}>

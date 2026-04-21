@@ -26,8 +26,8 @@ const PlayerScorecard = () => {
   const { scorecardId } = useLocalSearchParams();
 
   const [scorecard, setScorecard] = useState<any>(null);
-      const [handicap, setHandicap] = useState<any>(null);
-  
+  const [handicap, setHandicap] = useState<any>(null);
+
   const [loading, setLoading] = useState(true);
   const renderScoring =
     scorecard && scorecard.length > 0
@@ -44,11 +44,10 @@ const PlayerScorecard = () => {
     try {
       setLoading(true);
       const data = await getScorecardById(Number(scorecardId));
-            const rsc = await getSubScorecardHandicap(data[0].teeBoxId);
-      
-      setScorecard(data);
-            setHandicap(rsc);
+      const rsc = await getSubScorecardHandicap(data[0].teeBoxId);
 
+      setScorecard(data);
+      setHandicap(rsc);
     } catch (error) {
       console.error("Error fetching scorecard data:", error);
       Toast.show({
@@ -76,6 +75,11 @@ const PlayerScorecard = () => {
   const sumPts = (arr: any[]) =>
     arr?.reduce((t, h) => t + (h.stablefordPoints || 0), 0) || 0;
 
+  const sumDoublePieora = sumScores(scorecard) - sumNet(scorecard);
+
+  useEffect(() => {
+    console.log(sumDoublePieora);
+  }, [scorecard]);
   const front9 = scorecard?.slice(0, 9) || [];
   const back9 = scorecard?.slice(9, 18) || [];
 
@@ -220,7 +224,7 @@ const PlayerScorecard = () => {
       <Text
         className={`flex-1 text-center text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
       >
-        {h.handicap}
+        {h.strokeIndex}
       </Text>
       <Text
         className={`flex-1 text-center text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
@@ -352,10 +356,12 @@ const PlayerScorecard = () => {
       >
         ({renderScoring})
       </ThemedText>
-        <HStack className="justify-between mx-5 my-2">
-                  <ThemedText>Decleared HC: {handicap?.handicap}</ThemedText>
-                  <ThemedText>DP HC: -</ThemedText>
-                </HStack>
+      <HStack className="justify-between mx-5 my-2">
+        <ThemedText>Handicap: {handicap?.handicap}</ThemedText>
+        <ThemedText>
+          DP HC: {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
+        </ThemedText>
+      </HStack>
       <Watermark />
 
       {loading ? (
@@ -398,7 +404,15 @@ const PlayerScorecard = () => {
             className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"} mt-4`}
             style={{ borderWidth: 1, borderColor: isDark ? "#444" : "#ddd" }}
           >
-            {["Hole", "SI", "Yards", "Par", "Score", "Net", "Pts"].map((h) => (
+            {[
+              "Hole",
+              "Stroke\nIndex",
+              "Yards",
+              "Par",
+              "Score",
+              "Net",
+              "Pts",
+            ].map((h) => (
               <Text
                 key={h}
                 className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}
