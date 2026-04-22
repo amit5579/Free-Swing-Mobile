@@ -149,21 +149,21 @@ export default function SubAdminProfile() {
     );
   };
 
-  const StatsSkeleton = ({ isDark }: { isDark: boolean }) => {
-    return (
-      <HStack className="justify-between mb-6">
-        {[1, 2].map((_, i) => (
-          <Box key={i} className="flex-1 mx-1 p-4 rounded-xl bg-white/10">
-            <VStack className="items-center">
-              <Skeleton isDark={isDark} height={20} width={20} style={{ marginBottom: 8 }} />
-              <Skeleton isDark={isDark} height={18} width="40%" style={{ marginBottom: 6 }} />
-              <Skeleton isDark={isDark} height={12} width="60%" />
-            </VStack>
-          </Box>
-        ))}
-      </HStack>
-    );
-  };
+  // const StatsSkeleton = ({ isDark }: { isDark: boolean }) => {
+  //   return (
+  //     <HStack className="justify-between mb-6">
+  //       {[1, 2].map((_, i) => (
+  //         <Box key={i} className="flex-1 mx-1 p-4 rounded-xl bg-white/10">
+  //           <VStack className="items-center">
+  //             <Skeleton isDark={isDark} height={20} width={20} style={{ marginBottom: 8 }} />
+  //             <Skeleton isDark={isDark} height={18} width="40%" style={{ marginBottom: 6 }} />
+  //             <Skeleton isDark={isDark} height={12} width="60%" />
+  //           </VStack>
+  //         </Box>
+  //       ))}
+  //     </HStack>
+  //   );
+  // };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }} edges={["top", "left", "right"]}>
@@ -177,7 +177,7 @@ export default function SubAdminProfile() {
                 <Skeleton isDark={isDark} height={20} width="30%" borderRadius={4} style={{ marginLeft: 12 }} />
               </HStack>
               <ProfileCardSkeleton isDark={isDark} />
-              <StatsSkeleton isDark={isDark} />
+              {/* <StatsSkeleton isDark={isDark} /> */}
               <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
                 <Skeleton isDark={isDark} height={20} width="60%" style={{ marginBottom: 10 }} />
                 <Skeleton isDark={isDark} height={14} width="80%" />
@@ -229,7 +229,7 @@ export default function SubAdminProfile() {
                 </VStack>
               </Box>
 
-              <HStack className="justify-between mb-6">
+              {/* <HStack className="justify-between mb-6">
                 <Box className="flex-1 mr-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
                   <VStack className="items-center">
                     <ChartBar size={22} color="#8bc34a" />
@@ -248,7 +248,7 @@ export default function SubAdminProfile() {
                     <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>Handicap</ThemedText>
                   </VStack>
                 </Box>
-              </HStack>
+              </HStack> */}
 
               <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
                 <VStack space="lg">

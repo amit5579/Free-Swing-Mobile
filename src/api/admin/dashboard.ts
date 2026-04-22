@@ -250,21 +250,23 @@ export const getScorecardHistory = async (
 
 
 export type ScorecardHoleApi = {
-  holeId: number;
-  holeNumber: number;
-  par: number;
-  handicap: number;
-  yardage: number;
-  teeBoxId: number;
-  courseId: number;
-  score: number;
-  netScore: number;
-  roundNumber: number;
-  stablefordPoints: number;
-  isCompleted: boolean;
-  isDQ: boolean;
-  tournamentId: number | null;
-  isDoublePeoria: boolean;
+   "holeId": number,
+        "holeNumber": number,
+        "par": number,
+        "strokeIndex": number,
+        "yardage": number,
+        "teeBoxId": number,
+        "courseId": number,
+        "score": number,
+        "netScore": number,
+        "roundNumber": number,
+        "stablefordPoints": null,
+        "isCompleted": boolean,
+        "isDQ": boolean,
+        "tournamentId": null,
+        "isDoublePeoria": boolean,
+        "courseHalf": string,
+        "isExcluded": boolean
 };
 
 export type ScorecardHole = {

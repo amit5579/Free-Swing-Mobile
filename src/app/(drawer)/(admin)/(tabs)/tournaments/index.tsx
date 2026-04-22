@@ -96,12 +96,7 @@ export default function adminTournamentsPage() {
       return;
     }
     getTeeBox(String(courseId)).then((boxes: any[]) => {
-      setTeeBox(
-        boxes.map((b) => ({
-          label: b.name,
-          value: b.teeBoxId,
-        })),
-      );
+      setTeeBox(boxes);
     });
   }, [watchedCourseId?.[0]]);
 
@@ -112,26 +107,27 @@ export default function adminTournamentsPage() {
   const onSubmit = async (data: any) => {
     try {
       const tournamentData = {
-        name: data.name,
         courseId: data.courseId[0],
-        teeBoxId: data.teeColor[0],
-        scoringType: scoringMap[data.scoringType[0]] || "standard",
-        startDate: formatDate(data.startDate),
-        endDate: formatDate(data.endDate),
-        description: data.description || "",
         creatorId: Number(userId) || 1,
-      };
-      const updatedData = {
-        courseId: data.courseId[0],
+        description: data.description || "",
         endDate: formatDate(data.endDate),
         name: data.name,
-        scoringType: scoringMap[data.scoringType[0]] || "standard",
+        scoringType: scoringMap[data.scoringType[0]] || "include",
         startDate: formatDate(data.startDate),
         teeBoxId: data.teeColor[0],
-        tournamentId: editingCourse.tournamentId,
-        description: data.description || "",
       };
+
       if (isEditMode) {
+        const updatedData = {
+          courseId: data.courseId[0],
+          endDate: formatDate(data.endDate),
+          name: data.name,
+          scoringType: scoringMap[data.scoringType[0]] || "standard",
+          startDate: formatDate(data.startDate),
+          teeBoxId: data.teeColor[0],
+          tournamentId: editingCourse.tournamentId,
+          description: data.description || "",
+        };
         console.log("UPDATE API", tournamentData);
         await updateTournament(updatedData, editingCourse.tournamentId);
       } else {
@@ -551,18 +547,11 @@ export default function adminTournamentsPage() {
                         }}
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
-                        data={
-                          //   [
-                          //   { label: "red", value: "1" },
-                          //   { label: "blue", value: "2" },
-                          //   { label: "black", value: "3" },
-                          //   { label: "white", value: "4" },
-                          //   { label: "gold", value: "5" },
-                          //   { label: "green", value: "6" },
-                          //   { label: "silver", value: "7" },
-                          // ]
-                          teeBox
-                        }
+                        data={teeBox.map((item: any) => ({
+                          ...item,
+                          label: `${item.name}(Slope:${item.slope} / Rating:${item.rating})`,
+                          value: item.teeBoxId,
+                        }))}
                         labelField="label"
                         valueField="value"
                         placeholder="Select Tee Box"

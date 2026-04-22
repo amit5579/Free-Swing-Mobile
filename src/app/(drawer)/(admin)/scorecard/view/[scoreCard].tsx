@@ -7,30 +7,29 @@ import {
     ScrollView,
     TextInput,
     Pressable,
-    TouchableOpacity,
     useColorScheme,
     StyleSheet,
-    ActivityIndicator,
     Alert,
     BackHandler,
 } from "react-native";
 import { useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Skeleton } from "@/components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { updateScorecardApi } from "@/api/admin/dashboard";
 import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
+import { HStack } from "@/components/hstack";
+import { ThemedText } from "@/components/themed-text";
+import { Box } from "@/components/box";
 
 const ScoreCard: React.FC = () => {
-    const { scoreCard, handicap: paramHandicap, username, courseName } = useLocalSearchParams<{
+    const { scoreCard, handicap: paramHandicap } = useLocalSearchParams<{
         scoreCard: string;
         handicap: string;
-        username: string;
-        courseName: string;
     }>();
     const navigation = useNavigation();
     const router = useRouter();
@@ -50,6 +49,8 @@ const ScoreCard: React.FC = () => {
             const storedRole = await AsyncStorage.getItem("role");
             setRole(storedRole);
         };
+        fetchRole();
+
         fetchRole();
     }, []);
 
@@ -86,7 +87,18 @@ const ScoreCard: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isStableford, setIsStableford] = useState(false);
-
+    const [displayFront9, setDisplayFront9] = useState(true);
+    const [displayBack9, setDisplayBack9] = useState(true);
+     const renderScoring =
+    holes && holes.length > 0
+      ? holes[0].stablefordPoints == null &&
+        holes[0].isExcluded == false
+        ? "Net Score Include Par 3"
+        : holes[0].stablefordPoints == null &&
+            holes[0].isExcluded == true
+          ? "Net Score Exclude Par 3"
+          : "Stableford"
+      : "";
     useEffect(() => {
         const fetchScorecard = async () => {
             try {
@@ -113,6 +125,15 @@ const ScoreCard: React.FC = () => {
         fetchScorecard();
     }, [scoreCard]);
 
+    useEffect(() => {
+        if (holes.length > 0) {
+            const f9 = holes.slice(0, 9);
+            const b9 = holes.slice(9, 18);
+            setDisplayFront9(sumScores(f9) > 0);
+            setDisplayBack9(sumScores(b9) > 0);
+        }
+    }, [holes]);
+
     const calculateStrokes = (handicap: number, strokeIndex: number) => {
         const base = Math.floor(handicap / 18);
         const remainder = handicap % 18;
@@ -131,9 +152,9 @@ const ScoreCard: React.FC = () => {
         setTextScores(prev => ({ ...prev, [holeId]: formattedText }));
         const score = formattedText === "" ? -1 : parseInt(formattedText, 10);
 
-        setHoles(prev => prev.map(h => {
+        setHoles(prev => prev.map((h:any) => {
             if (h.holeId === holeId) {
-                const strokes = calculateStrokes(displayHandicap, h.handicap);
+                const strokes = calculateStrokes(displayHandicap, h.strokeIndex);
                 const netScore = score > 0 ? score - strokes : 0;
                 const stablefordPoints = score > 0 ? Math.max(0, h.par - netScore + 2) : 0;
                 return { ...h, score: score >= 0 ? score : 0, netScore, stablefordPoints };
@@ -206,6 +227,14 @@ const ScoreCard: React.FC = () => {
     const front9 = holes.slice(0, 9);
     const back9 = holes.slice(9, 18);
 
+    const displayedHoles = [
+        ...(displayFront9 ? front9 : []),
+        ...(displayBack9 ? back9 : [])
+    ];
+    // useEffect(() => {
+    //     console.log("bbbb", back9);
+
+    // }, [back9])
     const renderScoreIndicator = (score: number | null, par: number, isDark: boolean, rawValue: string) => {
         if (rawValue === "" || rawValue === undefined || score === null) return null;
 
@@ -360,13 +389,64 @@ const ScoreCard: React.FC = () => {
             </ThemedView>
         );
     }
+     const renderHeader = () => {
+        return (<><View style={{ paddingTop: 10 }}>
+            <HStack
+              className="px-3 items-center"
+              style={{ height: 30, justifyContent: "center" }}
+            >
+              <Pressable
+                onPress={() => router.back()}
+                style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={isDark ? "#ffffff" : "#020617"}
+                />
+              </Pressable>
+    
+              <ThemedText
+                style={{
+                  fontSize: 20,
+                  fontWeight: "700",
+                  textAlign: "center",
+                }}
+              >
+                Scorecard
+              </ThemedText>
+            </HStack>
+           
+            <HStack className="justify-between m-3">
+               <ThemedText
+              style={{ fontSize: 13, opacity: 0.8 }}
+            >
+              ({renderScoring}) 
+            </ThemedText>
+              <Box
+                style={{
+                  padding: 8,
+                  backgroundColor: "#8bc34a",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight:700 }}>Handicap: nohc
+                    {/* {handicap.handicap} */}
+                    </Text>
+              </Box>
+            </HStack>
+          </View>
+          </>
+          
+        );
+      };
     return (
-        <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F9FAFB" }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F9FAFB" }}>
             <Watermark />
-
+{renderHeader()}
             {/* ── Fixed Top Area ── */}
-            <View className="px-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF", paddingTop: Math.max(insets.top, 16) }}>
-                {/* Back + Title */}
+
+            {/* <View className="px-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF", paddingTop: Math.max(insets.top, 16) }}>
                 <View className="flex-row items-center mb-4 mt-0">
                     <TouchableOpacity
                         onPress={handleBack}
@@ -397,7 +477,6 @@ const ScoreCard: React.FC = () => {
                         )}
                     </View>
 
-                    {/* Verified badge — only shown when not coming from admin context */}
                     {!username && (
                         <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
                             <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
@@ -406,8 +485,7 @@ const ScoreCard: React.FC = () => {
                     )}
                 </View>
 
-                {/* Info banner removed in view mode */}
-            </View>
+            </View> */}
 
             {/* ── Scrollable Table ── */}
             <ScrollView
@@ -421,7 +499,7 @@ const ScoreCard: React.FC = () => {
                         className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
                     >
-                        {["Hole", "SI", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
+                        {["Hole", "Stroke\nIndex", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
                             <Text key={h} className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}>
                                 {h}
                             </Text>
@@ -431,142 +509,149 @@ const ScoreCard: React.FC = () => {
 
                 {/* Table rows — inline subtotals */}
                 <View
-                    className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
+                    className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl mb-3 overflow-hidden`}
                     style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}
                 >
                     {/* ── Front 9 holes ── */}
-                    {front9.map((h, index) => (
-                        <View
-                            key={h.holeId}
-                            className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
-                        >
-                            <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
-                            <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
-                            <View className="flex-1 items-center justify-center relative">
-                                {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
-                                <TextInput
-                                    style={{
-                                        width: 50,
-                                        height: 36,
-                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
-                                        color: isDark ? "#fff" : "#000",
-                                        textAlign: "center",
-                                        borderRadius: 8,
-                                        paddingVertical: 0,
-                                        paddingHorizontal: 0,
-                                        zIndex: 10,
-                                        fontWeight: "bold",
-                                        fontSize: 14,
-                                    }}
-                                    editable={!saving}
-                                    keyboardType="numeric"
-                                    onChangeText={(text) => handleScoreChange(h.holeId, text)}
-                                    value={textScores[h.holeId] || ""}
-                                    placeholder="-"
-                                    placeholderTextColor={isDark ? "#666" : "#999"}
-                                />
+                    {displayFront9 && (
+                        <>
+                            {front9.map((h, index) => (
+                                <View
+                                    key={index}
+                                    className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
+                                >
+                                    <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
+                                    <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
+                                    <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
+                                    <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
+                                    <View className="flex-1 items-center justify-center relative">
+                                        {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
+                                        <TextInput
+                                            style={{
+                                                width: 50,
+                                                height: 36,
+                                                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
+                                                color: isDark ? "#fff" : "#000",
+                                                textAlign: "center",
+                                                borderRadius: 8,
+                                                paddingVertical: 0,
+                                                paddingHorizontal: 0,
+                                                zIndex: 10,
+                                                fontWeight: "bold",
+                                                fontSize: 14,
+                                                
+                                            }}
+                                            editable={false}
+                                            keyboardType="numeric"
+                                            onChangeText={(text) => handleScoreChange(h.holeId, text)}
+                                            value={textScores[h.holeId] || ""}
+                                            placeholder="-"
+                                            placeholderTextColor={isDark ? "#666" : "#999"}
+                                        />
+                                    </View>
+                                    <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
+                                        {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
+                                    </Text>
+                                    {isStableford && (
+                                        <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                            {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                        </Text>
+                                    )}
+                                </View>
+                            ))}
+
+                            {/* ── Front 9 Subtotal ── */}
+                            <View
+                                className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
+                                style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
+                            >
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>Front 9</Text>
+                                <Text className="flex-1" />
+                                <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumYardage(front9)}</Text>
+                                <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(front9)}</Text>
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(front9) === 0 ? "-" : sumScores(front9)}</Text>
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(front9) === 0 ? "-" : sumNet(front9)}</Text>
+                                {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(front9)}</Text>}
                             </View>
-                            <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
-                            </Text>
-                            {isStableford && (
-                                <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
-                                </Text>
-                            )}
-                        </View>
-                    ))}
+                        </>
+                    )}
 
-                    {/* ── Front 9 Subtotal ── */}
-                    <View
-                        className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
-                        style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
-                    >
-                        <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>Front 9</Text>
-                        <Text className="flex-1" />
-                        <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumYardage(front9)}</Text>
-                        <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(front9)}</Text>
-                        <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(front9)}</Text>
-                        <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(front9)}</Text>
-                        {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(front9)}</Text>}
-                    </View>
+                    {/* ── Back 9 holes ── */}
+                    {displayBack9 && back9.length > 0 && (
+                        <>
+                            {back9.map((h, index) => (
+                                <View
+                                    key={index}
+                                    className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
+                                >
+                                    <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
+                                    <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
+                                    <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
+                                    <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
+                                    <View className="flex-1 items-center justify-center relative">
+                                        {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
+                                        <TextInput
+                                            style={{
+                                                width: 50,
+                                                height: 36,
+                                                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
+                                                color: isDark ? "#fff" : "#000",
+                                                textAlign: "center",
+                                                borderRadius: 8,
+                                                paddingVertical: 0,
+                                                paddingHorizontal: 0,
+                                                zIndex: 10,
+                                                fontWeight: "bold",
+                                                fontSize: 14,
+                                            }}
+                                            editable={!saving}
+                                            keyboardType="numeric"
+                                            onChangeText={(text) => handleScoreChange(h.holeId, text)}
+                                            value={textScores[h.holeId] || ""}
+                                            placeholder="-"
+                                            placeholderTextColor={isDark ? "#666" : "#999"}
+                                        />
+                                    </View>
+                                    <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
+                                        {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
+                                    </Text>
+                                    {isStableford && (
+                                        <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
+                                            {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                        </Text>
+                                    )}
+                                </View>
+                            ))}
 
-                    {/* ── Back 9 holes (only if 18-hole round) ── */}
-                    {back9.length > 0 && back9.map((h, index) => (
-                        <View
-                            key={h.holeId}
-                            className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
-                        >
-                            <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
-                            <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
-                            <View className="flex-1 items-center justify-center relative">
-                                {renderScoreIndicator(h.score ?? null, h.par, isDark, textScores[h.holeId] || "")}
-                                <TextInput
-                                    style={{
-                                        width: 50,
-                                        height: 36,
-                                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.05)",
-                                        color: isDark ? "#fff" : "#000",
-                                        textAlign: "center",
-                                        borderRadius: 8,
-                                        paddingVertical: 0,
-                                        paddingHorizontal: 0,
-                                        zIndex: 10,
-                                        fontWeight: "bold",
-                                        fontSize: 14,
-                                    }}
-                                    editable={!saving}
-                                    keyboardType="numeric"
-                                    onChangeText={(text) => handleScoreChange(h.holeId, text)}
-                                    value={textScores[h.holeId] || ""}
-                                    placeholder="-"
-                                    placeholderTextColor={isDark ? "#666" : "#999"}
-                                />
+                            {/* ── Back 9 Subtotal ── */}
+                            <View
+                                className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
+                                style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
+                            >
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>Back 9</Text>
+                                <Text className="flex-1" />
+                                <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumYardage(back9)}</Text>
+                                <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(back9)}</Text>
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(back9) === 0 ? "-" : sumScores(back9)}</Text>
+                                <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(back9) === 0 ? "-" : sumNet(back9)}</Text>
+                                {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(back9)}</Text>}
                             </View>
-                            <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
-                            </Text>
-                            {isStableford && (
-                                <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
-                                </Text>
-                            )}
-                        </View>
-                    ))}
-
-                    {/* ── Back 9 Subtotal (18-hole only) ── */}
-                    {back9.length > 0 && (
-                        <View
-                            className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
-                            style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
-                        >
-                            <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>Back 9</Text>
-                            <Text className="flex-1" />
-                            <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumYardage(back9)}</Text>
-                            <Text className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}>{sumPar(back9)}</Text>
-                            <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}>{sumScores(back9)}</Text>
-                            <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>{sumNet(back9)}</Text>
-                            {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(back9)}</Text>}
-                        </View>
+                        </>
                     )}
 
                     {/* ── Grand Total ── */}
                     <View className="flex-row p-3" style={{ backgroundColor: "#8BC34A" }}>
                         <Text className="flex-1 text-center font-black text-xs text-white">Grand Total</Text>
                         <Text className="flex-1" />
-                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumYardage(holes)}</Text>
-                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumPar(holes)}</Text>
-                        <Text className="flex-1 text-center font-black text-xs text-white">{sumScores(holes)}</Text>
-                        <Text className="flex-1 text-center font-black text-xs text-white">{sumNet(holes)}</Text>
-                        {isStableford && <Text className="flex-1 text-center font-black text-xs text-white">{sumPts(holes)}</Text>}
+                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumYardage(displayedHoles)}</Text>
+                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumPar(displayedHoles)}</Text>
+                        <Text className="flex-1 text-center font-black text-xs text-white">{sumScores(displayedHoles) === 0 ? "0" : sumScores(displayedHoles)}</Text>
+                        <Text className="flex-1 text-center font-black text-xs text-white">{sumNet(displayedHoles) === 0 ? "0" : sumNet(displayedHoles)}</Text>
+                        {isStableford && <Text className="flex-1 text-center font-black text-xs text-white">{sumPts(displayedHoles)}</Text>}
                     </View>
                 </View>
 
-                <View className="my-8 px-2">
+                {/* <View className="my-8 px-2">
                     <TouchableOpacity
                         onPress={handleFinishRound}
                         disabled={saving}
@@ -594,7 +679,7 @@ const ScoreCard: React.FC = () => {
                             </>
                         )}
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {(() => {
                     const scoreCounts: Record<string, number> = {
@@ -766,7 +851,7 @@ const ScoreCard: React.FC = () => {
                     );
                 })()}
             </ScrollView>
-        </ThemedView>
+        </SafeAreaView>
     );
 };
 

@@ -27,14 +27,18 @@ import { BlurView } from "expo-blur";
 import { getUsers, UserListApi } from "@/api/admin/allMembers";
 import { Skeleton } from "@/components/Skeleton";
 
-export default function AllMembersScreen({ hideAdminControls = false }: { hideAdminControls?: boolean } = {}) {
+export default function AllMembersScreen({
+  hideAdminControls = false,
+}: { hideAdminControls?: boolean } = {}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [members, setMembers] = useState<UserListApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
-  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>(
+    {},
+  );
 
   useEffect(() => {
     fetchUsers();
@@ -72,9 +76,9 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
             } finally {
               setLoading(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -120,7 +124,13 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
     }));
   };
 
-  const MemberCardSkeleton = ({ isExpanded, isDark }: { isExpanded?: boolean; isDark: boolean }) => {
+  const MemberCardSkeleton = ({
+    isExpanded,
+    isDark,
+  }: {
+    isExpanded?: boolean;
+    isDark: boolean;
+  }) => {
     return (
       <View
         style={{
@@ -128,7 +138,9 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: isDark ? 0.4 : 0.15,
           shadowRadius: 14,
-          backgroundColor: isDark ? "rgba(26, 26, 26, 0.3)" : "rgba(255, 255, 255, 0.4)",
+          backgroundColor: isDark
+            ? "rgba(26, 26, 26, 0.3)"
+            : "rgba(255, 255, 255, 0.4)",
           borderRadius: 22,
           borderLeftWidth: 6,
           borderLeftColor: "#8BC34A",
@@ -148,37 +160,97 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
         />
         <HStack className="items-center justify-between">
           <HStack className="items-center" style={{ flex: 1 }}>
-
-            <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
+            <Skeleton
+              isDark={isDark}
+              width={44}
+              height={44}
+              borderRadius={22}
+              style={{ marginRight: 12 }}
+            />
             <VStack style={{ gap: 5 }}>
-              <Skeleton isDark={isDark} width={130} height={17} borderRadius={6} />
-              <Skeleton isDark={isDark} width={80} height={11} borderRadius={4} />
+              <Skeleton
+                isDark={isDark}
+                width={130}
+                height={17}
+                borderRadius={6}
+              />
+              <Skeleton
+                isDark={isDark}
+                width={80}
+                height={11}
+                borderRadius={4}
+              />
             </VStack>
           </HStack>
 
           <HStack className="items-center">
-            <Skeleton isDark={isDark} width={62} height={22} borderRadius={12} style={{ marginRight: 8 }} />
-            <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+            <Skeleton
+              isDark={isDark}
+              width={62}
+              height={22}
+              borderRadius={12}
+              style={{ marginRight: 8 }}
+            />
+            <Skeleton
+              isDark={isDark}
+              width={20}
+              height={20}
+              borderRadius={10}
+            />
           </HStack>
         </HStack>
 
         {isExpanded && (
           <VStack style={{ marginTop: 16 }}>
-            <View style={{ height: 1, backgroundColor: isDark ? "#333" : "#f0f0f0", marginBottom: 12 }} />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: isDark ? "#333" : "#f0f0f0",
+                marginBottom: 12,
+              }}
+            />
             <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                 <VStack key={i} style={{ width: "47%" }}>
-                  <Skeleton isDark={isDark} width={55} height={9} borderRadius={4} style={{ marginBottom: 4 }} />
+                  <Skeleton
+                    isDark={isDark}
+                    width={55}
+                    height={9}
+                    borderRadius={4}
+                    style={{ marginBottom: 4 }}
+                  />
                   <HStack style={{ alignItems: "center", gap: 5 }}>
-                    <Skeleton isDark={isDark} width={14} height={14} borderRadius={7} />
-                    <Skeleton isDark={isDark} width={"70%"} height={13} borderRadius={4} />
+                    <Skeleton
+                      isDark={isDark}
+                      width={14}
+                      height={14}
+                      borderRadius={7}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      width={"70%"}
+                      height={13}
+                      borderRadius={4}
+                    />
                   </HStack>
                 </VStack>
               ))}
             </HStack>
-            <HStack style={{ marginTop: 20, justifyContent: "flex-end", gap: 10 }}>
-              <Skeleton isDark={isDark} width={76} height={36} borderRadius={12} />
-              <Skeleton isDark={isDark} width={90} height={36} borderRadius={12} />
+            <HStack
+              style={{ marginTop: 20, justifyContent: "flex-end", gap: 10 }}
+            >
+              <Skeleton
+                isDark={isDark}
+                width={76}
+                height={36}
+                borderRadius={12}
+              />
+              <Skeleton
+                isDark={isDark}
+                width={90}
+                height={36}
+                borderRadius={12}
+              />
             </HStack>
           </VStack>
         )}
@@ -191,22 +263,33 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
       edges={["left", "right"]}
       style={{
         flex: 1,
-        backgroundColor: hideAdminControls ? "transparent" : (isDark ? "#000" : "#f2f2f2"),
+        backgroundColor: hideAdminControls
+          ? "transparent"
+          : isDark
+            ? "#000"
+            : "#f2f2f2",
       }}
     >
-
       {!hideAdminControls && <Watermark />}
 
       {loading ? (
         <>
           <HStack className="items-center justify-between mt-4 mb-6 px-4">
             <HStack className="items-center">
-              <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
+              <ThemedText
+                style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}
+              >
                 All Members
               </ThemedText>
             </HStack>
           </HStack>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 100,
+            }}
+          >
             <VStack>
               <MemberCardSkeleton isDark={isDark} isExpanded={true} />
               <MemberCardSkeleton isDark={isDark} />
@@ -314,7 +397,12 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                       borderTopWidth: 1,
                       borderRightWidth: 1,
                       borderBottomWidth: 1,
-                      borderColor: (member.isBlocked && isDark) ? "#EF4444" : (isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0"),
+                      borderColor:
+                        member.isBlocked && isDark
+                          ? "#EF4444"
+                          : isDark
+                            ? "rgba(139, 195, 74, 0.6)"
+                            : "#E0E0E0",
                       padding: 12,
                       marginBottom: 12,
                       overflow: "hidden",
@@ -341,12 +429,24 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                               marginRight: 12,
                             }}
                           >
-                            {member.profilePictureUrl && member.profilePictureUrl.trim() !== "" && member.profilePictureUrl !== "null" && !imageErrors[member.id] ? (
+                            {member.profilePictureUrl &&
+                            member.profilePictureUrl.trim() !== "" &&
+                            member.profilePictureUrl !== "null" &&
+                            !imageErrors[member.id] ? (
                               <AvatarImage
                                 source={{
-                                  uri: member.profilePictureUrl.startsWith('http') ? member.profilePictureUrl : `https://kolve18freeswing.com${member.profilePictureUrl}`,
+                                  uri: member.profilePictureUrl.startsWith(
+                                    "http",
+                                  )
+                                    ? member.profilePictureUrl
+                                    : `https://kolve18freeswing.com${member.profilePictureUrl}`,
                                 }}
-                                onError={() => setImageErrors(prev => ({ ...prev, [member.id]: true }))}
+                                onError={() =>
+                                  setImageErrors((prev) => ({
+                                    ...prev,
+                                    [member.id]: true,
+                                  }))
+                                }
                               />
                             ) : (
                               <ThemedText
@@ -384,33 +484,34 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                           <Box
                             style={{
                               backgroundColor: member.isBlocked
-                                ? "rgba(239,68,68,0.15)"
-                                : "rgba(139,195,74,0.15)",
-                              paddingHorizontal: 10,
-                              paddingVertical: 5,
-                              borderRadius: 12,
-                              marginRight: 8,
+                                ? "rgba(239,68,68,0.12)"
+                                : "rgba(139,195,74,0.12)",
+                              paddingHorizontal: 12,
+                              paddingVertical: 6,
+                              borderRadius: 14,
+                              marginRight: 10,
                             }}
                           >
                             <ThemedText
                               style={{
-                                color: member.isBlocked ? "#EF4444" : "#8BC34A",
-                                fontSize: 10,
-                                fontWeight: "900",
-                                letterSpacing: 0.5,
+                                color: member.isBlocked ? "#DC2626" : "#2E7D32",
+                                fontSize: 11,
+                                fontWeight: "600",
+                                letterSpacing: 0.6,
                               }}
                             >
                               {member.isBlocked ? "PENDING" : "ACTIVE"}
                             </ThemedText>
                           </Box>
+
                           <Ionicons
                             name={
                               expanded[member.id]
                                 ? "chevron-up"
                                 : "chevron-down"
                             }
-                            size={20}
-                            color={member.isBlocked ? "#EF4444" : "#8BC34A"}
+                            size={18}
+                            color={member.isBlocked ? "#DC2626" : "#2E7D32"}
                           />
                         </HStack>
                       </HStack>
@@ -425,13 +526,24 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                           }}
                         />
 
-                        <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
+                        <HStack
+                          style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}
+                        >
                           {!hideAdminControls && (
                             <>
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>EMAIL</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="mail-outline" size={14} color="#8BC34A" />
+                                <ThemedText style={styles.cardLabel}>
+                                  EMAIL
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="mail-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
                                   <ThemedText
                                     style={[styles.cardValue, { flex: 1 }]}
                                     numberOfLines={1}
@@ -443,48 +555,99 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                               </VStack>
 
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>MOBILE</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="call-outline" size={14} color="#8BC34A" />
-                                  <ThemedText style={styles.cardValue}>{member.mobileNumber}</ThemedText>
+                                <ThemedText style={styles.cardLabel}>
+                                  MOBILE
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="call-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
+                                  <ThemedText style={styles.cardValue}>
+                                    {member.mobileNumber}
+                                  </ThemedText>
                                 </HStack>
                               </VStack>
 
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>ROLE</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="person-outline" size={14} color="#8BC34A" />
-                                  <ThemedText style={styles.cardValue}>{member.role}</ThemedText>
+                                <ThemedText style={styles.cardLabel}>
+                                  ROLE
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="person-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
+                                  <ThemedText style={styles.cardValue}>
+                                    {member.role}
+                                  </ThemedText>
                                 </HStack>
                               </VStack>
                             </>
                           )}
 
                           <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>INVITED BY</ThemedText>
+                            <ThemedText style={styles.cardLabel}>
+                              INVITED BY
+                            </ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="people-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={[styles.cardValue, { fontWeight: "700" }]}>
+                              <Ionicons
+                                name="people-outline"
+                                size={14}
+                                color="#8BC34A"
+                              />
+                              <ThemedText
+                                style={[
+                                  styles.cardValue,
+                                  { fontWeight: "700" },
+                                ]}
+                              >
                                 {member.invitedBySubAdminName || "Direct"}
                               </ThemedText>
                             </HStack>
                           </VStack>
 
                           <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>HOME COURSE</ThemedText>
+                            <ThemedText style={styles.cardLabel}>
+                              HOME COURSE
+                            </ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="map-outline" size={14} color="#8BC34A" />
-                              <ThemedText style={styles.cardValue}>{member.homeCourse || "N/A"}</ThemedText>
+                              <Ionicons
+                                name="map-outline"
+                                size={14}
+                                color="#8BC34A"
+                              />
+                              <ThemedText style={styles.cardValue}>
+                                {member.homeCourse || "N/A"}
+                              </ThemedText>
                             </HStack>
                           </VStack>
 
                           {!hideAdminControls && (
                             <VStack style={{ width: "47%" }}>
-                              <ThemedText style={styles.cardLabel}>SLOPE / RATING</ThemedText>
-                              <HStack className="items-center" style={{ gap: 6 }}>
-                                <Ionicons name="stats-chart-outline" size={14} color="#8BC34A" />
+                              <ThemedText style={styles.cardLabel}>
+                                SLOPE / RATING
+                              </ThemedText>
+                              <HStack
+                                className="items-center"
+                                style={{ gap: 6 }}
+                              >
+                                <Ionicons
+                                  name="stats-chart-outline"
+                                  size={14}
+                                  color="#8BC34A"
+                                />
                                 <ThemedText style={styles.cardValue}>
-                                  {member.slope || "N/A"} / {member.rating || "N/A"}
+                                  {member.slope || "N/A"} /{" "}
+                                  {member.rating || "N/A"}
                                 </ThemedText>
                               </HStack>
                             </VStack>
@@ -492,10 +655,16 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
 
                           <VStack style={{ width: "47%" }}>
                             <ThemedText style={styles.cardLabel}>
-                              {hideAdminControls ? "HC INDEX" : "DECLARED HC / INDEX"}
+                              {hideAdminControls
+                                ? "HC INDEX"
+                                : "DECLARED HC / INDEX"}
                             </ThemedText>
                             <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons name="ribbon-outline" size={14} color="#8BC34A" />
+                              <Ionicons
+                                name="ribbon-outline"
+                                size={14}
+                                color="#8BC34A"
+                              />
                               <ThemedText style={styles.cardValue}>
                                 {hideAdminControls
                                   ? (member.handicapIndex ?? "N/A")
@@ -505,7 +674,13 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                           </VStack>
 
                           {hideAdminControls && (
-                            <VStack style={{ width: "47%", justifyContent: "center", alignItems: "flex-end" }}>
+                            <VStack
+                              style={{
+                                width: "47%",
+                                justifyContent: "center",
+                                alignItems: "flex-end",
+                              }}
+                            >
                               <TouchableOpacity
                                 style={{
                                   paddingHorizontal: 16,
@@ -517,13 +692,27 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                                   flexDirection: "row",
                                   alignItems: "center",
                                 }}
-                                onPress={() => router.push({
-                                  pathname: "/(drawer)/(user)/(tabs)/dashboard/tabs/[id]",
-                                  params: { id: member.id }
-                                } as any)}
+                                onPress={() =>
+                                  router.push({
+                                    pathname:
+                                      "/(drawer)/(user)/(tabs)/dashboard/tabs/[id]",
+                                    params: { id: member.id },
+                                  } as any)
+                                }
                               >
-                                <Ionicons name="eye-outline" size={16} color="#8BC34A" />
-                                <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={16}
+                                  color="#8BC34A"
+                                />
+                                <ThemedText
+                                  style={{
+                                    marginLeft: 6,
+                                    fontSize: 13,
+                                    fontWeight: "800",
+                                    color: "#8BC34A",
+                                  }}
+                                >
                                   View Profile
                                 </ThemedText>
                               </TouchableOpacity>
@@ -533,42 +722,89 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                           {!hideAdminControls && (
                             <>
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>REVISED HC</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="checkmark-done-outline" size={14} color="#8BC34A" />
-                                  <ThemedText style={[styles.cardValue, { color: "#8BC34A", fontWeight: "800" }]}>
+                                <ThemedText style={styles.cardLabel}>
+                                  REVISED HC
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="checkmark-done-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
+                                  <ThemedText
+                                    style={[
+                                      styles.cardValue,
+                                      { color: "#8BC34A", fontWeight: "800" },
+                                    ]}
+                                  >
                                     {member.calculatedHandicap}
                                   </ThemedText>
                                 </HStack>
                               </VStack>
 
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>DATE OF BIRTH</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="calendar-outline" size={14} color="#8BC34A" />
+                                <ThemedText style={styles.cardLabel}>
+                                  DATE OF BIRTH
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="calendar-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
                                   <ThemedText style={styles.cardValue}>
-                                    {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString() : "N/A"}
+                                    {member.dateOfBirth
+                                      ? new Date(
+                                          member.dateOfBirth,
+                                        ).toLocaleDateString()
+                                      : "N/A"}
                                   </ThemedText>
                                 </HStack>
                               </VStack>
 
                               <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>AGE</ThemedText>
-                                <HStack className="items-center" style={{ gap: 6 }}>
-                                  <Ionicons name="hourglass-outline" size={14} color="#8BC34A" />
+                                <ThemedText style={styles.cardLabel}>
+                                  AGE
+                                </ThemedText>
+                                <HStack
+                                  className="items-center"
+                                  style={{ gap: 6 }}
+                                >
+                                  <Ionicons
+                                    name="hourglass-outline"
+                                    size={14}
+                                    color="#8BC34A"
+                                  />
                                   <ThemedText style={styles.cardValue}>
-                                    {member.dateOfBirth ? (
-                                      (() => {
-                                        const birthDate = new Date(member.dateOfBirth);
-                                        const today = new Date();
-                                        let age = today.getFullYear() - birthDate.getFullYear();
-                                        const m = today.getMonth() - birthDate.getMonth();
-                                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                          age--;
-                                        }
-                                        return age >= 0 ? age : "N/A";
-                                      })()
-                                    ) : "N/A"}
+                                    {member.dateOfBirth
+                                      ? (() => {
+                                          const birthDate = new Date(
+                                            member.dateOfBirth,
+                                          );
+                                          const today = new Date();
+                                          let age =
+                                            today.getFullYear() -
+                                            birthDate.getFullYear();
+                                          const m =
+                                            today.getMonth() -
+                                            birthDate.getMonth();
+                                          if (
+                                            m < 0 ||
+                                            (m === 0 &&
+                                              today.getDate() <
+                                                birthDate.getDate())
+                                          ) {
+                                            age--;
+                                          }
+                                          return age >= 0 ? age : "N/A";
+                                        })()
+                                      : "N/A"}
                                   </ThemedText>
                                 </HStack>
                               </VStack>
@@ -578,7 +814,11 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
 
                         {!hideAdminControls && (
                           <HStack
-                            style={{ marginTop: 24, justifyContent: "flex-end", gap: 12 }}
+                            style={{
+                              marginTop: 24,
+                              justifyContent: "flex-end",
+                              gap: 12,
+                            }}
                           >
                             <>
                               {member.isBlocked ? (
@@ -596,8 +836,19 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                                     }}
                                     onPress={() => handleDeny(member.id)}
                                   >
-                                    <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
-                                    <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#EF4444" }}>
+                                    <Ionicons
+                                      name="close-circle-outline"
+                                      size={16}
+                                      color="#EF4444"
+                                    />
+                                    <ThemedText
+                                      style={{
+                                        marginLeft: 6,
+                                        fontSize: 13,
+                                        fontWeight: "800",
+                                        color: "#EF4444",
+                                      }}
+                                    >
                                       Deny
                                     </ThemedText>
                                   </TouchableOpacity>
@@ -615,8 +866,19 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                                     }}
                                     onPress={() => handleApprove(member.id)}
                                   >
-                                    <Ionicons name="checkmark-circle-outline" size={16} color="#8BC34A" />
-                                    <ThemedText style={{ marginLeft: 6, fontSize: 13, fontWeight: "800", color: "#8BC34A" }}>
+                                    <Ionicons
+                                      name="checkmark-circle-outline"
+                                      size={16}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText
+                                      style={{
+                                        marginLeft: 6,
+                                        fontSize: 13,
+                                        fontWeight: "800",
+                                        color: "#8BC34A",
+                                      }}
+                                    >
                                       Approve
                                     </ThemedText>
                                   </TouchableOpacity>
@@ -646,17 +908,23 @@ export default function AllMembersScreen({ hideAdminControls = false }: { hideAd
                                         : "ban-outline"
                                     }
                                     size={16}
-                                    color={member.isBlocked ? "#22C55E" : "#EF4444"}
+                                    color={
+                                      member.isBlocked ? "#22C55E" : "#EF4444"
+                                    }
                                   />
                                   <ThemedText
                                     style={{
                                       marginLeft: 6,
                                       fontSize: 13,
                                       fontWeight: "800",
-                                      color: member.isBlocked ? "#22C55E" : "#EF4444",
+                                      color: member.isBlocked
+                                        ? "#22C55E"
+                                        : "#EF4444",
                                     }}
                                   >
-                                    {member.isBlocked ? "Unblock" : "Block Member"}
+                                    {member.isBlocked
+                                      ? "Unblock"
+                                      : "Block Member"}
                                   </ThemedText>
                                 </TouchableOpacity>
                               )}

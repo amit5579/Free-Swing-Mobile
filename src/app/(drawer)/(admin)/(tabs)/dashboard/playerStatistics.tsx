@@ -58,7 +58,12 @@ const PlayerCard = ({
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderBottomWidth: 1,
-        borderColor: (player.isBlocked && isDark) ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
+        borderColor:
+          player.isBlocked && isDark
+            ? "#ef4444"
+            : isDark
+              ? "rgba(139,195,74,0.6)"
+              : "#E0E0E0",
         borderRadius: 22,
         padding: 12,
         marginBottom: 12,
@@ -85,11 +90,16 @@ const PlayerCard = ({
                 overflow: "hidden",
               }}
             >
-              {player.profilePictureUrl && player.profilePictureUrl.trim() !== "" && player.profilePictureUrl !== "null" && !imageError ? (
+              {player.profilePictureUrl &&
+              player.profilePictureUrl.trim() !== "" &&
+              player.profilePictureUrl !== "null" &&
+              !imageError ? (
                 <AvatarImage
                   style={{ width: "100%", height: "100%", borderRadius: 19 }}
                   source={{
-                    uri: player.profilePictureUrl.startsWith('http') ? player.profilePictureUrl : `https://kolve18freeswing.com${player.profilePictureUrl}`,
+                    uri: player.profilePictureUrl.startsWith("http")
+                      ? player.profilePictureUrl
+                      : `https://kolve18freeswing.com${player.profilePictureUrl}`,
                   }}
                   onError={() => setImageError(true)}
                 />
@@ -238,26 +248,29 @@ const PlayerCard = ({
           </HStack>
 
           {/* Action Button */}
+          {/* Action Button */}
           <HStack style={{ marginTop: 12, justifyContent: "flex-end" }}>
             <TouchableOpacity
+              activeOpacity={0.7}
               style={{
-                backgroundColor: "rgba(139,195,74,0.15)",
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 8,
+                backgroundColor: "rgba(139,195,74,0.12)",
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 10,
                 flexDirection: "row",
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: "rgba(139,195,74,0.2)",
+                borderColor: "rgba(139,195,74,0.35)",
               }}
               onPress={handleViewHistory}
             >
               <Ionicons name="time-outline" size={16} color="#2E7D32" />
+
               <ThemedText
                 style={{
                   color: "#2E7D32",
-                  fontWeight: "800",
-                  marginLeft: 8,
+                  fontWeight: "600",
+                  marginLeft: 6,
                   fontSize: 13,
                 }}
               >
@@ -302,7 +315,14 @@ export default function PlayerStatistics({
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2", paddingHorizontal: 16, paddingTop: 10 }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#000" : "#f2f2f2",
+          paddingHorizontal: 16,
+          paddingTop: 10,
+        }}
+      >
         <Watermark />
         {[1, 2, 3, 4, 5].map((item, index) => (
           <Box
@@ -312,7 +332,9 @@ export default function PlayerStatistics({
               shadowOffset: { width: 0, height: 6 },
               shadowOpacity: isDark ? 0.4 : 0.15,
               shadowRadius: 14,
-              backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+              backgroundColor: isDark
+                ? "rgba(26,26,26,0.6)"
+                : "rgba(255,255,255,0.6)",
               borderRadius: 22,
               borderLeftWidth: 6,
               borderLeftColor: "#8BC34A",
@@ -326,28 +348,59 @@ export default function PlayerStatistics({
           >
             <HStack className="items-center justify-between">
               <HStack className="items-center" style={{ flex: 1 }}>
-                <Skeleton isDark={isDark} width={48} height={48} borderRadius={24} style={{ marginRight: 12 }} />
+                <Skeleton
+                  isDark={isDark}
+                  width={48}
+                  height={48}
+                  borderRadius={24}
+                  style={{ marginRight: 12 }}
+                />
                 <VStack>
-                  <Skeleton isDark={isDark} width={150} height={20} style={{ marginBottom: 4 }} />
+                  <Skeleton
+                    isDark={isDark}
+                    width={150}
+                    height={20}
+                    style={{ marginBottom: 4 }}
+                  />
                   <Skeleton isDark={isDark} width={80} height={12} />
                 </VStack>
               </HStack>
-              <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+              <Skeleton
+                isDark={isDark}
+                width={20}
+                height={20}
+                borderRadius={10}
+              />
             </HStack>
 
             {index === 0 && (
               <VStack style={{ marginTop: 20 }}>
-                <Skeleton isDark={isDark} width="100%" height={1} style={{ marginBottom: 16 }} />
+                <Skeleton
+                  isDark={isDark}
+                  width="100%"
+                  height={1}
+                  style={{ marginBottom: 16 }}
+                />
                 <HStack style={{ flexWrap: "wrap", gap: 16 }}>
                   {[1, 2, 3, 4].map((stat) => (
                     <VStack key={stat} style={{ width: "47%" }}>
-                      <Skeleton isDark={isDark} width={80} height={10} style={{ marginBottom: 4 }} />
+                      <Skeleton
+                        isDark={isDark}
+                        width={80}
+                        height={10}
+                        style={{ marginBottom: 4 }}
+                      />
                       <Skeleton isDark={isDark} width={50} height={20} />
                     </VStack>
                   ))}
                 </HStack>
                 <HStack style={{ marginTop: 24, justifyContent: "flex-end" }}>
-                  <Skeleton isDark={isDark} width={120} height={40} borderRadius={12} />
+                  <Skeleton
+                    isDark={isDark}
+                    width={120}
+                    height={40}
+                    borderRadius={12}
+                  />
                 </HStack>
               </VStack>
             )}
@@ -361,7 +414,11 @@ export default function PlayerStatistics({
     <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
       <Watermark />
       <FlatList
-        data={players.filter(p => !searchQuery || p.username.toLowerCase().includes(searchQuery.toLowerCase()))}
+        data={players.filter(
+          (p) =>
+            !searchQuery ||
+            p.username.toLowerCase().includes(searchQuery.toLowerCase()),
+        )}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <PlayerCard
