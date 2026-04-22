@@ -22,12 +22,9 @@ import {
   Radio,
   RadioGroup,
   RadioIndicator,
-  RadioIcon,
   RadioLabel,
 } from "@/components/radio";
-import { CircleIcon } from "@/components/icon";
 import { getHandicapDetails } from "@/api/newRound";
-import Toast from "react-native-toast-message";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
@@ -313,7 +310,7 @@ function CourseCard({ course, isDark }: any) {
           onPress={() => {
             setModalVisible(true);
             setTeeBoxList(course.teeBoxes);
-            setSelectedTeeBoxId(0); // reset selection
+            setSelectedTeeBoxId(0); // reset selection 
           }}
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
@@ -401,15 +398,18 @@ function CourseCard({ course, isDark }: any) {
                   backgroundColor: isDark ? "#333" : "#eee",
                 }}
                 activeColor={isDark ? "#333" : "#eee"}
-                data={teeBoxList as any}
-                labelField="name"
+                data={teeBoxList.map((item: any) => ({
+                  ...item,
+                  label: `${item.name} (Slope:${item.slope} / Rating:${item.rating})`,
+                }))}
+                labelField="label"
                 valueField="teeBoxId"
                 placeholder={"Choose Tee Box"}
                 value={selectedTeeBoxId}
                 onChange={(item: any) => {
+                  console.log("TeeItem", item);
                   setHandicapView(true);
                   setSelectedTeeBoxId(item.teeBoxId); // ✅ store ID
-                  // getHandicapDetails(item.teeBoxId)
                 }}
               />
 
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dropdown: {
-    height: 40,
+    height: 50,
     borderWidth: 1,
     borderRadius: 7,
     paddingHorizontal: 10,

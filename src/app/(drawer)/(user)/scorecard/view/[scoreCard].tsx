@@ -92,7 +92,7 @@ const ScoreCard: React.FC = () => {
 
         setHoles(prev => prev.map(h => {
             if (h.holeId === holeId) {
-                const strokes = calculateStrokes(displayHandicap, h.handicap);
+                const strokes = calculateStrokes(displayHandicap, h.strokeIndex);
                 const netScore = score > 0 ? score - strokes : 0;
                 const stablefordPoints = score > 0 ? Math.max(0, h.par - netScore + 2) : 0;
                 return { ...h, score: score >= 0 ? score : 0, netScore, stablefordPoints };
@@ -273,7 +273,7 @@ const ScoreCard: React.FC = () => {
 
                     {/* Table Header Skeleton - Match 6 columns */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
-                        {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
+                        {["Hole", "Stroke\nIndex", "Yards", "Par", "Score", "Net"].map((_, i) => (
                             <View key={i} className="flex-1 items-center">
                                 <Skeleton isDark={isDark} width={28} height={12} borderRadius={4} />
                             </View>
@@ -383,7 +383,7 @@ const ScoreCard: React.FC = () => {
                         className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
                     >
-                        {["Hole", "SI", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
+                        {["Hole", "Stroke\nIndex", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
                             <Text key={h} className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>
                                 {h}
                             </Text>
@@ -403,7 +403,7 @@ const ScoreCard: React.FC = () => {
                             className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                         >
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
+                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
                             <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                             <View className="flex-1 items-center justify-center relative">
@@ -462,7 +462,7 @@ const ScoreCard: React.FC = () => {
                             className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                         >
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
+                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
                             <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                             <View className="flex-1 items-center justify-center relative">

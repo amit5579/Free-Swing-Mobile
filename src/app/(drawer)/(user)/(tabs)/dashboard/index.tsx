@@ -26,13 +26,11 @@ import { InProgressTab } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/gameFeed";
 import { getFeedApi, likeFeedApi } from "@/api/dashboard";
 import { verifyScoreApi } from "@/api/admin/dashboard";
-import { getScoreStats, ScoreStats } from "@/api/dashboard";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getScoreStats, ScoreStats, getUserProfile, UserProfile } from "@/api/dashboard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Watermark from "@/components/watermark";
 import { Skeleton } from "@/components/Skeleton";
 import { useRouter, useFocusEffect } from "expo-router";
-
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_MARGIN = 8;
@@ -62,7 +60,7 @@ export default function DashboardScreen() {
     { key: "history", label: "History", icon: "time-outline" },
   ];
 
-  const tabKeys = tabs.map(t => t.key);
+  const tabKeys = tabs.map((t) => t.key);
 
   const swipePanResponder = useRef(
     PanResponder.create({
@@ -70,18 +68,18 @@ export default function DashboardScreen() {
         Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 60,
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx < -40) {
-          setActiveTab(prev => {
+          setActiveTab((prev) => {
             const idx = tabKeys.indexOf(prev);
             return idx < tabKeys.length - 1 ? tabKeys[idx + 1] : prev;
           });
         } else if (gestureState.dx > 40) {
-          setActiveTab(prev => {
+          setActiveTab((prev) => {
             const idx = tabKeys.indexOf(prev);
             return idx > 0 ? tabKeys[idx - 1] : prev;
           });
         }
       },
-    })
+    }),
   ).current;
 
   useFocusEffect(
@@ -90,7 +88,7 @@ export default function DashboardScreen() {
       fetchFeed();
       fetchStats();
       fetchProfile();
-    }, [])
+    }, []),
   );
 
   const fetchStats = async () => {
@@ -113,8 +111,11 @@ export default function DashboardScreen() {
       if (!userId) return;
 
       const data = await getUserProfile(Number(userId));
-      if (data.profilePictureUrl != null || data.username != null || data.handicap)
-
+      if (
+        data.profilePictureUrl != null ||
+        data.username != null ||
+        data.handicap
+      )
         setProfile(data);
     } catch (error) {
       console.log("Profile error:", error);
@@ -163,16 +164,15 @@ export default function DashboardScreen() {
         prev.map((c) =>
           c.id === id
             ? {
-              ...c,
-              isLiked: !c.isLiked,
-              likes: c.isLiked ? c.likes - 1 : c.likes + 1,
-            }
-            : c
-        )
+                ...c,
+                isLiked: !c.isLiked,
+                likes: c.isLiked ? c.likes - 1 : c.likes + 1,
+              }
+            : c,
+        ),
       );
 
       await likeFeedApi(id);
-
     } catch (error) {
       console.error("Like toggle error:", error);
     }
@@ -197,8 +197,8 @@ export default function DashboardScreen() {
                         isAuthenticated: true,
                         authenticatedBy: "Authorized User",
                       }
-                    : card
-                )
+                    : card,
+                ),
               );
               Alert.alert("Success", "Round authenticated successfully.");
             } catch (err) {
@@ -207,13 +207,18 @@ export default function DashboardScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["left", "right"]}>
-      <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+      edges={["left", "right"]}
+    >
+      <ThemedView
+        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+      >
         <Watermark />
 
         <View
@@ -228,25 +233,57 @@ export default function DashboardScreen() {
               <HStack
                 className="rounded-full p-1 justify-between"
                 style={{
-                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                  backgroundColor: isDark
+                    ? "rgba(22, 22, 24, 0.4)"
+                    : "rgba(255, 255, 255, 0.35)",
                   borderWidth: isDark ? 1 : 0,
                   borderColor: isDark ? "#FFFFFF" : "transparent",
                 }}
               >
-                <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1 }} />
-                <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1, marginHorizontal: 4 }} />
-                <Skeleton isDark={isDark} height={36} borderRadius={20} style={{ flex: 1 }} />
+                <Skeleton
+                  isDark={isDark}
+                  height={36}
+                  borderRadius={20}
+                  style={{ flex: 1 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={36}
+                  borderRadius={20}
+                  style={{ flex: 1, marginHorizontal: 4 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={36}
+                  borderRadius={20}
+                  style={{ flex: 1 }}
+                />
               </HStack>
 
               <Box
                 className="flex-row items-center px-4 rounded-xl border h-11"
                 style={{
-                  backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
-                  borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(255,255,255,0.9)",
+                  borderColor: isDark
+                    ? "rgba(139,195,74,0.3)"
+                    : "rgba(229,231,235,1)",
                 }}
               >
-                <Skeleton isDark={isDark} height={18} width={18} borderRadius={9} />
-                <Skeleton isDark={isDark} height={14} width="60%" borderRadius={4} style={{ marginLeft: 8 }} />
+                <Skeleton
+                  isDark={isDark}
+                  height={18}
+                  width={18}
+                  borderRadius={9}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={14}
+                  width="60%"
+                  borderRadius={4}
+                  style={{ marginLeft: 8 }}
+                />
               </Box>
             </VStack>
           ) : (
@@ -254,9 +291,13 @@ export default function DashboardScreen() {
               <HStack
                 className="p-1 rounded-full"
                 style={{
-                  backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(243, 244, 246, 0.8)",
+                  backgroundColor: isDark
+                    ? "rgba(22, 22, 24, 0.4)"
+                    : "rgba(243, 244, 246, 0.8)",
                   borderWidth: 1,
-                  borderColor: isDark ? "rgba(139,195,74,0.1)" : "rgba(229,231,235,1)"
+                  borderColor: isDark
+                    ? "rgba(139,195,74,0.1)"
+                    : "rgba(229,231,235,1)",
                 }}
               >
                 {tabs.map((tab) => {
@@ -267,7 +308,10 @@ export default function DashboardScreen() {
                       onPress={() => {
                         setActiveTab(tab.key);
                         const tIndex = tabs.findIndex((t) => t.key === tab.key);
-                        scrollViewRef.current?.scrollTo({ x: tIndex * SCREEN_WIDTH, animated: true });
+                        scrollViewRef.current?.scrollTo({
+                          x: tIndex * SCREEN_WIDTH,
+                          animated: true,
+                        });
                       }}
                       className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
                       style={{
@@ -282,7 +326,13 @@ export default function DashboardScreen() {
 
                       <Text
                         className="text-sm font-bold ml-1"
-                        style={{ color: active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280" }}
+                        style={{
+                          color: active
+                            ? "#fff"
+                            : isDark
+                              ? "#D1D5DB"
+                              : "#6B7280",
+                        }}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                       >
@@ -296,8 +346,12 @@ export default function DashboardScreen() {
               <Box
                 className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
                 style={{
-                  backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
-                  borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(255,255,255,0.9)",
+                  borderColor: isDark
+                    ? "rgba(139,195,74,0.3)"
+                    : "rgba(229,231,235,1)",
                 }}
               >
                 <Ionicons name="search-outline" size={18} color="#8BC34A" />
@@ -323,7 +377,11 @@ export default function DashboardScreen() {
                 />
                 {searchQuery !== "" && (
                   <Pressable onPress={() => setSearchQuery("")}>
-                    <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color={isDark ? "#6B7280" : "#9CA3AF"}
+                    />
                   </Pressable>
                 )}
               </Box>
@@ -333,7 +391,13 @@ export default function DashboardScreen() {
 
         <View style={{ flex: 1 }} {...swipePanResponder.panHandlers}>
           {activeTab === "overview" && (
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 100,
+              }}
+            >
               {loading ? (
                 <VStack className="space-y-4">
                   <VStack space="sm">
@@ -344,7 +408,7 @@ export default function DashboardScreen() {
                       scrollEnabled={false}
                     >
                       <HStack space="sm" className="items-center">
-                        {[1, 2, 3, 4, 5].map((i) => (
+                        {[1, 2, 3, 4].map((i) => (
                           <Box
                             key={i}
                             className="rounded-xl p-2 items-center"
@@ -352,15 +416,38 @@ export default function DashboardScreen() {
                               width: STAT_CARD_WIDTH,
                               minWidth: STAT_CARD_WIDTH,
                               minHeight: 100,
-                              backgroundColor: isDark ? "rgba(31, 31, 31, 0.5)" : "rgba(243, 244, 246, 0.8)",
+                              backgroundColor: isDark
+                                ? "rgba(31, 31, 31, 0.5)"
+                                : "rgba(243, 244, 246, 0.8)",
                               borderColor: "rgba(139, 195, 74, 0.2)",
-                              borderWidth: 1.5
+                              borderWidth: 1.5,
                             }}
                           >
-                            <Skeleton isDark={isDark} height={28} width={28} borderRadius={14} style={{ marginBottom: 6 }} />
-                            <Skeleton isDark={isDark} height={18} width="60%" style={{ marginBottom: 6 }} />
-                            <Skeleton isDark={isDark} height={10} width="70%" style={{ marginBottom: 8 }} />
-                            <Skeleton isDark={isDark} height={12} width="40%" borderRadius={6} />
+                            <Skeleton
+                              isDark={isDark}
+                              height={28}
+                              width={28}
+                              borderRadius={14}
+                              style={{ marginBottom: 6 }}
+                            />
+                            <Skeleton
+                              isDark={isDark}
+                              height={18}
+                              width="60%"
+                              style={{ marginBottom: 6 }}
+                            />
+                            <Skeleton
+                              isDark={isDark}
+                              height={10}
+                              width="70%"
+                              style={{ marginBottom: 8 }}
+                            />
+                            <Skeleton
+                              isDark={isDark}
+                              height={12}
+                              width="40%"
+                              borderRadius={6}
+                            />
                           </Box>
                         ))}
                       </HStack>
@@ -370,52 +457,169 @@ export default function DashboardScreen() {
                   <HStack className="justify-between items-center mb-2">
                     <HStack space="sm" className="items-center">
                       <Skeleton isDark={isDark} width={120} height={28} />
-                      <Skeleton isDark={isDark} width={60} height={24} borderRadius={20} />
+                      <Skeleton
+                        isDark={isDark}
+                        width={60}
+                        height={24}
+                        borderRadius={20}
+                      />
                     </HStack>
                   </HStack>
 
-                  <Box className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
+                  <Box
+                    className="w-full rounded-2xl mb-4"
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(26,26,26,0.6)"
+                        : "rgba(255,255,255,0.7)",
+                      borderLeftWidth: 6,
+                      borderLeftColor: "#8BC34A",
+                      borderWidth: 1,
+                      borderColor: "rgba(139, 195, 74, 0.3)",
+                      borderRadius: 20,
+                      overflow: "hidden",
+                      padding: 16,
+                    }}
+                  >
                     <HStack className="justify-between items-center mb-4">
                       <HStack space="sm" className="items-center">
-                        <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} />
+                        <Skeleton
+                          isDark={isDark}
+                          width={40}
+                          height={40}
+                          borderRadius={20}
+                        />
                         <VStack space="xs">
-                          <Skeleton isDark={isDark} width={120} height={18} borderRadius={4} />
-                          <Skeleton isDark={isDark} width={80} height={10} borderRadius={4} />
+                          <Skeleton
+                            isDark={isDark}
+                            width={120}
+                            height={18}
+                            borderRadius={4}
+                          />
+                          <Skeleton
+                            isDark={isDark}
+                            width={80}
+                            height={10}
+                            borderRadius={4}
+                          />
                         </VStack>
                       </HStack>
-                      <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+                      <Skeleton
+                        isDark={isDark}
+                        width={20}
+                        height={20}
+                        borderRadius={10}
+                      />
                     </HStack>
 
                     <HStack space="xs" className="mb-4 justify-between">
                       {[1, 2, 3, 4].map((i) => (
-                        <Box key={i} className="rounded-xl items-center py-3 border" style={{ width: "23.5%", backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.4)", borderColor: "rgba(139,195,74,0.15)" }}>
-                          <Skeleton isDark={isDark} width={18} height={8} style={{ marginBottom: 6 }} borderRadius={3} />
-                          <Skeleton isDark={isDark} width={30} height={14} borderRadius={3} />
+                        <Box
+                          key={i}
+                          className="rounded-xl items-center py-3 border"
+                          style={{
+                            width: "23.5%",
+                            backgroundColor: isDark
+                              ? "rgba(22, 22, 24, 0.4)"
+                              : "rgba(255, 255, 255, 0.4)",
+                            borderColor: "rgba(139,195,74,0.15)",
+                          }}
+                        >
+                          <Skeleton
+                            isDark={isDark}
+                            width={18}
+                            height={8}
+                            style={{ marginBottom: 6 }}
+                            borderRadius={3}
+                          />
+                          <Skeleton
+                            isDark={isDark}
+                            width={30}
+                            height={14}
+                            borderRadius={3}
+                          />
                         </Box>
                       ))}
                     </HStack>
 
-                    <Divider style={{ backgroundColor: isDark ? "rgba(51,51,51,0.2)" : "rgba(229,231,235,0.2)", marginBottom: 14 }} />
+                    <Divider
+                      style={{
+                        backgroundColor: isDark
+                          ? "rgba(51,51,51,0.2)"
+                          : "rgba(229,231,235,0.2)",
+                        marginBottom: 14,
+                      }}
+                    />
                     <HStack className="justify-between items-center">
                       <HStack space="md">
-                        <Skeleton isDark={isDark} width={45} height={26} borderRadius={13} />
-                        <Skeleton isDark={isDark} width={55} height={26} borderRadius={13} />
+                        <Skeleton
+                          isDark={isDark}
+                          width={45}
+                          height={26}
+                          borderRadius={13}
+                        />
+                        <Skeleton
+                          isDark={isDark}
+                          width={55}
+                          height={26}
+                          borderRadius={13}
+                        />
                       </HStack>
-                      <Skeleton isDark={isDark} width={70} height={30} borderRadius={15} />
+                      <Skeleton
+                        isDark={isDark}
+                        width={70}
+                        height={30}
+                        borderRadius={15}
+                      />
                     </HStack>
                   </Box>
 
                   {[1, 2].map((i) => (
-                    <Box key={i} className="w-full rounded-2xl mb-4" style={{ backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)", borderLeftWidth: 6, borderLeftColor: "#8BC34A", borderWidth: 1, borderColor: "rgba(139, 195, 74, 0.3)", borderRadius: 20, overflow: "hidden", padding: 16 }}>
+                    <Box
+                      key={i}
+                      className="w-full rounded-2xl mb-4"
+                      style={{
+                        backgroundColor: isDark
+                          ? "rgba(26,26,26,0.6)"
+                          : "rgba(255,255,255,0.7)",
+                        borderLeftWidth: 6,
+                        borderLeftColor: "#8BC34A",
+                        borderWidth: 1,
+                        borderColor: "rgba(139, 195, 74, 0.3)",
+                        borderRadius: 20,
+                        overflow: "hidden",
+                        padding: 16,
+                      }}
+                    >
                       <HStack className="justify-between items-center">
                         <HStack space="sm" className="items-center">
-                          <Skeleton isDark={isDark} width={36} height={36} borderRadius={18} />
+                          <Skeleton
+                            isDark={isDark}
+                            width={36}
+                            height={36}
+                            borderRadius={18}
+                          />
                           <VStack space="xs">
-                            <Skeleton isDark={isDark} width={100} height={16} borderRadius={4} />
-                            <Skeleton isDark={isDark} width={60} height={8} borderRadius={4} />
+                            <Skeleton
+                              isDark={isDark}
+                              width={100}
+                              height={16}
+                              borderRadius={4}
+                            />
+                            <Skeleton
+                              isDark={isDark}
+                              width={60}
+                              height={8}
+                              borderRadius={4}
+                            />
                           </VStack>
                         </HStack>
-                        <Skeleton isDark={isDark} width={16} height={16} borderRadius={8} />
+                        <Skeleton
+                          isDark={isDark}
+                          width={16}
+                          height={16}
+                          borderRadius={8}
+                        />
                       </HStack>
                     </Box>
                   ))}
@@ -423,85 +627,208 @@ export default function DashboardScreen() {
               ) : (
                 <>
                   {!searchQuery && (
-                    <VStack space="sm">
-                      <ScrollView
-                        ref={statsScrollViewRef}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        snapToInterval={STAT_CARD_WIDTH + 8}
-                        snapToAlignment="start"
-                        decelerationRate="fast"
-                        nestedScrollEnabled={true}
-                        contentContainerStyle={{ flexGrow: 1 }}
-                        onScroll={(event) => {
-                          const offsetX = event.nativeEvent.contentOffset.x;
-                          const index = Math.round(offsetX / (STAT_CARD_WIDTH + 8));
-                          setStatsScrollIndex(index);
-                        }}
-                        scrollEventThrottle={16}
-                      >
-                        <HStack space="sm" className="items-center">
-                          {[
-                            { label: "COURSES PLAYED", value: stats?.coursesPlayed ?? 0, icon: "location", color: "#FBBF24", badge: "Unique" },
-                            { label: "AVG SCORE", value: stats?.averageScore ? stats.averageScore.toFixed(1) : 0, icon: "stats-chart-outline", color: "#06B6D4", badge: "Per 18" },
-                            { label: "BEST SCORE", value: stats?.bestScore ?? 0, icon: "star", color: "#FBBF24", badge: "PERSONAL BEST" },
-                            { label: "HANDICAP INDEX", value: profile?.handicapIndex ?? 0, icon: "flag", color: "#EF4444", badge: "Index" },
-                            { label: "HOME HANDICAP", value: profile?.handicap ?? 0, icon: "home", color: "#8BC34A", badge: "Local" },
-                          ].map((stat, index) => (
-                            <Box
-                              key={index}
-                              className="rounded-xl p-2 items-center"
-                              style={{
-                                width: STAT_CARD_WIDTH,
-                                minWidth: STAT_CARD_WIDTH,
-                                flexShrink: 0,
-                                minHeight: 100,
-                                backgroundColor: isDark ? "rgba(31, 31, 31, 0.6)" : "rgba(243, 244, 246, 0.7)",
-                                borderWidth: 1.5,
-                                borderColor: "#8BC34A",
-                              }}
-                            >
+                    <>
+                      <VStack space="sm">
+                        <ScrollView
+                          ref={statsScrollViewRef}
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          snapToInterval={STAT_CARD_WIDTH + 8}
+                          snapToAlignment="start"
+                          decelerationRate="fast"
+                          nestedScrollEnabled={true}
+                          contentContainerStyle={{ flexGrow: 1 }}
+                          onScroll={(event) => {
+                            const offsetX = event.nativeEvent.contentOffset.x;
+                            const index = Math.round(
+                              offsetX / (STAT_CARD_WIDTH + 8),
+                            );
+                            setStatsScrollIndex(index);
+                          }}
+                          scrollEventThrottle={16}
+                        >
+                          <HStack space="sm" className="items-center">
+                            {[
+                              {
+                                label: "COURSES PLAYED",
+                                value: stats?.coursesPlayed ?? 0,
+                                icon: "location",
+                                color: "#FBBF24",
+                                badge: "Unique",
+                              },
+                              {
+                                label: "AVG SCORE",
+                                value: stats?.averageScore
+                                  ? stats.averageScore.toFixed(1)
+                                  : 0,
+                                icon: "stats-chart-outline",
+                                color: "#06B6D4",
+                                badge: "Per 18",
+                              },
+                              {
+                                label: "BEST SCORE",
+                                value: stats?.bestScore ?? 0,
+                                icon: "star",
+                                color: "#FBBF24",
+                                badge: "PERSONAL BEST",
+                              },
+                              {
+                                label: "HANDICAP INDEX",
+                                value: profile?.handicapIndex ?? 0,
+                                icon: "flag",
+                                color: "#EF4444",
+                                badge: "Index",
+                              }
+                            ].map((stat, index) => (
                               <Box
+                                key={index}
+                                className="rounded-xl p-2 items-center"
                                 style={{
-                                  backgroundColor: stat.color + "26", // ~15% opacity
-                                  padding: 6,
-                                  borderRadius: 20,
-                                  marginBottom: 6,
+                                  width: STAT_CARD_WIDTH,
+                                  minWidth: STAT_CARD_WIDTH,
+                                  flexShrink: 0,
+                                  minHeight: 100,
+                                  backgroundColor: isDark
+                                    ? "rgba(31, 31, 31, 0.6)"
+                                    : "rgba(243, 244, 246, 0.7)",
+                                  borderWidth: 1.5,
+                                  borderColor: "#8BC34A",
                                 }}
                               >
-                                <Ionicons name={stat.icon as any} size={16} color={stat.color} />
+                                <Box
+                                  style={{
+                                    backgroundColor: stat.color + "26", // ~15% opacity
+                                    padding: 6,
+                                    borderRadius: 20,
+                                  }}
+                                >
+                                  <Ionicons
+                                    name={stat.icon as any}
+                                    size={16}
+                                    color={stat.color}
+                                  />
+                                </Box>
+                                <Text
+                                  style={{
+                                    color: isDark ? "#fff" : "#111",
+                                    fontSize: 16,
+                                  }}
+                                  className="font-bold mt-1"
+                                >
+                                  {stat.value}
+                                </Text>
+                                <Text
+                                  style={{
+                                    color: isDark ? "#D1D5DB" : "#4B5563",
+                                    fontSize: 9,
+                                    textAlign: "center",
+                                  }}
+                                  className="font-bold"
+                                  numberOfLines={2}
+                                >
+                                  {stat.label}
+                                </Text>
+                                <Box className="bg-green-100 px-1.5 py-0.5 rounded-full mt-1.5">
+                                  <Text className="text-[9px] font-bold text-green-800 uppercase">
+                                    {stat.badge}
+                                  </Text>
+                                </Box>
                               </Box>
-                              <Text style={{ color: isDark ? "#fff" : "#111", fontSize: 16 }} className="font-bold mt-1">
-                                {stat.value}
-                              </Text>
-                              <Text
-                                style={{ color: isDark ? "#D1D5DB" : "#4B5563", fontSize: 9, textAlign: 'center' }}
-                                className="font-bold"
-                                numberOfLines={2}
-                              >
-                                {stat.label}
-                              </Text>
-                              <Box className="bg-green-100 px-1.5 py-0.5 rounded-full mt-1.5">
-                                <Text className="text-[9px] font-bold text-green-800 uppercase">{stat.badge}</Text>
-                              </Box>
-                            </Box>
-                          ))}
-                        </HStack>
-                      </ScrollView>
-                    </VStack>
+                            ))}
+                          </HStack>
+                        </ScrollView>
+                      </VStack>
+
+                      <HStack
+                        className="items-center justify-between mt-2"
+                        style={{
+                          width: "100%",
+                          padding: 12,
+                          borderRadius: 14,
+                          backgroundColor: isDark
+                            ? "rgba(31,31,31,0.6)"
+                            : "rgba(243,244,246,0.9)",
+                          borderWidth: 1,
+                          borderColor: isDark
+                            ? "rgba(255,255,255,0.08)"
+                            : "#E5E7EB",
+                        }}
+                      >
+                        {/* LEFT CONTENT */}
+                        <Box style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              color: isDark ? "#9CA3AF" : "#6B7280",
+                              letterSpacing: 0.5,
+                              marginBottom: 2,
+                            }}
+                          >
+                            HOME COURSE HANDICAP
+                          </Text>
+
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              color: isDark ? "#fff" : "#111",
+                              fontWeight: "600",
+                            }}
+                          >
+                            NH • {profile?.resolvedHomeCourse}
+                          </Text>
+                        </Box>
+
+                        {/* RIGHT BUTTON */}
+                        <Box
+                          style={{
+                            backgroundColor: "rgba(139,195,74,0.15)",
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 20,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <Ionicons
+                            name="home-outline"
+                            size={14}
+                            color="#2E7D32"
+                          />
+
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              fontWeight: "600",
+                              color: "#2E7D32",
+                            }}
+                          >
+                            Manual Selection
+                          </Text>
+                        </Box>
+                      </HStack>
+                    </>
                   )}
                   {searchQuery !== "" && (
-                    <Box className="m-0">
-                      <Text className="text-2xl font-bold" style={{ color: isDark ? "#fff" : "#000" }}>
+                    <Box>
+                      <Text
+                        className="text-2xl font-bold"
+                        style={{ color: isDark ? "#fff" : "#000" }}
+                      >
                         Game Feed Results
                       </Text>
                     </Box>
                   )}
                   <Box className="mb-4">
                     <OverviewTab
-                      cards={cards.filter(c =>
-                        c.playerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        c.course.toLowerCase().includes(searchQuery.toLowerCase())
+                      cards={cards.filter(
+                        (c) =>
+                          c.playerName
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) ||
+                          c.course
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()),
                       )}
                       handleLike={handleLike}
                       handleVerify={handleVerify}
@@ -518,11 +845,11 @@ export default function DashboardScreen() {
             <InProgressTab
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
-              onDelete={() => { }}
+              onDelete={() => {}}
               onResume={(id) => {
                 router.push({
                   pathname: "/(drawer)/(user)/scorecard/resume/[id]",
-                  params: { id: id, handicap: profile?.handicap || 0 }
+                  params: { id: id, handicap: profile?.handicap || 0 },
                 });
               }}
             />

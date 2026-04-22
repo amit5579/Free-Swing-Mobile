@@ -48,6 +48,9 @@ export default function ScoreCardUserPage() {
   const [borderDisplay, setBorderDisplay] = useState(true);
   const isExcluded = excluded === "true";
   const isStableford = stableford === "true";
+  const [displayFront9, setDisplayFront9] = useState(true);
+  const [displayBack9, setDisplayBack9] = useState(true);
+
   // const holesCount = Number(holes);
 
   const fetchScoreCard = async () => {
@@ -82,7 +85,7 @@ export default function ScoreCardUserPage() {
         stablefordPoints: null,
       };
     }
-
+    const strokeIndex = "";
     let score = Number(hole.score);
 
     // REAL strokes calculation
@@ -108,6 +111,7 @@ export default function ScoreCardUserPage() {
 
     return {
       ...hole,
+      strokeIndex,
       netScore,
       stablefordPoints,
     };
@@ -210,7 +214,6 @@ export default function ScoreCardUserPage() {
 
   const frontTotals = getTotals(processedFront9);
   const backTotals = getTotals(processedBack9);
-  const grandTotals = getTotals(processedAllHoles);
 
   const processedHoles = processedAllHoles.filter((h: any, index: number) => {
     if (holes === "18") return true;
@@ -218,6 +221,8 @@ export default function ScoreCardUserPage() {
     if (holes === "back9") return index >= 9;
     return true;
   });
+
+  const grandTotals = getTotals(processedHoles);
 
   const payload = processedAllHoles.map((h: any) => ({
     courseId: Number(courseId),
@@ -230,31 +235,37 @@ export default function ScoreCardUserPage() {
     teeBoxId: Number(teeBoxId),
   }));
 
-  const handleFinishRound = async() => {
+  const handleFinishRound = async () => {
     try {
       setVisible(false);
-   await saveScoreCard(payload);
-    Toast.show({
-      type: "success",
-      text1: "Round Finished",
-      text2: "Score submitted successfully",
-    });
-    routePage.push("/(drawer)/(user)/(tabs)/dashboard");
-  }catch(error){
-    console.error("Error finishing round:", error);
-    setVisible(false);
-    Toast.show({
-      type: "error",
-      text1: "Error",
-      text2: "Failed to finish round",
-    });
-  }
+      await saveScoreCard(payload);
+      Toast.show({
+        type: "success",
+        text1: "Round Finished",
+        text2: "Score submitted successfully",
+      });
+      routePage.push("/(drawer)/(user)/(tabs)/dashboard");
+    } catch (error) {
+      console.error("Error finishing round:", error);
+      setVisible(false);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to finish round",
+      });
+    }
   };
 
   useEffect(() => {
     fetchScoreCard();
   }, [excluded, stableford, holes, handicap, courseId, teeBoxId]);
 
+  useEffect(() => {
+    if (scoreCardDetails && scoreCardDetails.length > 0) {
+      setDisplayFront9(frontTotals.score > 0);
+      setDisplayBack9(backTotals.score > 0);
+    }
+  }, [scoreCardDetails, frontTotals.score, backTotals.score]);
   // input fields
 
   // finds correct hole
@@ -446,72 +457,74 @@ export default function ScoreCardUserPage() {
   };
 
   const renderHeader = () => {
-    return (<>
-    <View style={{ paddingTop: 10 }}>
-        <HStack
-          className="px-3 items-center"
-          style={{ height: 60, justifyContent: "center" }}
-        >
-          {/* LEFT: Back button (Absolute positioned for centering) */}
-          <Pressable
-            onPress={() => routePage.back()}
-            style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+    return (
+      <>
+        <View style={{ paddingTop: 10 }}>
+          <HStack
+            className="px-3 items-center"
+            style={{ height: 60, justifyContent: "center" }}
           >
-            <Ionicons
-              name="arrow-back-outline"
-              size={24}
-              color={isDark ? "#ffffff" : "#020617"}
-            />
-          </Pressable>
+            {/* LEFT: Back button (Absolute positioned for centering) */}
+            <Pressable
+              onPress={() => routePage.back()}
+              style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+            >
+              <Ionicons
+                name="arrow-back-outline"
+                size={24}
+                color={isDark ? "#ffffff" : "#020617"}
+              />
+            </Pressable>
 
-          {/* CENTER: Title */}
-          <ThemedText
-            style={{
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
-            }}
-          >
-            Scorecard
-          </ThemedText>
-        </HStack>
+            {/* CENTER: Title */}
+            <ThemedText
+              style={{
+                fontSize: 20,
+                fontWeight: "700",
+                textAlign: "center",
+              }}
+            >
+              Scorecard
+            </ThemedText>
+          </HStack>
 
-        <HStack className="justify-between px-5 items-center mb-2">
-          <View style={{ flex: 1 }}>
-            {excluded === "true" && stableford === "false" && (
-              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-                (Net Score Exclude Par 3)
-              </ThemedText>
-            )}
-            {excluded === "false" && stableford === "true" && (
-              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-                (Stableford)
-              </ThemedText>
-            )}
-            {excluded === "false" && stableford === "false" && (
-              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-                (Net Score Include Par 3)
-              </ThemedText>
-            )}
-            {excluded === "true" && stableford === "true" && (
-              <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-                (Stableford Exclude Par 3)
-              </ThemedText>
-            )}
-          </View>
-          <Box
-            style={{
-              padding: 8,
-              backgroundColor: "#8bc34a",
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight:700 }}>Handicap: {handicap}</Text>
-          </Box>
-        </HStack>
-      </View>
+          <HStack className="justify-between px-5 items-center mb-2">
+            <View style={{ flex: 1 }}>
+              {excluded === "true" && stableford === "false" && (
+                <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                  (Net Score Exclude Par 3)
+                </ThemedText>
+              )}
+              {excluded === "false" && stableford === "true" && (
+                <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                  (Stableford)
+                </ThemedText>
+              )}
+              {excluded === "false" && stableford === "false" && (
+                <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                  (Net Score Include Par 3)
+                </ThemedText>
+              )}
+              {excluded === "true" && stableford === "true" && (
+                <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
+                  (Stableford Exclude Par 3)
+                </ThemedText>
+              )}
+            </View>
+            <Box
+              style={{
+                padding: 8,
+                backgroundColor: "#8bc34a",
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: 700 }}>
+                Handicap: {handicap}
+              </Text>
+            </Box>
+          </HStack>
+        </View>
       </>
-     
     );
   };
 
@@ -684,7 +697,7 @@ export default function ScoreCardUserPage() {
                         </HStack>
 
                         {/*  FRONT 9 */}
-                        {index === 8 && (
+                        {h.holeNumber === 9 && (
                           <HStack
                             style={{
                               backgroundColor: isDark
@@ -753,7 +766,7 @@ export default function ScoreCardUserPage() {
                         )}
 
                         {/*  BACK 9 */}
-                        {index === 17 && (
+                        {h.holeNumber === 18 && (
                           <HStack
                             style={{
                               backgroundColor: isDark
@@ -778,7 +791,7 @@ export default function ScoreCardUserPage() {
                               style={{ flex: 1, textAlign: "center" }}
                             >
                               {backTotals.strokeIndex}
-                            </ThemedText>     
+                            </ThemedText>
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}
                             >
@@ -844,6 +857,11 @@ export default function ScoreCardUserPage() {
                       Total
                     </ThemedText>
 
+                    <ThemedText
+                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                    >
+                      {grandTotals.strokeIndex}
+                    </ThemedText>
                     <ThemedText
                       style={{ flex: 1, textAlign: "center", color: "#fff" }}
                     >

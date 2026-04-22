@@ -188,7 +188,7 @@ export default function ScorecardDetailsScreen() {
       <ThemedText
         style={{ flex: 1, fontSize: 11, color: "#888", textAlign: "center" }}
       >
-        {hole.handicap}
+        {hole.strokeIndex}
       </ThemedText>
       <ThemedText
         style={{ flex: 1.2, fontSize: 11, color: "#888", textAlign: "center" }}

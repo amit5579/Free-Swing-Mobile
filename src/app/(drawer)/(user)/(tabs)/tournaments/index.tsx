@@ -1457,7 +1457,7 @@ export default function TournamentsScreen() {
                         .find((c: any) => c.courseId === selectedCourse)
                         ?.teeBoxes?.map((item: any) => {
                           return {
-                            label: item.name,
+                            label: item.name + " (Slope:" + item.slope + " / " + "Rating:" + item.rating + ")",
                             value: item.teeBoxId,
                           };
                         }) || []

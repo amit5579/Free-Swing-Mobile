@@ -465,7 +465,7 @@ export default function SubAdminLeaderboardPage() {
           key={i}
           style={[styles.infoCellText, { width: HOLE_WIDTH }]}
         >
-          {type === "par" ? h.par : h.handicap}
+          {type === "par" ? h.par : h.strokeIndex}
         </ThemedText>
       ))}
       <ThemedText
@@ -480,7 +480,7 @@ export default function SubAdminLeaderboardPage() {
           key={i}
           style={[styles.infoCellText, { width: HOLE_WIDTH }]}
         >
-          {type === "par" ? h.par : h.handicap}
+          {type === "par" ? h.par : h.strokeIndex}
         </ThemedText>
       ))}
       <ThemedText

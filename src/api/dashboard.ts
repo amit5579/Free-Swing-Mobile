@@ -98,6 +98,7 @@ export interface UserProfile {
   homeCourse: string | null;
   isBlocked: boolean;
   profilePictureUrl: string | null;
+  resolvedHomeCourse: string | null;
 }
 
 export const getUserProfile = async (userId: number) => {
@@ -209,21 +210,23 @@ export const getUpdates = async () => {
 };
 
 export type ScorecardHole = {
-  holeId: number;
-  holeNumber: number;
-  par: number;
-  handicap: number;
-  yardage: number;
-  teeBoxId: number;
-  courseId: number;
-  score: number;
-  netScore: number;
-  roundNumber: number;
-  stablefordPoints: number;
-  isCompleted: boolean;
-  isDQ: boolean;
-  tournamentId?: number;
-  isDoublePeoria: boolean;
+ "holeId": number,
+        "holeNumber": number,
+        "par": number,
+        "strokeIndex": number,
+        "yardage": number,
+        "teeBoxId": number,
+        "courseId": number,
+        "score": number,
+        "netScore": number,
+        "roundNumber": number,
+        "stablefordPoints": null,
+        "isCompleted": boolean,
+        "isDQ": boolean,
+        "tournamentId": null,
+        "isDoublePeoria": boolean,
+        "courseHalf": string,
+        "isExcluded": boolean
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {

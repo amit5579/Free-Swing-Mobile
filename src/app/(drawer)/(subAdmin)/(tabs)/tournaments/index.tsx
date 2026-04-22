@@ -124,12 +124,7 @@ export default function SubAdminTournamentsPage() {
       try {
         const details = await getCourseDetails(courseId);
         if (details && details.teeBoxes) {
-          setTeeBox(
-            details.teeBoxes.map((b: any) => ({
-              label: `${b.name} (${b.color})`,
-              value: b.teeBoxId,
-            })),
-          );
+          setTeeBox(details.teeBoxes);
         } else {
           setTeeBox([]);
         }
@@ -159,18 +154,16 @@ export default function SubAdminTournamentsPage() {
         creatorId: Number(userId) || 1,
       };
 
-      const updatedData = {
-        courseId: data.courseId[0],
-        endDate: data.endDate,
-        name: data.name,
-        scoringType: scoringMap[data.scoringType[0]] || "standard",
-        startDate: formatDate(data.startDate),
-        teeBoxId: data.teeColor[0],
-        tournamentId: editingCourse.tournamentId,
-      };
       if (isEditMode) {
-        console.log();
-
+        const updatedData = {
+          courseId: data.courseId[0],
+          endDate: data.endDate,
+          name: data.name,
+          scoringType: scoringMap[data.scoringType[0]] || "standard",
+          startDate: formatDate(data.startDate),
+          teeBoxId: data.teeColor[0],
+          tournamentId: editingCourse.tournamentId,
+        };
         await updateTournament(editingCourse.tournamentId, updatedData);
       } else {
         await createTournament(tournamentData);
@@ -573,7 +566,11 @@ export default function SubAdminTournamentsPage() {
                         }}
                         itemTextStyle={{ color: isDark ? "white" : "black" }}
                         activeColor={isDark ? "#333" : "#f0f0f0"}
-                        data={teeBox}
+                        data={teeBox.map((item: any) => ({
+                          ...item,
+                          label: `${item.name} (Slope:${item.slope} / Rating:${item.rating})`,
+                          value: item.teeBoxId,
+                        }))}
                         labelField="label"
                         valueField="value"
                         placeholder="Select Tee Box"

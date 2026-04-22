@@ -434,8 +434,8 @@ const FeedCard = ({
                 style={{ backgroundColor: "#8BC34A" }}
                 onPress={() => handleViewScorecard(card.id, card.playerName, card.courseName)}
               >
-                <Ionicons name="eye-outline" size={12} color="#fff" />
-                <ButtonText className="text-white text-[10px] font-extrabold ml-1">View</ButtonText>
+                <Ionicons name="eye" size={12} color="#fff" />
+                <ButtonText className="text-white text-[10px] font-extrabold">View</ButtonText>
               </Button>
 
             </HStack>
