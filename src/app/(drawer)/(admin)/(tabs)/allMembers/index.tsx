@@ -9,6 +9,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -29,7 +30,8 @@ import { Skeleton } from "@/components/Skeleton";
 
 export default function AllMembersScreen({
   hideAdminControls = false,
-}: { hideAdminControls?: boolean } = {}) {
+  searchQuery = "",
+}: { hideAdminControls?: boolean; searchQuery?: string } = {}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -40,7 +42,14 @@ export default function AllMembersScreen({
     {},
   );
 
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   useEffect(() => {
+    const loadRole = async () => {
+      const storedRole = await AsyncStorage.getItem("role");
+      setUserRole(storedRole?.toLowerCase() || null);
+    };
+    loadRole();
     fetchUsers();
   }, []);
   const handleApprove = async (id: number) => {
@@ -300,7 +309,7 @@ export default function AllMembersScreen({
         </>
       ) : (
         <>
-          <HStack className="items-center justify-between mb-6 px-4">
+          <HStack className="items-center justify-between mt-4 mb-6 px-4">
             <HStack className="items-center">
               <ThemedText
                 style={{
@@ -380,410 +389,422 @@ export default function AllMembersScreen({
           >
             <VStack className="px-4">
               <VStack space="md" style={{ gap: 16 }}>
-                {members.map((member) => (
-                  <Box
-                    key={member.id}
-                    style={{
-                      shadowColor: "#8BC34A",
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: isDark ? 0.4 : 0.15,
-                      shadowRadius: 14,
-                      backgroundColor: isDark
-                        ? "rgba(26, 26, 26, 0.3)"
-                        : "rgba(255, 255, 255, 0.4)",
-                      borderRadius: 22,
-                      borderLeftWidth: 6,
-                      borderLeftColor: member.isBlocked ? "#EF4444" : "#8BC34A",
-                      borderTopWidth: 1,
-                      borderRightWidth: 1,
-                      borderBottomWidth: 1,
-                      borderColor:
-                        member.isBlocked && isDark
-                          ? "#EF4444"
-                          : isDark
-                            ? "rgba(139, 195, 74, 0.6)"
-                            : "#E0E0E0",
-                      padding: 12,
-                      marginBottom: 12,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <BlurView
-                      intensity={25}
-                      tint={isDark ? "dark" : "light"}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <Pressable onPress={() => toggleMember(member.id)}>
-                      <HStack className="items-center justify-between">
-                        <HStack className="items-center" style={{ flex: 1 }}>
-                          <Avatar
-                            size="md"
-                            style={{
-                              borderWidth: 2,
-                              borderColor: member.isBlocked
-                                ? "#EF4444"
-                                : "#8BC34A",
-                              backgroundColor: member.isBlocked
-                                ? "rgba(239,68,68,0.1)"
-                                : "rgba(139,195,74,0.1)",
-                              marginRight: 12,
-                            }}
-                          >
-                            {member.profilePictureUrl &&
-                            member.profilePictureUrl.trim() !== "" &&
-                            member.profilePictureUrl !== "null" &&
-                            !imageErrors[member.id] ? (
-                              <AvatarImage
-                                source={{
-                                  uri: member.profilePictureUrl.startsWith(
-                                    "http",
-                                  )
-                                    ? member.profilePictureUrl
-                                    : `https://kolve18freeswing.com${member.profilePictureUrl}`,
-                                }}
-                                onError={() =>
-                                  setImageErrors((prev) => ({
-                                    ...prev,
-                                    [member.id]: true,
-                                  }))
-                                }
-                              />
-                            ) : (
+                {members
+                  .filter((m) => {
+                    if (!searchQuery) return true;
+                    const q = searchQuery.toLowerCase();
+                    return (
+                      m.username?.toLowerCase().includes(q) ||
+                      m.email?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((member) => (
+                    <Box
+                      key={member.id}
+                      style={{
+                        shadowColor: "#8BC34A",
+                        shadowOffset: { width: 0, height: 6 },
+                        shadowOpacity: isDark ? 0.4 : 0.15,
+                        shadowRadius: 14,
+                        backgroundColor: isDark
+                          ? "rgba(26, 26, 26, 0.3)"
+                          : "rgba(255, 255, 255, 0.4)",
+                        borderRadius: 22,
+                        borderLeftWidth: 6,
+                        borderLeftColor: member.isBlocked ? "#EF4444" : "#8BC34A",
+                        borderTopWidth: 1,
+                        borderRightWidth: 1,
+                        borderBottomWidth: 1,
+                        borderColor:
+                          member.isBlocked && isDark
+                            ? "#EF4444"
+                            : isDark
+                              ? "rgba(139, 195, 74, 0.6)"
+                              : "#E0E0E0",
+                        padding: 12,
+                        marginBottom: 12,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <BlurView
+                        intensity={25}
+                        tint={isDark ? "dark" : "light"}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <Pressable onPress={() => toggleMember(member.id)}>
+                        <HStack className="items-center justify-between">
+                          <HStack className="items-center" style={{ flex: 1 }}>
+                            <Avatar
+                              size="md"
+                              style={{
+                                borderWidth: 2,
+                                borderColor: member.isBlocked
+                                  ? "#EF4444"
+                                  : "#8BC34A",
+                                backgroundColor: member.isBlocked
+                                  ? "rgba(239,68,68,0.1)"
+                                  : "rgba(139,195,74,0.1)",
+                                marginRight: 12,
+                              }}
+                            >
+                              {member.profilePictureUrl &&
+                                member.profilePictureUrl.trim() !== "" &&
+                                member.profilePictureUrl !== "null" &&
+                                !imageErrors[member.id] ? (
+                                <AvatarImage
+                                  source={{
+                                    uri: member.profilePictureUrl.startsWith(
+                                      "http",
+                                    )
+                                      ? member.profilePictureUrl
+                                      : `https://kolve18freeswing.com${member.profilePictureUrl}`,
+                                  }}
+                                  onError={() =>
+                                    setImageErrors((prev) => ({
+                                      ...prev,
+                                      [member.id]: true,
+                                    }))
+                                  }
+                                />
+                              ) : (
+                                <ThemedText
+                                  style={{
+                                    fontWeight: "800",
+                                    color: member.isBlocked
+                                      ? "#EF4444"
+                                      : "#8BC34A",
+                                  }}
+                                >
+                                  {member.username.charAt(0).toUpperCase()}
+                                </ThemedText>
+                              )}
+                            </Avatar>
+                            <VStack>
+                              <ThemedText
+                                style={{ fontWeight: "800", fontSize: 17 }}
+                              >
+                                {member.username}
+                              </ThemedText>
                               <ThemedText
                                 style={{
-                                  fontWeight: "800",
-                                  color: member.isBlocked
-                                    ? "#EF4444"
-                                    : "#8BC34A",
+                                  fontSize: 11,
+                                  color: isDark ? "#888" : "#999",
+                                  textTransform: "uppercase",
+                                  letterSpacing: 0.5,
                                 }}
                               >
-                                {member.username.charAt(0).toUpperCase()}
+                                Player ID: #{member.id}
                               </ThemedText>
-                            )}
-                          </Avatar>
-                          <VStack>
-                            <ThemedText
-                              style={{ fontWeight: "800", fontSize: 17 }}
-                            >
-                              {member.username}
-                            </ThemedText>
-                            <ThemedText
+                            </VStack>
+                          </HStack>
+
+                          <HStack className="items-center">
+                            <Box
                               style={{
-                                fontSize: 11,
-                                color: isDark ? "#888" : "#999",
-                                textTransform: "uppercase",
-                                letterSpacing: 0.5,
+                                backgroundColor: member.isBlocked
+                                  ? "rgba(239,68,68,0.12)"
+                                  : "rgba(139,195,74,0.12)",
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 14,
+                                marginRight: 10,
                               }}
                             >
-                              Player ID: #{member.id}
-                            </ThemedText>
-                          </VStack>
-                        </HStack>
-
-                        <HStack className="items-center">
-                          <Box
-                            style={{
-                              backgroundColor: member.isBlocked
-                                ? "rgba(239,68,68,0.12)"
-                                : "rgba(139,195,74,0.12)",
-                              paddingHorizontal: 12,
-                              paddingVertical: 6,
-                              borderRadius: 14,
-                              marginRight: 10,
-                            }}
-                          >
-                            <ThemedText
-                              style={{
-                                color: member.isBlocked ? "#DC2626" : "#2E7D32",
-                                fontSize: 11,
-                                fontWeight: "600",
-                                letterSpacing: 0.6,
-                              }}
-                            >
-                              {member.isBlocked ? "PENDING" : "ACTIVE"}
-                            </ThemedText>
-                          </Box>
-
-                          <Ionicons
-                            name={
-                              expanded[member.id]
-                                ? "chevron-up"
-                                : "chevron-down"
-                            }
-                            size={18}
-                            color={member.isBlocked ? "#DC2626" : "#2E7D32"}
-                          />
-                        </HStack>
-                      </HStack>
-                    </Pressable>
-
-                    {expanded[member.id] && (
-                      <VStack style={{ marginTop: 20 }}>
-                        <Divider
-                          style={{
-                            marginBottom: 16,
-                            backgroundColor: isDark ? "#333" : "#F0F0F0",
-                          }}
-                        />
-
-                        <HStack
-                          style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}
-                        >
-                          {!hideAdminControls && (
-                            <>
-                              <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>
-                                  EMAIL
-                                </ThemedText>
-                                <HStack
-                                  className="items-center"
-                                  style={{ gap: 6 }}
-                                >
-                                  <Ionicons
-                                    name="mail-outline"
-                                    size={14}
-                                    color="#8BC34A"
-                                  />
-                                  <ThemedText
-                                    style={[styles.cardValue, { flex: 1 }]}
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                  >
-                                    {member.email}
-                                  </ThemedText>
-                                </HStack>
-                              </VStack>
-
-                              <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>
-                                  MOBILE
-                                </ThemedText>
-                                <HStack
-                                  className="items-center"
-                                  style={{ gap: 6 }}
-                                >
-                                  <Ionicons
-                                    name="call-outline"
-                                    size={14}
-                                    color="#8BC34A"
-                                  />
-                                  <ThemedText style={styles.cardValue}>
-                                    {member.mobileNumber}
-                                  </ThemedText>
-                                </HStack>
-                              </VStack>
-
-                              <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>
-                                  ROLE
-                                </ThemedText>
-                                <HStack
-                                  className="items-center"
-                                  style={{ gap: 6 }}
-                                >
-                                  <Ionicons
-                                    name="person-outline"
-                                    size={14}
-                                    color="#8BC34A"
-                                  />
-                                  <ThemedText style={styles.cardValue}>
-                                    {member.role}
-                                  </ThemedText>
-                                </HStack>
-                              </VStack>
-                            </>
-                          )}
-
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>
-                              INVITED BY
-                            </ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons
-                                name="people-outline"
-                                size={14}
-                                color="#8BC34A"
-                              />
                               <ThemedText
-                                style={[
-                                  styles.cardValue,
-                                  { fontWeight: "700" },
-                                ]}
+                                style={{
+                                  color: member.isBlocked ? "#DC2626" : "#2E7D32",
+                                  fontSize: 11,
+                                  fontWeight: "600",
+                                  letterSpacing: 0.6,
+                                }}
                               >
-                                {member.invitedBySubAdminName || "Direct"}
+                                {member.isBlocked ? "PENDING" : "ACTIVE"}
                               </ThemedText>
-                            </HStack>
-                          </VStack>
+                            </Box>
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>
-                              HOME COURSE
-                            </ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons
-                                name="map-outline"
-                                size={14}
-                                color="#8BC34A"
-                              />
-                              <ThemedText style={styles.cardValue}>
-                                {member.homeCourse || "N/A"}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
+                            <Ionicons
+                              name={
+                                expanded[member.id]
+                                  ? "chevron-up"
+                                  : "chevron-down"
+                              }
+                              size={18}
+                              color={member.isBlocked ? "#DC2626" : "#2E7D32"}
+                            />
+                          </HStack>
+                        </HStack>
+                      </Pressable>
 
-                          {!hideAdminControls && (
+                      {expanded[member.id] && (
+                        <VStack style={{ marginTop: 20 }}>
+                          <Divider
+                            style={{
+                              marginBottom: 16,
+                              backgroundColor: isDark ? "#333" : "#F0F0F0",
+                            }}
+                          />
+
+                          <HStack
+                            style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}
+                          >
+                            {!hideAdminControls && (
+                              <>
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    EMAIL
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="mail-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText
+                                      style={[styles.cardValue, { flex: 1 }]}
+                                      numberOfLines={1}
+                                      ellipsizeMode="tail"
+                                    >
+                                      {member.email}
+                                    </ThemedText>
+                                  </HStack>
+                                </VStack>
+
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    MOBILE
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="call-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText style={styles.cardValue}>
+                                      {member.mobileNumber}
+                                    </ThemedText>
+                                  </HStack>
+                                </VStack>
+
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    ROLE
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="person-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText style={styles.cardValue}>
+                                      {member.role}
+                                    </ThemedText>
+                                  </HStack>
+                                </VStack>
+                              </>
+                            )}
+
                             <VStack style={{ width: "47%" }}>
                               <ThemedText style={styles.cardLabel}>
-                                SLOPE / RATING
+                                INVITED BY
                               </ThemedText>
-                              <HStack
-                                className="items-center"
-                                style={{ gap: 6 }}
-                              >
+                              <HStack className="items-center" style={{ gap: 6 }}>
                                 <Ionicons
-                                  name="stats-chart-outline"
+                                  name="people-outline"
+                                  size={14}
+                                  color="#8BC34A"
+                                />
+                                <ThemedText
+                                  style={[
+                                    styles.cardValue,
+                                    { fontWeight: "700" },
+                                  ]}
+                                >
+                                  {member.invitedBySubAdminName || "Direct"}
+                                </ThemedText>
+                              </HStack>
+                            </VStack>
+
+                            <VStack style={{ width: "47%" }}>
+                              <ThemedText style={styles.cardLabel}>
+                                HOME COURSE
+                              </ThemedText>
+                              <HStack className="items-center" style={{ gap: 6 }}>
+                                <Ionicons
+                                  name="map-outline"
                                   size={14}
                                   color="#8BC34A"
                                 />
                                 <ThemedText style={styles.cardValue}>
-                                  {member.slope || "N/A"} /{" "}
-                                  {member.rating || "N/A"}
+                                  {member.homeCourse || "N/A"}
                                 </ThemedText>
                               </HStack>
                             </VStack>
-                          )}
 
-                          <VStack style={{ width: "47%" }}>
-                            <ThemedText style={styles.cardLabel}>
-                              {hideAdminControls
-                                ? "HC INDEX"
-                                : "DECLARED HC / INDEX"}
-                            </ThemedText>
-                            <HStack className="items-center" style={{ gap: 6 }}>
-                              <Ionicons
-                                name="ribbon-outline"
-                                size={14}
-                                color="#8BC34A"
-                              />
-                              <ThemedText style={styles.cardValue}>
-                                {hideAdminControls
-                                  ? (member.handicapIndex ?? "N/A")
-                                  : `${member.handicap} / ${member.handicapIndex ?? "N/A"}`}
-                              </ThemedText>
-                            </HStack>
-                          </VStack>
-
-                          {hideAdminControls && (
-                            <VStack
-                              style={{
-                                width: "47%",
-                                justifyContent: "center",
-                                alignItems: "flex-end",
-                              }}
-                            >
-                              <TouchableOpacity
-                                style={{
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  borderRadius: 12,
-                                  backgroundColor: "rgba(139,195,74,0.1)",
-                                  borderWidth: 1,
-                                  borderColor: "rgba(139,195,74,0.2)",
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                }}
-                                onPress={() =>
-                                  router.push({
-                                    pathname:
-                                      "/(drawer)/(user)/(tabs)/dashboard/tabs/[id]",
-                                    params: { id: member.id },
-                                  } as any)
-                                }
-                              >
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={16}
-                                  color="#8BC34A"
-                                />
-                                <ThemedText
-                                  style={{
-                                    marginLeft: 6,
-                                    fontSize: 13,
-                                    fontWeight: "800",
-                                    color: "#8BC34A",
-                                  }}
-                                >
-                                  View Profile
-                                </ThemedText>
-                              </TouchableOpacity>
-                            </VStack>
-                          )}
-
-                          {!hideAdminControls && (
-                            <>
+                            {!hideAdminControls && (
                               <VStack style={{ width: "47%" }}>
                                 <ThemedText style={styles.cardLabel}>
-                                  REVISED HC
+                                  SLOPE / RATING
                                 </ThemedText>
                                 <HStack
                                   className="items-center"
                                   style={{ gap: 6 }}
                                 >
                                   <Ionicons
-                                    name="checkmark-done-outline"
+                                    name="stats-chart-outline"
                                     size={14}
+                                    color="#8BC34A"
+                                  />
+                                  <ThemedText style={styles.cardValue}>
+                                    {member.slope || "N/A"} /{" "}
+                                    {member.rating || "N/A"}
+                                  </ThemedText>
+                                </HStack>
+                              </VStack>
+                            )}
+
+                            <VStack style={{ width: "47%" }}>
+                              <ThemedText style={styles.cardLabel}>
+                                {hideAdminControls
+                                  ? "HC INDEX"
+                                  : "DECLARED HC / INDEX"}
+                              </ThemedText>
+                              <HStack className="items-center" style={{ gap: 6 }}>
+                                <Ionicons
+                                  name="ribbon-outline"
+                                  size={14}
+                                  color="#8BC34A"
+                                />
+                                <ThemedText style={styles.cardValue}>
+                                  {hideAdminControls
+                                    ? (member.handicapIndex ?? "N/A")
+                                    : `${member.handicap} / ${member.handicapIndex ?? "N/A"}`}
+                                </ThemedText>
+                              </HStack>
+                            </VStack>
+
+                            {hideAdminControls && (
+                              <VStack
+                                style={{
+                                  width: "47%",
+                                  justifyContent: "center",
+                                  alignItems: "flex-end",
+                                }}
+                              >
+                                <TouchableOpacity
+                                  style={{
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 10,
+                                    borderRadius: 12,
+                                    backgroundColor: "rgba(139,195,74,0.1)",
+                                    borderWidth: 1,
+                                    borderColor: "rgba(139,195,74,0.2)",
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                  onPress={() => {
+                                    const path = userRole === 'admin'
+                                      ? "/(drawer)/(admin)/(tabs)/allMembers/[id]"
+                                      : "/(drawer)/(user)/(tabs)/dashboard/tabs/[id]";
+
+                                    router.push({
+                                      pathname: path as any,
+                                      params: { id: member.id },
+                                    });
+                                  }}
+                                >
+                                  <Ionicons
+                                    name="eye-outline"
+                                    size={16}
                                     color="#8BC34A"
                                   />
                                   <ThemedText
-                                    style={[
-                                      styles.cardValue,
-                                      { color: "#8BC34A", fontWeight: "800" },
-                                    ]}
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 13,
+                                      fontWeight: "800",
+                                      color: "#8BC34A",
+                                    }}
                                   >
-                                    {member.calculatedHandicap}
+                                    View Profile
                                   </ThemedText>
-                                </HStack>
+                                </TouchableOpacity>
                               </VStack>
+                            )}
 
-                              <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>
-                                  DATE OF BIRTH
-                                </ThemedText>
-                                <HStack
-                                  className="items-center"
-                                  style={{ gap: 6 }}
-                                >
-                                  <Ionicons
-                                    name="calendar-outline"
-                                    size={14}
-                                    color="#8BC34A"
-                                  />
-                                  <ThemedText style={styles.cardValue}>
-                                    {member.dateOfBirth
-                                      ? new Date(
+                            {!hideAdminControls && (
+                              <>
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    REVISED HC
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="checkmark-done-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText
+                                      style={[
+                                        styles.cardValue,
+                                        { color: "#8BC34A", fontWeight: "800" },
+                                      ]}
+                                    >
+                                      {member.calculatedHandicap}
+                                    </ThemedText>
+                                  </HStack>
+                                </VStack>
+
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    DATE OF BIRTH
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="calendar-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText style={styles.cardValue}>
+                                      {member.dateOfBirth
+                                        ? new Date(
                                           member.dateOfBirth,
                                         ).toLocaleDateString()
-                                      : "N/A"}
-                                  </ThemedText>
-                                </HStack>
-                              </VStack>
+                                        : "N/A"}
+                                    </ThemedText>
+                                  </HStack>
+                                </VStack>
 
-                              <VStack style={{ width: "47%" }}>
-                                <ThemedText style={styles.cardLabel}>
-                                  AGE
-                                </ThemedText>
-                                <HStack
-                                  className="items-center"
-                                  style={{ gap: 6 }}
-                                >
-                                  <Ionicons
-                                    name="hourglass-outline"
-                                    size={14}
-                                    color="#8BC34A"
-                                  />
-                                  <ThemedText style={styles.cardValue}>
-                                    {member.dateOfBirth
-                                      ? (() => {
+                                <VStack style={{ width: "47%" }}>
+                                  <ThemedText style={styles.cardLabel}>
+                                    AGE
+                                  </ThemedText>
+                                  <HStack
+                                    className="items-center"
+                                    style={{ gap: 6 }}
+                                  >
+                                    <Ionicons
+                                      name="hourglass-outline"
+                                      size={14}
+                                      color="#8BC34A"
+                                    />
+                                    <ThemedText style={styles.cardValue}>
+                                      {member.dateOfBirth
+                                        ? (() => {
                                           const birthDate = new Date(
                                             member.dateOfBirth,
                                           );
@@ -798,143 +819,143 @@ export default function AllMembersScreen({
                                             m < 0 ||
                                             (m === 0 &&
                                               today.getDate() <
-                                                birthDate.getDate())
+                                              birthDate.getDate())
                                           ) {
                                             age--;
                                           }
                                           return age >= 0 ? age : "N/A";
                                         })()
-                                      : "N/A"}
-                                  </ThemedText>
-                                </HStack>
-                              </VStack>
-                            </>
-                          )}
-                        </HStack>
-
-                        {!hideAdminControls && (
-                          <HStack
-                            style={{
-                              marginTop: 24,
-                              justifyContent: "flex-end",
-                              gap: 12,
-                            }}
-                          >
-                            <>
-                              {member.isBlocked ? (
-                                <>
-                                  <TouchableOpacity
-                                    style={{
-                                      paddingHorizontal: 16,
-                                      paddingVertical: 10,
-                                      borderRadius: 12,
-                                      backgroundColor: "rgba(239,68,68,0.1)",
-                                      borderWidth: 1,
-                                      borderColor: "rgba(239,68,68,0.2)",
-                                      flexDirection: "row",
-                                      alignItems: "center",
-                                    }}
-                                    onPress={() => handleDeny(member.id)}
-                                  >
-                                    <Ionicons
-                                      name="close-circle-outline"
-                                      size={16}
-                                      color="#EF4444"
-                                    />
-                                    <ThemedText
-                                      style={{
-                                        marginLeft: 6,
-                                        fontSize: 13,
-                                        fontWeight: "800",
-                                        color: "#EF4444",
-                                      }}
-                                    >
-                                      Deny
+                                        : "N/A"}
                                     </ThemedText>
-                                  </TouchableOpacity>
-
-                                  <TouchableOpacity
-                                    style={{
-                                      paddingHorizontal: 16,
-                                      paddingVertical: 10,
-                                      borderRadius: 12,
-                                      backgroundColor: "rgba(139,195,74,0.15)",
-                                      borderWidth: 1,
-                                      borderColor: "rgba(139,195,74,0.2)",
-                                      flexDirection: "row",
-                                      alignItems: "center",
-                                    }}
-                                    onPress={() => handleApprove(member.id)}
-                                  >
-                                    <Ionicons
-                                      name="checkmark-circle-outline"
-                                      size={16}
-                                      color="#8BC34A"
-                                    />
-                                    <ThemedText
-                                      style={{
-                                        marginLeft: 6,
-                                        fontSize: 13,
-                                        fontWeight: "800",
-                                        color: "#8BC34A",
-                                      }}
-                                    >
-                                      Approve
-                                    </ThemedText>
-                                  </TouchableOpacity>
-                                </>
-                              ) : (
-                                <TouchableOpacity
-                                  style={{
-                                    paddingHorizontal: 20,
-                                    paddingVertical: 10,
-                                    borderRadius: 12,
-                                    backgroundColor: member.isBlocked
-                                      ? "rgba(34,197,94,0.1)"
-                                      : "rgba(239,68,68,0.15)",
-                                    borderWidth: 1,
-                                    borderColor: member.isBlocked
-                                      ? "rgba(34,197,94,0.2)"
-                                      : "rgba(239,68,68,0.2)",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                  }}
-                                  onPress={() => handleToggleBlock(member.id)}
-                                >
-                                  <Ionicons
-                                    name={
-                                      member.isBlocked
-                                        ? "checkmark-circle-outline"
-                                        : "ban-outline"
-                                    }
-                                    size={16}
-                                    color={
-                                      member.isBlocked ? "#22C55E" : "#EF4444"
-                                    }
-                                  />
-                                  <ThemedText
-                                    style={{
-                                      marginLeft: 6,
-                                      fontSize: 13,
-                                      fontWeight: "800",
-                                      color: member.isBlocked
-                                        ? "#22C55E"
-                                        : "#EF4444",
-                                    }}
-                                  >
-                                    {member.isBlocked
-                                      ? "Unblock"
-                                      : "Block Member"}
-                                  </ThemedText>
-                                </TouchableOpacity>
-                              )}
-                            </>
+                                  </HStack>
+                                </VStack>
+                              </>
+                            )}
                           </HStack>
-                        )}
-                      </VStack>
-                    )}
-                  </Box>
-                ))}
+
+                          {!hideAdminControls && (
+                            <HStack
+                              style={{
+                                marginTop: 24,
+                                justifyContent: "flex-end",
+                                gap: 12,
+                              }}
+                            >
+                              <>
+                                {member.isBlocked ? (
+                                  <>
+                                    <TouchableOpacity
+                                      style={{
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 10,
+                                        borderRadius: 12,
+                                        backgroundColor: "rgba(239,68,68,0.1)",
+                                        borderWidth: 1,
+                                        borderColor: "rgba(239,68,68,0.2)",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                      }}
+                                      onPress={() => handleDeny(member.id)}
+                                    >
+                                      <Ionicons
+                                        name="close-circle-outline"
+                                        size={16}
+                                        color="#EF4444"
+                                      />
+                                      <ThemedText
+                                        style={{
+                                          marginLeft: 6,
+                                          fontSize: 13,
+                                          fontWeight: "800",
+                                          color: "#EF4444",
+                                        }}
+                                      >
+                                        Deny
+                                      </ThemedText>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                      style={{
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 10,
+                                        borderRadius: 12,
+                                        backgroundColor: "rgba(139,195,74,0.15)",
+                                        borderWidth: 1,
+                                        borderColor: "rgba(139,195,74,0.2)",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                      }}
+                                      onPress={() => handleApprove(member.id)}
+                                    >
+                                      <Ionicons
+                                        name="checkmark-circle-outline"
+                                        size={16}
+                                        color="#8BC34A"
+                                      />
+                                      <ThemedText
+                                        style={{
+                                          marginLeft: 6,
+                                          fontSize: 13,
+                                          fontWeight: "800",
+                                          color: "#8BC34A",
+                                        }}
+                                      >
+                                        Approve
+                                      </ThemedText>
+                                    </TouchableOpacity>
+                                  </>
+                                ) : (
+                                  <TouchableOpacity
+                                    style={{
+                                      paddingHorizontal: 20,
+                                      paddingVertical: 10,
+                                      borderRadius: 12,
+                                      backgroundColor: member.isBlocked
+                                        ? "rgba(34,197,94,0.1)"
+                                        : "rgba(239,68,68,0.15)",
+                                      borderWidth: 1,
+                                      borderColor: member.isBlocked
+                                        ? "rgba(34,197,94,0.2)"
+                                        : "rgba(239,68,68,0.2)",
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                    }}
+                                    onPress={() => handleToggleBlock(member.id)}
+                                  >
+                                    <Ionicons
+                                      name={
+                                        member.isBlocked
+                                          ? "checkmark-circle-outline"
+                                          : "ban-outline"
+                                      }
+                                      size={16}
+                                      color={
+                                        member.isBlocked ? "#22C55E" : "#EF4444"
+                                      }
+                                    />
+                                    <ThemedText
+                                      style={{
+                                        marginLeft: 6,
+                                        fontSize: 13,
+                                        fontWeight: "800",
+                                        color: member.isBlocked
+                                          ? "#22C55E"
+                                          : "#EF4444",
+                                      }}
+                                    >
+                                      {member.isBlocked
+                                        ? "Unblock"
+                                        : "Block Member"}
+                                    </ThemedText>
+                                  </TouchableOpacity>
+                                )}
+                              </>
+                            </HStack>
+                          )}
+                        </VStack>
+                      )}
+                    </Box>
+                  ))}
               </VStack>
             </VStack>
           </ScrollView>

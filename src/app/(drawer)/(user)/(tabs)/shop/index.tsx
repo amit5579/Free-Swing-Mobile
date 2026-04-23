@@ -16,6 +16,7 @@ import {
   FlatList,
   ActivityIndicator,
   useColorScheme,
+  RefreshControl,
 } from "react-native";
 import { Image } from "expo-image";
 import Animated, {
@@ -294,7 +295,7 @@ export default function ShopScreen() {
 
   return (
     <ThemedView className="flex-1 self-center w-full max-w-[1200px]" style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}>
-      <Watermark />
+      <Watermark opacity={0.1} />
 
       <VStack className="mx-5 my-3">
         <HStack className="justify-between items-center w-full">
@@ -354,13 +355,21 @@ export default function ShopScreen() {
           Gear up with official equipment
         </ThemedText>
       </VStack>
-
-      <ScrollView
+ 
+       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={fetchProducts}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
       >
-        {loading ? (
+        {loading && products.length === 0 ? (
           <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
             {[1, 2, 3, 4].map((i) => (
               <Box
@@ -384,7 +393,7 @@ export default function ShopScreen() {
               </Box>
             ))}
           </HStack>
-        ) : (
+        ) : products.length > 0 ? (
           <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
             {products.map((product) => (
               <ProductCard
@@ -394,9 +403,36 @@ export default function ShopScreen() {
               />
             ))}
           </HStack>
+        ) : (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, marginTop: 40 }}>
+            <Box style={{ backgroundColor: isDark ? "#222" : "#f0f0f0", padding: 30, borderRadius: 100, marginBottom: 24 }}>
+              <Ionicons name="storefront-outline" size={80} color="#8BC34A" style={{ opacity: 0.5 }} />
+            </Box>
+            <ThemedText style={{ fontSize: 20, fontWeight: "800", textAlign: "center", marginBottom: 10 }}>
+              No Products Found
+            </ThemedText>
+            <ThemedText style={{ fontSize: 14, color: "#9CA3AF", textAlign: "center", marginBottom: 30, lineHeight: 20 }}>
+              The Pro Shop is currently being restocked with new gear. Please check back later!
+            </ThemedText>
+            <TouchableOpacity
+              onPress={fetchProducts}
+              style={{
+                backgroundColor: "#8BC34A",
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Ionicons name="refresh" size={20} color="white" />
+              <ThemedText style={{ color: "white", fontWeight: "700" }}>Refresh Shop</ThemedText>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
-
+ 
       <Modal visible={isCartOpen} transparent animationType="slide">
         <View className="flex-1 bg-black/50 justify-center items-center">
           <ThemedView className="w-[94%] h-[92%] rounded-[20px] overflow-hidden">

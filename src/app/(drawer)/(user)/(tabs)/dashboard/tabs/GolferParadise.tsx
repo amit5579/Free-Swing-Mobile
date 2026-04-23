@@ -79,7 +79,7 @@ const PostImage = ({ imageUrl, isDark, onImagePress }: { imageUrl: string; isDar
     );
 };
 
-export default function GolferParadise() {
+export default function GolferParadise({ searchQuery = "" }: { searchQuery?: string }) {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
@@ -98,9 +98,16 @@ export default function GolferParadise() {
     const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
     const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
 
+    const [userRole, setUserRole] = useState<string | null>(null);
+    
     useEffect(() => {
         fetchPosts();
         loadUserAvatar();
+        const loadRole = async () => {
+            const role = await AsyncStorage.getItem("role");
+            setUserRole(role?.toLowerCase() || null);
+        };
+        loadRole();
     }, []);
 
     const loadUserAvatar = async () => {
@@ -213,7 +220,10 @@ export default function GolferParadise() {
     };
 
     const handlePressProfile = (userId: number) => {
-        router.push(`/(drawer)/(user)/(tabs)/dashboard/tabs/${userId}`);
+        const path = userRole === 'admin' 
+            ? `/(drawer)/(admin)/(tabs)/allMembers/${userId}`
+            : `/(drawer)/(user)/(tabs)/dashboard/tabs/${userId}`;
+        router.push(path as any);
     };
 
     if (loading && posts.length === 0) {
@@ -309,7 +319,16 @@ export default function GolferParadise() {
 
             {posts.length > 0 && (
                 <View style={{ paddingTop: 8 }}>
-                    {posts.map((post) => (
+                    {posts
+                        .filter((p) => {
+                            if (!searchQuery) return true;
+                            const q = searchQuery.toLowerCase();
+                            return (
+                                p.caption?.toLowerCase().includes(q) ||
+                                p.playerName?.toLowerCase().includes(q)
+                            );
+                        })
+                        .map((post) => (
                         <View key={post.id}>
                             <Box
                                 className="rounded-2xl border"

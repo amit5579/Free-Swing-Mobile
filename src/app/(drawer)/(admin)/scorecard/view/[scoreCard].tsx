@@ -389,15 +389,16 @@ const ScoreCard: React.FC = () => {
             </ThemedView>
         );
     }
-     const renderHeader = () => {
-        return (<><View style={{ paddingTop: 10 }}>
+      const renderHeader = () => {
+        return (
+          <View style={{ paddingTop: 10, paddingBottom: 5 }}>
             <HStack
               className="px-3 items-center"
-              style={{ height: 30, justifyContent: "center" }}
+              style={{ justifyContent: "flex-start" }}
             >
               <Pressable
-                onPress={() => router.back()}
-                style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+                onPress={handleBack}
+                style={{ padding: 8, marginRight: 8 }}
               >
                 <Ionicons
                   name="arrow-back"
@@ -406,38 +407,30 @@ const ScoreCard: React.FC = () => {
                 />
               </Pressable>
     
-              <ThemedText
-                style={{
-                  fontSize: 20,
-                  fontWeight: "700",
-                  textAlign: "center",
-                }}
-              >
-                Scorecard
-              </ThemedText>
-            </HStack>
-           
-            <HStack className="justify-between m-3">
-               <ThemedText
-              style={{ fontSize: 13, opacity: 0.8 }}
-            >
-              ({renderScoring}) 
-            </ThemedText>
-              <Box
-                style={{
-                  padding: 8,
-                  backgroundColor: "#8bc34a",
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight:700 }}>Handicap: nohc
-                    {/* {handicap.handicap} */}
-                    </Text>
-              </Box>
+              <View className="flex-row items-center justify-between flex-1">
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <ThemedText style={{ fontSize: 16, fontWeight: "700" }}>
+                    Scorecard 
+                    <ThemedText style={{ fontSize: 12, fontWeight: "400", opacity: 0.8 }}> ({renderScoring})</ThemedText>
+                  </ThemedText>
+                </View>
+                <Box
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: "#8bc34a"
+                  }}
+                >
+                  <Text style={{ color: "#8bc34a", fontWeight: "700", fontSize: 12 }}>
+                    Handicap: {displayHandicap}
+                  </Text>
+                </Box>
+              </View>
             </HStack>
           </View>
-          </>
-          
         );
       };
     return (
@@ -496,11 +489,11 @@ const ScoreCard: React.FC = () => {
                 {/* 0th child → sticky table header */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View
-                        className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+                        className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
                     >
                         {["Hole", "Stroke\nIndex", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
-                            <Text key={h} className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}>
+                            <Text key={h} className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`} style={{ textAlignVertical: 'center' }}>
                                 {h}
                             </Text>
                         ))}

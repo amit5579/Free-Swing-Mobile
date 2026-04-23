@@ -11,6 +11,7 @@ import {
   Modal,
   Alert,
   useColorScheme,
+  Linking,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,17 +25,17 @@ export default function LoginScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  
-  const { email: emailParam, password: passwordParam } = useLocalSearchParams<{
+
+  const { email: emailParam, months } = useLocalSearchParams<{
     email?: string;
-    password?: string;
+    months?: string;
   }>();
   const { login } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
-  
+
   const [resetEmail, setResetEmail] = useState("");
   const [resetPhoneNumber, setResetPhoneNumber] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,18 +44,22 @@ export default function LoginScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
+  const [showApprovalPopup, setShowApprovalPopup] = useState(!!months);
+  const [isPopupExpanded, setIsPopupExpanded] = useState(true);
+  const [touchY, setTouchY] = useState(0);
 
   const bgImage = require("@/assets/golf-bgg.jpg");
 
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: emailParam || "",
-      password: passwordParam || "",
+      password: "",
     },
   });
 
@@ -71,9 +76,21 @@ export default function LoginScreen() {
       } else {
         router.replace("/(drawer)/(admin)/(tabs)/dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("🚨 HANDLE LOGIN ERROR:", error);
-      Alert.alert("Error", "Login failed. Please check your credentials.");
+      const errorMsg = error?.response?.data?.message || "Login failed. Please check your credentials.";
+
+      const isPending = errorMsg.toLowerCase().includes("approve") ||
+        errorMsg.toLowerCase().includes("pending") ||
+        errorMsg.toLowerCase().includes("waiting") ||
+        errorMsg.toLowerCase().includes("membership");
+
+      if (isPending || (months && errorMsg.includes("credentials"))) {
+        setShowApprovalPopup(true);
+        setIsPopupExpanded(true);
+      } else {
+        setError("root", { message: errorMsg });
+      }
     } finally {
       setLoading(false);
     }
@@ -81,7 +98,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1 }}
     >
       <ImageBackground
@@ -91,15 +108,20 @@ export default function LoginScreen() {
         blurRadius={showResetModal ? 10 : 0}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingBottom: showApprovalPopup ? (isPopupExpanded ? 280 : 80) : 40
+          }}
           scrollEnabled={!showResetModal}
+          keyboardShouldPersistTaps="handled"
           style={{ opacity: showResetModal ? 0.3 : 1 }}
         >
           <View style={{ alignItems: "center", marginBottom: 40 }}>
-            <Text style={{ color: "#fff", fontSize: 32, fontWeight: "bold" }}>
+            <Text style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}>
               Login
             </Text>
-            <Text style={{ color: "#e0f2d9", fontSize: 16, marginTop: 6 }}>
+            <Text style={{ color: "#8bc34a", fontSize: 16, marginTop: 6 }}>
               Enter your account details
             </Text>
           </View>
@@ -208,6 +230,12 @@ export default function LoginScreen() {
                 style={{ color: "#ef4444", fontSize: 12, marginBottom: 16 }}
               >
                 {errors.password.message}
+              </Text>
+            )}
+
+            {errors.root && (
+              <Text style={{ color: "#ef4444", fontSize: 13, marginBottom: 16, textAlign: "center", fontWeight: "500" }}>
+                {errors.root.message}
               </Text>
             )}
 
@@ -460,34 +488,34 @@ export default function LoginScreen() {
                       setResetError("Passwords do not match");
                       return;
                     }
-                      try {
-                        setResetLoading(true);
-                        await forgotPassword({
-                          Email: resetEmail,
-                          PhoneNumber: resetPhoneNumber,
-                          Password: newPassword,
-                          ConfirmPassword: confirmPassword,
-                        });
-                        
-                        Alert.alert("Success", "Successfully reset password!", [
-                          { 
-                            text: "OK", 
-                            onPress: () => {
-                              setShowResetModal(false);
-                              setResetEmail("");
-                              setResetPhoneNumber("");
-                              setNewPassword("");
-                              setConfirmPassword("");
-                              setResetError("");
-                            } 
+                    try {
+                      setResetLoading(true);
+                      await forgotPassword({
+                        Email: resetEmail,
+                        PhoneNumber: resetPhoneNumber,
+                        Password: newPassword,
+                        ConfirmPassword: confirmPassword,
+                      });
+
+                      Alert.alert("Success", "Successfully reset password!", [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            setShowResetModal(false);
+                            setResetEmail("");
+                            setResetPhoneNumber("");
+                            setNewPassword("");
+                            setConfirmPassword("");
+                            setResetError("");
                           }
-                        ]);
-                      } catch (error: any) {
-                        const errorMsg = error?.response?.data?.message || "Details not found or an unexpected error occurred.";
-                        setResetError(errorMsg);
-                      } finally {
-                        setResetLoading(false);
-                      }
+                        }
+                      ]);
+                    } catch (error: any) {
+                      const errorMsg = error?.response?.data?.message || "Details not found or an unexpected error occurred.";
+                      setResetError(errorMsg);
+                    } finally {
+                      setResetLoading(false);
+                    }
                   }}
                   style={{
                     backgroundColor: "#8bc34a",
@@ -513,6 +541,89 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {showApprovalPopup && (
+        <View style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "#fff",
+          padding: isPopupExpanded ? 20 : 10,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 20,
+        }}>
+          <View
+            onStartShouldSetResponder={(evt) => {
+              setTouchY(evt.nativeEvent.pageY);
+              return true;
+            }}
+            onResponderRelease={(evt) => {
+              const currentY = evt.nativeEvent.pageY;
+              if (touchY - currentY > 50) {
+                // Swipe Up
+                setIsPopupExpanded(true);
+              } else if (currentY - touchY > 50) {
+                // Swipe Down
+                setIsPopupExpanded(false);
+              }
+            }}
+            style={{
+              alignSelf: "center",
+              paddingVertical: 5,
+              width: "100%",
+              alignItems: "center"
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setIsPopupExpanded(!isPopupExpanded)}
+              style={{ padding: 5, width: "100%", alignItems: "center" }}
+            >
+              <Ionicons
+                name={isPopupExpanded ? "chevron-down" : "chevron-up"}
+                size={28}
+                color="#8bc34a"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {isPopupExpanded && (
+            <>
+              <Text style={{ fontSize: 16, fontWeight: "600", color: "#1f2937", textAlign: "center", marginBottom: 10 }}>
+                {months ? `${months} Months ` : ""}Membership request is waiting for admin approval.
+              </Text>
+              <Text style={{ fontSize: 14, color: "#4b5563", textAlign: "center", marginBottom: 20 }}>
+                Please confirm payment with admin on WhatsApp.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`https://wa.me/919876543210?text=Hello Admin, I am waiting for my account approval. Please check my payment confirmation.`)}
+                style={{
+                  backgroundColor: "#25D366",
+                  flexDirection: "row",
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 10
+                }}
+              >
+                <Ionicons name="logo-whatsapp" size={24} color="#fff" style={{ marginRight: 10 }} />
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Open WhatsApp</Text>
+              </TouchableOpacity>
+
+              <Text style={{ fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
+                Your account is pending admin approval after payment confirmation.
+              </Text>
+            </>
+          )}
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

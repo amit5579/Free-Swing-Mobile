@@ -19,12 +19,14 @@ export interface RegisterPayload {
   MobileNumber: string;
   DateOfBirth?: string | null;
   HomeCourse?: string | null;
-  MembershipNumber?: string | null;
+  HomeCourseId?: string | null;
+  MembershipNo?: string | null;
   TeeBox?: string | null;
   Handicap?: string | null;
   HandicapIndex?: string | null;
   Slope?: string | null;
   Rating?: string | null;
+  SubscriptionPlanMonths: number;
 }
 
 export const loginUser = async (payload: LoginPayload) => {

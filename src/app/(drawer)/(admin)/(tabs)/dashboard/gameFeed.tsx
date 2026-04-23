@@ -5,7 +5,7 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,6 +15,7 @@ import {
   Alert,
   Modal,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getFeed, FeedApi } from "@/api/admin/dashboard";
@@ -24,6 +25,8 @@ import { Button, ButtonText } from "@/components/button";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import { Image } from "expo-image";
+import GolferParadise from "@/app/(drawer)/(user)/(tabs)/dashboard/tabs/GolferParadise";
+import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers/index";
 
 export type Scorecard = {
   id: string;
@@ -160,7 +163,7 @@ const FeedCard = ({
               </Text>
               <HStack space="xs" className="items-center mt-0.5">
                 <Ionicons
-                  name="calendar-outline" r
+                  name="calendar-outline"
                   size={10}
                   color={isDark ? "#aaa" : "#9ca3af"}
                 />
@@ -487,8 +490,7 @@ const FeedCardSkeleton = () => {
     </Box>
   );
 };
-
-
+                                                    
 export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hideHeader?: boolean; searchQuery?: string }) {
   const [cards, setCards] = useState<Scorecard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -499,6 +501,8 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [likedUsers, setLikedUsers] = useState<LikedUser[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [subTab, setSubTab] = useState<'feed' | 'paradise' | 'members'>('feed');
+  const SCREEN_WIDTH = Dimensions.get('window').width;
 
   useFocusEffect(
     useCallback(() => {
@@ -620,7 +624,7 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
     setExpandedId(prev => prev === id ? null : id);
   };
 
-  if (loading) {
+  if (loading && subTab === 'feed') {
     return (
       <VStack space="md" className="py-2">
         <FeedCardSkeleton />
@@ -632,68 +636,89 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
 
   return (
     <VStack space="md">
-      {/* Header */}
+      {/* Header Tabs */}
       {!hideHeader && (
-        <HStack className="justify-between items-center mb-2">
-          <HStack space="sm" className="items-center">
-            <Text
-              className="text-xl font-bold"
-              style={{ color: isDark ? "#fff" : "#000" }}
-            >
-              Game Feed
-            </Text>
-            <HStack
-              className="items-center px-3 py-1 rounded-full space-x-2"
-              style={{
-                backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#D1FAE5",
-                borderWidth: isDark ? 1 : 0,
-                borderColor: isDark ? "#fff" : "transparent",
-              }}
-            >
-              <Ionicons
-                name="pulse"
-                size={16}
-                color={isDark ? "#fff" : "#22C55E"}
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                className="text-xs font-semibold"
-                style={{ color: isDark ? "#fff" : "#15803D" }}
-              >
-                Live
-              </Text>
+        <HStack
+          className="mb-4 p-1 rounded-full"
+          style={{
+            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(139,195,74,0.1)" : "rgba(229,231,235,1)"
+          }}
+        >
+          <Pressable
+            onPress={() => setSubTab('feed')}
+            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+            style={{ backgroundColor: subTab === 'feed' ? '#8BC34A' : 'transparent' }}
+          >
+            <HStack space="xs" className="items-center">
+              <Ionicons name="pulse" size={14} color={subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+              <Text className="font-bold text-[11px]" style={{ color: subTab === 'feed' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Game Feed</Text>
             </HStack>
-          </HStack>
+          </Pressable>
+          <Pressable
+            onPress={() => setSubTab('paradise')}
+            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+            style={{ backgroundColor: subTab === 'paradise' ? '#8BC34A' : 'transparent' }}
+          >
+            <HStack space="xs" className="items-center">
+              <Ionicons name="trophy-outline" size={14} color={subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+              <Text className="font-bold text-[11px]" style={{ color: subTab === 'paradise' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Golfer Paradise</Text>
+            </HStack>
+          </Pressable>
+          <Pressable
+            onPress={() => setSubTab('members')}
+            className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+            style={{ backgroundColor: subTab === 'members' ? '#8BC34A' : 'transparent' }}
+          >
+            <HStack space="xs" className="items-center">
+              <Ionicons name="people-outline" size={14} color={subTab === 'members' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563")} />
+              <Text className="font-bold text-[11px]" style={{ color: subTab === 'members' ? "#fff" : (isDark ? "#D1D5DB" : "#4B5563") }}>Members</Text>
+            </HStack>
+          </Pressable>
         </HStack>
       )}
 
-      {cards.length === 0 && (
-        <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center">
-          <Text className="text-4xl">⛳</Text>
-          <Text className="text-typography-400 font-semibold text-sm mt-3">
-            No scorecards yet
-          </Text>
-        </Box>
-      )}
+      {/* Content Rendering */}
+      {subTab === 'feed' ? (
+        <View>
+          {cards.length === 0 && (
+            <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center">
+              <Text className="text-4xl">⛳</Text>
+              <Text className="text-typography-400 font-semibold text-sm mt-3">
+                No scorecards yet
+              </Text>
+            </Box>
+          )}
 
-      {cards
-        .filter((c) => {
-          const q = searchQuery.toLowerCase();
-          return c.playerName.toLowerCase().includes(q) || c.courseName.toLowerCase().includes(q);
-        })
-        .map((card) => (
-          <FeedCard
-            key={card.id}
-            card={card}
-            isDark={isDark}
-            isExpanded={expandedId === card.id}
-            onToggle={() => toggleCard(card.id)}
-            handleLike={handleLike}
-            handleViewScorecard={handleViewScorecard}
-            handleVerifyCard={handleVerifyCard}
-            onActivity={handleShowActivity}
-          />
-        ))}
+          {cards
+            .filter((c) => {
+              const q = searchQuery.toLowerCase();
+              return c.playerName.toLowerCase().includes(q) || c.courseName.toLowerCase().includes(q);
+            })
+            .map((card) => (
+              <FeedCard
+                key={card.id}
+                card={card}
+                isDark={isDark}
+                isExpanded={expandedId === card.id}
+                onToggle={() => toggleCard(card.id)}
+                handleLike={handleLike}
+                handleViewScorecard={handleViewScorecard}
+                handleVerifyCard={handleVerifyCard}
+                onActivity={handleShowActivity}
+              />
+            ))}
+        </View>
+      ) : subTab === 'paradise' ? (
+        <View style={{ width: SCREEN_WIDTH - 32 }}>
+          <GolferParadise searchQuery={searchQuery} />
+        </View>
+      ) : (
+        <View style={{ width: SCREEN_WIDTH - 32 }}>
+          <AllMembersScreen hideAdminControls={true} searchQuery={searchQuery} />
+        </View>
+      )}
 
       {/* ACTIVITY MODAL */}
       <Modal
