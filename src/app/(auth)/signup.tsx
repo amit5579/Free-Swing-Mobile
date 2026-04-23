@@ -22,6 +22,7 @@ export default function SignupScreen() {
     const router = useRouter();
 
     const [userType, setUserType] = useState("beginner");
+    const [subscriptionMonths, setSubscriptionMonths] = useState(1);
 
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -32,6 +33,7 @@ export default function SignupScreen() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [course, setCourse] = useState("");
+    const [courseId, setCourseId] = useState("");
     const [hcp, setHcp] = useState("");
     const [hIndex, setHIndex] = useState("");
     const [slope, setSlope] = useState("");
@@ -113,7 +115,15 @@ export default function SignupScreen() {
     const bgImage = require("/assets/golf-bgg.jpg");
 
     const handleSignup = async () => {
-    try {
+        if (!name || !email || !password || !mobile || !dob) {
+            alert("Please fill in all required fields");
+            return;
+        }
+        if (password.length < 8) {
+            alert("Password must be at least 8 characters");
+            return;
+        }
+        try {
         const payload = {
             Username: name,
             Email: email,
@@ -121,12 +131,14 @@ export default function SignupScreen() {
             MobileNumber: mobile,
             DateOfBirth: dob ? new Date(selectedDate).toISOString().split("T")[0] : null,
             HomeCourse: course || null,
-            MembershipNumber: membershipNumber || null,
+            HomeCourseId: courseId || null,
+            MembershipNo: membershipNumber || null,
             TeeBox: selectedTeeBox || null,
             Handicap: hcp || null,
             HandicapIndex: hIndex || null,
             Slope: slope || null,
             Rating: rating || null,
+            SubscriptionPlanMonths: subscriptionMonths,
         };
 
         await registerUser(payload);
@@ -135,7 +147,7 @@ export default function SignupScreen() {
 
         router.replace({
             pathname: "/login",
-            params: { email, password },
+            params: { email, months: subscriptionMonths },
         });
 
     } catch (error: any) {
@@ -156,7 +168,7 @@ export default function SignupScreen() {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <ImageBackground
                 source={bgImage}
@@ -167,10 +179,10 @@ export default function SignupScreen() {
                     keyboardShouldPersistTaps="handled">
 
                     <View style={{ alignItems: "center", marginTop: 40, marginBottom: 40 }}>
-                        <Text style={{ color: "#2e7d32", fontSize: 32, fontWeight: "bold" }}>
+                        <Text style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}>
                             Sign Up
                         </Text>
-                        <Text style={{ color: "#2e7d32", fontSize: 16, marginTop: 6 }}>
+                        <Text style={{ color: "#8bc34a", fontSize: 16, marginTop: 6 }}>
                             Create your golf account
                         </Text>
                     </View>
@@ -189,6 +201,31 @@ export default function SignupScreen() {
                             height: keyboardVisible ? undefined : 550,
                         }}
                     >
+                        <Text style={{ fontWeight: "600", marginBottom: 10, color: "#374151", textAlign: "center" }}>
+                            Select Subscription Plan
+                        </Text>
+                        <View style={{ flexDirection: "row", marginBottom: 20, justifyContent: "space-between" }}>
+                            {[1, 3, 6, 12].map((month) => (
+                                <TouchableOpacity
+                                    key={month}
+                                    onPress={() => setSubscriptionMonths(month)}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 10,
+                                        borderRadius: 10,
+                                        marginHorizontal: 2,
+                                        backgroundColor: subscriptionMonths === month ? "#8bc34a" : "#e5e5e5",
+                                        alignItems: "center",
+                                        borderWidth: 1,
+                                        borderColor: subscriptionMonths === month ? "#8bc34a" : "#ccc",
+                                    }}
+                                >
+                                    <Text style={{ color: subscriptionMonths === month ? "#fff" : "#000", fontSize: 12, fontWeight: "600" }}>
+                                        {month} Month
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
                         <View style={{ flexDirection: "row", marginBottom: 20 }}>
                             <TouchableOpacity
@@ -231,7 +268,7 @@ export default function SignupScreen() {
                             contentContainerStyle={{ paddingBottom: 20 }}
                         >
                             <Text style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}>
-                                Name
+                                Username
                             </Text>
                             <TextInput
                                 placeholder="Enter your name"
@@ -600,6 +637,7 @@ export default function SignupScreen() {
                                         }}
                                         onPress={() => {
                                             setCourse(item.name);
+                                            setCourseId(item.id || item._id);
                                             setAvailableTeeBoxes(item.teeBoxes || []);
                                             setSelectedTeeBox(""); 
                                             setCourseModal(false);

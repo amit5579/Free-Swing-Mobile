@@ -62,14 +62,11 @@ const FeedCard = ({
     const [imageError, setImageError] = useState(false);
 
     const handleViewScorecard = (scorecardId: string) => {
-    router.push({
-      pathname: "/(drawer)/(admin)/scorecard/view/[scoreCard]",
-      params: { scoreCard: scorecardId },
-    });
-  };
-
-
-    
+        router.push({
+            pathname: "/(drawer)/(admin)/scorecard/view/[scoreCard]",
+            params: { scoreCard: scorecardId },
+        });
+    };
 
     return (
         <Box
@@ -251,14 +248,14 @@ const FeedCard = ({
 
                         <HStack space="sm" className="items-center">
                             <Pressable
-                                onPress={() => {onActivity(card.id); handleViewScorecard(card.id)}}
+                                onPress={() => { onActivity(card.id); handleViewScorecard(card.id) }}
                                 className="p-1 px-2.5 rounded-full flex-row items-center"
                                 style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(229,231,235,0.35)" }}
                             >
                                 <Ionicons name="people-outline" size={14} color={isDark ? "#fff" : "#6b7280"} />
                                 <Text className="ml-1 text-xs font-semibold" style={{ color: isDark ? "#fff" : "#6b7280" }}>Activity</Text>
                             </Pressable>
-{/*  handleViewScorecard(card.id, card.playerName, card.courseName) */}
+                            {/*  handleViewScorecard(card.id, card.playerName, card.courseName) */}
                             <Button size="xs" className="rounded-full px-3 h-8 shadow-sm" style={{ backgroundColor: "#8BC34A" }} onPress={() => handleViewScorecard(card.id)}>
                                 <Ionicons name="eye-outline" size={12} color="#fff" />
                                 <ButtonText className="text-white text-[10px] font-extrabold ml-1">View</ButtonText>

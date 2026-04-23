@@ -14,8 +14,8 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 const signupBaseSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .min(3, "Name must be at least 3 characters"),
+    .min(1, "Username is required")
+    .min(3, "Username must be at least 3 characters"),
   dob: z.string().min(1, "Date of Birth is required"),
   mobile: z
     .string()
@@ -30,6 +30,7 @@ const signupBaseSchema = z.object({
     .string()
     .min(1, "Password is required")
     .min(8, "Password must be at least 8 characters"),
+  subscriptionMonths: z.number().default(1),
 });
 const signupExperiencedExtension = z.object({
   course: z.string().min(1, "Home Course is required"),

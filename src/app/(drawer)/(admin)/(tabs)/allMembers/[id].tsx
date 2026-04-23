@@ -12,6 +12,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -99,7 +100,18 @@ export default function MemberProfilePage() {
         <Watermark />
         <View className="px-4 py-3">
             <TouchableOpacity 
-              onPress={() => router.back()}
+              onPress={async () => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  const role = await AsyncStorage.getItem("role");
+                  if (role?.toLowerCase() === 'admin') {
+                    router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+                  } else {
+                    router.replace("/(drawer)/(user)/(tabs)/dashboard");
+                  }
+                }
+              }}
               className="bg-[#8BC34A] rounded-full p-2 h-10 w-10 items-center justify-center mb-4"
             >
               <Ionicons name="arrow-back" size={24} color="white" />
@@ -136,7 +148,18 @@ export default function MemberProfilePage() {
       {/* Header */}
       <HStack className="items-center px-4 py-3 justify-between">
         <TouchableOpacity 
-          onPress={() => router.back()}
+          onPress={async () => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              const role = await AsyncStorage.getItem("role");
+              if (role?.toLowerCase() === 'admin') {
+                router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+              } else {
+                router.replace("/(drawer)/(user)/(tabs)/dashboard");
+              }
+            }
+          }}
           style={{
             backgroundColor: "#8BC34A",
             padding: 10,
