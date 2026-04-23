@@ -217,7 +217,7 @@ export default function SubAdminDashboard() {
                 </VStack>
                 <Pressable
                   className="py-1.5 rounded-lg items-center mt-2"
-                  onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/players/index" as any)}
+                  // onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/players/index" as any)}
                   style={{
                     backgroundColor: "rgba(255,255,255,0.2)",
                     borderColor: "rgba(46,125,50,0.4)",
@@ -260,7 +260,7 @@ export default function SubAdminDashboard() {
                 </VStack>
                 <Pressable
                   className="py-1.5 rounded-lg items-center mt-2"
-                  onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/course/index" as any)}
+                  // onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/course/index" as any)}
                   style={{
                     backgroundColor: "rgba(255,255,255,0.2)",
                     borderColor: "rgba(2,136,209,0.4)",

@@ -22,7 +22,6 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
-import { Badge, BadgeText } from "@/components/badge";
 import { Divider } from "@/components/divider";
 
 import {

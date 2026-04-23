@@ -114,3 +114,22 @@ export const miniTournamentSchema = z.object({
 });
 
 export type MiniTournamentType = z.infer<typeof miniTournamentSchema>;
+
+// Add member schema
+export const addMemberSchema = z.object({
+  username: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+  membershipNo: z.string().min(1, "Membership No. is required"),
+  mobileNumber: z.string().min(10, "Invalid Phone Number"),
+  dateOfBirth: z.string().optional().nullable(),
+  teeBoxId: z.number().min(1, "Select a tee box"),
+  homeCourse: z.string().min(1, "Select a course"),
+  homeCourseId: z.number().min(1, "Select a course"),
+  handicap: z.preprocess((val) => Number(val), z.number().min(0, "Handicap must be ≥ 0")),
+  handicapIndex: z.preprocess((val) => Number(val), z.number().min(0, "Handicap Index must be ≥ 0")),
+  courseSlope: z.preprocess((val) => Number(val), z.number().min(0, "Course Slope must be ≥ 0")),
+  courseRating: z.preprocess((val) => Number(val), z.number().min(0, "Course Rating must be ≥ 0")),
+});
+
+export type AddMemberType = z.infer<typeof addMemberSchema>;
