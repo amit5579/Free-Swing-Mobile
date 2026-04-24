@@ -744,7 +744,7 @@ export default function SubAdminTeeBookingPage() {
               className="rounded-full p-1 mb-6"
               style={{
                 flex: 1,
-                paddingVertical: 10,
+                paddingVertical: 4,
                 borderRadius: 999,
                 flexDirection: "row",
                 alignItems: "center",

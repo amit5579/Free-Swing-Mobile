@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import https from "../https";
 
 
@@ -17,6 +18,19 @@ export type UserApi = {
   profilePictureUrl: string | null;
 };
 
+export const getUser = async () => {
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) {
+      throw new Error("User ID not found in storage");
+    }
+    const response = await https.get(`/User/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching user:", error?.response?.data || error.message);
+    throw error;
+  }
+};
 export const getUserById = async (id: number): Promise<UserApi> => {
   try {
     const response = await https.get(`/User/${id}`);

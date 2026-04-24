@@ -17,7 +17,7 @@ export type UserApi = {
 
 export const getUserById = async (id: number): Promise<UserApi | null> => {
   try {
-    const response = await https.get(`/User/${id}`);
+    const response = await https.get(`User/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get User API Error:", error);

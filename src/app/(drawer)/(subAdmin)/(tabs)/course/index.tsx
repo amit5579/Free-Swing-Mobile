@@ -343,8 +343,17 @@ export default function SubAdminCoursePage() {
           </>
         ) : players.length === 0 ? (
           <View style={{ alignItems: "center", paddingTop: 60 }}>
-            <Ionicons name="person-outline" size={52} color={isDark ? "#333" : "#ddd"} />
-            <Text style={{ marginTop: 16, fontSize: 16, color: isDark ? "#555" : "#999", fontWeight: "600" }}>
+             <View
+                                  style={{
+                                    backgroundColor: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
+                                    padding: 18,
+                                    borderRadius: 50,
+                                    // marginBottom: 16,
+                                  }}
+                                >
+            <Ionicons name="person" size={32} color={"#8BC34A"} />
+                                </View>
+            <Text style={{ marginTop: 16, fontSize: 16, color:"#555", fontWeight: "600" }}>
               No course marshals found
             </Text>
           </View>

@@ -39,9 +39,7 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
-import { getScorecardHandicap } from "@/api/scoreCard";
-import { Badge, BadgeText } from "@/components/badge";
-import { Divider } from "@/components/divider";
+
 
 export default function TournamentsScreen() {
   const colorScheme = useColorScheme();

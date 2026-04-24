@@ -200,6 +200,7 @@ function CustomDrawerContent({ navigation }: any) {
                   },
                 ]}
               />
+              
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
@@ -319,6 +320,41 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(subscription)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name="star"
+                    size={22}
+                    color="#8bc34a"
+                  />
+                </View>
+                <Text style={styles.drawerText}>Subscription</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
                     router.push("/(drawer)/(user)/(contactAdmin)");
                   });
                 }}
@@ -348,6 +384,7 @@ function CustomDrawerContent({ navigation }: any) {
                   },
                 ]}
               />
+
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
