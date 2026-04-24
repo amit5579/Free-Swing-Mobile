@@ -50,7 +50,7 @@ import { Text } from "react-native";
 
 export default function AllMembersScreen({
   hideAdminControls = false,
-  searchQuery = "",
+  searchQuery: initialSearchQuery = "",
 }: { hideAdminControls?: boolean; searchQuery?: string } = {}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -65,8 +65,13 @@ export default function AllMembersScreen({
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("All"); // All, Pending, Active, Blocked
+
+  useEffect(() => {
+    setSearchQuery(initialSearchQuery);
+  }, [initialSearchQuery]);
 
   const tabs = ["All", "Pending", "Active", "Blocked"];
 
@@ -533,7 +538,7 @@ export default function AllMembersScreen({
               Members
             </ThemedText>
             <ThemedText style={{ fontSize: 13, opacity: 0.6, marginTop: -2 }}>
-              {members.length} total members listed
+              Total Members: {members.length}  
             </ThemedText>
           </VStack>
 
@@ -1248,7 +1253,6 @@ export default function AllMembersScreen({
                             )}
                           </HStack>
                         )}
-                        )
                       </VStack>
                     )}
                   </Box>
