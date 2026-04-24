@@ -337,38 +337,38 @@ const ScoreCard: React.FC = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-
                     <View className="flex-1">
-                        <Text className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`} numberOfLines={1}>
-                            {isStableford ? (courseName ? courseName : "Scorecard (Stableford)") : (courseName ? courseName : "Scorecard")}
-                        </Text>
-                        {username ? (
-                            <View className="flex-row items-center">
-                                <Ionicons name="person-outline" size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
-                                <Text className={`text-sm ml-1 font-bold ${isDark ? "text-gray-400" : "text-gray-700"}`}>
-                                    {username}
+                        <View className="flex-row items-center justify-between">
+                            <Text className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}>
+                                {courseName ? courseName : "Scorecard"}
+                                {isStableford && (
+                                    <Text style={{ fontWeight: "400", fontSize: 13, opacity: 0.8 }}> (Stableford)</Text>
+                                )}
+                            </Text>
+                            <View className="flex-row items-center px-2 py-1 rounded-lg" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
+                                <Ionicons name="person-outline" size={12} color="#8BC34A" />
+                                <Text className="text-xs font-bold ml-1" style={{ color: "#8BC34A" }}>
+                                    Handicap: {displayHandicap}
                                 </Text>
                             </View>
-                        ) : (
-                            <View className="flex-row items-center">
-                                <Ionicons name="person-outline" size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
-                                <Text className={`text-sm ml-1 font-bold ${isDark ? "text-gray-400" : "text-gray-700"}`}>
-                                    Handicap: {displayHandicap}
+                        </View>
+                        {username && (
+                            <View className="flex-row items-center mt-1">
+                                <Ionicons name="person-outline" size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                                <Text className={`text-xs ml-1 font-bold ${isDark ? "text-gray-400" : "text-gray-700"}`}>
+                                    {username}
                                 </Text>
                             </View>
                         )}
                     </View>
-
-                    {/* Verified badge — only shown when not coming from admin context */}
-                    {!username && (
-                        <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
-                            <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
-                            <Text className="text-xs font-bold ml-1" style={{ color: "#8BC34A" }}>Verified</Text>
-                        </View>
-                    )}
                 </View>
 
-                {/* Info banner removed in view mode */}
+                {!username && (
+                    <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
+                        <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
+                        <Text className="text-xs font-bold ml-1" style={{ color: "#8BC34A" }}>Verified</Text>
+                    </View>
+                )}
             </View>
 
             {/* ── Scrollable Table ── */}
@@ -380,11 +380,11 @@ const ScoreCard: React.FC = () => {
                 {/* 0th child → sticky table header */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View
-                        className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+                        className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
                         style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}
                     >
                         {["Hole", "Stroke\nIndex", "Yards", "Par", "Score", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
-                            <Text key={h} className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>
+                            <Text key={h} className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`} style={{ textAlignVertical: 'center' }}>
                                 {h}
                             </Text>
                         ))}

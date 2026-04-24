@@ -210,23 +210,23 @@ export const getUpdates = async () => {
 };
 
 export type ScorecardHole = {
- "holeId": number,
-        "holeNumber": number,
-        "par": number,
-        "strokeIndex": number,
-        "yardage": number,
-        "teeBoxId": number,
-        "courseId": number,
-        "score": number,
-        "netScore": number,
-        "roundNumber": number,
-        "stablefordPoints": null,
-        "isCompleted": boolean,
-        "isDQ": boolean,
-        "tournamentId": null,
-        "isDoublePeoria": boolean,
-        "courseHalf": string,
-        "isExcluded": boolean
+  holeId: number;
+  holeNumber: number;
+  par: number;
+  strokeIndex: number;
+  yardage: number;
+  teeBoxId: number;
+  courseId: number;
+  score: number;
+  netScore: number;
+  roundNumber: number;
+  stablefordPoints: number | null;
+  isCompleted: boolean;
+  isDQ: boolean;
+  tournamentId: number | null;
+  isDoublePeoria: boolean;
+  courseHalf: string;
+  isExcluded: boolean;
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {

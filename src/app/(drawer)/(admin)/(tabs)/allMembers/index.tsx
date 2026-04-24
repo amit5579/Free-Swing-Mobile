@@ -13,6 +13,7 @@ import {
   TextInput,
   Platform,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 
@@ -49,7 +50,8 @@ import { Text } from "react-native";
 
 export default function AllMembersScreen({
   hideAdminControls = false,
-}: { hideAdminControls?: boolean } = {}) {
+  searchQuery = "",
+}: { hideAdminControls?: boolean; searchQuery?: string } = {}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [modalVisible, setModalVisible] = useState(false);
@@ -114,6 +116,11 @@ export default function AllMembersScreen({
     },
   });
   useEffect(() => {
+    const loadRole = async () => {
+      const storedRole = await AsyncStorage.getItem("role");
+      setUserRole(storedRole?.toLowerCase() || null);
+    };
+    loadRole();
     fetchUsers();
   }, []);
 
