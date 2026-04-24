@@ -538,7 +538,7 @@ export default function AllMembersScreen({
               Members
             </ThemedText>
             <ThemedText style={{ fontSize: 13, opacity: 0.6, marginTop: -2 }}>
-              {members.length} total members listed
+              Total Members: {members.length}  
             </ThemedText>
           </VStack>
 
@@ -1253,7 +1253,6 @@ export default function AllMembersScreen({
                             )}
                           </HStack>
                         )}
-                        )
                       </VStack>
                     )}
                   </Box>
