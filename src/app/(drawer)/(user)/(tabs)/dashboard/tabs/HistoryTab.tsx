@@ -17,8 +17,8 @@ export type GameHistory = {
     date: string;
     time: string;
     course: string;
-    score: number;
-    net: number;
+    score: number | null;
+    net: number | null;
     par: number;
     isTournament: boolean;
     isDQ: boolean;
@@ -232,8 +232,8 @@ export function HistoryTab({ playerId, onViewGame, searchQuery = "" }: HistoryTa
                                                         <Badge
                                                             className="rounded-full px-3 py-1 flex-row items-center border"
                                                             style={{
-                                                                backgroundColor: isDark ? "#06B6D4" : "#22D3EE",
-                                                                borderColor: isDark ? "#06B6D4" : "#22D3EE",
+                                                                backgroundColor: isDark ? "#0891B2" : "#A3D977",
+                                                                borderColor: isDark ? "#0891B2" : "#A3D977",
                                                             }}
                                                         >
                                                             <Ionicons

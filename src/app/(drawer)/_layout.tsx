@@ -327,7 +327,7 @@ function CustomDrawerContent({ navigation }: any) {
               >
                 <View style={styles.iconContainer}>
                   <Ionicons
-                    name="star"
+                    name="diamond-outline"
                     size={22}
                     color="#8bc34a"
                   />

@@ -46,7 +46,11 @@ interface UserProfile {
   rating: number | null;
   membershipLevel?: string;
   memberSince?: string;
+  createdAt?: string;
   bestScore?: number;
+  paradisePostCount?: number;
+  paradisePhotoPostCount?: number;
+  lastParadisePostAt?: string | null;
 }
 
 export default function MemberProfilePage({ id: propId, hideHeader = false }: { id?: string; hideHeader?: boolean }) {
@@ -190,7 +194,6 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
         </HStack>
       )}
 
-      {/* Fixed Profile Card at Top */}
       <Box 
         style={{
           backgroundColor: isDark ? "rgba(26,26,26,0.95)" : "#FFF",
@@ -255,12 +258,12 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
                   </Text>
               </Box>
               <Text style={{ color: isDark ? "#666" : "#888", fontSize: 10, fontWeight: "800", marginLeft: 8 }}>
-                  Not added yet
+                  {user.homeCourse ? user.homeCourse : "Not added yet"}
               </Text>
             </HStack>
 
             <Text style={{ color: isDark ? "#444" : "#AAA", fontSize: 9, fontWeight: "700", marginTop: 6 }}>
-              Member since {user.memberSince || "Recently joined"}
+              Member since {(user.createdAt || user.memberSince) ? new Date(user.createdAt || user.memberSince!).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recently joined"}
             </Text>
           </VStack>
         </HStack>
@@ -271,7 +274,6 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       >
         
-        {/* Statistics Grid */}
         <Box 
           style={{
             backgroundColor: isDark ? "rgba(26,26,26,0.9)" : "#FFF",
@@ -284,12 +286,12 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
         >
           <HStack style={{ flexWrap: "wrap", justifyContent: "space-between" }}>
             {[
-              { label: "HC Index", value: user.handicapIndex ?? "-57" },
-              { label: "Handicap", value: user.handicap ?? "0" },
+              { label: "HC Index", value: user.handicapIndex ?? "--" },
+              { label: "Handicap", value: user.handicap ?? "--" },
               { label: "Rounds", value: user.totalRounds || "--" },
               { label: "Avg Score", value: user.averageScore || "--" },
-              { label: "Best Score", value: user.bestScore || "0" },
-              { label: "Courses", value: user.coursesPlayed || "0" },
+              { label: "Best Score", value: user.bestScore || "--" },
+              { label: "Courses", value: user.coursesPlayed || "--" },
             ].map((stat, idx) => (
               <VStack key={idx} style={{ width: "31%", alignItems: "center", marginBottom: idx < 3 ? 24 : 0 }}>
                 <Text style={{ color: "#8BC34A", fontSize: 20, fontWeight: "900" }}>{stat.value}</Text>
@@ -300,7 +302,6 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
         </Box>
 
         <VStack space="md">
-            {/* Account Info Section */}
             <Box 
             style={{
                 backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#FFF",
@@ -328,12 +329,11 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
                 {renderInfoRow("Email", user.email, "mail-outline")}
                 {renderInfoRow("Mobile", user.mobileNumber, "call-outline")}
                 {renderInfoRow("Date of Birth", user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : "N/A", "calendar-outline")}
-                {renderInfoRow("Invited By", user.invitedBySubAdminName || "Direct", "people-outline")}
+                {renderInfoRow("Member Since", (user.createdAt || user.memberSince) ? new Date(user.createdAt || user.memberSince!).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A", "time-outline")}
                 </View>
             )}
             </Box>
 
-            {/* Golf Profile Section */}
             <Box 
             style={{
                 backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#FFF",
@@ -361,11 +361,11 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
                 {renderInfoRow("Home Course", user.homeCourse || "N/A", "location-outline")}
                 {renderInfoRow("Slope", user.slope || "N/A", "trending-up-outline")}
                 {renderInfoRow("Rating", user.rating || "N/A", "star-outline")}
+                {renderInfoRow("Invited By", user.invitedBySubAdminName || "Direct", "people-outline")}
                 </View>
             )}
             </Box>
 
-            {/* Community Activity Section */}
             <Box 
             style={{
                 backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#FFF",
@@ -390,9 +390,9 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
             {sections.community && (
                 <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
                     <View style={{ height: 1, backgroundColor: "rgba(139,195,74,0.1)", marginBottom: 8 }} />
-                    {renderInfoRow("Posts Shared", "0", "share-social-outline")}
-                    {renderInfoRow("Photo Posts", "0", "image-outline")}
-                    {renderInfoRow("Latest Post", "No posts yet", "time-outline")}
+                    {renderInfoRow("Posts Shared", user.paradisePostCount?.toString() || "0", "share-social-outline")}
+                    {renderInfoRow("Photo Posts", user.paradisePhotoPostCount?.toString() || "0", "image-outline")}
+                    {renderInfoRow("Latest Post", user.lastParadisePostAt ? new Date(user.lastParadisePostAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "No posts yet", "time-outline")}
                 </View>
             )}
             </Box>
@@ -400,7 +400,6 @@ export default function MemberProfilePage({ id: propId, hideHeader = false }: { 
 
       </ScrollView>
 
-      {/* Image Preview Modal */}
       <Modal
         visible={imageModalVisible}
         transparent={true}
