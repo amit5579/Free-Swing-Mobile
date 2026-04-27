@@ -386,55 +386,92 @@ export default function ManageRoasterPage() {
   // ── Header ──
   const renderHeader = () => {
     return (
-      <View style={{ marginBottom: 16 }}>
+      <VStack
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+          marginBottom: 20,
+        }}
+      >
         <HStack
-          className="px-3 items-center"
-          style={{ height: 60, justifyContent: "center" }}
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: isDark ? "#020617" : "#ffffff",
+          }}
         >
+          {/* 🔙 BACK BUTTON */}
           <Pressable
             onPress={() => routePage.back()}
-            style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
           >
             <Ionicons
-              name="arrow-back-outline"
-              size={24}
-              color={isDark ? "#ffffff" : "#020617"}
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
             />
           </Pressable>
 
-          <ThemedText
+          {/* 🧠 TITLE BLOCK */}
+          <VStack
             style={{
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 6,
             }}
           >
-            Manage Roster:{" "}
+            {/* LABEL */}
             <ThemedText
               style={{
-                color: colors.accent,
-                fontSize: 20,
+                fontSize: 12,
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "500",
+              }}
+            >
+              Manage Roster
+            </ThemedText>
+
+            {/* MAIN TITLE */}
+            <ThemedText
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={{
+                fontSize: 17,
                 fontWeight: "700",
+                marginTop: 2,
+                maxWidth: "85%",
                 textAlign: "center",
               }}
             >
               {tournamentName}
             </ThemedText>
-          </ThemedText>
-        </HStack>
+          </VStack>
 
+          {/* ⚖️ RIGHT PLACEHOLDER */}
+          <View style={{ width: 40 }} />
+        </HStack>
         <ThemedText
           style={{
-            fontSize: 14,
-            color: colors.subText,
+            fontSize: 12,
+            color: isDark ? "#64748b" : "#6b7280",
             textAlign: "center",
-            marginTop: 4,
-            paddingHorizontal: 20,
+            // marginTop: 4,
           }}
         >
-          Select players from your roster to invite them to this tournament.
+          Select players from your roster to invite them to this tournament
         </ThemedText>
-      </View>
+      </VStack>
     );
   };
 

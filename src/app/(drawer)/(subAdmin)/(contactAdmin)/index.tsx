@@ -91,35 +91,64 @@ export default function SubAdminContactAdminPage() {
       hour12: true,
     });
   };
-  const RenderHeader = () => (
-    <HStack className="px-3 pt-5 items-center justify-between">
+ const RenderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* 🔙 BACK */}
       <Pressable
         onPress={() =>
           routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")
         }
-        style={{ padding: 6 }}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
       >
         <Ionicons
-          name="arrow-back-outline"
-          size={22}
+          name="arrow-back"
+          size={20}
           color={isDark ? "#fff" : "#020617"}
         />
       </Pressable>
 
-      <ThemedText
-        style={{
-          flex: 1,
-          fontSize: 20,
-          fontWeight: "700",
-          textAlign: "center",
-        }}
-      >
-        Contact Admin
-      </ThemedText>
+      {/* 🧠 TITLE BLOCK */}
+      <VStack style={{ flex: 1, alignItems: "center" }}>
+        <ThemedText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginTop: 2,
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Contact Admin
+        </ThemedText>
+      </VStack>
 
+      {/* ⚖️ RIGHT SPACER */}
       <View style={{ width: 40 }} />
     </HStack>
-  );
+  </Box>
+);
 
   const renderFeedbackItem = ({ item }: any) => (
     <Box
@@ -256,7 +285,7 @@ export default function SubAdminContactAdminPage() {
             <HStack className="justify-end mb-3 ">
               <Box className="border border-gray-400 rounded-full px-3 py-1">
                 <ThemedText>
-                  {feedbacks.length}
+                  {feedbacks.length}{" "}
                   {feedbacks.length == 1 ? "item" : "items"}
                 </ThemedText>
               </Box>
@@ -291,7 +320,7 @@ export default function SubAdminContactAdminPage() {
                     <Ionicons
                       name="chatbubble-ellipses-outline"
                       size={28}
-                      color={isDark ? "#94a3b8" : "#475569"}
+                      color={"#84cc16"}
                     />
                   </View>
 

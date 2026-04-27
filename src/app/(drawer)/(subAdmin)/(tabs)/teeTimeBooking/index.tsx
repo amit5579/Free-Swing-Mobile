@@ -276,54 +276,69 @@ export default function SubAdminTeeBookingPage() {
   }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
 
   const RenderHeader = () => {
-    return (
-      <>
-        <VStack className="px-3 mt-1 items-center">
+  return (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <VStack
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 14,
+          alignItems: "center",
+        }}
+      >
+        {/* 🧠 TITLE */}
+        <ThemedText
+          style={{
+            fontSize: 18,
+            fontWeight: "700",
+            textAlign: "center",
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Tee Time Booking
+        </ThemedText>
+
+        {/* 🔽 ACTION BUTTON */}
+        <Pressable
+          onPress={handleDownloadPDF}
+          style={{
+            marginTop: 10,
+            flexDirection: "row",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 10,
+            backgroundColor: "rgba(139,195,74,0.12)",
+            borderWidth: 1,
+            borderColor: "rgba(139,195,74,0.3)",
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          android_ripple={{ color: "rgba(0,0,0,0.05)" }}
+        >
+          <Ionicons name="download-outline" size={16} color="#2E7D32" />
+
           <ThemedText
             style={{
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
-              lineHeight: 30,
+              marginLeft: 6,
+              fontSize: 13,
+              fontWeight: "600",
+              color: "#2E7D32",
             }}
           >
-            Tee time booking
+            Download Report
           </ThemedText>
-          <ThemedText style={{fontSize:12,textAlign:"center",color:isDark?"#fff":"#111"}}>Choose your date, tee, and seat from the same shared page layout used across the app.</ThemedText>
-        </VStack>
-        <HStack className="justify-end m-3">
-          <Pressable
-            onPress={handleDownloadPDF}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: isDark
-                ? "rgba(139, 195, 74, 0.1)"
-                : "rgba(139, 195, 74, 0.05)",
-              paddingHorizontal: 12,
-              paddingVertical: 9,
-              borderRadius: 9,
-              marginTop: 4,
-              borderWidth: 1,
-              borderColor: "rgba(139, 195, 74, 0.3)",
-            }}
-          >
-            <Ionicons name="download-outline" size={16} color="#8BC34A" />
-            <Text
-              style={{
-                marginLeft: 6,
-                color: "#8BC34A",
-                fontSize: 13,
-                fontWeight: "600",
-              }}
-            >
-              Print / Download Report
-            </Text>
-          </Pressable>
-        </HStack>
-      </>
-    );
-  };
+        </Pressable>
+      </VStack>
+    </Box>
+  );
+};
 
   const TeeRow = ({ slot }: any) => {
     return (

@@ -1685,7 +1685,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.one,
     // paddingBottom: BottomTabInset + Spacing.two,
     maxWidth: MaxContentWidth,
+    marginBottom: 50,
   },
+  
   createButton: {
     backgroundColor: "#8bc34a",
     paddingHorizontal: 7,
