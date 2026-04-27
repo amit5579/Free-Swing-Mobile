@@ -77,7 +77,7 @@ export default function ResumeScorecard() {
 
         setHoles(prev => prev.map(h => {
             if (h.holeId === holeId) {
-                const strokes = calculateStrokes(handicap, h.handicap);
+                const strokes = calculateStrokes(handicap, h.strokeIndex);
                 // Fix: netScore should be 0 if score is not entered or picked up (0)
                 const netScore = score > 0 ? score - strokes : 0;
                 // Calculate stablefordPoints
@@ -148,7 +148,7 @@ export default function ResumeScorecard() {
         }, 0);
 
     const sumNet = (arr: ScorecardHole[]) =>
-        arr.reduce((t, h) => t + (h.score > 0 ? (h.netScore || 0) : 0), 0);
+        arr.reduce((t, h) => t + ((h.score !== null && h.score > 0) ? (h.netScore || 0) : 0), 0);
 
     const sumPar = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.par || 0), 0);
@@ -158,7 +158,7 @@ export default function ResumeScorecard() {
 
     const sumPts = (arr: ScorecardHole[]) => {
         if (!isStableford) return 0;
-        return arr.reduce((t, h) => t + (h.score > 0 ? (h.stablefordPoints || 0) : 0), 0);
+        return arr.reduce((t, h) => t + ((h.score !== null && h.score > 0) ? (h.stablefordPoints || 0) : 0), 0);
     };
 
     if (loading) {
@@ -378,7 +378,7 @@ export default function ResumeScorecard() {
                     {holes.slice(0, 9).map((h, index) => (
                         <View key={h.holeId} className={`flex-row items-center p-3 ${(index < 8) ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
+                            <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
                             <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                             <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                             <View className="flex-1 items-center justify-center relative">
@@ -430,7 +430,7 @@ export default function ResumeScorecard() {
                         {holes.slice(9, 18).map((h, index) => (
                             <View key={h.holeId} className={`flex-row items-center p-3 ${(index < 8) ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}>
                                 <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.holeNumber}</Text>
-                                <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.handicap}</Text>
+                                <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.strokeIndex}</Text>
                                 <Text className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{h.yardage}</Text>
                                 <Text className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}>{h.par}</Text>
                                 <View className="flex-1 items-center justify-center relative">

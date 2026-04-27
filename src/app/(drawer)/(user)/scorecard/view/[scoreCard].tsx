@@ -104,11 +104,11 @@ const ScoreCard: React.FC = () => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            const holeScores = Object.entries(textScores).map(([holeId, score]) => ({
-                holeId: parseInt(holeId),
-                score: score === "" ? 0 : parseInt(score)
+            const payload = holes.map(h => ({
+                ...h,
+                score: (h.score !== null && h.score >= 0) ? h.score : 0
             }));
-            await updateScorecardApi(scoreCard!, holeScores);
+            await updateHoleScoresApi(scoreCard!, payload);
         } catch (err) {
             console.error(err);
         } finally {
@@ -130,9 +130,9 @@ const ScoreCard: React.FC = () => {
                             const payload = holes.map(h => ({
                                 ...h,
                                 isCompleted: true,
-                                score: (h.score !== null && h.score >= 0) ? h.score : null
+                                score: (h.score !== null && h.score >= 0) ? h.score : 0
                             }));
-                            await updateHoleScoresApi(payload);
+                            await updateHoleScoresApi(scoreCard!, payload);
                             Alert.alert("Success", "Round finished successfully", [
                                 { text: "OK", onPress: () => router.back() }
                             ]);
@@ -151,14 +151,14 @@ const ScoreCard: React.FC = () => {
     const sumScores = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.score || 0), 0);
     const sumNet = (arr: ScorecardHole[]) =>
-        arr.reduce((t, h) => t + (h.score > 0 ? (h.netScore || 0) : 0), 0);
+        arr.reduce((t, h) => t + ((h.score !== null && h.score > 0) ? (h.netScore || 0) : 0), 0);
     const sumYardage = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.yardage || 0), 0);
     const sumPar = (arr: ScorecardHole[]) =>
         arr.reduce((t, h) => t + (h.par || 0), 0);
     const sumPts = (arr: ScorecardHole[]) => {
         if (!isStableford) return 0;
-        return arr.reduce((t, h) => t + (h.score > 0 ? (h.stablefordPoints || 0) : 0), 0);
+        return arr.reduce((t, h) => t + ((h.score !== null && h.score > 0) ? (h.stablefordPoints || 0) : 0), 0);
     };
 
     const front9 = holes.slice(0, 9);

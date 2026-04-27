@@ -230,6 +230,7 @@ export type ScorecardHole = {
   isExcluded: boolean;
   scoringType?: string;
   isTournament?: boolean;
+  userId?: number;
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
@@ -243,10 +244,20 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
   }
 };
 
+export const deleteScorecardApi = async (scorecardId: string | number) => {
+  try {
+    const response = await https.delete(`/scorecard/${scorecardId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Delete Scorecard Error:", error);
+    throw error;
+  }
+};
+
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
-    const response = await https.post(`scorecard/update`, { scorecardId, holeScores });
+    const response = await https.put(`/scorecard/update`, { scorecardId, holeScores });
     return response.data;
   } catch (error) {
     console.error("Updating scorecard error:", error);
@@ -256,7 +267,7 @@ export const updateScorecardApi = async (scorecardId: string | number, holeScore
 
 export const finishScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.post(`scorecard/save`, { scorecardId });
+    const response = await https.post(`/scorecard/save`, { scorecardId });
     return response.data;
   } catch (error) {
     console.error("Finishing scorecard error:", error);
@@ -266,20 +277,25 @@ export const finishScorecardApi = async (scorecardId: string | number) => {
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const updateHoleScoresApi = async (payload: any[]) => {
+export const updateHoleScoresApi = async (scorecardId: string | number, holes: any[]) => {
   try {
-    const userId = await AsyncStorage.getItem("userId");
-    const finalPayload = payload.map(h => ({
+    const storedUserId = await AsyncStorage.getItem("userId");
+    const userId = storedUserId ? Number(storedUserId) : null;
+
+    const payload = holes.map(h => ({
       ...h,
-      userId: userId ? Number(userId) : h.userId
+      userId: userId || h.userId
     }));
 
-    console.log("updateHoleScoresApi sending payload:", JSON.stringify(finalPayload, null, 2));
-    const response = await https.post(`scorecard/save`, finalPayload);
+    const response = await https.post(`/scorecard/save`, payload);
     console.log("updateHoleScoresApi response:", response.status, response.data);
     return response.data;
-  } catch (error) {
-    console.error("Updating hole scores error:", error);
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Updating hole scores error (status):", error.response.status, "data:", error.response.data);
+    } else {
+      console.error("Updating hole scores error:", error.message);
+    }
     throw error;
   }
 };
