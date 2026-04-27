@@ -128,7 +128,7 @@ export default function adminTournamentsPage() {
           tournamentId: editingCourse.tournamentId,
           description: data.description || "",
         };
-        console.log("UPDATE API", tournamentData);
+        // console.log("UPDATE API", tournamentData);
         await updateTournament(updatedData, editingCourse.tournamentId);
       } else {
         // console.log("CREATE API", tournamentData);
@@ -289,49 +289,82 @@ export default function adminTournamentsPage() {
     );
   };
 
+ const renderHeader = () => (
+  <HStack
+    style={{
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    {/* 🧠 TITLE */}
+    <ThemedText
+      style={{
+        fontSize: 20,
+        fontWeight: "700",
+        color: isDark ? "#fff" : "#020617",
+      }}
+    >
+      Tournaments
+    </ThemedText>
+
+    {/* ➕ CREATE BUTTON */}
+    <Pressable
+      onPress={() => {
+        setIsEditMode(false);
+        reset({
+          name: "",
+          courseId: [],
+          teeColor: [],
+          scoringType: [],
+          startDate: null,
+          endDate: null,
+        });
+        setEditingCourse(null);
+        setModalVisible(true);
+      }}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 10,
+        backgroundColor: "#84cc16",
+      }}
+      android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+    >
+      <Ionicons name="add" size={18} color="#fff" />
+
+      <ThemedText
+        style={{
+          color: "#fff",
+          fontWeight: "600",
+          fontSize: 13,
+          marginLeft: 6,
+        }}
+      >
+        Create
+      </ThemedText>
+    </Pressable>
+  </HStack>
+);
+
   return (
     <>
       <View
         style={{
           flex: 1,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
         }}
       >
         <Watermark />
 
         {/* Header */}
-        <HStack className="justify-between items-center p-4 mt-2">
-          <ThemedText
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-            }}
-          >
-            Tournaments
-          </ThemedText>
-
-          <Pressable
-            style={styles.createButton}
-            onPress={() => {
-              setIsEditMode(false);
-              reset({
-                name: "",
-                courseId: [],
-                teeColor: [],
-                scoringType: [],
-                startDate: null,
-                endDate: null,
-              });
-              setEditingCourse(null);
-              setModalVisible(true);
-            }}
-            className="flex-row items-center gap-1"
-          >
-            <Ionicons name="add" size={28} color="white" />
-            <ThemedText style={{ color: "white", fontWeight: "600" }}>
-              Create Tournament
-            </ThemedText>
-          </Pressable>
-        </HStack>
+        {renderHeader()}
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">

@@ -233,39 +233,79 @@ export default function FeedbackInboxPage() {
     );
   };
 
-  return (
-    <>
-      <ThemedView
+const renderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      marginBottom: 20,
+    }}
+  >
+    <VStack style={{ paddingTop: 14, paddingBottom: 12 }}>
+      
+      {/* 🔝 TOP ROW */}
+      <HStack
         style={{
-          flex: 1,
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
+        {/* 🔙 BACK */}
+         <Pressable
+              onPress={() => router.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+
+        {/* 🧠 TITLE */}
+        <ThemedText
+          numberOfLines={1}
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
+            paddingHorizontal: 8,
+          }}
+        >
+Feedback Inbox
+        </ThemedText>
+
+        {/* ⚖️ RIGHT SPACER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+    </VStack>
+  </Box>
+);
+
+  return (
+    <>
         <SafeAreaView
           style={{
             flex: 1,
+            backgroundColor: isDark ? "#020617" : "#ffffff",
           }}
         >
           <Watermark />
           <ScrollView>
             <VStack className="flex-1 p-4">
               {/* HEADER (FIXED) */}
-              <HStack className="items-center justify-between mb-5">
-                <Pressable onPress={() => router.back()}>
-                  <Ionicons name="arrow-back" size={24} color="#8bc34a" />
-                </Pressable>
-
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: "700",
-                    color: isDark ? "white" : "black",
-                  }}
-                >
-                  Feedback Inbox
-                </Text>
-
-                <View style={{ width: 24 }} />
-              </HStack>
+             {renderHeader()}
 
               <VStack
                 style={{
@@ -432,7 +472,6 @@ export default function FeedbackInboxPage() {
             </VStack>
           </ScrollView>
         </SafeAreaView>
-      </ThemedView>
     </>
   );
 }

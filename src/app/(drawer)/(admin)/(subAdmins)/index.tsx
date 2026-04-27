@@ -228,56 +228,106 @@ export default function subAdminsPage() {
     );
   };
 
+
+  const handleCreate = () => {
+  setIsEditMode(false);
+  setEditingAdmin(null);
+  reset();
+  setModalVisible(true);
+};
+
+
+const renderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 10,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* 🔙 BACK */}
+      <Pressable
+        onPress={() => router.back()}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
+
+      {/* 🧠 TITLE */}
+      <ThemedText
+        style={{
+          flex: 1,
+          textAlign: "center",
+          fontSize: 18,
+          fontWeight: "700",
+          color: isDark ? "#fff" : "#020617",
+        }}
+      >
+        Sub Admins
+      </ThemedText>
+    </HStack>
+
+    {/* 🔥 PRIMARY CTA */}
+    <Pressable
+      onPress={handleCreate}
+      style={{
+        marginHorizontal: 16,
+        marginBottom: 12,
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 6,
+        backgroundColor: "#84cc16",
+      }}
+    >
+      <Ionicons name="add" size={18} color="#fff" />
+      <ThemedText
+        style={{
+          color: "#fff",
+          fontWeight: "600",
+          fontSize: 14,
+        }}
+      >
+        Create Sub-Admin
+      </ThemedText>
+    </Pressable>
+  </Box>
+);
+
   return (
     <>
       <SafeAreaView
         style={{
           flex: 1,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
         }}
       >
         <Watermark />
 
         {/* Header */}
-        <HStack className="justify-between items-center px-4 my-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={
-              {
-                // borderRadius: 12,
-                // backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e8f5e9",
-              }
-            }
-          >
-            <Ionicons name="arrow-back" size={24} color="#8bc34a" />
-          </TouchableOpacity>
-
-          <ThemedText
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-            }}
-          >
-            Sub Admins
-          </ThemedText>
-
-          <Pressable
-            onPress={() => {
-              setIsEditMode(false);
-              setEditingAdmin(null);
-              reset();
-              // setSelectedCourses([]);
-              setModalVisible(true);
-            }}
-            className="flex-row items-center gap-1"
-            style={styles.createButton}
-          >
-            <Ionicons name="add-circle-outline" size={18} color="white" />
-
-            <ThemedText style={{ color: "white", fontWeight: "600" }}>
-              Create Sub-Admins
-            </ThemedText>
-          </Pressable>
-        </HStack>
+       {renderHeader()}
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">

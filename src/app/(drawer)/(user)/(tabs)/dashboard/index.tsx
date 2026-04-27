@@ -4,7 +4,7 @@ import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { Divider } from "@/components/divider";
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -90,6 +90,17 @@ export default function DashboardScreen() {
       fetchProfile();
     }, []),
   );
+
+ const renderHomeCourse = () => {
+  const completedRoundsCount = profile?.totalRounds || 0;
+  if(profile?.homeCourse){
+    return profile?.homeCourse ;
+  }
+if (completedRoundsCount >= 10){
+  return 'No home course could be derived'; ;
+}
+return `Auto after ${10 -completedRoundsCount} more completed ${completedRoundsCount === 1 ? 'game' : 'games'}`
+}
 
   const fetchStats = async () => {
     try {
@@ -774,36 +785,7 @@ export default function DashboardScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            NH • {profile?.resolvedHomeCourse}
-                          </Text>
-                        </Box>
-
-                        {/* RIGHT BUTTON */}
-                        <Box
-                          style={{
-                            backgroundColor: "rgba(139,195,74,0.15)",
-                            paddingHorizontal: 10,
-                            paddingVertical: 6,
-                            borderRadius: 20,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          <Ionicons
-                            name="home-outline"
-                            size={14}
-                            color="#2E7D32"
-                          />
-
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              fontWeight: "600",
-                              color: "#2E7D32",
-                            }}
-                          >
-                            Manual Selection
+                          {renderHomeCourse()}
                           </Text>
                         </Box>
                       </HStack>

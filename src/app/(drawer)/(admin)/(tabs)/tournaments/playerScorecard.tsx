@@ -18,6 +18,7 @@ import { getScorecardById } from "@/api/admin/tournaments";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import { getSubScorecardHandicap } from "@/api/scoreCard";
+import { Box } from "@/components/box";
 
 const PlayerScorecard = () => {
   const colorScheme = useColorScheme();
@@ -77,9 +78,9 @@ const PlayerScorecard = () => {
 
   const sumDoublePieora = sumScores(scorecard) - sumNet(scorecard);
 
-  useEffect(() => {
-    console.log(sumDoublePieora);
-  }, [scorecard]);
+  // useEffect(() => {
+  //   console.log(sumDoublePieora);
+  // }, [scorecard]);
   const front9 = scorecard?.slice(0, 9) || [];
   const back9 = scorecard?.slice(9, 18) || [];
 
@@ -318,50 +319,113 @@ const PlayerScorecard = () => {
     </View>
   );
 
+  const renderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      paddingBottom: 10,
+    }}
+  >
+    {/* 🔝 TOP HEADER */}
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        // paddingBottom: 2,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* 🔙 BACK BUTTON */}
+      <Pressable
+        onPress={() => routePage.back()}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
+
+      {/* 🧠 TITLE */}
+      <VStack
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ThemedText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginTop: 2,
+          }}
+        >
+          Scorecard
+        </ThemedText>
+      </VStack>
+
+      {/* ⚖️ RIGHT PLACEHOLDER */}
+      <View style={{ width: 40 }} />
+    </HStack>
+
+    {/* 📌 SCORING TYPE */}
+    <ThemedText
+      style={{
+        textAlign: "center",
+        fontSize: 13,
+        fontWeight: "500",
+        color: isDark ? "#94a3b8" : "#64748b",
+      }}
+    >
+      {renderScoring}
+    </ThemedText>
+
+    {/* 📊 STATS ROW */}
+    <HStack
+      style={{
+        marginTop: 8,
+        marginHorizontal: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+      }}
+    >
+      <ThemedText style={{ fontSize: 12 }}>
+        Handicap:{" "}
+        <ThemedText style={{ fontWeight: "600" }}>
+          {handicap?.handicap ?? "N/A"}
+        </ThemedText>
+      </ThemedText>
+
+      <ThemedText style={{ fontSize: 12 }}>
+        DP HC:{" "}
+        <ThemedText style={{ fontWeight: "600" }}>
+          {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
+        </ThemedText>
+      </ThemedText>
+    </HStack>
+  </Box>
+);
+
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* HEADER */}
-      <HStack
-        className="px-3 pt-5 pb-3 items-center"
-        style={{ justifyContent: "space-between" }}
-      >
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={isDark ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
+      {renderHeader()}
 
-        <ThemedText
-          style={{
-            flex: 1,
-            fontSize: 20,
-            fontWeight: "700",
-            textAlign: "center",
-          }}
-        >
-          Player Scorecard
-        </ThemedText>
-
-        <View style={{ width: 40 }} />
-      </HStack>
-      <ThemedText
-        style={{
-          textAlign: "center",
-          fontSize: 16,
-          fontWeight: "600",
-          marginBottom: 2,
-        }}
-      >
-        ({renderScoring})
-      </ThemedText>
-      <HStack className="justify-between mx-5 my-2">
-        <ThemedText>Handicap: {handicap?.handicap}</ThemedText>
-        <ThemedText>
-          DP HC: {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
-        </ThemedText>
-      </HStack>
       <Watermark />
 
       {loading ? (

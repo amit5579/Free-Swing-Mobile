@@ -1,4 +1,5 @@
 import {
+  AppState,
   View,
   Text,
   StyleSheet,
@@ -9,7 +10,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { updateHoleScoresApi } from "@/api/dashboard";
@@ -30,6 +31,7 @@ export default function PlayScoreCard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+  const navigation = useNavigation();
 
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
@@ -52,20 +54,15 @@ export default function PlayScoreCard() {
     userIdRef.current = userId;
   }, [userId]);
 
+  // Ref to track latest scorecard for listeners
+  const processedScoreCardRef = useRef<any>([]);
+  const inputRefs = useRef<any[]>([]);
+
   const isStableford =
     scoringType === "stableford" || scoringType === "Stableford";
 
-  const isDoublePeoria =
-    scoringType === "double-peoria" ||
-    scoringType === "Double-Peoria" ||
-    scoringType === "double-peoria-stableford" ||
-    scoringType === "Double-Peoria-Stableford" ||
-    scoringType === "double-peoria-net" ||
-    scoringType === "Double-Peoria-Net";
-
   const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
-  const isStandard = scoringType === "standard" || scoringType === "Standard";
 
   const renderScoringType =
     scoringType === "stableford" || scoringType === "Stableford"
@@ -181,8 +178,21 @@ export default function PlayScoreCard() {
   };
 
   // ── Score change handler ──
-  const handleScoreChange = (holeId: number, value: string) => {
-    let formattedText = value.replace(/[^0-9]/g, '');
+  const handleScoreChange = (holeId: number, value: string, index: number) => {
+    
+    if (value === "") {
+      setScoreCard((prev: any[]) =>
+        prev.map((hole) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
+        ),
+      );
+      return;
+    }
+
+    if (!/^\d+$/.test(value)) {
+      Toast.show({ type: "error", text1: "Enter valid score" });
+      return;
+    }
 
     if (formattedText !== "") {
       const numericValue = Number(formattedText);
@@ -191,6 +201,7 @@ export default function PlayScoreCard() {
         formattedText = "";
       }
     }
+    // console.log("value entered:", value);
 
     const updatedScoreCard = scoreCard.map((hole: any) =>
       hole.holeId === holeId ? { ...hole, score: formattedText === "" ? null : Number(formattedText) } : hole
@@ -338,8 +349,7 @@ export default function PlayScoreCard() {
     routePage.back();
   };
 
-  // ── Finish Round ──
-  const handleFinishRound = async() => {
+  const saveRound = async (isCompleted: boolean, shouldGoBack: boolean = false) => {
     try {
       setVisible(false);
       const finishPayload = scoreCardRef.current.map(calculateHole).map((h: any) => ({
@@ -365,16 +375,21 @@ export default function PlayScoreCard() {
       text1: "Round Finished",
       text2: "Score submitted successfully",
     });
-    routePage.back();
-  }catch(error){
-    console.log("Error finishing round",error);
-    setVisible(false);
-    Toast.show({
-      type: "error",
-      text1: "Error",
-      text2: "Failed to finish round",
+
+    const beforeRemoveListener = navigation.addListener("beforeRemove", () => {
+      saveRound(false, false);
     });
-  }
+
+    return () => {
+      appStateListener.remove();
+      beforeRemoveListener();
+    };
+  }, [navigation]);
+
+  // ── Finish Round ──
+  const handleFinishRound = () => {
+    setVisible(false);
+    saveRound(true, true);
   };
 
   // ── Score indicator ──
@@ -654,16 +669,24 @@ export default function PlayScoreCard() {
                             }}
                           >
                             {renderScoreIndicator(h.score, h.par, isDark)}
-                            <TextInput
-                              value={
-                                h.score !== null && h.score !== undefined
-                                  ? String(h.score)
-                                  : ""
-                              }
-                              onChangeText={(val) =>
-                                handleScoreChange(h.holeId, val)
-                              }
-                              keyboardType="numeric"
+                              <TextInput
+                                value={
+                                  h.score !== null && h.score !== undefined
+                                    ? String(h.score)
+                                    : ""
+                                }
+                                onChangeText={(val) =>
+                                  handleScoreChange(h.holeId, val, index)
+                                }
+                                onBlur={() => saveRound(false, false)}
+                                onSubmitEditing={() => {
+                                  if (index < 17) {
+                                    inputRefs.current[index + 1]?.focus();
+                                  }
+                                }}
+                                returnKeyType={index === 17 ? "done" : "next"}
+                                ref={(el:any) => (inputRefs.current[index] = el)}
+                                keyboardType="numeric"
                               style={{
                                 width: 42,
                                 height: 42,
@@ -861,6 +884,11 @@ export default function PlayScoreCard() {
                       }}
                     >
                       Total
+                    </ThemedText>
+                    <ThemedText
+                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                    >
+                      {grandTotals.strokeIndex}
                     </ThemedText>
                     <ThemedText
                       style={{ flex: 1, textAlign: "center", color: "#fff" }}

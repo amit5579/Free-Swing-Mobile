@@ -150,7 +150,7 @@ export default function AllMembersScreen({
     text: isDark ? "#f1f5f9" : "#0f172a",
     subText: isDark ? "#94a3b8" : "#64748b",
     dimText: isDark ? "#64748b" : "#94a3b8",
-    accent: "#84cc16",
+    accent: "#8bc34a",
     accentSoft: isDark ? "rgba(132,204,22,0.15)" : "rgba(132,204,22,0.1)",
     statusActive: "#22c55e",
     statusBlocked: "#ef4444",
@@ -207,7 +207,7 @@ export default function AllMembersScreen({
         onPress: async () => {
           try {
             setLoading(true);
-            console.log("id is ", id, "type is ", typeof id);
+            // console.log("id is ", id, "type is ", typeof id);
 
             await approveSubscription(id);
             fetchUsers();
@@ -1030,7 +1030,7 @@ export default function AllMembersScreen({
                             <Ionicons
                               name="calendar-outline"
                               size={14}
-                              color="#84cc16"
+                              color="#8bc34a"
                             />
                             <ThemedText style={{ fontSize: 11, opacity: 0.8 }}>
                               {formatDate(member.subscriptionEndsAtUtc) ||
@@ -1241,7 +1241,7 @@ export default function AllMembersScreen({
                                     fontSize: 13,
                                     fontWeight: item.highlight ? "700" : "600",
                                     color: item.highlight
-                                      ? "#84cc16"
+                                      ? "#8bc34a"
                                       : isDark
                                         ? "#e2e8f0"
                                         : "#1e293b",
@@ -1415,7 +1415,7 @@ export default function AllMembersScreen({
                       marginBottom: 16,
                     }}
                   >
-                    <Ionicons name="search" size={40} color={"#8ddd14ff"} />
+                    <Ionicons name="search" size={40} color={"#8bc34a"} />
                   </Box>
                   <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
                     {searchQuery
