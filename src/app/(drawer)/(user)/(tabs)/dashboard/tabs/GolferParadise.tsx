@@ -99,7 +99,7 @@ export default function GolferParadise({ searchQuery = "" }: { searchQuery?: str
     const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
 
     const [userRole, setUserRole] = useState<string | null>(null);
-    
+
     useEffect(() => {
         fetchPosts();
         loadUserAvatar();
@@ -220,7 +220,7 @@ export default function GolferParadise({ searchQuery = "" }: { searchQuery?: str
     };
 
     const handlePressProfile = (userId: number) => {
-        const path = userRole === 'admin' 
+        const path = userRole === 'admin'
             ? `/(drawer)/(admin)/(tabs)/allMembers/${userId}`
             : `/(drawer)/(user)/(tabs)/dashboard/tabs/${userId}`;
         router.push(path as any);
@@ -329,110 +329,110 @@ export default function GolferParadise({ searchQuery = "" }: { searchQuery?: str
                             );
                         })
                         .map((post) => (
-                        <View key={post.id}>
-                            <Box
-                                className="rounded-2xl border"
-                                style={{
-                                    backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)",
-                                    borderColor: "rgba(139, 195, 74, 0.3)",
-                                    marginBottom: 16,
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                <HStack className="p-4 items-center justify-between">
-                                    <TouchableOpacity 
-                                        activeOpacity={0.7}
-                                        onPress={() => handlePressProfile(post.userId)}
-                                        className="flex-row items-center flex-1"
-                                    >
-                                        <Box
-                                            style={{
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 20,
-                                                backgroundColor: isDark ? "#222" : "#eee",
-                                                overflow: "hidden",
-                                                borderWidth: 1,
-                                                borderColor: "#8BC34A"
-                                            }}
+                            <View key={post.id}>
+                                <Box
+                                    className="rounded-2xl border"
+                                    style={{
+                                        backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)",
+                                        borderColor: "rgba(139, 195, 74, 0.3)",
+                                        marginBottom: 16,
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <HStack className="p-4 items-center justify-between">
+                                        <TouchableOpacity
+                                            activeOpacity={0.7}
+                                            onPress={() => handlePressProfile(post.userId)}
+                                            className="flex-row items-center flex-1"
                                         >
-                                            {post.playerAvatar && post.playerAvatar !== "null" ? (
-                                                <Image source={{ uri: post.playerAvatar.startsWith('http') ? post.playerAvatar : `https://kolve18freeswing.com${post.playerAvatar}` }} style={{ width: "100%", height: "100%" }} />
-                                            ) : (
-                                                <Box className="items-center justify-center flex-1">
-                                                    <Text className="font-bold text-lg" style={{ color: "#8BC34A" }}>{post.playerName ? post.playerName.charAt(0).toUpperCase() : "?"}</Text>
-                                                </Box>
-                                            )}
-                                        </Box>
-                                        <VStack className="ml-3 flex-1">
-                                            <Text className="font-bold text-base" style={{ color: isDark ? "#fff" : "#111" }}>{post.playerName || "Unknown Golfer"}</Text>
-                                            <Text className="text-[10px]" style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
-                                                {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""} • {post.createdAt ? new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-                                            </Text>
-                                        </VStack>
-                                    </TouchableOpacity>
-
-                                    <View style={{ position: 'relative', zIndex: 10 }}>
-                                        <TouchableOpacity onPress={() => setActiveOptionsPostId(prev => prev === post.id ? null : post.id)} style={{ padding: 4 }}>
-                                            <Ionicons name="ellipsis-horizontal" size={20} color={isDark ? "#D1D5DB" : "#4B5563"} />
+                                            <Box
+                                                style={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: 20,
+                                                    backgroundColor: isDark ? "#222" : "#eee",
+                                                    overflow: "hidden",
+                                                    borderWidth: 1,
+                                                    borderColor: "#8BC34A"
+                                                }}
+                                            >
+                                                {post.playerAvatar && post.playerAvatar !== "null" ? (
+                                                    <Image source={{ uri: post.playerAvatar.startsWith('http') ? post.playerAvatar : `https://kolve18freeswing.com${post.playerAvatar}` }} style={{ width: "100%", height: "100%" }} />
+                                                ) : (
+                                                    <Box className="items-center justify-center flex-1">
+                                                        <Text className="font-bold text-lg" style={{ color: "#8BC34A" }}>{post.playerName ? post.playerName.charAt(0).toUpperCase() : "?"}</Text>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            <VStack className="ml-3 flex-1">
+                                                <Text className="font-bold text-base" style={{ color: isDark ? "#fff" : "#111" }}>{post.playerName || "Unknown Golfer"}</Text>
+                                                <Text className="text-[10px]" style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
+                                                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""} • {post.createdAt ? new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                                                </Text>
+                                            </VStack>
                                         </TouchableOpacity>
 
-                                        {activeOptionsPostId === post.id && (
-                                            <View style={{ position: 'absolute', top: 30, right: 0, backgroundColor: isDark ? '#333' : '#fff', borderRadius: 12, padding: 8, zIndex: 10, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, minWidth: 110, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
-                                                {currentUserId && post.userId === currentUserId ? (
-                                                    <TouchableOpacity onPress={() => handleDeletePost(post.id)} className="flex-row items-center p-2 rounded-lg" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}>
-                                                        <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                                                        <Text className="ml-2 font-bold text-sm" style={{ color: "#EF4444" }}>Delete</Text>
-                                                    </TouchableOpacity>
-                                                ) : (
-                                                    <TouchableOpacity onPress={() => { setActiveOptionsPostId(null); Alert.alert("Report Post", "This post has been flagged for review."); }} className="flex-row items-center p-2 rounded-lg" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6" }}>
-                                                        <Ionicons name="flag-outline" size={16} color={isDark ? "#D1D5DB" : "#4B5563"} />
-                                                        <Text className="ml-2 font-bold text-sm" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>Report</Text>
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        )}
-                                    </View>
-                                </HStack>
+                                        <View style={{ position: 'relative', zIndex: 10 }}>
+                                            <TouchableOpacity onPress={() => setActiveOptionsPostId(prev => prev === post.id ? null : post.id)} style={{ padding: 4 }}>
+                                                <Ionicons name="ellipsis-horizontal" size={20} color={isDark ? "#D1D5DB" : "#4B5563"} />
+                                            </TouchableOpacity>
 
-                                <Box className="px-4 pb-3" style={{ zIndex: 1 }}>
-                                    {post.caption ? (
-                                        <Text style={{ color: isDark ? "#E5E7EB" : "#374151" }} className="text-sm mb-3">
-                                            {post.caption}
-                                        </Text>
-                                    ) : null}
-                                    {post.imageUrl ? (
-                                        <Box className="rounded-xl overflow-hidden border" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
-                                            <PostImage
-                                                imageUrl={post.imageUrl.startsWith('http') ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}`}
-                                                isDark={isDark}
-                                                onImagePress={() => {
-                                                    setFullImageUrl(post.imageUrl!.startsWith("http") ? post.imageUrl! : `https://kolve18freeswing.com${post.imageUrl}`);
-                                                    setFullImageModalVisible(true);
-                                                }}
-                                            />
-                                        </Box>
-                                    ) : null}
+                                            {activeOptionsPostId === post.id && (
+                                                <View style={{ position: 'absolute', top: 30, right: 0, backgroundColor: isDark ? '#333' : '#fff', borderRadius: 12, padding: 8, zIndex: 10, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, minWidth: 110, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
+                                                    {currentUserId && post.userId === currentUserId ? (
+                                                        <TouchableOpacity onPress={() => handleDeletePost(post.id)} className="flex-row items-center p-2 rounded-lg" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}>
+                                                            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                                                            <Text className="ml-2 font-bold text-sm" style={{ color: "#EF4444" }}>Delete</Text>
+                                                        </TouchableOpacity>
+                                                    ) : (
+                                                        <TouchableOpacity onPress={() => { setActiveOptionsPostId(null); Alert.alert("Report Post", "This post has been flagged for review."); }} className="flex-row items-center p-2 rounded-lg" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6" }}>
+                                                            <Ionicons name="flag-outline" size={16} color={isDark ? "#D1D5DB" : "#4B5563"} />
+                                                            <Text className="ml-2 font-bold text-sm" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>Report</Text>
+                                                        </TouchableOpacity>
+                                                    )}
+                                                </View>
+                                            )}
+                                        </View>
+                                    </HStack>
+
+                                    <Box className="px-4 pb-3" style={{ zIndex: 1 }}>
+                                        {post.caption ? (
+                                            <Text style={{ color: isDark ? "#E5E7EB" : "#374151" }} className="text-sm mb-3">
+                                                {post.caption}
+                                            </Text>
+                                        ) : null}
+                                        {post.imageUrl ? (
+                                            <Box className="rounded-xl overflow-hidden border" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
+                                                <PostImage
+                                                    imageUrl={post.imageUrl.startsWith('http') ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}`}
+                                                    isDark={isDark}
+                                                    onImagePress={() => {
+                                                        setFullImageUrl(post.imageUrl!.startsWith("http") ? post.imageUrl! : `https://kolve18freeswing.com${post.imageUrl}`);
+                                                        setFullImageModalVisible(true);
+                                                    }}
+                                                />
+                                            </Box>
+                                        ) : null}
+                                    </Box>
+
+                                    <Divider style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }} />
+                                    <HStack className="px-4 py-2 items-center">
+                                        <TouchableOpacity
+                                            onPress={() => handleLike(post.id)}
+                                            className="flex-row items-center mr-6 p-1"
+                                        >
+                                            <Ionicons name={post.isLikedByMe ? "heart" : "heart-outline"} size={22} color={post.isLikedByMe ? "#EF4444" : (isDark ? "#D1D5DB" : "#4B5563")} />
+                                            <Text className="ml-1 text-xs font-semibold" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.likeCount}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className="flex-row items-center p-1" onPress={() => setCommentModalPostId(post.id)}>
+                                            <Ionicons name="chatbubble-outline" size={20} color={isDark ? "#D1D5DB" : "#4B5563"} />
+                                            <Text className="ml-1 text-xs font-semibold" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.commentCount}</Text>
+                                        </TouchableOpacity>
+                                    </HStack>
                                 </Box>
 
-                                <Divider style={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }} />
-                                <HStack className="px-4 py-2 items-center">
-                                    <TouchableOpacity
-                                        onPress={() => handleLike(post.id)}
-                                        className="flex-row items-center mr-6 p-1"
-                                    >
-                                        <Ionicons name={post.isLikedByMe ? "heart" : "heart-outline"} size={22} color={post.isLikedByMe ? "#EF4444" : (isDark ? "#D1D5DB" : "#4B5563")} />
-                                        <Text className="ml-1 text-xs font-semibold" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.likeCount}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="flex-row items-center p-1" onPress={() => setCommentModalPostId(post.id)}>
-                                        <Ionicons name="chatbubble-outline" size={20} color={isDark ? "#D1D5DB" : "#4B5563"} />
-                                        <Text className="ml-1 text-xs font-semibold" style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.commentCount}</Text>
-                                    </TouchableOpacity>
-                                </HStack>
-                            </Box>
-
-                        </View>
-                    ))}
+                            </View>
+                        ))}
                 </View>
             )}
 
@@ -469,8 +469,8 @@ export default function GolferParadise({ searchQuery = "" }: { searchQuery?: str
                                         const commenterName = comment.userName || comment.playerName || comment.user || "User";
                                         const commentText = comment.text || comment.comment || "";
                                         return (
-                                            <TouchableOpacity 
-                                                key={comment.id} 
+                                            <TouchableOpacity
+                                                key={comment.id}
                                                 onPress={() => {
                                                     setCommentModalPostId(null);
                                                     handlePressProfile(comment.userId);

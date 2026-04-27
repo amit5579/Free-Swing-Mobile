@@ -67,8 +67,8 @@ export interface InProgressApiItem {
   scorecardId: number;
   date: string;
   courseName: string;
-  score: number;
-  netScore: number;
+  score: number | null;
+  netScore: number | null;
   par: number;
   holesPlayed: number;
   isDQ: boolean;
@@ -171,8 +171,8 @@ export interface ScoreHistoryItem {
   scorecardId: number;
   date: string;
   courseName: string;
-  score: number;
-  netScore: number;
+  score: number | null;
+  netScore: number | null;
   par: number;
   isDQ: boolean;
   tournamentId: number | null;
@@ -218,8 +218,8 @@ export type ScorecardHole = {
   yardage: number;
   teeBoxId: number;
   courseId: number;
-  score: number;
-  netScore: number;
+  score: number | null;
+  netScore: number | null;
   roundNumber: number;
   stablefordPoints: number | null;
   isCompleted: boolean;
@@ -228,12 +228,14 @@ export type ScorecardHole = {
   isDoublePeoria: boolean;
   courseHalf: string;
   isExcluded: boolean;
+  scoringType?: string;
+  isTournament?: boolean;
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
   try {
     console.log("scorecardid",scorecardId);
-    const response = await https.get(`/scorecard/details/${scorecardId}`);
+    const response = await https.get(`scorecard/details/${scorecardId}`);
     return response.data as ScorecardHole[];
   } catch (error) {
     console.error("Failed to fetch scorecard details:", error);
@@ -244,7 +246,7 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
-    const response = await https.post(`/scorecard/update`, { scorecardId, holeScores });
+    const response = await https.post(`scorecard/update`, { scorecardId, holeScores });
     return response.data;
   } catch (error) {
     console.error("Updating scorecard error:", error);
@@ -252,12 +254,32 @@ export const updateScorecardApi = async (scorecardId: string | number, holeScore
   }
 };
 
-export const saveScorecardApi = async (scorecardId: string | number) => {
+export const finishScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.post(`/scorecard/save`, { scorecardId });
+    const response = await https.post(`scorecard/save`, { scorecardId });
     return response.data;
   } catch (error) {
-    console.error("Saving scorecard error:", error);
+    console.error("Finishing scorecard error:", error);
+    throw error;
+  }
+};
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export const updateHoleScoresApi = async (payload: any[]) => {
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    const finalPayload = payload.map(h => ({
+      ...h,
+      userId: userId ? Number(userId) : h.userId
+    }));
+
+    console.log("updateHoleScoresApi sending payload:", JSON.stringify(finalPayload, null, 2));
+    const response = await https.post(`scorecard/save`, finalPayload);
+    console.log("updateHoleScoresApi response:", response.status, response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Updating hole scores error:", error);
     throw error;
   }
 };

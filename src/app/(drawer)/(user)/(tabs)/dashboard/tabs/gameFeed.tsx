@@ -6,15 +6,16 @@ import { HStack } from "@/components/hstack";
 import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView, Dimensions, Alert } from "react-native";
+import { Pressable, useColorScheme, View, Modal, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getLikedUsersApi, LikedUser } from "@/api/dashboard";
 import { verifyScoreApi } from "@/api/admin/dashboard";
 import GolferParadise from "./GolferParadise";
 import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers";
+import { useFocusEffect } from "expo-router";
 
 export type Scorecard = {
     id: string;

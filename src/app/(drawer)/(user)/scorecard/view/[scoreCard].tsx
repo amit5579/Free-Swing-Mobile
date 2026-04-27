@@ -1,4 +1,4 @@
-import { getScorecardDetails, ScorecardHole, saveScorecardApi } from "@/api/dashboard";
+import { getScorecardDetails, ScorecardHole, updateHoleScoresApi } from "@/api/dashboard";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
@@ -53,12 +53,12 @@ const ScoreCard: React.FC = () => {
                 const data = await getScorecardDetails(scoreCard!);
                 setHoles(data);
 
-                const showPts = data.some(h => h.tournamentId !== null);
+                const showPts = data.some(h => h.stablefordPoints !== null && h.stablefordPoints !== undefined);
                 setIsStableford(showPts);
 
                 const initialText: Record<number, string> = {};
                 data.forEach(h => {
-                    if (h.score != null && h.score > 0) {
+                    if (h.score != null && h.score >= 0) {
                         initialText[h.holeId] = h.score.toString();
                     }
                 });
@@ -93,9 +93,9 @@ const ScoreCard: React.FC = () => {
         setHoles(prev => prev.map(h => {
             if (h.holeId === holeId) {
                 const strokes = calculateStrokes(displayHandicap, h.strokeIndex);
-                const netScore = score > 0 ? score - strokes : 0;
-                const stablefordPoints = score > 0 ? Math.max(0, h.par - netScore + 2) : 0;
-                return { ...h, score: score >= 0 ? score : 0, netScore, stablefordPoints };
+                const netScore = score > 0 ? score - strokes : null;
+                const stablefordPoints = (score !== null && score > 0 && netScore !== null) ? Math.max(0, h.par - netScore + 2) : null;
+                return { ...h, score: score !== null && score >= 0 ? score : null, netScore, stablefordPoints };
             }
             return h;
         }));
@@ -127,13 +127,12 @@ const ScoreCard: React.FC = () => {
                     onPress: async () => {
                         try {
                             setSaving(true);
-                            const holeScores = Object.entries(textScores).map(([holeId, score]) => ({
-                                holeId: parseInt(holeId),
-                                score: score === "" ? 0 : parseInt(score)
+                            const payload = holes.map(h => ({
+                                ...h,
+                                isCompleted: true,
+                                score: (h.score !== null && h.score >= 0) ? h.score : null
                             }));
-                            await updateScorecardApi(scoreCard!, holeScores);
-
-                            const response = await saveScorecardApi(scoreCard!);
+                            await updateHoleScoresApi(payload);
                             Alert.alert("Success", "Round finished successfully", [
                                 { text: "OK", onPress: () => router.back() }
                             ]);
@@ -302,7 +301,6 @@ const ScoreCard: React.FC = () => {
                         ))}
                     </View>
 
-                    {/* Grand Total Skeleton */}
                     <View className="mt-6 mb-12">
                         <Skeleton isDark={isDark} width="100%" height={48} borderRadius={12} />
                     </View>
@@ -326,9 +324,7 @@ const ScoreCard: React.FC = () => {
         <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F9FAFB" }}>
             <Watermark />
 
-            {/* ── Fixed Header ── */}
             <View className="px-4 pb-2 z-10 w-full" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF", paddingTop: Math.max(insets.top, 16) }}>
-                {/* Back + Title */}
                 <View className="flex-row items-center mb-4 mt-0">
                     <TouchableOpacity
                         onPress={() => router.back()}
@@ -363,21 +359,14 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
 
-                {!username && (
-                    <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9", borderWidth: 1, borderColor: "#8BC34A" }}>
-                        <Ionicons name="shield-checkmark" size={14} color="#8BC34A" />
-                        <Text className="text-xs font-bold ml-1" style={{ color: "#8BC34A" }}>Verified</Text>
-                    </View>
-                )}
+
             </View>
 
-            {/* ── Scrollable Table ── */}
             <ScrollView
                 className="px-4 flex-1"
                 showsVerticalScrollIndicator={false}
                 stickyHeaderIndices={[0]}
             >
-                {/* 0th child → sticky table header */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View
                         className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
@@ -391,12 +380,10 @@ const ScoreCard: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Table rows — inline subtotals */}
                 <View
                     className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
                     style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}
                 >
-                    {/* ── Front 9 holes ── */}
                     {front9.map((h, index) => (
                         <View
                             key={h.holeId}
@@ -431,17 +418,16 @@ const ScoreCard: React.FC = () => {
                                 />
                             </View>
                             <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
+                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) >= 0) ? h.netScore : "-"}
                             </Text>
                             {isStableford && (
                                 <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) >= 0) ? (h.stablefordPoints || 0) : "-"}
                                 </Text>
                             )}
                         </View>
                     ))}
 
-                    {/* ── Front 9 Subtotal ── */}
                     <View
                         className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
                         style={{ backgroundColor: isDark ? "rgba(139,195,74,0.12)" : "rgba(139,195,74,0.08)" }}
@@ -455,7 +441,6 @@ const ScoreCard: React.FC = () => {
                         {isStableford && <Text className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(front9)}</Text>}
                     </View>
 
-                    {/* ── Back 9 holes (only if 18-hole round) ── */}
                     {back9.length > 0 && back9.map((h, index) => (
                         <View
                             key={h.holeId}
@@ -490,17 +475,16 @@ const ScoreCard: React.FC = () => {
                                 />
                             </View>
                             <Text className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}>
-                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? h.netScore : "-"}
+                                {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) >= 0) ? h.netScore : "-"}
                             </Text>
                             {isStableford && (
                                 <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) >= 0) ? (h.stablefordPoints || 0) : "-"}
                                 </Text>
                             )}
                         </View>
                     ))}
 
-                    {/* ── Back 9 Subtotal (18-hole only) ── */}
                     {back9.length > 0 && (
                         <View
                             className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
@@ -516,21 +500,16 @@ const ScoreCard: React.FC = () => {
                         </View>
                     )}
 
-                    {/* ── Grand Total ── */}
-                    <View className="flex-row p-3" style={{ backgroundColor: "#8BC34A" }}>
-                        <Text className="flex-1 text-center font-black text-xs text-white">Grand Total</Text>
+                    <View className="flex-row p-3 items-center" style={{ backgroundColor: "#8BC34A" }}>
+                        <Text className="flex-1 text-center font-black text-l text-white">Grand Total</Text>
                         <Text className="flex-1" />
-                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumYardage(holes)}</Text>
-                        <Text className="flex-1 text-center font-bold text-xs text-white">{sumPar(holes)}</Text>
-                        <Text className="flex-1 text-center font-black text-xs text-white">{sumScores(holes)}</Text>
-                        <Text className="flex-1 text-center font-black text-xs text-white">{sumNet(holes)}</Text>
-                        {isStableford && <Text className="flex-1 text-center font-black text-xs text-white">{sumPts(holes)}</Text>}
+                        <Text className="flex-1 text-center font-bold text-l text-white">{sumYardage(holes)}</Text>
+                        <Text className="flex-1 text-center font-bold text-l text-white">{sumPar(holes)}</Text>
+                        <Text className="flex-1 text-center font-black text-l text-white">{sumScores(holes)}</Text>
+                        <Text className="flex-1 text-center font-black text-l text-white">{sumNet(holes)}</Text>
+                        {isStableford && <Text className="flex-1 text-center font-black text-l text-white">{sumPts(holes)}</Text>}
                     </View>
                 </View>
-
-                {/* Finish Round Button hidden in view mode */}
-
-                {/* ── Dynamic Legend with counts ── */}
                 {(() => {
                     const scoreCounts: Record<string, number> = {
                         holeInOne: 0,

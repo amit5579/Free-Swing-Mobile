@@ -24,12 +24,6 @@ export const saveScoreCard = async (payload: any[]) => {
   }
 };
 
-
-
-// scorecard of user tournament ------------------------------------------
-
-// scorecard/handicap/userId/teeBoxId
-
 export const getScorecardHandicap = async (teeBoxId: number) => {
     try {
       const userId = await AsyncStorage.getItem("userId");

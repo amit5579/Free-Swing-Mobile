@@ -49,8 +49,9 @@ interface UserProfile {
   bestScore?: number;
 }
 
-export default function MemberProfilePage() {
-  const { id } = useLocalSearchParams();
+export default function MemberProfilePage({ id: propId, hideHeader = false }: { id?: string; hideHeader?: boolean }) {
+  const { id: paramId } = useLocalSearchParams();
+  const id = propId || paramId;
   const router = useRouter();
   const isDark = useColorScheme() === "dark";
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -96,27 +97,29 @@ export default function MemberProfilePage() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex:1, backgroundColor: isDark ? "#000" : "#F2F2F2" }}>
+      <View style={{ flex:1, backgroundColor: isDark ? "#000" : "#F2F2F2" }}>
         <Watermark />
-        <View className="px-4 py-3">
-            <TouchableOpacity 
-              onPress={async () => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  const role = await AsyncStorage.getItem("role");
-                  if (role?.toLowerCase() === 'admin') {
-                    router.replace("/(drawer)/(admin)/(tabs)/dashboard");
-                  } else {
-                    router.replace("/(drawer)/(user)/(tabs)/dashboard");
-                  }
-                }
-              }}
-              className="bg-[#8BC34A] rounded-full p-2 h-10 w-10 items-center justify-center mb-4"
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-        </View>
+        {!hideHeader && (
+            <View className="px-4 py-3">
+                <TouchableOpacity 
+                  onPress={async () => {
+                    if (router.canGoBack()) {
+                      router.back();
+                    } else {
+                      const role = await AsyncStorage.getItem("role");
+                      if (role?.toLowerCase() === 'admin') {
+                        router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+                      } else {
+                        router.replace("/(drawer)/(user)/(tabs)/dashboard");
+                      }
+                    }
+                  }}
+                  className="bg-[#8BC34A] rounded-full p-2 h-10 w-10 items-center justify-center mb-4"
+                >
+                  <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
+        )}
         <View className="p-4">
           <Skeleton isDark={isDark} width={width - 32} height={180} borderRadius={32} style={{ marginBottom: 16 }} />
           <Skeleton isDark={isDark} width={width - 32} height={120} borderRadius={32} style={{ marginBottom: 16 }} />
@@ -124,7 +127,7 @@ export default function MemberProfilePage() {
           <Skeleton isDark={isDark} width={width - 32} height={60} borderRadius={24} style={{ marginBottom: 16 }} />
           <Skeleton isDark={isDark} width={width - 32} height={60} borderRadius={24} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -142,48 +145,50 @@ export default function MemberProfilePage() {
                          !imageError;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}>
+    <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}>
       <Watermark />
       
       {/* Header */}
-      <HStack className="items-center px-4 py-3 justify-between">
-        <TouchableOpacity 
-          onPress={async () => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              const role = await AsyncStorage.getItem("role");
-              if (role?.toLowerCase() === 'admin') {
-                router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+      {!hideHeader && (
+        <HStack className="items-center px-4 py-3 justify-between">
+          <TouchableOpacity 
+            onPress={async () => {
+              if (router.canGoBack()) {
+                router.back();
               } else {
-                router.replace("/(drawer)/(user)/(tabs)/dashboard");
+                const role = await AsyncStorage.getItem("role");
+                if (role?.toLowerCase() === 'admin') {
+                  router.replace("/(drawer)/(admin)/(tabs)/dashboard");
+                } else {
+                  router.replace("/(drawer)/(user)/(tabs)/dashboard");
+                }
               }
-            }
-          }}
-          style={{
-            backgroundColor: "#8BC34A",
-            padding: 10,
-            borderRadius: 14,
-            shadowColor: "#8BC34A",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-          }}
-        >
-          <Ionicons name="arrow-back" size={20} color="white" />
-        </TouchableOpacity>
-        <Text 
-          style={{ 
-            fontSize: 18, 
-            fontWeight: "900", 
-            color: isDark ? "#FFF" : "#1A1A1A",
-            letterSpacing: -0.5
-          }}
-        >
-          Golfers Paradise Member
-        </Text>
-        <View style={{ width: 40 }} />
-      </HStack>
+            }}
+            style={{
+              backgroundColor: "#8BC34A",
+              padding: 10,
+              borderRadius: 14,
+              shadowColor: "#8BC34A",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+            }}
+          >
+            <Ionicons name="arrow-back" size={20} color="white" />
+          </TouchableOpacity>
+          <Text 
+            style={{ 
+              fontSize: 18, 
+              fontWeight: "900", 
+              color: isDark ? "#FFF" : "#1A1A1A",
+              letterSpacing: -0.5
+            }}
+          >
+            Golfers Paradise Member
+          </Text>
+          <View style={{ width: 40 }} />
+        </HStack>
+      )}
 
       {/* Fixed Profile Card at Top */}
       <Box 
@@ -418,7 +423,6 @@ export default function MemberProfilePage() {
           )}
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
-
