@@ -58,7 +58,7 @@ export default function subAdminTournamentHistory() {
           marginBottom: 16,
         }}
       >
-        <Ionicons name="time-outline" size={32} color={colors.subText} />
+        <Ionicons name="time-outline" size={32} color={"#84cc16"} />
       </View>
       <ThemedText
         style={{
@@ -87,7 +87,7 @@ export default function subAdminTournamentHistory() {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const data = await getTournamentHistory(Number(tournamentId));      // console.log("hData", hData);
+      const data = await getTournamentHistory(Number(tournamentId)); // console.log("hData", hData);
       setHistory(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -100,41 +100,71 @@ export default function subAdminTournamentHistory() {
     fetchHistory();
   }, []);
 
+  const renderHeader = () => (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <HStack
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* 🔙 BACK */}
+        <Pressable
+          onPress={() => routePage.back()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          }}
+          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
+
+        {/* 🧠 TITLE BLOCK */}
+        <VStack style={{ flex: 1, alignItems: "center" }}>
+          <ThemedText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginTop: 2,
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Tournament History
+          </ThemedText>
+        </VStack>
+
+        {/* ⚖️ RIGHT SPACER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+    </Box>
+  );
+
   return (
     <ThemedView
       style={{
         flex: 1,
       }}
     >
-      <HStack
-        className="px-3 pt-5 pb-3 items-center"
-        style={{ justifyContent: "space-between" }}
-      >
-        {/* LEFT: Back button */}
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
+      {renderHeader()}
 
-        {/* CENTER: Title */}
-        <ThemedText
-          style={{
-            flex: 1,
-            fontSize: 20,
-            fontWeight: "700",
-            textAlign: "center",
-            lineHeight: 30,
-          }}
-        >
-          Tournament History
-        </ThemedText>
-
-        {/* RIGHT: Add Button */}
-        <View style={{ width: 40 }} />
-      </HStack>
       <Watermark />
 
       <ScrollView

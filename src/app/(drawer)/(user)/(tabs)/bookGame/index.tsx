@@ -79,40 +79,62 @@ export default function BookGameScreen() {
     },
   ];
 
+  const renderHeader = () => (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <VStack
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 16,
+          alignItems: "center",
+        }}
+      >
+        {/* 🧠 TITLE */}
+        <ThemedText
+          style={{
+            fontSize: 20,
+            fontWeight: "700",
+            textAlign: "center",
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Book a Complimentary Game
+        </ThemedText>
+
+        {/* 📌 SUBTITLE */}
+        <ThemedText
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            color: isDark ? "#94a3b8" : "#64748b",
+            textAlign: "center",
+            maxWidth: "90%",
+          }}
+        >
+          Select your bank to be redirected to the booking portal
+        </ThemedText>
+      </VStack>
+    </Box>
+  );
+
   return (
     <ThemedView
       style={{
         flex: 1,
       }}
     >
+      {/* Header */}
+      {renderHeader()}
       <Watermark />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack className="px-4 pt-6 pb-20">
-          {/* Header */}
-          <VStack className="mb-6">
-            <ThemedText
-              style={{
-                fontSize: 24,
-                fontWeight: "700",
-                textAlign: "center",
-              }}
-            >
-              Book a Complimentary Game
-            </ThemedText>
-
-            <ThemedText
-              style={{
-                fontSize: 14,
-                opacity: 0.6,
-                marginTop: 8,
-                textAlign: "center",
-              }}
-            >
-              Select your bank to be redirected to the booking portal.
-            </ThemedText>
-          </VStack>
-
           {/* Bank List */}
           <VStack className="gap-3">
             {bankDetails.map((bank, index) => (

@@ -25,6 +25,9 @@ import {
   RadioLabel,
 } from "@/components/radio";
 import { getHandicapDetails } from "@/api/newRound";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
@@ -52,38 +55,49 @@ export default function StartNewRoundPage() {
   }, []);
 
   const RenderHeader = () => {
-    return (
-      <>
-        <HStack
-          className="px-3 mt-3 items-center"
-          style={{ justifyContent: "space-between" }}
-        >
-          {/* CENTER: Title */}
-          <ThemedText
-            style={{
-              flex: 1,
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
-              lineHeight: 30,
-            }}
-          >
-            Start new round
-          </ThemedText>
-        </HStack>
+  return (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <VStack
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 14,
+          alignItems: "center",
+        }}
+      >
+        {/* 🧠 TITLE */}
         <ThemedText
           style={{
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "400",
-            lineHeight: 30,
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
           }}
         >
-          Select a course to begin your round.
+          Start New Round
         </ThemedText>
-      </>
-    );
-  };
+
+        {/* 📌 SUBTITLE */}
+        <ThemedText
+          style={{
+            marginTop: 4,
+            fontSize: 13,
+            color: isDark ? "#94a3b8" : "#64748b",
+            textAlign: "center",
+            maxWidth: "90%",
+          }}
+        >
+          Select a course to begin your round
+        </ThemedText>
+      </VStack>
+    </Box>
+  );
+};
 
   const CourseCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
@@ -152,7 +166,6 @@ export default function StartNewRoundPage() {
         {/* Header */}
 
         <RenderHeader />
-
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -203,13 +216,28 @@ function CourseCard({ course, isDark }: any) {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [teeBoxList, setTeeBoxList] = useState<any[]>([]);
-  const [selectedTeeBoxId, setSelectedTeeBoxId] = useState<number>(0);
   const [handicapDetails, setHandicapDetails] = useState<any>([]);
-  const [scoreType, setScoreType] =
-    useState<keyof typeof scoringOptions>("net_including");
-  const [holesToPlay, setHolesToPlay] =
-    useState<keyof typeof holesOptions>("18");
   const [handicapView, setHandicapView] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<NewRoundFormValues>({
+    resolver: zodResolver(newRoundSchema),
+    defaultValues: {
+      teeBoxId: 0,
+      scoreType: "net_including",
+      holesToPlay: "18",
+    },
+  });
+
+  const selectedTeeBoxId = watch("teeBoxId");
+  const scoreType = watch("scoreType");
+  const holesToPlay = watch("holesToPlay");
   const textColor = isDark ? "#fff" : "#000";
   const subTextColor = isDark ? "#aaa" : "#555";
   const cardBg = isDark ? "#1e1e1e" : "#f9f9f9";
@@ -310,7 +338,7 @@ function CourseCard({ course, isDark }: any) {
           onPress={() => {
             setModalVisible(true);
             setTeeBoxList(course.teeBoxes);
-            setSelectedTeeBoxId(0); // reset selection 
+            reset(); // reset form to defaults
           }}
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
@@ -360,7 +388,8 @@ function CourseCard({ course, isDark }: any) {
 
               <Pressable
                 onPress={() => {
-                  // reset();
+                  reset();
+                  setHandicapView(false);
                   setModalVisible(false);
                 }}
               >
@@ -375,43 +404,52 @@ function CourseCard({ course, isDark }: any) {
               <ThemedText>
                 You are now starting a round for {course.name}
               </ThemedText>
-              <Dropdown
-                style={[
-                  styles.dropdown,
-                  {
-                    backgroundColor: cardBg,
-                    borderColor: borderColor,
-                    borderWidth: 1,
-                  },
-                ]}
-                placeholderStyle={{ color: subTextColor }}
-                selectedTextStyle={{ color: textColor }}
-                itemTextStyle={{ color: textColor }}
-                containerStyle={{
-                  backgroundColor: isDark ? "#333" : "#eee",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  borderWidth: 1,
-                  borderColor: borderColor,
-                }}
-                itemContainerStyle={{
-                  backgroundColor: isDark ? "#333" : "#eee",
-                }}
-                activeColor={isDark ? "#333" : "#eee"}
-                data={teeBoxList.map((item: any) => ({
-                  ...item,
-                  label: `${item.name} (Slope:${item.slope} / Rating:${item.rating})`,
-                }))}
-                labelField="label"
-                valueField="teeBoxId"
-                placeholder={"Choose Tee Box"}
-                value={selectedTeeBoxId}
-                onChange={(item: any) => {
-                  console.log("TeeItem", item);
-                  setHandicapView(true);
-                  setSelectedTeeBoxId(item.teeBoxId); // ✅ store ID
-                }}
+              <Controller
+                control={control}
+                name="teeBoxId"
+                render={({ field: { onChange, value } }) => (
+                  <Dropdown
+                    style={[
+                      styles.dropdown,
+                      {
+                        backgroundColor: cardBg,
+                        borderColor: errors.teeBoxId ? "#ef4444" : borderColor,
+                        borderWidth: 1,
+                      },
+                    ]}
+                    placeholderStyle={{ color: subTextColor }}
+                    selectedTextStyle={{ color: textColor }}
+                    itemTextStyle={{ color: textColor }}
+                    containerStyle={{
+                      backgroundColor: isDark ? "#333" : "#eee",
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      borderWidth: 1,
+                      borderColor: borderColor,
+                    }}
+                    itemContainerStyle={{
+                      backgroundColor: isDark ? "#333" : "#eee",
+                    }}
+                    activeColor={isDark ? "#333" : "#eee"}
+                    data={teeBoxList.map((item: any) => ({
+                      ...item,
+                      label: `${item.name} (Slope:${item.slope} / Rating:${item.rating})`,
+                    }))}
+                    labelField="label"
+                    valueField="teeBoxId"
+                    placeholder={"Choose Tee Box"}
+                    value={value}
+                    onChange={(item: any) => {
+                      // console.log("TeeItem", item);
+                      setHandicapView(true);
+                      onChange(item.teeBoxId);
+                    }}
+                  />
+                )}
               />
+              {errors.teeBoxId && (
+                <Text style={styles.errorText}>{errors.teeBoxId.message}</Text>
+              )}
 
               {handicapView && (
                 <HStack
@@ -430,121 +468,132 @@ function CourseCard({ course, isDark }: any) {
               )}
 
               <View style={styles.container}>
-                <RadioGroup value={scoreType} onChange={setScoreType}>
-                  <ThemedText style={{ color: textColor, marginBottom: 8 }}>
-                    Scoring Mode
-                  </ThemedText>
+                <Controller
+                  control={control}
+                  name="scoreType"
+                  render={({ field: { onChange, value } }) => (
+                    <RadioGroup value={value} onChange={onChange}>
+                      <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                        Scoring Mode
+                      </ThemedText>
 
-                  {[
-                    {
-                      label: "Net Score (including par 3)",
-                      value: "net_including",
-                      excluded: false,
-                      stableford: false,
-                    },
-                    {
-                      label: "Net Score (excluding par 3)",
-                      value: "net_excluding",
-                      excluded: true,
-                      stableford: false,
-                    },
-                    {
-                      label: "Stableford Scoring",
-                      value: "stableford",
-                      excluded: false,
-                      stableford: true,
-                    },
-                  ].map((item) => (
-                    <Radio
-                      key={item.value}
-                      value={item.value}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <RadioIndicator
-                        style={{
-                          borderColor: textColor,
-                          borderWidth: 2,
-                          marginRight: 10,
-                        }}
-                      >
-                        {scoreType === item.value && (
-                          <View
+                      {[
+                        {
+                          label: "Net Score (including par 3)",
+                          value: "net_including",
+                        },
+                        {
+                          label: "Net Score (excluding par 3)",
+                          value: "net_excluding",
+                        },
+                        {
+                          label: "Stableford Scoring",
+                          value: "stableford",
+                        },
+                      ].map((item) => (
+                        <Radio
+                          key={item.value}
+                          value={item.value}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 10,
+                          }}
+                        >
+                          <RadioIndicator
                             style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 5,
-                              backgroundColor: textColor,
+                              borderColor: textColor,
+                              borderWidth: 2,
+                              marginRight: 10,
                             }}
-                          />
-                        )}
-                      </RadioIndicator>
+                          >
+                            {value === item.value && (
+                              <View
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: 5,
+                                  backgroundColor: textColor,
+                                }}
+                              />
+                            )}
+                          </RadioIndicator>
 
-                      <RadioLabel style={{ color: textColor }}>
-                        {item.label}
-                      </RadioLabel>
-                    </Radio>
-                  ))}
-                </RadioGroup>
+                          <RadioLabel style={{ color: textColor }}>
+                            {item.label}
+                          </RadioLabel>
+                        </Radio>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
+                {errors.scoreType && (
+                  <Text style={styles.errorText}>{errors.scoreType.message}</Text>
+                )}
               </View>
 
               {/* Holes to play */}
               <View style={styles.container}>
-                <RadioGroup value={holesToPlay} onChange={setHolesToPlay}>
-                  <ThemedText style={{ color: textColor, marginBottom: 8 }}>
-                    Holes to Play
-                  </ThemedText>
+                <Controller
+                  control={control}
+                  name="holesToPlay"
+                  render={({ field: { onChange, value } }) => (
+                    <RadioGroup value={value} onChange={onChange}>
+                      <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                        Holes to Play
+                      </ThemedText>
 
-                  {[
-                    {
-                      label: "18 Holes",
-                      value: "18",
-                      holes: 18,
-                    },
-                    {
-                      label: "Front Nine (1-9)",
-                      value: "front9",
-                      holes: 9,
-                    },
-                    {
-                      label: "Back Nine (10-18)",
-                      value: "back9",
-                      holes: 10,
-                    },
-                  ].map((item) => (
-                    <Radio
-                      key={item.value}
-                      value={item.value}
-                      style={{ flexDirection: "row", marginBottom: 10 }}
-                    >
-                      <RadioIndicator
-                        style={{
-                          borderColor: textColor,
-                          borderWidth: 2,
-                          marginRight: 10,
-                        }}
-                      >
-                        {holesToPlay === item.value && (
-                          <View
+                      {[
+                        {
+                          label: "18 Holes",
+                          value: "18",
+                        },
+                        {
+                          label: "Front Nine (1-9)",
+                          value: "front9",
+                        },
+                        {
+                          label: "Back Nine (10-18)",
+                          value: "back9",
+                        },
+                      ].map((item) => (
+                        <Radio
+                          key={item.value}
+                          value={item.value}
+                          style={{ flexDirection: "row", marginBottom: 10 }}
+                        >
+                          <RadioIndicator
                             style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 5,
-                              backgroundColor: textColor,
+                              borderColor: textColor,
+                              borderWidth: 2,
+                              marginRight: 10,
                             }}
-                          />
-                        )}
-                      </RadioIndicator>
+                          >
+                            {value === item.value && (
+                              <View
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: 5,
+                                  backgroundColor: textColor,
+                                }}
+                              />
+                            )}
+                          </RadioIndicator>
 
-                      <RadioLabel style={{ color: textColor }}>
-                        {item.label}
-                      </RadioLabel>
-                    </Radio>
-                  ))}
-                </RadioGroup>
+                          <RadioLabel style={{ color: textColor }}>
+                            {item.label}
+                          </RadioLabel>
+                        </Radio>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
+                {errors.holesToPlay && (
+                  <Text style={styles.errorText}>
+                    {errors.holesToPlay.message}
+                  </Text>
+                )}
               </View>
             </ScrollView>
 
@@ -565,16 +614,16 @@ function CourseCard({ course, isDark }: any) {
               </Pressable>
 
               <Pressable
-                onPress={
-                  // handleSubmit(onSubmit)
-                  () => {
-                    setHandicapView(false);
-                    setModalVisible(false);
-                    routePage.push(
-                      `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${selectedTeeBoxId}`,
-                    );
-                  }
-                }
+                onPress={handleSubmit((data) => {
+                  const selectedScore = scoringOptions[data.scoreType];
+                  const selectedHoles = holesOptions[data.holesToPlay];
+                  
+                  setHandicapView(false);
+                  setModalVisible(false);
+                  routePage.push(
+                    `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}`,
+                  );
+                })}
                 style={styles.createBtn}
               >
                 <Text style={{ color: "#fff" }}>Start Game</Text>

@@ -27,14 +27,27 @@ export const userTournamentSchema = z
 
 
 export const contactAdminSchema = z.object({
-    category: z
-        .string()
-        .min(1, "Category is required")
-        .refine(
-            (val) => ["bug", "improvement", "general"].includes(val),
-            "Invalid category"
-        ), subject: z.string().min(3, "Subject must be at least 3 characters"),
-    message: z.string().min(10, "Message must be at least 10 characters"),
+  category: z
+    .string()
+    .min(1, "Category is required")
+    .refine(
+      (val) => ["bug", "improvement", "general"].includes(val),
+      "Invalid category"
+    ), subject: z.string().min(3, "Subject must be at least 3 characters"),
+  message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
 export type ContactAdminType = z.infer<typeof contactAdminSchema>;
+
+
+
+export const newRoundSchema = z.object({
+  teeBoxId: z.number().min(1, "Please select a tee box"),
+  scoreType: z.enum(["net_including", "net_excluding", "stableford"], {
+    message: "Please select a scoring mode",
+  }),
+  holesToPlay: z.enum(["18", "front9", "back9"], {
+    message: "Please select holes to play",
+  }),
+});
+export type NewRoundFormValues = z.infer<typeof newRoundSchema>;

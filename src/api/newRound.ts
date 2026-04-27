@@ -23,13 +23,13 @@ export const getHandicapDetails = async (teeBoxId: number) => {
 
 // get scorecard details scorecard/userId/teeBoxId/courseId
 
-export const getScoreCardDetails = async (teeBoxId: number, courseId: number) => {
+export const getScoreCardDetails = async (teeBoxId: number, courseId: number, holes: string) => {
     try {
          const userId = await AsyncStorage.getItem("userId");
     if (!userId) {
       throw new Error("User ID not found in storage");
     }
-        const response = await https.get(`scorecard/${userId}/${teeBoxId}/${courseId}`);
+        const response = await https.get(`scorecard/${userId}/${teeBoxId}/${courseId}?holes=${holes}`);
         // console.log("scorecard response", response.data);
         
         return response.data;
