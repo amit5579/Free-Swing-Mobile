@@ -61,30 +61,71 @@ setUserData(uu);
       return "N/A";
     }
   };
-  const RenderHeader = () => (
-    <HStack className="px-3 pt-5 items-center justify-between">
-      <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-        <Ionicons
-          name="arrow-back-outline"
-          size={22}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      <ThemedText
-        style={{
-          flex: 1,
-          fontSize: 20,
-          fontWeight: "700",
-          textAlign: "center",
-        }}
-      >
-        Subscription Details
-      </ThemedText>
-
-      <View style={{ width: 40 }} />
-    </HStack>
-  );
+   const RenderHeader = () => {
+      return (
+        <Box
+          style={{
+            backgroundColor: isDark ? "#020617" : "#ffffff",
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          }}
+        >
+          <VStack
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom: 12,
+            }}
+          >
+            {/* 🔝 TOP ROW */}
+            <HStack
+              style={{
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* 🔙 BACK */}
+              <Pressable
+                onPress={() => routePage.back()}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                }}
+                android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={20}
+                  color={isDark ? "#fff" : "#020617"}
+                />
+              </Pressable>
+  
+              {/* 🧠 TITLE */}
+              <ThemedText
+                numberOfLines={1}
+                style={{
+                  flex: 1,
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: "700",
+                  color: isDark ? "#fff" : "#020617",
+                  paddingHorizontal: 8,
+                }}
+              >
+                Subscription Details
+              </ThemedText>
+  
+              {/* ⚖️ RIGHT SPACER */}
+              <View style={{ width: 40 }} />
+            </HStack>
+          </VStack>
+        </Box>
+      );
+    };
 
   const SubscriptionPageSkeleton = ({ isDark }: { isDark: boolean }) => (
     <VStack className="px-4 pt-5 pb-24" space="lg">

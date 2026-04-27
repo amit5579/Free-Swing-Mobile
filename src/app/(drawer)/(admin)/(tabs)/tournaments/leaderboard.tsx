@@ -116,62 +116,88 @@ export default function LeaderboardPage() {
   };
 
   const RenderHeader = () => {
-    return (
-      <HStack
-        className="px-3 pt-5 pb-3 items-center"
-        style={{ justifyContent: "space-between" }}
+  return (
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      {/* 🔙 BACK BUTTON */}
+      <Pressable
+        onPress={() => routePage.back()}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
       >
-        {/* LEFT: Back button */}
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
 
-        {/* CENTER: Title */}
-        <HStack
+      {/* 🧠 TITLE BLOCK */}
+      <VStack
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 6,
+        }}
+      >
+        {/* LABEL */}
+        <ThemedText
           style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
+            fontSize: 12,
+            color: isDark ? "#94a3b8" : "#64748b",
+            fontWeight: "500",
           }}
         >
+          Leaderboard
+        </ThemedText>
+
+        {/* MAIN TITLE */}
+        {loading ? (
+          <Skeleton
+            isDark={isDark}
+            height={18}
+            width={140}
+            style={{ marginTop: 2, borderRadius: 6 }}
+          />
+        ) : (
           <ThemedText
+            numberOfLines={1}
+            ellipsizeMode="tail"
             style={{
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: "700",
+              marginTop: 2,
+              maxWidth: "85%",
+              textAlign: "center",
             }}
           >
-            Leaderboard:
+            {tournamentName}
           </ThemedText>
+        )}
+      </VStack>
 
-          {loading ? (
-            <Skeleton
-              isDark={isDark}
-              height={18}
-              width={120}
-              style={{ marginLeft: 8 }}
-            />
-          ) : (
-            <ThemedText
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-                marginLeft: 6,
-              }}
-            >
-              {tournamentName}
-            </ThemedText>
-          )}
-        </HStack>
-
-        {/* RIGHT: Add Button */}
-        <View style={{ width: 40 }} />
-      </HStack>
-    );
-  };
+      {/* ⚖️ RIGHT PLACEHOLDER */}
+      <View style={{ width: 40 }} />
+    </HStack>
+  );
+};
 
   const RenderSecretHoles = () => {
     const isDark = colorScheme === "dark";

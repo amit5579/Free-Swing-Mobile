@@ -152,6 +152,87 @@ export default function managePlayers() {
     );
   };
 
+ const renderHeader = () => (
+  <HStack
+    style={{
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 12,
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    {/* 🔙 BACK BUTTON */}
+    <Pressable
+      onPress={() => routePage.back()}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+      }}
+    >
+      <Ionicons
+        name="arrow-back"
+        size={20}
+        color={isDark ? "#fff" : "#020617"}
+      />
+    </Pressable>
+
+    {/* 🧠 TITLE BLOCK */}
+    <VStack
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {/* LABEL */}
+      <ThemedText
+        style={{
+          fontSize: 12,
+          color: isDark ? "#94a3b8" : "#64748b",
+          fontWeight: "500",
+        }}
+      >
+        Manage Players
+      </ThemedText>
+
+      {/* MAIN TITLE */}
+      {loading ? (
+        <Skeleton
+          isDark={isDark}
+          height={18}
+          width={140}
+          style={{ marginTop: 2, borderRadius: 6 }}
+        />
+      ) : (
+        <ThemedText
+          numberOfLines={1}
+          style={{
+            fontSize: 18,
+            fontWeight: "700",
+            marginTop: 2,
+            maxWidth: "80%",
+            textAlign: "center",
+          }}
+        >
+          {tournamentsName}
+        </ThemedText>
+      )}
+    </VStack>
+
+    {/* ⚖️ RIGHT PLACEHOLDER (Keeps center aligned) */}
+    <View style={{ width: 40 }} />
+  </HStack>
+); 
+
+
   return (
     <ThemedView
       style={{
@@ -160,59 +241,8 @@ export default function managePlayers() {
     >
       <Watermark />
       {/* HEADER */}
-      <HStack
-        className="px-3 pt-5 pb-3 items-center"
-        style={{ justifyContent: "space-between" }}
-      >
-        {/* LEFT: Back button */}
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
+      {renderHeader()}
 
-        {/* CENTER: Title */}
-        <HStack
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: 20,
-              fontWeight: "700",
-            }}
-          >
-            Manage Players:
-          </ThemedText>
-
-          {loading ? (
-            <Skeleton
-              isDark={isDark}
-              height={18}
-              width={120}
-              style={{ marginLeft: 8 }}
-            />
-          ) : (
-            <ThemedText
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-                marginLeft: 6,
-              }}
-            >
-              {tournamentsName}
-            </ThemedText>
-          )}
-        </HStack>
-
-        {/* RIGHT: Add Button */}
-        <View style={{ width: 40 }} />
-      </HStack>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack className="p-4 gap-4">
           {loading ? (

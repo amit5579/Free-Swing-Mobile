@@ -183,6 +183,81 @@ export default function adminCoursePage() {
     );
   };
 
+const renderHeader = () => (
+  <Box
+    style={{
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 12,
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    <HStack
+      style={{
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* 🧠 LEFT CONTENT */}
+      <VStack style={{ flex: 1, paddingRight: 10 }}>
+        <ThemedText
+          style={{
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Golf Courses
+        </ThemedText>
+
+        <ThemedText
+          style={{
+            fontSize: 12,
+            color: isDark ? "#94a3b8" : "#64748b",
+            marginTop: 2,
+          }}
+        >
+          Manage and explore your courses
+        </ThemedText>
+      </VStack>
+
+      {/* ➕ ADD BUTTON */}
+      <Pressable
+        onPress={() => {
+          setIsEditMode(false);
+          setEditingCourse(null);
+          reset();
+          setModalVisible(true);
+        }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 10,
+          backgroundColor: "#84cc16",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+      >
+        <Ionicons name="add" size={18} color="#fff" />
+
+        <ThemedText
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 13,
+            marginLeft: 6,
+          }}
+        >
+          Add
+        </ThemedText>
+      </Pressable>
+    </HStack>
+  </Box>
+);
+
   return (
     <>
       <ThemedView
@@ -192,53 +267,7 @@ export default function adminCoursePage() {
         }}
       >
         {/* HEADER */}
-        <VStack>
-          <ThemedText
-            style={{
-              fontSize: 20,
-              fontWeight: "500",
-              textAlign: "center",
-              lineHeight: 30,
-              marginTop: 10,
-            }}
-          >
-            Manage and explore your golf courses
-          </ThemedText>
-          <HStack
-            className="p-3 items-center"
-            style={{ justifyContent: "flex-end" }}
-          >
-            {/* LEFT: Back button */}
-            {/* <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-              <Ionicons
-                name="arrow-back-outline"
-                size={22}
-                color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-              />
-            </Pressable> */}
-            {/* <View>
-  {" "}
-</View> */}
-
-            {/* RIGHT: Add Button */}
-            <Pressable
-              onPress={() => {
-                // debugger;
-                setIsEditMode(false);
-                setEditingCourse(null);
-                reset();
-                setModalVisible(true);
-              }}
-              style={styles.createButton}
-              className="flex-row items-center gap-1"
-            >
-              <Ionicons name="add-outline" size={28} color="white" />
-              <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                Add Courses
-              </ThemedText>
-            </Pressable>
-          </HStack>
-        </VStack>
+        {renderHeader()}
         <Watermark />
 
         <ScrollView showsVerticalScrollIndicator={false}>

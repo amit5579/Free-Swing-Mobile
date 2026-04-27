@@ -97,6 +97,7 @@ export interface UserProfile {
   handicapIndex: number;
   homeCourse: string | null;
   isBlocked: boolean;
+  totalRounds : number | null;
   profilePictureUrl: string | null;
   resolvedHomeCourse: string | null;
 }

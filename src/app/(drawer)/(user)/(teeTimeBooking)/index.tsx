@@ -61,22 +61,33 @@ export default function TeeTimeBookingPage() {
       setLoading(true);
 
       const courseResponse = await getSubAdminCourses();
-      const teeDetails = await getTeeTimeSeats(
-        availableDates[selectedDateIndex],
-        activeTeeTab,
-      );
-      setTeeData(teeDetails); // ✅ IMPORTANT
+      // console.log("courseResponse", courseResponse);
 
-      // console.log("teeDetails", teeDetails);
-      // Map courses to { label, value } for the dropdown
       const formattedCourses = courseResponse.map((c: any) => ({
         label: c.name || `Course ${c.courseId}`,
         value: c.courseId,
       }));
+
       setCourses(formattedCourses);
-      if (formattedCourses.length > 0) {
-        setSelectedCourse(formattedCourses[0].value);
+
+      let currentCourseId = selectedCourse;
+      if (formattedCourses.length > 0 && !selectedCourse) {
+        currentCourseId = formattedCourses[0].value;
+        setSelectedCourse(currentCourseId);
       }
+
+      if (currentCourseId) {
+        const teeDetails = await getTeeTimeSeats(
+          currentCourseId,
+          availableDates[selectedDateIndex],
+          activeTeeTab,
+        );
+        setTeeData(teeDetails); // ✅ IMPORTANT
+      }
+
+      // console.log("teeDetails", teeDetails);
+      // Map courses to { label, value } for the dropdown
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching tee timings:", error);
@@ -99,7 +110,6 @@ export default function TeeTimeBookingPage() {
     getUserId();
   }, []);
 
-  
   // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
 
   const bookSeatHandler = async (timeSlot: string, seatNumber: number) => {
@@ -220,37 +230,79 @@ export default function TeeTimeBookingPage() {
 
   const RenderHeader = () => {
     return (
-      <>
-        <HStack
-          className="px-3 pt-5 items-center"
-          style={{ justifyContent: "space-between" }}
+      <Box
+        style={{
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        }}
+      >
+        <VStack
+          style={{
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: 12,
+          }}
         >
-          {/* LEFT: Back button */}
-          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-            <Ionicons
-              name="arrow-back-outline"
-              size={22}
-              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-            />
-          </Pressable>
-
-          {/* CENTER: Title */}
-          <ThemedText
+          {/* 🔝 TOP ROW */}
+          <HStack
             style={{
-              flex: 1,
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
-              lineHeight: 30,
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            Tee time booking
-          </ThemedText>
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
 
-          {/* RIGHT: Add Button */}
-          <View style={{ width: 40 }} />
-        </HStack>
-      </>
+            {/* 🧠 TITLE */}
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: "700",
+                color: isDark ? "#fff" : "#020617",
+                paddingHorizontal: 8,
+              }}
+            >
+              Tee Time Booking
+            </ThemedText>
+
+            {/* ⚖️ RIGHT SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+
+          {/* 📌 SUBTITLE */}
+          <ThemedText
+            style={{
+              fontSize: 12,
+              color: isDark ? "#94a3b8" : "#64748b",
+              // marginTop: 6,
+              textAlign: "center",
+            }}
+          >
+            Schedule and manage tee time slots
+          </ThemedText>
+        </VStack>
+      </Box>
     );
   };
 
@@ -337,7 +389,6 @@ export default function TeeTimeBookingPage() {
                     //     text2: "You don't have permission to cancel this booking.",
                     //   });
                     // }
-
                   } else {
                     bookSeatHandler(slot.time, seat.seatNumber);
                   }
@@ -349,11 +400,14 @@ export default function TeeTimeBookingPage() {
                   borderRadius: 10,
                   marginBottom: 10,
                   alignItems: "center",
-                  backgroundColor: isBooked ?isMine? "#ef4444" :"grey" :"#8BC34A",
+                  backgroundColor: isBooked
+                    ? isMine
+                      ? "#ef4444"
+                      : "grey"
+                    : "#8BC34A",
                   // opacity: isLoading ? 0.6 : 1,
                 }}
               >
-
                 {/*  {isLoading
                     ? "Please wait"
                     : isBooked
@@ -520,6 +574,7 @@ export default function TeeTimeBookingPage() {
       <SafeAreaView
         style={{
           flex: 1,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
         }}
       >
         {/* HEADER */}
@@ -532,13 +587,17 @@ export default function TeeTimeBookingPage() {
             <ThemedView
               style={{
                 backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                borderWidth: 1,
+                borderRadius: 14,
                 paddingVertical: 10,
                 paddingHorizontal: 16,
+                shadowColor: "#000",
+                shadowOpacity: isDark ? 0.2 : 0.05,
               }}
-              className="mb-6 rounded-xl"
+              className="mb-6"
             >
               <ThemedText
                 style={{
@@ -646,18 +705,21 @@ export default function TeeTimeBookingPage() {
 
             {/* Tee tabs */}
             <HStack
-              className="rounded-full p-1 mb-6"
+              className="p-1 mb-6"
               style={{
                 flex: 1,
-                paddingVertical: 10,
-                borderRadius: 999,
+                paddingVertical: 5,
+                borderWidth: 1,
+                borderRadius: 50,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                 backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                shadowColor: "#000",
+                shadowOpacity: isDark ? 0.2 : 0.05,
               }}
             >
               {tabs.map((tab) => {
@@ -668,8 +730,11 @@ export default function TeeTimeBookingPage() {
                     onPress={() => {
                       setActiveTeeTab(tab.key);
                     }}
-                    className="flex-1 px-4 py-4 rounded-full flex-row items-center justify-center"
-                    style={active ? { backgroundColor: "#8BC34A" } : {}}
+                    className="flex-1 px-4 py-4 flex-row items-center justify-center"
+                    style={[
+                      { borderRadius: 30 },
+                      active ? { backgroundColor: "#8BC34A" } : {},
+                    ]}
                   >
                     <Ionicons
                       name="golf-outline"
@@ -724,4 +789,3 @@ export default function TeeTimeBookingPage() {
     </>
   );
 }
-

@@ -8,7 +8,7 @@ import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Modal,
   Pressable,
@@ -45,6 +45,7 @@ export default function ScoreCardUserPage() {
   const [visible, setVisible] = useState(false);
   const [scoreCardDetails, setScoreCardDetails] = useState<any>([]);
   const [loading, setLoading] = useState(false);
+  const inputRefs = useRef<any[]>([]);
   const [borderDisplay, setBorderDisplay] = useState(true);
   const isExcluded = excluded === "true";
   const isStableford = stableford === "true";
@@ -273,7 +274,7 @@ export default function ScoreCardUserPage() {
   // triggers re-render
   // recalculates everything automatically
 
-  const handleScoreChange = (holeId: number, value: string) => {
+  const handleScoreChange = (holeId: number, value: string, index: number) => {
     // allow empty
     if (value === "") {
       setScoreCardDetails((prev: any[]) =>
@@ -314,6 +315,14 @@ export default function ScoreCardUserPage() {
         hole.holeId === holeId ? { ...hole, score: value } : hole,
       ),
     );
+
+    // Auto-focus next input if 2 digits are entered
+    if (value.length >= 2) {
+      const nextIndex = index + 1;
+      if (nextIndex < scoreCardDetails.length) {
+        inputRefs.current[nextIndex]?.focus();
+      }
+    }
   };
 
   const renderScoreIndicator = (
@@ -657,8 +666,19 @@ export default function ScoreCardUserPage() {
                                   : ""
                               }
                               onChangeText={(val) =>
-                                handleScoreChange(h.holeId, val)
+                                handleScoreChange(h.holeId, val, index)
                               }
+                              onSubmitEditing={() => {
+                                if (index < processedHoles.length - 1) {
+                                  inputRefs.current[index + 1]?.focus();
+                                }
+                              }}
+                              returnKeyType={
+                                index === processedHoles.length - 1
+                                  ? "done"
+                                  : "next"
+                              }
+                              ref={(el:any) => (inputRefs.current[index] = el)}
                               keyboardType="numeric"
                               style={{
                                 width: 42,
