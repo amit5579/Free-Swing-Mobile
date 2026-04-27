@@ -34,6 +34,14 @@ export function InProgressTab({
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resumingId, setResumingId] = useState<string | null>(null);
+
+  const handleResume = (id: string) => {
+    if (resumingId) return;
+    setResumingId(id);
+    onResume(id);
+    setTimeout(() => setResumingId(null), 1000);
+  };
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -295,11 +303,13 @@ export function InProgressTab({
 
                     <Button
                       size="sm"
-                      onPress={() => onResume(game.id)}
+                      disabled={resumingId === game.id}
+                      onPress={() => handleResume(game.id)}
                       className="rounded-full flex-row items-center justify-center"
                       style={{
-                        backgroundColor: "#8BC34A",
+                        backgroundColor: resumingId === game.id ? "#A5D6A7" : "#8BC34A",
                         width: "48%",
+                        opacity: resumingId === game.id ? 0.7 : 1,
                       }}
                     >
                       <Text
@@ -309,9 +319,9 @@ export function InProgressTab({
                           marginRight: 6,
                         }}
                       >
-                        Resume
+                        {resumingId === game.id ? "Opening..." : "Resume"}
                       </Text>
-                      <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                      {resumingId !== game.id && <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />}
                     </Button>
                   </HStack>
                 </Box>
