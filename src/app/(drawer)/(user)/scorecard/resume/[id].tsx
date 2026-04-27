@@ -1,4 +1,4 @@
-import { getScorecardDetails, ScorecardHole, finishScorecardApi, updateHoleScoresApi } from "@/api/dashboard";
+import { getScorecardDetails, ScorecardHole, finishScorecardApi, updateHoleScoresApi, updateScorecardApi } from "@/api/dashboard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState, useLayoutEffect, useRef, useCallback } from "react";
@@ -18,10 +18,6 @@ export default function ResumeScorecard() {
     const handicap = parseInt(handicapParam || "0");
 
     useLayoutEffect(() => {
-        // useLayoutEffect is still fine if you need to set options, 
-        // but navigation object might be needed from useNavigation for this.
-        // Actually, we can keep useNavigation for setOptions if needed, 
-        // but let's use router.back() for navigation.
     }, []);
 
     const [holes, setHoles] = useState<ScorecardHole[]>([]);
@@ -34,6 +30,38 @@ export default function ResumeScorecard() {
     const textScoresRef = useRef<Record<number, string>>({});
     const holesRef = useRef<ScorecardHole[]>([]);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const storageKey = `scorecard_draft_${id}`;
+
+    const saveToServer = async (holesToSave: ScorecardHole[]) => {
+        const performSave = async () => {
+            try {
+                const payload = holesToSave.map(h => ({
+                    userId: userId ? Number(userId) : (h.userId || null),
+                    courseId: h.courseId || null,
+                    teeBoxId: h.teeBoxId || null,
+                    tournamentId: h.tournamentId || null,
+                    holeId: h.holeId,
+                    score: (h.score === undefined || h.score === null || h.score <= 0) ? null : h.score,
+                    roundNumber: h.roundNumber || 1,
+                    isCompleted: h.isCompleted || false,
+                    isExcluded: h.isExcluded || false
+                }));
+                console.log("SENDING EXACT PAYLOAD TO API:", JSON.stringify(payload, null, 2));
+                await updateHoleScoresApi(id!, payload);
+                console.log("Successfully synced scorecard:", id);
+                return true;
+            } catch (err) {
+                console.error("Sync failed for scorecard:", id, err);
+                return false;
+            }
+        };
+
+        const success = await performSave();
+        if (!success) {
+            console.log("API failed, will retry in 2 seconds...");
+            setTimeout(() => saveToServer(holesToSave), 2000);
+        }
+    };
 
     useEffect(() => {
         const fetchScorecard = async () => {
@@ -42,20 +70,47 @@ export default function ResumeScorecard() {
                 const storedUserId = await AsyncStorage.getItem("userId");
                 if (storedUserId) setUserId(Number(storedUserId));
 
-                const data = await getScorecardDetails(id!);
-                setHoles(data);
-
-                const initialText: Record<number, string> = {};
-                data.forEach(h => {
-                    if (h.score != null && h.score >= 0) {
-                        initialText[h.holeId] = h.score.toString();
+                let data: ScorecardHole[] | null = null;
+                try {
+                    data = await getScorecardDetails(id!);
+                } catch (err) {
+                    console.error("Failed to load from API, checking local draft...");
+                    const draft = await AsyncStorage.getItem(storageKey);
+                    if (draft) {
+                        const { holes: draftHoles, textScores: draftScores } = JSON.parse(draft);
+                        data = draftHoles;
+                        setTextScores(draftScores);
+                        textScoresRef.current = draftScores;
+                        console.log("Loaded from local draft");
+                    } else {
+                        throw err;
                     }
-                });
-                setTextScores(initialText);
-                textScoresRef.current = initialText;
+                }
 
-                const showPts = data.some(h => h.stablefordPoints !== null && h.stablefordPoints !== undefined);
-                setIsStableford(showPts);
+                if (data) {
+                    const sanitizedData = data.map(h => ({
+                        ...h,
+                        score: h.score || 0,
+                        netScore: h.netScore || 0,
+                        stablefordPoints: h.stablefordPoints || 0
+                    }));
+                    setHoles(sanitizedData);
+                    holesRef.current = sanitizedData;
+
+                    if (Object.keys(textScoresRef.current).length === 0) {
+                        const initialText: Record<number, string> = {};
+                        data.forEach(h => {
+                            if (h.score != null && h.score > 0) {
+                                initialText[h.holeId] = h.score.toString();
+                            }
+                        });
+                        setTextScores(initialText);
+                        textScoresRef.current = initialText;
+                    }
+
+                    const showPts = data.some(h => h.stablefordPoints !== null && h.stablefordPoints !== undefined);
+                    setIsStableford(showPts);
+                }
             } catch (err) {
                 setError("Failed to load scorecard.");
             } finally {
@@ -73,21 +128,25 @@ export default function ResumeScorecard() {
         holesRef.current = holes;
     }, [holes]);
     const handleGoBack = useCallback(async () => {
-        // Flush any pending debounced save before leaving
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
         }
 
-        // Always trigger a final save on back
-        const payload = holesRef.current.map(h => ({
-            ...h,
-            scorecardId: Number(id),
-            userId: userId ? Number(userId) : null,
-            score: (h.score === undefined || h.score === null || h.score < 0) ? null : h.score
-        }));
+        const payload = holesRef.current
+            .map(h => ({
+                userId: userId ? Number(userId) : h.userId,
+                courseId: h.courseId,
+                teeBoxId: h.teeBoxId,
+                tournamentId: h.tournamentId,
+                holeId: h.holeId,
+                score: (h.score === undefined || h.score === null || h.score <= 0) ? null : h.score,
+                roundNumber: h.roundNumber || 1,
+                isCompleted: h.isCompleted || false,
+                isExcluded: h.isExcluded || false
+            }));
         try {
-            await updateHoleScoresApi(payload);
+            await updateHoleScoresApi(id!, payload);
         } catch (err) {
             console.error("Final save failed:", err);
         }
@@ -117,7 +176,7 @@ export default function ResumeScorecard() {
 
         if (formattedText !== "") {
             const num = parseInt(formattedText, 10);
-            if (num > 15) return; // block entering values above 15
+            if (num > 15) return;
             formattedText = num.toString();
         }
 
@@ -127,10 +186,19 @@ export default function ResumeScorecard() {
         const updatedHoles = holes.map(h => {
             if (h.holeId === holeId) {
                 const strokes = calculateStrokes(handicap, h.strokeIndex);
-                // Treat score <= 0 as null
-                const validScore = (score !== null && score > 0) ? score : null;
-                const netScore = validScore !== null ? validScore - strokes : null;
-                const stablefordPoints = (validScore !== null && netScore !== null) ? Math.max(0, h.par - netScore + 2) : null;
+                const validScore = (score !== null && score > 0) ? score : 0;
+                const netScore = validScore > 0 ? validScore - strokes : 0;
+                const stablefordPoints = (validScore > 0 && netScore > 0) ? Math.max(0, h.par - netScore + 2) : 0;
+                
+                console.log("Hole Updated:", {
+                    hole: h.holeNumber,
+                    si: h.strokeIndex,
+                    yard: h.yardage,
+                    par: h.par,
+                    score: validScore > 0 ? validScore : "-",
+                    net: netScore > 0 ? netScore : "-"
+                });
+
                 return { ...h, score: validScore, netScore, stablefordPoints };
             }
             return h;
@@ -138,33 +206,31 @@ export default function ResumeScorecard() {
 
         setHoles(updatedHoles);
 
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
-            const payload = updatedHoles.map(h => ({
-                    ...h,
-                    ...(h.tournamentId ? {} : { scorecardId: Number(id) }),
-                    userId: userId,
-                    courseId: h.courseId,
-                    teeBoxId: h.teeBoxId,
-                    tournamentId: h.tournamentId,
-                    isCompleted: false,
-                    score: h.score,
-                    isTournament: !!h.tournamentId,
-                    scoringType: h.scoringType
-                }));
-            console.log("Triggering debounced save for scorecard:", id);
-            updateHoleScoresApi(payload).catch(err => console.error("Debounced save error:", err));
-        }, 300);
+        const newTextScores = { ...textScores, [holeId]: formattedText };
+        AsyncStorage.setItem(storageKey, JSON.stringify({
+            holes: updatedHoles,
+            textScores: newTextScores
+        })).catch(err => console.error("Failed to save draft:", err));
+
+        console.log("Triggering instant save to web for scorecard:", id);
+        saveToServer(updatedHoles);
     };
 
     const handleSave = async () => {
         try {
             setSaving(true);
             const payload = holes.map(h => ({
-                ...h,
-                score: (h.score === undefined || h.score === null || h.score < 0) ? null : h.score
+                userId: userId ? Number(userId) : h.userId,
+                courseId: h.courseId,
+                teeBoxId: h.teeBoxId,
+                tournamentId: h.tournamentId,
+                holeId: h.holeId,
+                score: (h.score === undefined || h.score === null || h.score <= 0) ? null : h.score,
+                roundNumber: h.roundNumber || 1,
+                isCompleted: h.isCompleted || false,
+                isExcluded: h.isExcluded || false
             }));
-            await updateHoleScoresApi(payload);
+            await updateHoleScoresApi(id!, payload);
         } catch (err) {
             console.error(err);
         } finally {
@@ -184,11 +250,19 @@ export default function ResumeScorecard() {
                         try {
                             setSaving(true);
                             const payload = holes.map(h => ({
-                                ...h,
+                                userId: userId ? Number(userId) : h.userId,
+                                courseId: h.courseId,
+                                teeBoxId: h.teeBoxId,
+                                tournamentId: h.tournamentId,
+                                holeId: h.holeId,
+                                score: (h.score === undefined || h.score === null || h.score <= 0) ? null : h.score,
+                                roundNumber: h.roundNumber || 1,
                                 isCompleted: true,
-                                score: (h.score === undefined || h.score === null || h.score < 0) ? null : h.score
+                                isExcluded: h.isExcluded || false
                             }));
-                            await updateHoleScoresApi(payload);
+                            await updateHoleScoresApi(id!, payload);
+                            await AsyncStorage.removeItem(storageKey);
+                            
                             Alert.alert("Success", "Round finished successfully", [
                                 { text: "OK", onPress: () => router.back() }
                             ]);
@@ -235,7 +309,6 @@ export default function ResumeScorecard() {
             <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)", paddingTop: insets.top }}>
                 <Watermark />
                 <ScrollView className="px-4 py-4 mt-0" showsVerticalScrollIndicator={false}>
-                    {/* Header Row Skeleton */}
                     <View className="flex-row items-center mb-6 mt-4">
                         <Skeleton isDark={isDark} width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
                         <View className="flex-1">
@@ -244,10 +317,8 @@ export default function ResumeScorecard() {
                         </View>
                     </View>
 
-                    {/* Info Banner Skeleton */}
                     <Skeleton isDark={isDark} width="100%" height={56} borderRadius={12} style={{ marginBottom: 20 }} />
 
-                    {/* Table Header Skeleton - Match 7 columns */}
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}>
                         {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
                             <View key={i} className="flex-1 items-center">
@@ -261,7 +332,6 @@ export default function ResumeScorecard() {
                         )}
                     </View>
 
-                    {/* Table Rows Skeleton */}
                     <View className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`} style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
                         {[...Array(9)].map((_, i) => (
                             <View key={i} className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}>
@@ -278,7 +348,6 @@ export default function ResumeScorecard() {
                         ))}
                     </View>
 
-                    {/* Grand Total Skeleton */}
                     <View className="mt-6 mb-12">
                         <Skeleton isDark={isDark} width="100%" height={48} borderRadius={12} />
                     </View>
@@ -305,7 +374,6 @@ export default function ResumeScorecard() {
         if (rawValue === "" || rawValue === undefined || score === null) return null;
 
         if (score === 0) {
-            // Albatross: Double Dark Cyan Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -315,7 +383,6 @@ export default function ResumeScorecard() {
             );
         }
         if (score === 1) {
-            // Hole-in-One: Double Gold Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
@@ -328,7 +395,6 @@ export default function ResumeScorecard() {
         const diff = score - par;
 
         if (diff === -3) {
-            // Albatross (if not already handled by score === 0 or score === 1)
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
@@ -338,7 +404,6 @@ export default function ResumeScorecard() {
             );
         }
         if (diff === -2) {
-            // Eagle: Double Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
@@ -348,7 +413,6 @@ export default function ResumeScorecard() {
             );
         }
         if (diff === -1) {
-            // Birdie: Single Green Circle
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
@@ -356,11 +420,9 @@ export default function ResumeScorecard() {
             );
         }
         if (diff === 0) {
-            // Par: no indicator
             return null;
         }
         if (diff === 1) {
-            // Bogey: Single Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
@@ -368,7 +430,6 @@ export default function ResumeScorecard() {
             );
         }
         if (diff === 2) {
-            // Double Bogey: Double Red Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
@@ -378,7 +439,6 @@ export default function ResumeScorecard() {
             );
         }
         if (diff === 3) {
-            // Triple Bogey: Triple Purple Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
@@ -390,7 +450,6 @@ export default function ResumeScorecard() {
             );
         }
         if (diff >= 4) {
-            // Quadruple Bogey+: Single Black/White Square
             return (
                 <View style={styles.indicatorContainer}>
                     <View style={[styles.singleSquare, { borderColor: isDark ? "#fff" : "#000" }]} />
@@ -445,13 +504,11 @@ export default function ResumeScorecard() {
                 </View>
             </View>
 
-            {/* Scrollable Table Area */}
             <ScrollView
                 className="px-4 flex-1"
                 showsVerticalScrollIndicator={false}
                 stickyHeaderIndices={[0]}
             >
-                {/* 0th Element: Table Header (Sticky) */}
                 <View className="z-10 shadow-sm" style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
                     <View className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`} style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#444" : "#ddd" }}>
                         {["Hole", "SI", "Yards", "Par", "Score ✎", "Net", ...(isStableford ? ["Pts"] : [])].map((h) => (
@@ -497,12 +554,12 @@ export default function ResumeScorecard() {
                             </Text>
                             {isStableford && (
                                 <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) >= 0) ? (h.stablefordPoints || 0) : "-"}
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
                                 </Text>
                             )}
                         </View>
                     ))}
-                    {/* Front 9 Subtotal Row */}
+
                     <View className={`flex-row p-3 ${isDark ? "bg-[#262626]" : "bg-gray-100"}`} style={{ borderTopWidth: 1, borderTopColor: isDark ? "#444" : "#ddd" }}>
                         <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>Front 9</Text>
                         <Text className="flex-1" />
@@ -513,7 +570,6 @@ export default function ResumeScorecard() {
                         {isStableford && <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}>{sumPts(holes.slice(0, 9))}</Text>}
                     </View>
 
-                    {/* Back 9 Section */}
                     {holes.length > 9 && (<>
                         {holes.slice(9, 18).map((h, index) => (
                         <View key={h.holeId} className={`flex-row items-center p-3 ${(index < 8) ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}>
@@ -549,12 +605,11 @@ export default function ResumeScorecard() {
                             </Text>
                             {isStableford && (
                                 <Text className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                    {h.stablefordPoints !== null && h.stablefordPoints !== undefined ? h.stablefordPoints : "-"}
+                                    {(textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined && parseInt(textScores[h.holeId]) > 0) ? (h.stablefordPoints || 0) : "-"}
                                 </Text>
                             )}
                         </View>
                         ))}
-                        {/* Back 9 Subtotal Row */}
                         <View className={`flex-row p-3 ${isDark ? "bg-[#262626]" : "bg-gray-100"}`} style={{ borderTopWidth: 1, borderTopColor: isDark ? "#444" : "#ddd" }}>
                             <Text className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}>Back 9</Text>
                             <Text className="flex-1" />
@@ -567,7 +622,6 @@ export default function ResumeScorecard() {
                     </>)}
                 </View>
 
-                {/* Grand Total Section */}
                 <View className="mb-8">
                     <View className={`flex-row p-3 rounded-xl items-center ${isDark ? "bg-[#8BC34A]" : "bg-[#8BC34A]"}`} style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 }}>
                         <Text className="flex-1 text-center font-bold text-white uppercase tracking-wider" style={{ fontSize: 12, lineHeight: 12 }}>
@@ -743,7 +797,6 @@ export default function ResumeScorecard() {
                         <View className="mb-20 p-4 rounded-2xl" style={{ backgroundColor: isDark ? "rgba(31,31,31,0.6)" : "rgba(255,255,255,0.6)", borderWidth: 1, borderColor: isDark ? "rgba(51,51,51,0.6)" : "rgba(238,238,238,0.6)" }}>
                             <Text className={`font-bold mb-6 text-center text-lg ${isDark ? "text-white" : "text-black"}`}>Scorecard Legend</Text>
                             {(() => {
-                                // Chunk into rows of 3
                                 const rows: (typeof dynamicLegend)[] = [];
                                 for (let i = 0; i < dynamicLegend.length; i += 3) {
                                     rows.push(dynamicLegend.slice(i, i + 3));

@@ -43,9 +43,8 @@ export default function PlayScoreCard() {
   const [userId, setUserId] = useState<number | null>(null);
   const userIdRef = useRef<number | null>(null);
   const scoreCardRef = useRef<any>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<any>(null);
 
-  // Update refs whenever state changes
   useEffect(() => {
     scoreCardRef.current = scoreCard;
   }, [scoreCard]);
@@ -54,7 +53,6 @@ export default function PlayScoreCard() {
     userIdRef.current = userId;
   }, [userId]);
 
-  // Ref to track latest scorecard for listeners
   const processedScoreCardRef = useRef<any>([]);
   const inputRefs = useRef<any[]>([]);
 
@@ -89,7 +87,6 @@ export default function PlayScoreCard() {
       // console.log("hcDetails", hcDetails);
       // console.log("scorecard details", response);
 
-      // Reset scores to empty so user can fill them in
       const clearedScores = response.map((h: any) => ({
         ...h,
         score: null,
@@ -131,7 +128,6 @@ export default function PlayScoreCard() {
     }
 
     const score = Number(hole.score);
-    // player handicap value (handled as number or object)
     const playerHandicapVal =
       typeof handicap === "object"
         ? (handicap.courseHandicap ?? handicap.handicap ?? 0)
@@ -141,7 +137,6 @@ export default function PlayScoreCard() {
       Number(playerHandicapVal),
       hole.handicap,
     );
-
 
   const  calculateStrokesReceived = (strokeIndex: number) => {
     const handicapValue = handicap.userHandicap;
@@ -156,14 +151,12 @@ export default function PlayScoreCard() {
     }
     return strokes;
   }
-    // Excluded logic
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
 
     const netScore = score - strokesReceived;
 
-    // Stableford
     let stablefordPoints = null;
     if (isStableford) {
       const pts = hole.par - netScore + 2;
@@ -177,22 +170,8 @@ export default function PlayScoreCard() {
     };
   };
 
-  // ── Score change handler ──
   const handleScoreChange = (holeId: number, value: string, index: number) => {
-    
-    if (value === "") {
-      setScoreCard((prev: any[]) =>
-        prev.map((hole) =>
-          hole.holeId === holeId ? { ...hole, score: "" } : hole,
-        ),
-      );
-      return;
-    }
-
-    if (!/^\d+$/.test(value)) {
-      Toast.show({ type: "error", text1: "Enter valid score" });
-      return;
-    }
+    let formattedText = value.replace(/[^0-9]/g, '');
 
     if (formattedText !== "") {
       const numericValue = Number(formattedText);
@@ -201,7 +180,6 @@ export default function PlayScoreCard() {
         formattedText = "";
       }
     }
-    // console.log("value entered:", value);
 
     const updatedScoreCard = scoreCard.map((hole: any) =>
       hole.holeId === holeId ? { ...hole, score: formattedText === "" ? null : Number(formattedText) } : hole
@@ -229,11 +207,10 @@ export default function PlayScoreCard() {
         scoringType: scoringType
       }));
       console.log("Triggering debounced save for new round tournamentId:", tournamentId);
-      updateHoleScoresApi(payload).catch(err => console.error("Debounced save error:", err));
-    }, 300);
+      updateHoleScoresApi(tournamentId ? Number(tournamentId) : (updatedScoreCard[0]?.scorecardId || 0), payload).catch(err => console.error("Debounced save error:", err));
+    }, 200);
   };
 
-  // ── Score legend counts ──
   const getScoreLegendCounts = (holes: any[]) => {
     const counts = {
       holeInOne: 0,
@@ -294,7 +271,6 @@ export default function PlayScoreCard() {
     return counts;
   };
 
-  // ── Totals helper ──
   const getTotals = (holes: any[]) => {
     const scoreTotal = holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0);
     const netTotal = holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0);
@@ -310,9 +286,7 @@ export default function PlayScoreCard() {
     };
   };
 
-  // ── Processed data ──
   const processedScoreCard = scoreCard.map(calculateHole);
-
   const processedFront9 = processedScoreCard.slice(0, 9);
   const processedBack9 = processedScoreCard.slice(9, 18);
   const legendCounts = getScoreLegendCounts(processedScoreCard);
@@ -342,21 +316,20 @@ export default function PlayScoreCard() {
       userId: userIdRef.current ? Number(userIdRef.current) : null
     }));
     try {
-      await updateHoleScoresApi(payload);
+      await updateHoleScoresApi(tournamentId ? Number(tournamentId) : (scoreCardRef.current[0]?.scorecardId || 0), payload);
     } catch (err) {
       console.error("Final save failed:", err);
     }
     routePage.back();
   };
 
-  const saveRound = async (isCompleted: boolean, shouldGoBack: boolean = false) => {
+  const saveRound = async (isCompleted: boolean = false) => {
     try {
-      setVisible(false);
-      const finishPayload = scoreCardRef.current.map(calculateHole).map((h: any) => ({
+      const payload = scoreCardRef.current.map(calculateHole).map((h: any) => ({
         ...h,
         courseId: courseId ? Number(courseId) : h.courseId,
         holeId: h.holeId,
-        isCompleted: true,
+        isCompleted: isCompleted,
         isExcluded: isExcluded && h.par === 3,
         roundNumber: h.roundNumber || 1,
         score: (h.score === undefined || h.score === null || h.score === "") ? null : Number(h.score),
@@ -369,15 +342,21 @@ export default function PlayScoreCard() {
         isTournament: !!tournamentId,
         scoringType: scoringType
       }));
-    await updateHoleScoresApi(finishPayload);
-    Toast.show({
-      type: "success",
-      text1: "Round Finished",
-      text2: "Score submitted successfully",
+      await updateHoleScoresApi(tournamentId ? Number(tournamentId) : (scoreCardRef.current[0]?.scorecardId || 0), payload);
+    } catch (err) {
+      console.error("Save round failed:", err);
+    }
+  };
+
+  useEffect(() => {
+    const appStateListener = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "inactive" || nextAppState === "background") {
+        saveRound(false);
+      }
     });
 
     const beforeRemoveListener = navigation.addListener("beforeRemove", () => {
-      saveRound(false, false);
+      saveRound(false);
     });
 
     return () => {
@@ -386,13 +365,17 @@ export default function PlayScoreCard() {
     };
   }, [navigation]);
 
-  // ── Finish Round ──
-  const handleFinishRound = () => {
+  const handleFinishRound = async () => {
     setVisible(false);
-    saveRound(true, true);
+    await saveRound(true);
+    Toast.show({
+      type: "success",
+      text1: "Round Finished",
+      text2: "Score submitted successfully",
+    });
+    routePage.back();
   };
 
-  // ── Score indicator ──
   const renderScoreIndicator = (
     score: number | string | null,
     par: number,
@@ -403,7 +386,6 @@ export default function PlayScoreCard() {
     const numericScore = Number(score);
     const diff = numericScore - par;
 
-    // Hole-in-One
     if (numericScore === 1) {
       return (
         <View style={styles.indicatorContainer}>
@@ -412,7 +394,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Albatross (-3)
     if (diff <= -3) {
       return (
         <View style={styles.indicatorContainer}>
@@ -421,7 +402,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Eagle (-2)
     if (diff === -2) {
       return (
         <View style={styles.indicatorContainer}>
@@ -430,7 +410,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Birdie (-1)
     if (diff === -1) {
       return (
         <View style={styles.indicatorContainer}>
@@ -439,7 +418,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Par (0)
     if (diff === 0) {
       return (
         <View style={styles.indicatorContainer}>
@@ -457,7 +435,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Quadruple+ (>= +4)
     if (diff >= 4) {
       return (
         <View style={styles.indicatorContainer}>
@@ -471,7 +448,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Triple Bogey (+3)
     if (diff === 3) {
       return (
         <View style={styles.indicatorContainer}>
@@ -482,7 +458,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Double Bogey (+2)
     if (diff === 2) {
       return (
         <View style={styles.indicatorContainer}>
@@ -493,7 +468,6 @@ export default function PlayScoreCard() {
       );
     }
 
-    // Bogey (+1)
     if (diff === 1) {
       return (
         <View style={styles.indicatorContainer}>
@@ -505,7 +479,6 @@ export default function PlayScoreCard() {
     return null;
   };
 
-  // ── Header ──
   const renderHeader = () => {
     return (<><View style={{ paddingTop: 10 }}>
         <HStack
@@ -569,7 +542,6 @@ export default function PlayScoreCard() {
                 <ThemedText>Loading...</ThemedText>
               ) : (
                 <>
-                  {/* CARD WRAPPER */}
                   <VStack
                     style={{
                       backgroundColor: isDark
@@ -583,7 +555,6 @@ export default function PlayScoreCard() {
                       shadowRadius: 6,
                     }}
                   >
-                    {/* 🔹 HEADER ROW */}
                     <HStack
                       style={{
                         paddingVertical: 10,
@@ -619,7 +590,6 @@ export default function PlayScoreCard() {
                         ))}
                     </HStack>
 
-                    {/* 🔹 ROWS */}
                     {processedScoreCard.map((h: any, index: number) => (
                       <View key={h.holeId}>
                         <HStack
@@ -630,12 +600,10 @@ export default function PlayScoreCard() {
                             borderColor: isDark ? "#333" : "#eee",
                           }}
                         >
-                          {/* Hole Number */}
                           <ThemedText style={{ flex: 1, textAlign: "center" }}>
                             {h.holeNumber}
                           </ThemedText>
 
-                          {/* Yardage */}
                           <ThemedText
                             style={{
                               flex: 1,
@@ -655,12 +623,10 @@ export default function PlayScoreCard() {
                             {h.yardage}
                           </ThemedText>
 
-                          {/* Par */}
                           <ThemedText style={{ flex: 1, textAlign: "center" }}>
                             {h.par}
                           </ThemedText>
 
-                          {/* Score with indicator */}
                           <View
                             style={{
                               flex: 1,
@@ -678,7 +644,7 @@ export default function PlayScoreCard() {
                                 onChangeText={(val) =>
                                   handleScoreChange(h.holeId, val, index)
                                 }
-                                onBlur={() => saveRound(false, false)}
+                                onBlur={() => saveRound(false)}
                                 onSubmitEditing={() => {
                                   if (index < 17) {
                                     inputRefs.current[index + 1]?.focus();
@@ -701,7 +667,6 @@ export default function PlayScoreCard() {
                             />
                           </View>
 
-                          {/* Net Score */}
                           <ThemedText
                             style={{
                               flex: 1,
@@ -713,7 +678,6 @@ export default function PlayScoreCard() {
                             {h.netScore ?? "-"}
                           </ThemedText>
 
-                          {/* Stableford Points */}
                           {isStableford && (
                             <ThemedText
                               style={{ flex: 1, textAlign: "center" }}

@@ -55,8 +55,6 @@ console.log("teeBoxId",teeBoxId);
     }
 }
 
-
-
 // getScorecardOpen - all tables details
 // scorecard/open/tournamentId/userId
 
@@ -74,8 +72,6 @@ export const getScoreCardOpen = async (tournamentId: number) => {
         throw error;
     }
 }
-
-
 
 // scorecard-tournament-user
 // get scorecard of player: scorecard/details/1936
