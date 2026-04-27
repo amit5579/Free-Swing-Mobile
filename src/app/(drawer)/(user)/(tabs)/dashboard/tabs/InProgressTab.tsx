@@ -59,7 +59,8 @@ export function InProgressTab({
             try {
               setDeletingId(id);
               await deleteScorecardApi(id);
-              setGames((prev) => prev.filter((g) => g.id !== id));
+              fetchGames();
+              // setGames((prev) => prev.filter((g) => g.id !== id));
             } catch (err) {
               console.error(err);
               Alert.alert("Error", "Failed to delete game.");
