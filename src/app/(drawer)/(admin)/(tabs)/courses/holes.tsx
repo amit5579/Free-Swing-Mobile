@@ -42,7 +42,7 @@ export default function EditHolesPage() {
       const formatted = response.map((item: any) => ({
         ...item,
         par: String(item.par),
-        handicap: String(item.handicap),
+        strokeIndex: String(item.strokeIndex),
         yardage: String(item.yardage),
       }));
 
@@ -63,7 +63,7 @@ export default function EditHolesPage() {
       setLoading(true);
       for (const hole of holes) {
         await updateHoles(
-          hole.handicap,
+          hole.strokeIndex,
           hole.holeId,
           hole.holeNumber,
           hole.par,
@@ -139,34 +139,64 @@ export default function EditHolesPage() {
     </Box>
   );
 };
+
+const renderHeader = () => (
+  <HStack
+    style={{
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 12,
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    {/* 🔙 BACK BUTTON */}
+    <Pressable
+      onPress={() => routePage.back()}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+      }}
+      android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+    >
+      <Ionicons
+        name="arrow-back"
+        size={20}
+        color={isDark ? "#fff" : "#020617"}
+      />
+    </Pressable>
+
+    {/* 🧠 TITLE */}
+    <VStack style={{ flex: 1, alignItems: "center" }}>
+
+      <ThemedText
+        style={{
+          fontSize: 17,
+          fontWeight: "700",
+          marginTop: 2,
+          color: isDark ? "#fff" : "#020617",
+        }}
+      >
+        Edit Holes
+      </ThemedText>
+    </VStack>
+
+    {/* ⚖️ RIGHT SPACER (MATCHES BACK BUTTON WIDTH) */}
+    <View style={{ width: 40 }} />
+  </HStack>
+);
+
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* HEADER */}
-      <HStack
-        className="px-3 pt-5 pb-3 items-center"
-        style={{ justifyContent: "space-between" }}
-      >
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={isDark ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
-
-        <ThemedText
-          style={{
-            flex: 1,
-            fontSize: 22,
-            fontWeight: "700",
-            textAlign: "center",
-          }}
-        >
-          Edit Holes
-        </ThemedText>
-
-        <View style={{ width: 34 }} />
-      </HStack>
+      {renderHeader()}
 
       <Watermark />
 
@@ -232,16 +262,16 @@ export default function EditHolesPage() {
                       />
                     </View>
 
-                    {/* HANDICAP */}
+                    {/* strokeIndex */}
                     <View style={{ width: "30%" }}>
                       <ThemedText style={{ fontSize: 11, marginBottom: 4 }}>
-                        Handicap
+                        Stroke Index
                       </ThemedText>
                       <TextInput
-                        value={hole.handicap}
+                        value={hole.strokeIndex}
                         keyboardType="numeric"
                         onChangeText={(text) =>
-                          updateField(index, "handicap", text)
+                          updateField(index, "strokeIndex", text)
                         }
                         style={{
                           borderWidth: 1,

@@ -156,7 +156,7 @@ export default function AllMembersScreen({
     text: isDark ? "#f1f5f9" : "#0f172a",
     subText: isDark ? "#94a3b8" : "#64748b",
     dimText: isDark ? "#64748b" : "#94a3b8",
-    accent: "#84cc16",
+    accent: "#8bc34a",
     accentSoft: isDark ? "rgba(132,204,22,0.15)" : "rgba(132,204,22,0.1)",
     statusActive: "#22c55e",
     statusBlocked: "#ef4444",
@@ -214,7 +214,7 @@ export default function AllMembersScreen({
         onPress: async () => {
           try {
             setLoading(true);
-            console.log("id is ", id, "type is ", typeof id);
+            // console.log("id is ", id, "type is ", typeof id);
 
             await approveSubscription(id);
             fetchUsers();
@@ -550,7 +550,7 @@ export default function AllMembersScreen({
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#84cc16",
+              backgroundColor: "#8bc34a",
               paddingHorizontal: 16,
               paddingVertical: 10,
               borderRadius: 16,
@@ -628,13 +628,13 @@ export default function AllMembersScreen({
                     paddingVertical: 9,
                     borderRadius: 14,
                     backgroundColor: isActive
-                      ? "#84cc16"
+                      ? "#8bc34a"
                       : isDark
                         ? "rgba(30,41,59,0.5)"
                         : "#fff",
                     borderWidth: 1,
                     borderColor: isActive
-                      ? "#84cc16"
+                      ? "#8bc34a"
                       : isDark
                         ? "rgba(255,255,255,0.05)"
                         : "#e2e8f0",
@@ -883,7 +883,7 @@ export default function AllMembersScreen({
                             <Ionicons
                               name="calendar-outline"
                               size={14}
-                              color="#84cc16"
+                              color="#8bc34a"
                             />
                             <ThemedText style={{ fontSize: 11, opacity: 0.8 }}>
                               {formatDate(member.subscriptionEndsAtUtc) ||
@@ -895,7 +895,7 @@ export default function AllMembersScreen({
                               <Ionicons
                                 name="ribbon-outline"
                                 size={14}
-                                color="#84cc16"
+                                color="#8bc34a"
                               />
                               <ThemedText
                                 style={{ fontSize: 11, opacity: 0.8 }}
@@ -1097,7 +1097,7 @@ export default function AllMembersScreen({
                                 <Ionicons
                                   name={item.icon as any}
                                   size={14}
-                                  color={item.highlight ? "#84cc16" : "#94a3b8"}
+                                  color={item.highlight ? "#8bc34a" : "#94a3b8"}
                                 />
                                 <ThemedText
                                   numberOfLines={1}
@@ -1105,7 +1105,7 @@ export default function AllMembersScreen({
                                     fontSize: 13,
                                     fontWeight: item.highlight ? "700" : "600",
                                     color: item.highlight
-                                      ? "#84cc16"
+                                      ? "#8bc34a"
                                       : isDark
                                         ? "#e2e8f0"
                                         : "#1e293b",
@@ -1134,7 +1134,7 @@ export default function AllMembersScreen({
                                     flexDirection: "row",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    backgroundColor: "#84cc16",
+                                    backgroundColor: "#8bc34a",
                                     paddingVertical: 12,
                                     borderRadius: 14,
                                   }}
@@ -1196,7 +1196,7 @@ export default function AllMembersScreen({
                                       flexDirection: "row",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      backgroundColor: "#84cc16",
+                                      backgroundColor: "#8bc34a",
                                       paddingVertical: 12,
                                       borderRadius: 14,
                                     }}
@@ -1273,7 +1273,7 @@ export default function AllMembersScreen({
                       marginBottom: 16,
                     }}
                   >
-                    <Ionicons name="search" size={40} color={"#8ddd14ff"} />
+                    <Ionicons name="search" size={40} color={"#8bc34a"} />
                   </Box>
                   <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
                     No members found
@@ -1327,7 +1327,7 @@ export default function AllMembersScreen({
                     }}
                   >
                     <HStack style={{ alignItems: "center", gap: 8 }}>
-                      <Ionicons name="person-add" size={22} color={"#84cc16"} />
+                      <Ionicons name="person-add" size={22} color={"#8bc34a"} />
                       <ThemedText
                         style={{
                           fontSize: 20,
@@ -1923,7 +1923,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#84cc16",
+    backgroundColor: "#8bc34a",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,

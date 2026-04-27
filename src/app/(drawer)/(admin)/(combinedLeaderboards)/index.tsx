@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { getTournaments } from "@/api/admin/tournaments";
 import { getCombinedLeaderboard } from "@/api/combinedLeaderboard";
+import { Box } from "@/components/box";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -157,40 +158,81 @@ export default function CombinedLeaderboardsPage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
-  return (
-    <>
-      <SafeAreaView style={{ flex: 1 }}>
-        {/* HEADER */}
-        <VStack className="my-3 px-4">
-          <HStack className="items-center justify-between">
-            <Pressable onPress={() => routePage.back()} hitSlop={10}>
-              <Ionicons name="arrow-back" size={24} color="#8bc34a" />
+const renderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+    }}
+  >
+    <VStack style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12 }}>
+      
+      {/* 🔝 TOP ROW */}
+      <HStack
+        style={{
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* 🔙 BACK */}
+         <Pressable
+              onPress={() => routePage.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
             </Pressable>
 
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-                color: isDark ? "white" : "black",
-              }}
-            >
-              Combined Leaderboards
-            </Text>
+        {/* 🧠 TITLE */}
+        <ThemedText
+          numberOfLines={1}
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
+            paddingHorizontal: 8,
+          }}
+        >
+          Combined Leaderboards
+        </ThemedText>
 
-            <View style={{ width: 24 }} />
-          </HStack>
+        {/* ⚖️ RIGHT SPACER */}
+        <View style={{ width: 40 }} />
+      </HStack>
 
-          <ThemedText
-            style={{
-              fontSize: 14,
-              opacity: 0.6,
-              marginTop: 6,
-              textAlign: "center",
-            }}
-          >
-            Aggregate scores across multiple tournaments
-          </ThemedText>
-        </VStack>
+      {/* 📌 SUBTITLE */}
+      <ThemedText
+        style={{
+          fontSize: 12,
+          color: isDark ? "#94a3b8" : "#64748b",
+          marginTop: 6,
+          textAlign: "center",
+        }}
+      >
+        Aggregate scores across multiple tournaments
+      </ThemedText>
+    </VStack>
+  </Box>
+);
+
+  return (
+    <>
+      <SafeAreaView style={{ flex: 1,backgroundColor:isDark ? "#020617" : "#ffffff" }}>
+        {renderHeader()}
 
         <Watermark />
 

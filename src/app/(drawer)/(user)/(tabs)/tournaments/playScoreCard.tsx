@@ -1,4 +1,5 @@
 import {
+  AppState,
   View,
   Text,
   StyleSheet,
@@ -8,8 +9,8 @@ import {
   Modal,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState, useRef } from "react";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 import { HStack } from "@/components/hstack";
@@ -28,6 +29,7 @@ export default function PlayScoreCard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+  const navigation = useNavigation();
 
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
@@ -37,20 +39,15 @@ export default function PlayScoreCard() {
   const [handicap, setHandicap] = useState<any>([]);
   const [visible, setVisible] = useState(false);
 
+  // Ref to track latest scorecard for listeners
+  const processedScoreCardRef = useRef<any>([]);
+  const inputRefs = useRef<any[]>([]);
+
   const isStableford =
     scoringType === "stableford" || scoringType === "Stableford";
 
-  const isDoublePeoria =
-    scoringType === "double-peoria" ||
-    scoringType === "Double-Peoria" ||
-    scoringType === "double-peoria-stableford" ||
-    scoringType === "Double-Peoria-Stableford" ||
-    scoringType === "double-peoria-net" ||
-    scoringType === "Double-Peoria-Net";
-
   const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
-  const isStandard = scoringType === "standard" || scoringType === "Standard";
 
   const renderScoringType =
     scoringType === "stableford" || scoringType === "Stableford"
@@ -161,7 +158,8 @@ export default function PlayScoreCard() {
   };
 
   // ── Score change handler ──
-  const handleScoreChange = (holeId: number, value: string) => {
+  const handleScoreChange = (holeId: number, value: string, index: number) => {
+    
     if (value === "") {
       setScoreCard((prev: any[]) =>
         prev.map((hole) =>
@@ -186,12 +184,21 @@ export default function PlayScoreCard() {
       );
       return;
     }
+    // console.log("value entered:", value);
 
     setScoreCard((prev: any[]) =>
       prev.map((hole) =>
-        hole.holeId === holeId ? { ...hole, score: value } : hole,
+        Number(hole.holeId) === Number(holeId) ? { ...hole, score: value } : hole,
       ),
     );
+
+    // Auto-focus next input if 2 digits are entered
+    // if (value.length >= 2) {
+    //   const nextIndex = index + 1;
+    //   if (nextIndex < 18) {
+    //     inputRefs.current[nextIndex]?.focus();
+    //   }
+    // }
   };
 
   // ── Score legend counts ──
@@ -279,37 +286,76 @@ export default function PlayScoreCard() {
   const backTotals = getTotals(processedBack9);
   const grandTotals = getTotals(processedScoreCard);
 
-  const payload = processedScoreCard.map((h: any) => ({
-    courseId: Number(courseId),
-    holeId: h.holeId,
-    isCompleted: true,
-    isExcluded: isExcluded && h.par === 3,
-    roundNumber: 1,
-    score: h.score ?? 0,
-    stablefordPoints: h.stablefordPoints ?? 0,
-    teeBoxId: Number(teeBoxId),
-  }));
+  // Keep ref updated
+  useEffect(() => {
+    processedScoreCardRef.current = processedScoreCard;
+  }, [processedScoreCard]);
+
+  const saveRound = async (isCompleted: boolean, shouldGoBack: boolean = false) => {
+    try {
+      const currentData = processedScoreCardRef.current;
+      if (!currentData || currentData.length === 0) return;
+
+      const payload = currentData.map((h: any) => ({
+        courseId: Number(courseId),
+        holeId: h.holeId,
+        isCompleted: isCompleted,
+        isExcluded: isExcluded && h.par === 3,
+        roundNumber: 1,
+        score: h.score ? Number(h.score) : 0,
+        stablefordPoints: h.stablefordPoints ?? 0,
+        teeBoxId: Number(teeBoxId),
+      }));
+      console.log("score saved");
+      
+// console.log(payload,"paylod sent");
+
+      await saveScoreCard(payload);
+
+      if (shouldGoBack) {
+        Toast.show({
+          type: "success",
+          text1: isCompleted ? "Round Finished" : "Draft Saved",
+          text2: isCompleted ? "Score submitted successfully" : "Progress saved",
+        });
+        routePage.back();
+      }
+    } catch (error) {
+      console.log("Error saving round:", error);
+      if (shouldGoBack) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to save round",
+        });
+      }
+    }
+  };
+
+  const handleIncompleteRound = () => saveRound(false, true);
+
+  // ── Auto-save listeners ──
+  useEffect(() => {
+    const appStateListener = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState.match(/inactive|background/)) {
+        saveRound(false, false);
+      }
+    });
+
+    const beforeRemoveListener = navigation.addListener("beforeRemove", () => {
+      saveRound(false, false);
+    });
+
+    return () => {
+      appStateListener.remove();
+      beforeRemoveListener();
+    };
+  }, [navigation]);
 
   // ── Finish Round ──
-  const handleFinishRound = async() => {
-    try {
-      setVisible(false);
-    await saveScoreCard(payload);
-    Toast.show({
-      type: "success",
-      text1: "Round Finished",
-      text2: "Score submitted successfully",
-    });
-    routePage.back();
-  }catch(error){
-    console.log("Error finishing round",error);
+  const handleFinishRound = () => {
     setVisible(false);
-    Toast.show({
-      type: "error",
-      text1: "Error",
-      text2: "Failed to finish round",
-    });
-  }
+    saveRound(true, true);
   };
 
   // ── Score indicator ──
@@ -589,16 +635,24 @@ export default function PlayScoreCard() {
                             }}
                           >
                             {renderScoreIndicator(h.score, h.par, isDark)}
-                            <TextInput
-                              value={
-                                h.score !== null && h.score !== undefined
-                                  ? String(h.score)
-                                  : ""
-                              }
-                              onChangeText={(val) =>
-                                handleScoreChange(h.holeId, val)
-                              }
-                              keyboardType="numeric"
+                              <TextInput
+                                value={
+                                  h.score !== null && h.score !== undefined
+                                    ? String(h.score)
+                                    : ""
+                                }
+                                onChangeText={(val) =>
+                                  handleScoreChange(h.holeId, val, index)
+                                }
+                                onBlur={() => saveRound(false, false)}
+                                onSubmitEditing={() => {
+                                  if (index < 17) {
+                                    inputRefs.current[index + 1]?.focus();
+                                  }
+                                }}
+                                returnKeyType={index === 17 ? "done" : "next"}
+                                ref={(el:any) => (inputRefs.current[index] = el)}
+                                keyboardType="numeric"
                               style={{
                                 width: 42,
                                 height: 42,
@@ -796,6 +850,11 @@ export default function PlayScoreCard() {
                       }}
                     >
                       Total
+                    </ThemedText>
+                    <ThemedText
+                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                    >
+                      {grandTotals.strokeIndex}
                     </ThemedText>
                     <ThemedText
                       style={{ flex: 1, textAlign: "center", color: "#fff" }}

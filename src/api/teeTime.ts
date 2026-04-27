@@ -28,18 +28,9 @@ export const getSubAdminCourses = async () => {
 
 // get tee time and seats - TeeTime/slots/2?date=2026-03-26&tee=1
 
-export const getTeeTimeSeats = async (date: string, tee: number) => {
+export const getTeeTimeSeats = async (selectedCourse:number,date: string, tee: number) => {
     try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (!userId) {
-            throw new Error("User ID not found in storage");
-        }
-
-
-        const response = await https.get(`TeeTime/slots/${userId}?date=${date}&tee=${tee}`);
-                console.log("uuuddd", date, tee, userId);
-
-        // console.log("fffff", response.data);
+        const response = await https.get(`TeeTime/slots/${selectedCourse}?date=${date}&tee=${tee}`);
         return response.data;
     } catch (error) {
         console.error("Fetching tee time slots Error:", error);

@@ -15,7 +15,7 @@ export const saveScoreCard = async (payload: any[]) => {
     }));
 
     const response = await https.post("scorecard/save", finalPayload);
-    console.log("response sent sucessfully",response.data);
+    // console.log("response sent sucessfully",response.data);
     
     return response.data;
   } catch (error) {

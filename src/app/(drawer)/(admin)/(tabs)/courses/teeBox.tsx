@@ -241,6 +241,133 @@ export default function teeBoxPage() {
     );
   };
 
+const handleAddTeeBox = () => {
+  setIsEditMode(false);
+  setEditingCourse(null);
+
+  reset({
+    name: "",
+    color: "",
+    rating: 0,
+    slope: 0,
+  });
+
+  setSelectedColor(null);
+  setModalVisible(true);
+};
+
+const renderHeader = () => (
+  <Box
+    style={{
+      backgroundColor: isDark ? "#020617" : "#ffffff",
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      paddingBottom: 12,
+    }}
+  >
+    {/* 🔝 TOP BAR */}
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 8,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* 🔙 BACK */}
+      <Pressable
+        onPress={() => routePage.back()}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
+
+      {/* 🧠 TITLE BLOCK */}
+      <VStack style={{ flex: 1, alignItems: "center" }}>
+        <ThemedText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginTop: 2,
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Tee Boxes
+        </ThemedText>
+      </VStack>
+
+      {/* ➕ ICON ACTION */}
+      {/* <Pressable
+        onPress={handleAddTeeBox}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          flexDirection: "row",
+          gap: 6,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#84cc16",
+        }}
+        android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+      >
+        <Ionicons name="add" size={20} color="#fff" />
+        <ThemedText
+        style={{
+          color: "#fff",
+          fontWeight: "600",
+          fontSize: 14,
+        }}
+      >
+        Add
+      </ThemedText>
+      </Pressable> */}
+    </HStack>
+
+    {/* 🔥 CTA BUTTON */}
+    <Pressable
+      onPress={handleAddTeeBox}
+      style={{
+        marginHorizontal: 16,
+        marginTop: 6,
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 6,
+        backgroundColor: "#84cc16",
+        elevation: 2, // Android shadow
+      }}
+      android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+    >
+      <Ionicons name="add" size={18} color="#fff" />
+      <ThemedText
+        style={{
+          color: "#fff",
+          fontWeight: "600",
+          fontSize: 14,
+        }}
+      >
+        Add Tee Box
+      </ThemedText>
+    </Pressable>
+  </Box>
+);
+
   return (
     <>
       <ThemedView
@@ -249,58 +376,7 @@ export default function teeBoxPage() {
         }}
       >
         {/* HEADER */}
-        <HStack
-          className="px-3 pt-5 pb-3 items-center"
-          style={{ justifyContent: "space-between" }}
-        >
-          {/* LEFT: Back button */}
-          <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-            <Ionicons
-              name="arrow-back-outline"
-              size={22}
-              color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-            />
-          </Pressable>
-
-          {/* CENTER: Title */}
-          <ThemedText
-            style={{
-              flex: 1,
-              fontSize: 24,
-              fontWeight: "700",
-              textAlign: "center",
-              lineHeight: 30,
-            }}
-          >
-            Tee Boxes
-          </ThemedText>
-
-          {/* RIGHT: Add Button */}
-          <Pressable
-            onPress={() => {
-              setIsEditMode(false);
-              setEditingCourse(null);
-
-              reset({
-                name: "",
-                color: "",
-                rating: 0,
-                slope: 0,
-              });
-
-              setSelectedColor(null);
-
-              setModalVisible(true);
-            }}
-            style={styles.createButton}
-            className="flex-row items-center gap-1"
-          >
-            <Ionicons name="add-outline" size={28} color="white" />
-            <ThemedText style={{ color: "white", fontWeight: "600" }}>
-              Add Tee Box
-            </ThemedText>
-          </Pressable>
-        </HStack>
+        {renderHeader()}
 
         <Watermark />
 

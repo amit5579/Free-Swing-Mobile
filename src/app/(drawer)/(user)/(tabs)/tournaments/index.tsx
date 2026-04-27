@@ -120,6 +120,13 @@ export default function TournamentsScreen() {
     }
   };
 
+  // const renderHomeCourse = () => {
+
+  //   return(
+      
+  //   )
+  // }
+
   useEffect(() => {
     // console.log(courses);
 
@@ -147,19 +154,18 @@ export default function TournamentsScreen() {
     // console.log("FORM DATA:", data);
     try {
       setLoading(true);
+
       const tournamentData = {
         description: "",
         endDate: formatDate(data.endDate),
         maxPlayers: data.maxPlayers,
-
         name: data.name,
         scoringType: data.scoringType,
         startDate: formatDate(data.startDate),
         teeBoxId: data.teeBox,
-
         courseId: data.courseId,
       };
-      console.log("FINAL PAYLOAD:", tournamentData);
+      // console.log("FINAL PAYLOAD:", tournamentData);
       await createMiniTournament(
         tournamentData.courseId,
         tournamentData.description,
@@ -289,34 +295,80 @@ export default function TournamentsScreen() {
     );
   };
 
+const renderHeader = () => {
+  const handleCreate = () => setTModalVisible(true);
+
+  return (
+    <Box
+      style={{
+        paddingVertical: 10,
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      {/* 🔝 TOP ROW */}
+      <HStack
+        style={{
+          paddingHorizontal: 16,
+          // paddingTop: 14,
+          paddingBottom: 10,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* 🧠 TITLE */}
+        <ThemedText
+          style={{
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Tournaments
+        </ThemedText>
+      </HStack>
+
+      {/* 🔥 PRIMARY CTA */}
+      <Pressable
+        onPress={handleCreate}
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 12,
+          paddingVertical: 12,
+          borderRadius: 12,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "center",
+          gap: 6,
+          backgroundColor: "#84cc16",
+        }}
+        android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+      >
+        <Ionicons name="add" size={18} color="#fff" />
+        <ThemedText
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 14,
+          }}
+        >
+          Create Mini Tournament
+        </ThemedText>
+      </Pressable>
+    </Box>
+  );
+};
+
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, {backgroundColor: isDark ? "#020617" : "#ffffff",}]}>
         <View style={styles.safeArea}>
           <Watermark />
 
           {/* Header */}
-          <HStack className="justify-between items-center mt-3">
-            <ThemedText
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-              }}
-            >
-              Tournaments
-            </ThemedText>
+          {renderHeader()}
 
-            <Pressable
-              style={styles.createButton}
-              onPress={() => setTModalVisible(true)}
-              className="flex-row items-center gap-1"
-            >
-              <Ionicons name="add-outline" size={28} color="white" />
-              <ThemedText style={{ color: "white", fontWeight: "600" }}>
-                Create Mini Tournament
-              </ThemedText>
-            </Pressable>
-          </HStack>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.list}

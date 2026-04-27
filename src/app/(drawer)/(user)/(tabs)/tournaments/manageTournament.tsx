@@ -16,6 +16,8 @@ import { useLocalSearchParams } from "expo-router/build/hooks";
 import { useEffect, useState } from "react";
 import { Pressable, Text, TextInput, useColorScheme, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import { Box } from "@/components/box";
+import { VStack } from "@/components/vstack";
 
 export default function ManageTournament() {
   const colorScheme = useColorScheme();
@@ -104,62 +106,101 @@ export default function ManageTournament() {
   const dataToShow = isSearching ? filteredMembers : members;
 
   const RenderHeader = () => {
-    return (
-      <HStack
-        className="px-3 mt-3 items-center"
-        style={{ justifyContent: "space-between" }}
+  return (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <VStack
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+        }}
       >
-        {/* LEFT: Back button */}
-        <Pressable onPress={() => routePage.back()} style={{ padding: 6 }}>
-          <Ionicons
-            name="arrow-back-outline"
-            size={22}
-            color={colorScheme === "dark" ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
-
-        {/* CENTER: Title */}
+        {/* 🔝 TOP ROW */}
         <HStack
           style={{
-            flex: 1,
-            justifyContent: "center",
             alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          <ThemedText
+          {/* 🔙 BACK */}
+          <Pressable
+            onPress={() => routePage.back()}
             style={{
-              fontSize: 20,
-              fontWeight: "700",
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* 🧠 TITLE BLOCK */}
+          <VStack
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 6,
             }}
           >
-            Manage :
-          </ThemedText>
-
-          {loading ? (
-            <Skeleton
-              isDark={isDark}
-              height={18}
-              width={120}
-              style={{ marginLeft: 8 }}
-            />
-          ) : (
+            {/* LABEL */}
             <ThemedText
               style={{
-                fontSize: 20,
-                fontWeight: "700",
-                marginLeft: 6,
+                fontSize: 12,
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "500",
               }}
             >
-              {tournamentName}
+              Manage Tournament
             </ThemedText>
-          )}
-        </HStack>
 
-        {/* RIGHT*/}
-        <View style={{ width: 40 }} />
-      </HStack>
-    );
-  };
+            {/* MAIN TITLE */}
+            {loading ? (
+              <Skeleton
+                isDark={isDark}
+                height={18}
+                width={140}
+                style={{ marginTop: 2, borderRadius: 6 }}
+              />
+            ) : (
+              <ThemedText
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={{
+                  fontSize: 17,
+                  fontWeight: "700",
+                  marginTop: 2,
+                  maxWidth: "85%",
+                  textAlign: "center",
+                  color: isDark ? "#fff" : "#020617",
+                }}
+              >
+                {tournamentName}
+              </ThemedText>
+            )}
+          </VStack>
+
+          {/* ⚖️ RIGHT SPACER */}
+          <View style={{ width: 40 }} />
+        </HStack>
+      </VStack>
+    </Box>
+  );
+};
 
   const SearchSkeleton = ({ isDark }: { isDark: boolean }) => (
     <Skeleton
