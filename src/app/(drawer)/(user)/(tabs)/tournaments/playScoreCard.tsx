@@ -238,9 +238,12 @@ export default function PlayScoreCard() {
       );
       console.log("Payload is ", payload);
 
-      updateHoleScoresApi(payload).catch((err) =>
-        console.error("Debounced save error:", err),
-      );
+      updateHoleScoresApi(
+        tournamentId
+          ? Number(tournamentId)
+          : scoreCardRef.current[0]?.scorecardId || 0,
+        payload,
+      ).catch((err) => console.error("Debounced save error:", err));
     }, 300);
   };
 
@@ -388,7 +391,12 @@ export default function PlayScoreCard() {
           }));
         console.log("finishPayload", finishPayload);
 
-        await updateHoleScoresApi(finishPayload);
+        await updateHoleScoresApi(
+          tournamentId
+            ? Number(tournamentId)
+            : scoreCardRef.current[0]?.scorecardId || 0,
+          finishPayload,
+        );
 
         if (isCompleted) {
           Toast.show({
