@@ -6,8 +6,8 @@ import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, useColorScheme, View, ScrollView, Pressable } from "react-native";
-import { getInProgressGames, InProgressApiItem } from "@/api/dashboard";
+import { ActivityIndicator, useColorScheme, View, ScrollView, Pressable, Alert } from "react-native";
+import { getInProgressGames, InProgressApiItem, deleteScorecardApi } from "@/api/dashboard";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "expo-router";
 
@@ -36,11 +36,40 @@ export function InProgressTab({
   const [loading, setLoading] = useState(true);
   const [resumingId, setResumingId] = useState<string | null>(null);
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const handleResume = (id: string) => {
-    if (resumingId) return;
+    if (resumingId || deletingId) return;
     setResumingId(id);
     onResume(id);
     setTimeout(() => setResumingId(null), 1000);
+  };
+
+  const handleDelete = (id: string) => {
+    if (resumingId || deletingId) return;
+    Alert.alert(
+      "Delete Game",
+      "Are you sure you want to delete this game in progress?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setDeletingId(id);
+              await deleteScorecardApi(id);
+              setGames((prev) => prev.filter((g) => g.id !== id));
+            } catch (err) {
+              console.error(err);
+              Alert.alert("Error", "Failed to delete game.");
+            } finally {
+              setDeletingId(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const colorScheme = useColorScheme();
@@ -278,27 +307,35 @@ export function InProgressTab({
                     <Button
                       variant="outline"
                       size="sm"
-                      onPress={() => onDelete(game.id)}
+                      disabled={deletingId === game.id}
+                      onPress={() => handleDelete(game.id)}
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         borderColor: isDark ? "#EF4444" : "#FCA5A5",
                         width: "48%",
+                        opacity: deletingId === game.id ? 0.7 : 1,
                       }}
                     >
-                      <Ionicons
-                        name="trash-outline"
-                        size={14}
-                        color={isDark ? "#EF4444" : "#DC2626"}
-                      />
-                      <Text
-                        style={{
-                          color: isDark ? "#EF4444" : "#DC2626",
-                          fontWeight: "600",
-                          marginLeft: 6,
-                        }}
-                      >
-                        Delete
-                      </Text>
+                      {deletingId === game.id ? (
+                        <ActivityIndicator size="small" color={isDark ? "#EF4444" : "#DC2626"} />
+                      ) : (
+                        <>
+                          <Ionicons
+                            name="trash-outline"
+                            size={14}
+                            color={isDark ? "#EF4444" : "#DC2626"}
+                          />
+                          <Text
+                            style={{
+                              color: isDark ? "#EF4444" : "#DC2626",
+                              fontWeight: "600",
+                              marginLeft: 6,
+                            }}
+                          >
+                            Delete
+                          </Text>
+                        </>
+                      )}
                     </Button>
 
                     <Button

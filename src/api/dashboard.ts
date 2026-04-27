@@ -244,6 +244,16 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
   }
 };
 
+export const deleteScorecardApi = async (scorecardId: string | number) => {
+  try {
+    const response = await https.delete(`/scorecard/${scorecardId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Delete Scorecard Error:", error);
+    throw error;
+  }
+};
+
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
