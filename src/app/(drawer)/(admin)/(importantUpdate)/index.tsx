@@ -24,9 +24,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { getUpdates, addUpdate, deleteUpdate, UpdateApi, getUserById } from "@/api/admin/dashboard";
-import { getSubAdminList } from "@/api/admin/subAdmins";
-import https from "@/api/https";
+import {
+  getUpdates,
+  addUpdate,
+  deleteUpdate,
+  UpdateApi,
+  getUserById,
+} from "@/api/modules/admin/dashboard.api";
+import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
+import https from "@/api/client";
 import { ParadisePost } from "@/app/(drawer)/(user)/(tabs)/dashboard/tabs/GolferParadise";
 import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
@@ -45,9 +51,15 @@ export default function ManageImportantUpdates() {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [updateImgErrorMap, setUpdateImgErrorMap] = useState<{ [key: number]: boolean }>({});
-  const [paradiseImgErrorMap, setParadiseImgErrorMap] = useState<{ [key: number]: boolean }>({});
-  const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
+  const [updateImgErrorMap, setUpdateImgErrorMap] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [paradiseImgErrorMap, setParadiseImgErrorMap] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [imgLoadingMap, setImgLoadingMap] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   const [content, setContent] = useState("");
   const [image, setImage] = useState<any>(null);
@@ -57,8 +69,12 @@ export default function ManageImportantUpdates() {
   const [subAdminIds, setSubAdminIds] = useState<Set<number>>(new Set());
   const [userRole, setUserRole] = useState<string | null>(null);
   const [paradisePosts, setParadisePosts] = useState<ParadisePost[]>([]);
-  const [paradiseCommentModalPostId, setParadiseCommentModalPostId] = useState<number | null>(null);
-  const [paradiseCommentTexts, setParadiseCommentTexts] = useState<Record<number, string>>({});
+  const [paradiseCommentModalPostId, setParadiseCommentModalPostId] = useState<
+    number | null
+  >(null);
+  const [paradiseCommentTexts, setParadiseCommentTexts] = useState<
+    Record<number, string>
+  >({});
   const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
   const [editingUpdateId, setEditingUpdateId] = useState<number | null>(null);
@@ -82,7 +98,10 @@ export default function ManageImportantUpdates() {
             horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
           } else if (filterRef.current === "subadmin") {
             setFilter("user");
-            horizontalScrollRef.current?.scrollTo({ x: width * 2, animated: true });
+            horizontalScrollRef.current?.scrollTo({
+              x: width * 2,
+              animated: true,
+            });
           }
         } else if (gs.dx > SWIPE_THRESHOLD) {
           if (filterRef.current === "user") {
@@ -94,7 +113,7 @@ export default function ManageImportantUpdates() {
           }
         }
       },
-    })
+    }),
   ).current;
 
   const fetchUpdates = async (isRefreshing = false) => {
@@ -105,11 +124,12 @@ export default function ManageImportantUpdates() {
         getSubAdminList(),
         https.get("paradise?page=1&pageSize=50").catch(() => ({ data: [] })),
       ]);
-      const sortedData = [...data].sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const sortedData = [...data].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
       const idSet = new Set<number>(
-        (subAdmins as { id: number }[]).map((sa) => sa.id)
+        (subAdmins as { id: number }[]).map((sa) => sa.id),
       );
       setSubAdminIds(idSet);
       setUpdates(sortedData);
@@ -142,7 +162,7 @@ export default function ManageImportantUpdates() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -151,9 +171,13 @@ export default function ManageImportantUpdates() {
       setParadisePosts((prev) =>
         prev.map((p) =>
           p.id === postId
-            ? { ...p, isLikedByMe: !p.isLikedByMe, likeCount: p.isLikedByMe ? p.likeCount - 1 : p.likeCount + 1 }
-            : p
-        )
+            ? {
+                ...p,
+                isLikedByMe: !p.isLikedByMe,
+                likeCount: p.isLikedByMe ? p.likeCount - 1 : p.likeCount + 1,
+              }
+            : p,
+        ),
       );
       await https.post(`paradise/like/${postId}`);
     } catch (err) {
@@ -167,7 +191,9 @@ export default function ManageImportantUpdates() {
     try {
       await https.post(`paradise/comment/${postId}`, { text });
       setParadiseCommentTexts((prev) => ({ ...prev, [postId]: "" }));
-      const res = await https.get("paradise?page=1&pageSize=50").catch(() => ({ data: [] }));
+      const res = await https
+        .get("paradise?page=1&pageSize=50")
+        .catch(() => ({ data: [] }));
       setParadisePosts(res.data || []);
     } catch (err) {
       console.error("Comment error:", err);
@@ -199,7 +225,8 @@ export default function ManageImportantUpdates() {
 
   const handleBack = () => {
     const isAdmin = userRole?.toLowerCase() === "admin";
-    const isSubAdmin = userRole?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin";
+    const isSubAdmin =
+      userRole?.toLowerCase().replace(/[^a-z]/g, "") === "subadmin";
 
     if (isSubAdmin) {
       router.navigate("/(drawer)/(subAdmin)/(tabs)/dashboard");
@@ -214,10 +241,13 @@ export default function ManageImportantUpdates() {
     fetchUpdates();
     fetchCurrentUser();
 
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      handleBack();
-      return true;
-    });
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleBack();
+        return true;
+      },
+    );
 
     return () => backHandler.remove();
   }, [userRole]);
@@ -286,7 +316,10 @@ export default function ManageImportantUpdates() {
       fetchUpdates();
     } catch (error) {
       console.error("Post/Update Error:", error);
-      Alert.alert("Error", `Failed to ${editingUpdateId ? "update" : "post"} update. Please try again.`);
+      Alert.alert(
+        "Error",
+        `Failed to ${editingUpdateId ? "update" : "post"} update. Please try again.`,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -301,7 +334,7 @@ export default function ManageImportantUpdates() {
         uri: update.mediaUrl.startsWith("http")
           ? update.mediaUrl
           : `https://kolve18freeswing.com${update.mediaUrl}`,
-        isExisting: true
+        isExisting: true,
       });
     } else {
       setImage(null);
@@ -326,9 +359,9 @@ export default function ManageImportantUpdates() {
               console.error("Delete Error:", error);
               Alert.alert("Error", "Failed to delete update.");
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -350,11 +383,17 @@ export default function ManageImportantUpdates() {
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <View>
-          <Text className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-black"}`}>
+          <Text
+            className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-black"}`}
+          >
             Important Updates
           </Text>
-          <Text className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-            {userRole?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin" ? "Sub Admin Control Panel" : "Admin Control Panel"}
+          <Text
+            className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {userRole?.toLowerCase().replace(/[^a-z]/g, "") === "subadmin"
+              ? "Sub Admin Control Panel"
+              : "Admin Control Panel"}
           </Text>
         </View>
       </View>
@@ -373,8 +412,17 @@ export default function ManageImportantUpdates() {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
-        <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)" }}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+      >
+        <ThemedView
+          style={{
+            flex: 1,
+            backgroundColor: isDark
+              ? "transparent"
+              : "rgba(255, 255, 255, 0.7)",
+          }}
+        >
           <Watermark />
           {renderHeader()}
           <ScrollView className="px-4">
@@ -383,14 +431,31 @@ export default function ManageImportantUpdates() {
                 key={i}
                 className="mb-4 p-4 rounded-2xl overflow-hidden"
                 style={{
-                  backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.7)",
+                  backgroundColor: isDark
+                    ? "rgba(26,26,26,0.6)"
+                    : "rgba(255,255,255,0.7)",
                   borderWidth: 1,
                   borderColor: "rgba(139, 195, 74, 0.3)",
                 }}
               >
-                <Skeleton isDark={isDark} width="80%" height={24} style={{ marginBottom: 8 }} />
-                <Skeleton isDark={isDark} width="100%" height={16} style={{ marginBottom: 16 }} />
-                <Skeleton isDark={isDark} width="100%" height={150} borderRadius={12} />
+                <Skeleton
+                  isDark={isDark}
+                  width="80%"
+                  height={24}
+                  style={{ marginBottom: 8 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  width="100%"
+                  height={16}
+                  style={{ marginBottom: 16 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  width="100%"
+                  height={150}
+                  borderRadius={12}
+                />
               </View>
             ))}
           </ScrollView>
@@ -404,7 +469,9 @@ export default function ManageImportantUpdates() {
       key={update.id}
       className="mb-6 p-5 rounded-3xl overflow-hidden"
       style={{
-        backgroundColor: isDark ? "rgba(31,31,31,0.8)" : "rgba(255,255,255,0.9)",
+        backgroundColor: isDark
+          ? "rgba(31,31,31,0.8)"
+          : "rgba(255,255,255,0.9)",
         borderWidth: 1,
         borderColor: "rgba(139, 195, 74, 0.2)",
         shadowColor: "#000",
@@ -416,7 +483,9 @@ export default function ManageImportantUpdates() {
       <View className="flex-row justify-between items-center mb-3">
         <View className="flex-row items-center">
           <View className="bg-[#8BC34A]/20 px-3 py-1 rounded-full border border-[#8BC34A]/30 mr-2">
-            <Text className="text-[#8BC34A] text-[10px] font-bold">ANNOUNCEMENT</Text>
+            <Text className="text-[#8BC34A] text-[10px] font-bold">
+              ANNOUNCEMENT
+            </Text>
           </View>
           <Text className="text-[10px] text-gray-500 font-medium">
             {new Date(update.createdAt).toLocaleString()}
@@ -431,7 +500,10 @@ export default function ManageImportantUpdates() {
               <Ionicons name="create-outline" size={20} color="#8BC34A" />
             </TouchableOpacity>
           )}
-          {(filter === "mine" || (userRole?.toLowerCase() !== "subadmin" && userRole?.toLowerCase().replace(/[^a-z]/g, '') !== "subadmin")) && (
+          {(filter === "mine" ||
+            (userRole?.toLowerCase() !== "subadmin" &&
+              userRole?.toLowerCase().replace(/[^a-z]/g, "") !==
+                "subadmin")) && (
             <TouchableOpacity
               onPress={() => handleDelete(update.id)}
               className="p-1"
@@ -443,7 +515,9 @@ export default function ManageImportantUpdates() {
       </View>
 
       {update.content && (
-        <Text className={`text-base leading-6 mb-4 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+        <Text
+          className={`text-base leading-6 mb-4 ${isDark ? "text-gray-200" : "text-gray-800"}`}
+        >
           {update.content}
         </Text>
       )}
@@ -454,7 +528,10 @@ export default function ManageImportantUpdates() {
           className="mb-4 flex-row items-center bg-[#8BC34A]/10 p-3 rounded-xl border border-[#8BC34A]/20"
         >
           <Ionicons name="link-outline" size={18} color="#8BC34A" />
-          <Text className="ml-2 text-[#8BC34A] font-semibold text-xs flex-1" numberOfLines={1}>
+          <Text
+            className="ml-2 text-[#8BC34A] font-semibold text-xs flex-1"
+            numberOfLines={1}
+          >
             {(update as any).linkUrl}
           </Text>
           <Ionicons name="open-outline" size={14} color="#8BC34A" />
@@ -471,10 +548,24 @@ export default function ManageImportantUpdates() {
             setFullImageModalVisible(true);
           }}
           activeOpacity={0.9}
-          style={{ width: "100%", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", justifyContent: "center", alignItems: "center" }}
+          style={{
+            width: "100%",
+            height: 200,
+            borderRadius: 20,
+            overflow: "hidden",
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(0,0,0,0.05)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
           {imgLoadingMap[update.id] !== false && (
-            <ActivityIndicator size="large" color="#8BC34A" style={{ position: "absolute" }} />
+            <ActivityIndicator
+              size="large"
+              color="#8BC34A"
+              style={{ position: "absolute" }}
+            />
           )}
           {/* <Image
             source={{
@@ -504,13 +595,21 @@ export default function ManageImportantUpdates() {
                 width: "100%",
                 height: 200,
                 borderRadius: 20,
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(0,0,0,0.05)",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
               <Ionicons name="image-outline" size={40} color="#8BC34A" />
-              <Text style={{ marginTop: 6, fontSize: 12, color: isDark ? "#aaa" : "#666" }}>
+              <Text
+                style={{
+                  marginTop: 6,
+                  fontSize: 12,
+                  color: isDark ? "#aaa" : "#666",
+                }}
+              >
                 Image not available
               </Text>
             </View>
@@ -545,8 +644,10 @@ export default function ManageImportantUpdates() {
           <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center mr-2">
             <Ionicons name="person" size={16} color="#666" />
           </View>
-          <Text className={`text-xs font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-            Posted by {update.authorName || 'Admin'}
+          <Text
+            className={`text-xs font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+          >
+            Posted by {update.authorName || "Admin"}
           </Text>
         </View>
       </View>
@@ -554,15 +655,24 @@ export default function ManageImportantUpdates() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
-      <ThemedView style={{ flex: 1, backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+    >
+      <ThemedView
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "transparent" : "rgba(255, 255, 255, 0.7)",
+        }}
+      >
         <Watermark />
         {renderHeader()}
         {/* Filter Row */}
         <View className="px-4 mb-4">
           <HStack
             className="rounded-full p-1"
-            style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
+            style={{
+              backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+            }}
           >
             <TouchableOpacity
               onPress={() => {
@@ -578,32 +688,60 @@ export default function ManageImportantUpdates() {
                 color={filter === "mine" ? "#fff" : isDark ? "#aaa" : "#666"}
                 style={{ marginRight: 4 }}
               />
-              <Text style={{ color: filter === "mine" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }}>
+              <Text
+                style={{
+                  color: filter === "mine" ? "#fff" : isDark ? "#aaa" : "#666",
+                  fontWeight: "bold",
+                  fontSize: 11,
+                }}
+              >
                 My Updates
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
                 setFilter("subadmin");
-                horizontalScrollRef.current?.scrollTo({ x: width, animated: true });
+                horizontalScrollRef.current?.scrollTo({
+                  x: width,
+                  animated: true,
+                });
               }}
               className="flex-1 py-1.5 rounded-full items-center justify-center flex-row"
-              style={filter === "subadmin" ? { backgroundColor: "#8BC34A" } : {}}
+              style={
+                filter === "subadmin" ? { backgroundColor: "#8BC34A" } : {}
+              }
             >
               <Ionicons
                 name="shield-checkmark-outline"
                 size={14}
-                color={filter === "subadmin" ? "#fff" : isDark ? "#aaa" : "#666"}
+                color={
+                  filter === "subadmin" ? "#fff" : isDark ? "#aaa" : "#666"
+                }
                 style={{ marginRight: 4 }}
               />
-              <Text style={{ color: filter === "subadmin" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }} numberOfLines={1} adjustsFontSizeToFit>
-                {userRole?.toLowerCase().includes("admin") && userRole?.toLowerCase().replace(/[^a-z]/g, '') !== "subadmin" ? "Sub Admin" : "Admin"}
+              <Text
+                style={{
+                  color:
+                    filter === "subadmin" ? "#fff" : isDark ? "#aaa" : "#666",
+                  fontWeight: "bold",
+                  fontSize: 11,
+                }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {userRole?.toLowerCase().includes("admin") &&
+                userRole?.toLowerCase().replace(/[^a-z]/g, "") !== "subadmin"
+                  ? "Sub Admin"
+                  : "Admin"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
                 setFilter("user");
-                horizontalScrollRef.current?.scrollTo({ x: width * 2, animated: true });
+                horizontalScrollRef.current?.scrollTo({
+                  x: width * 2,
+                  animated: true,
+                });
               }}
               className="flex-1 py-1.5 rounded-full items-center justify-center flex-row"
               style={filter === "user" ? { backgroundColor: "#8BC34A" } : {}}
@@ -614,13 +752,18 @@ export default function ManageImportantUpdates() {
                 color={filter === "user" ? "#fff" : isDark ? "#aaa" : "#666"}
                 style={{ marginRight: 4 }}
               />
-              <Text style={{ color: filter === "user" ? "#fff" : (isDark ? "#aaa" : "#666"), fontWeight: "bold", fontSize: 11 }}>
+              <Text
+                style={{
+                  color: filter === "user" ? "#fff" : isDark ? "#aaa" : "#666",
+                  fontWeight: "bold",
+                  fontSize: 11,
+                }}
+              >
                 Other
               </Text>
             </TouchableOpacity>
           </HStack>
         </View>
-
 
         <View {...panResponder.panHandlers} style={{ flex: 1 }}>
           <ScrollView
@@ -646,28 +789,39 @@ export default function ManageImportantUpdates() {
               style={{ width: width }}
               showsVerticalScrollIndicator={false}
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor="#8BC34A"
+                />
               }
             >
               <View className="px-4 pb-20 mt-2">
-                {updates
-                  .filter((u) => {
-                    const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
-                    const current = normalize(currentUserName);
-                    const author = normalize(u.authorName);
-                    return author === current;
-                  })
-                  .length === 0 ? (
+                {updates.filter((u) => {
+                  const normalize = (s: string | null | undefined): string =>
+                    s?.toLowerCase().trim() || "";
+                  const current = normalize(currentUserName);
+                  const author = normalize(u.authorName);
+                  return author === current;
+                }).length === 0 ? (
                   <View className="items-center justify-center mt-20 opacity-50">
-                    <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
-                    <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                    <Ionicons
+                      name="notifications-off-outline"
+                      size={64}
+                      color={isDark ? "#fff" : "#8BC34A"}
+                    />
+                    <Text
+                      className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
                       No personal updates yet
                     </Text>
                   </View>
                 ) : (
                   updates
                     .filter((u) => {
-                      const normalize = (s: string | null | undefined): string => s?.toLowerCase().trim() || "";
+                      const normalize = (
+                        s: string | null | undefined,
+                      ): string => s?.toLowerCase().trim() || "";
                       const current = normalize(currentUserName);
                       const author = normalize(u.authorName);
                       return author === current;
@@ -682,17 +836,25 @@ export default function ManageImportantUpdates() {
               style={{ width: width }}
               showsVerticalScrollIndicator={false}
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor="#8BC34A"
+                />
               }
             >
               <View className="px-4 pb-20 mt-2">
                 {(() => {
                   const isAdmin = userRole?.toLowerCase() === "admin";
-                  const isSubAdmin = userRole?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin";
+                  const isSubAdmin =
+                    userRole?.toLowerCase().replace(/[^a-z]/g, "") ===
+                    "subadmin";
 
                   const filtered = updates.filter((u) => {
                     const authorIsSubAdmin = subAdminIds.has(u.authorId);
-                    const authorIsMe = u.authorName?.toLowerCase().trim() === currentUserName?.toLowerCase().trim();
+                    const authorIsMe =
+                      u.authorName?.toLowerCase().trim() ===
+                      currentUserName?.toLowerCase().trim();
 
                     if (isSubAdmin) {
                       return !authorIsSubAdmin && !authorIsMe;
@@ -702,8 +864,14 @@ export default function ManageImportantUpdates() {
                   });
                   return filtered.length === 0 ? (
                     <View className="items-center justify-center mt-20 opacity-50">
-                      <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
-                      <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                      <Ionicons
+                        name="notifications-off-outline"
+                        size={64}
+                        color={isDark ? "#fff" : "#8BC34A"}
+                      />
+                      <Text
+                        className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
                         No {isAdmin ? "sub admin" : "admin"} updates yet
                       </Text>
                     </View>
@@ -718,14 +886,24 @@ export default function ManageImportantUpdates() {
               style={{ width: width }}
               showsVerticalScrollIndicator={false}
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#8BC34A" />
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor="#8BC34A"
+                />
               }
             >
               <View className="px-4 pb-20 mt-2">
                 {paradisePosts.length === 0 ? (
                   <View className="items-center justify-center mt-20 opacity-50">
-                    <Ionicons name="images-outline" size={64} color={isDark ? "#fff" : "#8BC34A"} />
-                    <Text className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}>
+                    <Ionicons
+                      name="images-outline"
+                      size={64}
+                      color={isDark ? "#fff" : "#8BC34A"}
+                    />
+                    <Text
+                      className={`mt-4 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
                       No user posts yet
                     </Text>
                   </View>
@@ -735,38 +913,76 @@ export default function ManageImportantUpdates() {
                       key={post.id}
                       className="mb-5 rounded-2xl overflow-hidden"
                       style={{
-                        backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.9)",
+                        backgroundColor: isDark
+                          ? "rgba(26,26,26,0.6)"
+                          : "rgba(255,255,255,0.9)",
                         borderWidth: 1,
                         borderColor: "rgba(139,195,74,0.2)",
                       }}
                     >
-                      <View style={{ flexDirection: "row", alignItems: "center", padding: 14 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: 14,
+                        }}
+                      >
                         <View
                           style={{
-                            width: 40, height: 40, borderRadius: 20,
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
                             backgroundColor: isDark ? "#222" : "#eee",
-                            overflow: "hidden", borderWidth: 1, borderColor: "#8BC34A",
-                            justifyContent: "center", alignItems: "center",
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: "#8BC34A",
+                            justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
                           {post.playerAvatar && post.playerAvatar !== "null" ? (
                             <Image
-                              source={{ uri: post.playerAvatar.startsWith("http") ? post.playerAvatar : `https://kolve18freeswing.com${post.playerAvatar}` }}
+                              source={{
+                                uri: post.playerAvatar.startsWith("http")
+                                  ? post.playerAvatar
+                                  : `https://kolve18freeswing.com${post.playerAvatar}`,
+                              }}
                               style={{ width: "100%", height: "100%" }}
                               resizeMode="cover"
                             />
                           ) : (
-                            <Text style={{ color: "#8BC34A", fontWeight: "bold", fontSize: 16 }}>
+                            <Text
+                              style={{
+                                color: "#8BC34A",
+                                fontWeight: "bold",
+                                fontSize: 16,
+                              }}
+                            >
                               {post.playerName?.charAt(0)?.toUpperCase() || "G"}
                             </Text>
                           )}
                         </View>
                         <View style={{ marginLeft: 12, flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontWeight: "bold", color: isDark ? "#fff" : "#111" }}>
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              fontWeight: "bold",
+                              color: isDark ? "#fff" : "#111",
+                            }}
+                          >
                             {post.playerName}
                           </Text>
-                          <Text style={{ fontSize: 10, color: isDark ? "#9CA3AF" : "#6B7280" }}>
-                            {new Date(post.createdAt).toLocaleDateString()} · {new Date(post.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: isDark ? "#9CA3AF" : "#6B7280",
+                            }}
+                          >
+                            {new Date(post.createdAt).toLocaleDateString()} ·{" "}
+                            {new Date(post.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </Text>
                         </View>
 
@@ -780,12 +996,23 @@ export default function ManageImportantUpdates() {
                             borderColor: "rgba(239,68,68,0.25)",
                           }}
                         >
-                          <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                          <Ionicons
+                            name="trash-outline"
+                            size={16}
+                            color="#EF4444"
+                          />
                         </TouchableOpacity>
                       </View>
 
                       {post.caption ? (
-                        <Text style={{ paddingHorizontal: 14, paddingBottom: 10, fontSize: 14, color: isDark ? "#E5E7EB" : "#374151" }}>
+                        <Text
+                          style={{
+                            paddingHorizontal: 14,
+                            paddingBottom: 10,
+                            fontSize: 14,
+                            color: isDark ? "#E5E7EB" : "#374151",
+                          }}
+                        >
                           {post.caption}
                         </Text>
                       ) : null}
@@ -799,14 +1026,28 @@ export default function ManageImportantUpdates() {
                               aspectRatio: 4 / 3,
                               justifyContent: "center",
                               alignItems: "center",
-                              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                              backgroundColor: isDark
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(0,0,0,0.03)",
                               borderTopWidth: 1,
                               borderBottomWidth: 1,
-                              borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+                              borderColor: isDark
+                                ? "rgba(255,255,255,0.07)"
+                                : "rgba(0,0,0,0.05)",
                             }}
                           >
-                            <Ionicons name="image-outline" size={36} color={isDark ? "#4B5563" : "#D1D5DB"} />
-                            <Text style={{ marginTop: 8, fontSize: 12, color: isDark ? "#6B7280" : "#9CA3AF" }}>
+                            <Ionicons
+                              name="image-outline"
+                              size={36}
+                              color={isDark ? "#4B5563" : "#D1D5DB"}
+                            />
+                            <Text
+                              style={{
+                                marginTop: 8,
+                                fontSize: 12,
+                                color: isDark ? "#6B7280" : "#9CA3AF",
+                              }}
+                            >
                               Image unavailable
                             </Text>
                           </View>
@@ -822,31 +1063,82 @@ export default function ManageImportantUpdates() {
                             }}
                           >
                             <Image
-                              source={{ uri: post.imageUrl.startsWith("http") ? post.imageUrl : `https://kolve18freeswing.com${post.imageUrl}` }}
+                              source={{
+                                uri: post.imageUrl.startsWith("http")
+                                  ? post.imageUrl
+                                  : `https://kolve18freeswing.com${post.imageUrl}`,
+                              }}
                               style={{ width: "100%", aspectRatio: 4 / 3 }}
                               resizeMode="cover"
-                              onError={() => setParadiseImgErrorMap((prev) => ({ ...prev, [post.id]: true }))}
+                              onError={() =>
+                                setParadiseImgErrorMap((prev) => ({
+                                  ...prev,
+                                  [post.id]: true,
+                                }))
+                              }
                             />
                           </TouchableOpacity>
                         )
                       ) : null}
 
-
                       {/* Footer — interactive likes & comments */}
-                      <View style={{ flexDirection: "row", paddingHorizontal: 14, paddingVertical: 10, gap: 20 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          paddingHorizontal: 14,
+                          paddingVertical: 10,
+                          gap: 20,
+                        }}
+                      >
                         <TouchableOpacity
                           onPress={() => handleParadiseLike(post.id)}
-                          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
                         >
-                          <Ionicons name={post.isLikedByMe ? "heart" : "heart-outline"} size={18} color={post.isLikedByMe ? "#EF4444" : isDark ? "#D1D5DB" : "#4B5563"} />
-                          <Text style={{ fontSize: 12, color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.likeCount}</Text>
+                          <Ionicons
+                            name={post.isLikedByMe ? "heart" : "heart-outline"}
+                            size={18}
+                            color={
+                              post.isLikedByMe
+                                ? "#EF4444"
+                                : isDark
+                                  ? "#D1D5DB"
+                                  : "#4B5563"
+                            }
+                          />
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: isDark ? "#D1D5DB" : "#4B5563",
+                            }}
+                          >
+                            {post.likeCount}
+                          </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => setParadiseCommentModalPostId(post.id)}
-                          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
                         >
-                          <Ionicons name="chatbubble-outline" size={16} color={isDark ? "#D1D5DB" : "#4B5563"} />
-                          <Text style={{ fontSize: 12, color: isDark ? "#D1D5DB" : "#4B5563" }}>{post.commentCount}</Text>
+                          <Ionicons
+                            name="chatbubble-outline"
+                            size={16}
+                            color={isDark ? "#D1D5DB" : "#4B5563"}
+                          />
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: isDark ? "#D1D5DB" : "#4B5563",
+                            }}
+                          >
+                            {post.commentCount}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -867,62 +1159,255 @@ export default function ManageImportantUpdates() {
           >
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : undefined}
-              style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                justifyContent: "flex-end",
+              }}
             >
-              <Pressable style={{ flex: 1 }} onPress={() => setParadiseCommentModalPostId(null)} />
-              <View style={{ backgroundColor: isDark ? "#1A1A1A" : "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "80%" }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}>
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: isDark ? "#fff" : "#111" }}>Comments</Text>
-                  <TouchableOpacity onPress={() => setParadiseCommentModalPostId(null)} style={{ padding: 4, backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#F3F4F6", borderRadius: 12 }}>
-                    <Ionicons name="close" size={20} color={isDark ? "#fff" : "#6b7280"} />
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => setParadiseCommentModalPostId(null)}
+              />
+              <View
+                style={{
+                  backgroundColor: isDark ? "#1A1A1A" : "#fff",
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  maxHeight: "80%",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingHorizontal: 20,
+                    paddingVertical: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: isDark ? "#fff" : "#111",
+                    }}
+                  >
+                    Comments
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setParadiseCommentModalPostId(null)}
+                    style={{
+                      padding: 4,
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.1)"
+                        : "#F3F4F6",
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Ionicons
+                      name="close"
+                      size={20}
+                      color={isDark ? "#fff" : "#6b7280"}
+                    />
                   </TouchableOpacity>
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
-                  {(paradisePosts.find((p) => p.id === paradiseCommentModalPostId)?.comments?.length ?? 0) === 0 ? (
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ padding: 16 }}
+                >
+                  {(paradisePosts.find(
+                    (p) => p.id === paradiseCommentModalPostId,
+                  )?.comments?.length ?? 0) === 0 ? (
                     <View style={{ paddingVertical: 40, alignItems: "center" }}>
-                      <Ionicons name="chatbubbles-outline" size={48} color={isDark ? "#333" : "#E5E7EB"} />
-                      <Text style={{ marginTop: 12, fontWeight: "600", color: isDark ? "#9CA3AF" : "#6B7280" }}>No comments yet.</Text>
+                      <Ionicons
+                        name="chatbubbles-outline"
+                        size={48}
+                        color={isDark ? "#333" : "#E5E7EB"}
+                      />
+                      <Text
+                        style={{
+                          marginTop: 12,
+                          fontWeight: "600",
+                          color: isDark ? "#9CA3AF" : "#6B7280",
+                        }}
+                      >
+                        No comments yet.
+                      </Text>
                     </View>
                   ) : (
-                    paradisePosts.find((p) => p.id === paradiseCommentModalPostId)?.comments?.map((comment) => {
-                      const commenterName = comment.userName || comment.playerName || comment.user || "User";
-                      const commentText = comment.text || comment.comment || "";
-                      return (
-                        <View key={comment.id} style={{ flexDirection: "row", marginBottom: 16, alignItems: "flex-start" }}>
-                          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#333" : "#E5E7EB", justifyContent: "center", alignItems: "center", overflow: "hidden", borderWidth: 1.5, borderColor: "rgba(139,195,74,0.4)" }}>
-                            {(comment.playerAvatar && comment.playerAvatar !== "null") || (comment.profilePictureUrl && comment.profilePictureUrl !== "null") ? (
-                              <Image
-                                source={{ uri: ((comment.playerAvatar || comment.profilePictureUrl)!).startsWith("http") ? (comment.playerAvatar || comment.profilePictureUrl)! : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}` }}
-                                style={{ width: "100%", height: "100%" }}
-                                resizeMode="cover"
-                              />
-                            ) : (
-                              <Text style={{ color: "#8BC34A", fontWeight: "bold", fontSize: 12 }}>{commenterName.charAt(0).toUpperCase()}</Text>
-                            )}
+                    paradisePosts
+                      .find((p) => p.id === paradiseCommentModalPostId)
+                      ?.comments?.map((comment) => {
+                        const commenterName =
+                          comment.userName ||
+                          comment.playerName ||
+                          comment.user ||
+                          "User";
+                        const commentText =
+                          comment.text || comment.comment || "";
+                        return (
+                          <View
+                            key={comment.id}
+                            style={{
+                              flexDirection: "row",
+                              marginBottom: 16,
+                              alignItems: "flex-start",
+                            }}
+                          >
+                            <View
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                backgroundColor: isDark ? "#333" : "#E5E7EB",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                overflow: "hidden",
+                                borderWidth: 1.5,
+                                borderColor: "rgba(139,195,74,0.4)",
+                              }}
+                            >
+                              {(comment.playerAvatar &&
+                                comment.playerAvatar !== "null") ||
+                              (comment.profilePictureUrl &&
+                                comment.profilePictureUrl !== "null") ? (
+                                <Image
+                                  source={{
+                                    uri: (comment.playerAvatar ||
+                                      comment.profilePictureUrl)!.startsWith(
+                                      "http",
+                                    )
+                                      ? (comment.playerAvatar ||
+                                          comment.profilePictureUrl)!
+                                      : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}`,
+                                  }}
+                                  style={{ width: "100%", height: "100%" }}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <Text
+                                  style={{
+                                    color: "#8BC34A",
+                                    fontWeight: "bold",
+                                    fontSize: 12,
+                                  }}
+                                >
+                                  {commenterName.charAt(0).toUpperCase()}
+                                </Text>
+                              )}
+                            </View>
+                            <View
+                              style={{
+                                flex: 1,
+                                marginLeft: 10,
+                                padding: 10,
+                                borderRadius: 12,
+                                backgroundColor: isDark
+                                  ? "rgba(255,255,255,0.03)"
+                                  : "#F9FAFB",
+                                borderWidth: 1,
+                                borderColor: isDark
+                                  ? "rgba(255,255,255,0.05)"
+                                  : "rgba(0,0,0,0.05)",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontWeight: "bold",
+                                  fontSize: 12,
+                                  color: isDark ? "#fff" : "#111",
+                                }}
+                              >
+                                {commenterName}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  marginTop: 2,
+                                  color: isDark ? "#D1D5DB" : "#4B5563",
+                                }}
+                              >
+                                {commentText}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  marginTop: 4,
+                                  color: isDark ? "#6B7280" : "#9CA3AF",
+                                }}
+                              >
+                                {new Date(comment.createdAt).toLocaleString(
+                                  undefined,
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}
+                              </Text>
+                            </View>
                           </View>
-                          <View style={{ flex: 1, marginLeft: 10, padding: 10, borderRadius: 12, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB", borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
-                            <Text style={{ fontWeight: "bold", fontSize: 12, color: isDark ? "#fff" : "#111" }}>{commenterName}</Text>
-                            <Text style={{ fontSize: 12, marginTop: 2, color: isDark ? "#D1D5DB" : "#4B5563" }}>{commentText}</Text>
-                            <Text style={{ fontSize: 10, marginTop: 4, color: isDark ? "#6B7280" : "#9CA3AF" }}>
-                              {new Date(comment.createdAt).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" })}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })
+                        );
+                      })
                   )}
                 </ScrollView>
-                <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 24, alignItems: "center", gap: 10, borderTopWidth: 1, borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", backgroundColor: isDark ? "#1A1A1A" : "#fff" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    paddingBottom: 24,
+                    alignItems: "center",
+                    gap: 10,
+                    borderTopWidth: 1,
+                    borderTopColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.05)",
+                    backgroundColor: isDark ? "#1A1A1A" : "#fff",
+                  }}
+                >
                   <TextInput
                     placeholder="Write a comment..."
                     placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
-                    style={{ flex: 1, height: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6", color: isDark ? "#fff" : "#111", fontSize: 13 }}
-                    value={paradiseCommentTexts[paradiseCommentModalPostId] || ""}
-                    onChangeText={(val) => setParadiseCommentTexts((prev) => ({ ...prev, [paradiseCommentModalPostId!]: val }))}
+                    style={{
+                      flex: 1,
+                      height: 40,
+                      paddingHorizontal: 14,
+                      borderRadius: 20,
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.05)"
+                        : "#F3F4F6",
+                      color: isDark ? "#fff" : "#111",
+                      fontSize: 13,
+                    }}
+                    value={
+                      paradiseCommentTexts[paradiseCommentModalPostId] || ""
+                    }
+                    onChangeText={(val) =>
+                      setParadiseCommentTexts((prev) => ({
+                        ...prev,
+                        [paradiseCommentModalPostId!]: val,
+                      }))
+                    }
                   />
                   <TouchableOpacity
-                    onPress={() => handleParadiseAddComment(paradiseCommentModalPostId)}
-                    style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#8BC34A", justifyContent: "center", alignItems: "center" }}
+                    onPress={() =>
+                      handleParadiseAddComment(paradiseCommentModalPostId)
+                    }
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: "#8BC34A",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
                   >
                     <Ionicons name="send" size={16} color="white" />
                   </TouchableOpacity>
@@ -942,21 +1427,35 @@ export default function ManageImportantUpdates() {
             <Box
               style={[
                 styles.modalContent,
-                { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF" }
+                { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF" },
               ]}
             >
               <VStack space="lg" className="p-6">
                 <HStack className="justify-between items-center mb-2">
-                  <Text style={[styles.modalTitle, { color: isDark ? "#FFF" : "#000" }]}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: isDark ? "#FFF" : "#000" },
+                    ]}
+                  >
                     {editingUpdateId ? "Edit Update" : "New Update"}
                   </Text>
                   <TouchableOpacity onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={28} color={isDark ? "#AAA" : "#666"} />
+                    <Ionicons
+                      name="close"
+                      size={28}
+                      color={isDark ? "#AAA" : "#666"}
+                    />
                   </TouchableOpacity>
                 </HStack>
 
                 <VStack space="xs">
-                  <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      { color: isDark ? "#CCC" : "#444" },
+                    ]}
+                  >
                     Message Content
                   </Text>
                   <TextInput
@@ -971,14 +1470,19 @@ export default function ManageImportantUpdates() {
                       {
                         backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
                         color: isDark ? "#FFF" : "#000",
-                        borderColor: isDark ? "#444" : "#DDD"
-                      }
+                        borderColor: isDark ? "#444" : "#DDD",
+                      },
                     ]}
                   />
                 </VStack>
 
                 <VStack space="xs">
-                  <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      { color: isDark ? "#CCC" : "#444" },
+                    ]}
+                  >
                     Attach Media (Optional)
                   </Text>
                   <TouchableOpacity
@@ -987,26 +1491,54 @@ export default function ManageImportantUpdates() {
                       styles.mediaPicker,
                       {
                         backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
-                        borderColor: isDark ? "#444" : "#DDD"
-                      }
+                        borderColor: isDark ? "#444" : "#DDD",
+                      },
                     ]}
                   >
                     {image ? (
                       <View className="items-center">
-                        <Image source={{ uri: image.uri }} style={styles.imagePreview} />
-                        <Text style={{ color: "#8BC34A", marginTop: 8, fontSize: 12 }}>Change file</Text>
+                        <Image
+                          source={{ uri: image.uri }}
+                          style={styles.imagePreview}
+                        />
+                        <Text
+                          style={{
+                            color: "#8BC34A",
+                            marginTop: 8,
+                            fontSize: 12,
+                          }}
+                        >
+                          Change file
+                        </Text>
                       </View>
                     ) : (
                       <View className="items-center">
-                        <Ionicons name="cloud-upload-outline" size={40} color={isDark ? "#666" : "#999"} />
-                        <Text style={{ color: isDark ? "#666" : "#999", marginTop: 4, textAlign: 'center' }}>Supported: Images (JPG/PNG), PDFs, limits apply.</Text>
+                        <Ionicons
+                          name="cloud-upload-outline"
+                          size={40}
+                          color={isDark ? "#666" : "#999"}
+                        />
+                        <Text
+                          style={{
+                            color: isDark ? "#666" : "#999",
+                            marginTop: 4,
+                            textAlign: "center",
+                          }}
+                        >
+                          Supported: Images (JPG/PNG), PDFs, limits apply.
+                        </Text>
                       </View>
                     )}
                   </TouchableOpacity>
                 </VStack>
 
                 <VStack space="xs">
-                  <Text style={[styles.inputLabel, { color: isDark ? "#CCC" : "#444" }]}>
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      { color: isDark ? "#CCC" : "#444" },
+                    ]}
+                  >
                     Or specify Link URL
                   </Text>
                   <TextInput
@@ -1019,12 +1551,13 @@ export default function ManageImportantUpdates() {
                       {
                         backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5",
                         color: isDark ? "#FFF" : "#000",
-                        borderColor: isDark ? "#444" : "#DDD"
-                      }
+                        borderColor: isDark ? "#444" : "#DDD",
+                      },
                     ]}
                   />
                   <Text className="text-[10px] text-gray-400 mt-1">
-                    If you don't have a file, you can link to an external resource.
+                    If you don't have a file, you can link to an external
+                    resource.
                   </Text>
                 </VStack>
 
@@ -1034,7 +1567,9 @@ export default function ManageImportantUpdates() {
                     onPress={() => setModalVisible(false)}
                     style={{ borderColor: "#8BC34A" }}
                   >
-                    <Text style={{ color: "#8BC34A", fontWeight: "600" }}>Close</Text>
+                    <Text style={{ color: "#8BC34A", fontWeight: "600" }}>
+                      Close
+                    </Text>
                   </Button>
                   <Button
                     className="bg-[#8BC34A] px-6"
@@ -1044,7 +1579,9 @@ export default function ManageImportantUpdates() {
                     {submitting ? (
                       <ActivityIndicator color="white" />
                     ) : (
-                      <Text className="text-white font-bold">{editingUpdateId ? "Update" : "Post Update"}</Text>
+                      <Text className="text-white font-bold">
+                        {editingUpdateId ? "Update" : "Post Update"}
+                      </Text>
                     )}
                   </Button>
                 </HStack>
@@ -1060,10 +1597,23 @@ export default function ManageImportantUpdates() {
           animationType="fade"
           onRequestClose={() => setFullImageModalVisible(false)}
         >
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.9)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <TouchableOpacity
               onPress={() => setFullImageModalVisible(false)}
-              style={{ position: "absolute", top: 50, right: 20, zIndex: 10, padding: 10 }}
+              style={{
+                position: "absolute",
+                top: 50,
+                right: 20,
+                zIndex: 10,
+                padding: 10,
+              }}
             >
               <Ionicons name="close-circle" size={40} color="white" />
             </TouchableOpacity>

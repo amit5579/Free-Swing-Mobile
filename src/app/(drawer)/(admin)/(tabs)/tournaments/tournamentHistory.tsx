@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   getTournamentHistory,
   getTournamentHistoryByUserId,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function tournamentHistory() {
@@ -45,80 +45,79 @@ export default function tournamentHistory() {
     fetchHistory();
   }, []);
 
-
   const renderHeader = () => (
-  <HStack
-    style={{
-      paddingHorizontal: 16,
-      paddingTop: 14,
-      paddingBottom: 12,
-      marginBottom:20,
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    {/* 🔙 BACK BUTTON */}
-    <Pressable
-      onPress={() => routePage.back()}
+    <HStack
       style={{
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        justifyContent: "center",
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        marginBottom: 20,
         alignItems: "center",
-        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
-      <Ionicons
-        name="arrow-back"
-        size={20}
-        color={isDark ? "#fff" : "#020617"}
-      />
-    </Pressable>
-
-    {/* 🧠 TITLE BLOCK */}
-    <VStack
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 6,
-      }}
-    >
-      {/* LABEL */}
-      <ThemedText
+      {/* 🔙 BACK BUTTON */}
+      <Pressable
+        onPress={() => routePage.back()}
         style={{
-          fontSize: 12,
-          color: isDark ? "#94a3b8" : "#64748b",
-          fontWeight: "500",
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
         }}
       >
-        History
-      </ThemedText>
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
 
-      {/* MAIN TITLE */}
-      <ThemedText
-        numberOfLines={1}
-        ellipsizeMode="tail"
+      {/* 🧠 TITLE BLOCK */}
+      <VStack
         style={{
-          fontSize: 17,
-          fontWeight: "700",
-          marginTop: 2,
-          maxWidth: "85%",
-          textAlign: "center",
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 6,
         }}
       >
-        {tournamentName}
-      </ThemedText>
-    </VStack>
+        {/* LABEL */}
+        <ThemedText
+          style={{
+            fontSize: 12,
+            color: isDark ? "#94a3b8" : "#64748b",
+            fontWeight: "500",
+          }}
+        >
+          History
+        </ThemedText>
 
-    {/* ⚖️ RIGHT PLACEHOLDER */}
-    <View style={{ width: 40 }} />
-  </HStack>
-);
+        {/* MAIN TITLE */}
+        <ThemedText
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginTop: 2,
+            maxWidth: "85%",
+            textAlign: "center",
+          }}
+        >
+          {tournamentName}
+        </ThemedText>
+      </VStack>
+
+      {/* ⚖️ RIGHT PLACEHOLDER */}
+      <View style={{ width: 40 }} />
+    </HStack>
+  );
 
   return (
     <ThemedView

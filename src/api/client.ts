@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
-const https = axios.create({
+const client = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
   timeout: 10000,
   headers: {
@@ -10,7 +10,7 @@ const https = axios.create({
   },
 });
 
-https.interceptors.request.use(
+client.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
 
@@ -26,7 +26,7 @@ https.interceptors.request.use(
 );
 
 // RESPONSE INTERCEPTOR (optional)
-// https.interceptors.response.use(
+// client.interceptors.response.use(
 //   (response) => response,
 //   async (error) => {
 
@@ -41,7 +41,7 @@ https.interceptors.request.use(
 
 
 let isRedirecting = false;
-https.interceptors.response.use(
+client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const isUnauthorized = error.response?.status === 401;
@@ -88,4 +88,4 @@ https.interceptors.response.use(
   }
 );
 
-export default https;
+export default client;

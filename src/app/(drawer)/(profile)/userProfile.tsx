@@ -27,7 +27,7 @@ import {
   getCertificateByUserId,
   getProfile,
   uploadProfileImage,
-} from "@/api/profile";
+} from "@/api/modules/profile.api";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Controller, useForm } from "react-hook-form";
@@ -300,19 +300,17 @@ export default function UserProfile() {
                         }}
                       >
                         <Avatar size="xl">
-                          {(
-                            (userProfile?.profilePictureUrl &&
-                              userProfile.profilePictureUrl.trim() !== "" &&
-                              userProfile.profilePictureUrl !== "null")) &&
+                          {userProfile?.profilePictureUrl &&
+                          userProfile.profilePictureUrl.trim() !== "" &&
+                          userProfile.profilePictureUrl !== "null" &&
                           !imageError ? (
                             <Image
                               source={{
-                                uri:
-                                  (userProfile?.profilePictureUrl?.startsWith(
-                                    "http",
-                                  )
-                                    ? userProfile.profilePictureUrl
-                                    : `https://kolve18freeswing.com${userProfile.profilePictureUrl}`),
+                                uri: userProfile?.profilePictureUrl?.startsWith(
+                                  "http",
+                                )
+                                  ? userProfile.profilePictureUrl
+                                  : `https://kolve18freeswing.com${userProfile.profilePictureUrl}`,
                               }}
                               style={{
                                 width: 90,

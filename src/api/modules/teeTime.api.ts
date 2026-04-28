@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import https from "./https";
+import client from "../client";
 
 // get teetimeslots TeeTime/slots/2?date=2026-03-25&tee=1 qparams : date 2026-03-25 tee 1
 
@@ -7,7 +7,7 @@ import https from "./https";
 
 export const getAllCourses = async () => {
     try {
-        const response = await https.get(`course?onlyWithSubAdmin=false`);
+        const response = await client.get(`course?onlyWithSubAdmin=false`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -17,7 +17,7 @@ export const getAllCourses = async () => {
 };
 export const getSubAdminCourses = async () => {
     try {
-        const response = await https.get(`course?onlyWithSubAdmin=true`);
+        const response = await client.get(`course?onlyWithSubAdmin=true`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -28,9 +28,9 @@ export const getSubAdminCourses = async () => {
 
 // get tee time and seats - TeeTime/slots/2?date=2026-03-26&tee=1
 
-export const getTeeTimeSeats = async (selectedCourse:number,date: string, tee: number) => {
+export const getTeeTimeSeats = async (selectedCourse: number, date: string, tee: number) => {
     try {
-        const response = await https.get(`TeeTime/slots/${selectedCourse}?date=${date}&tee=${tee}`);
+        const response = await client.get(`TeeTime/slots/${selectedCourse}?date=${date}&tee=${tee}`);
         return response.data;
     } catch (error) {
         console.error("Fetching tee time slots Error:", error);
@@ -40,7 +40,7 @@ export const getTeeTimeSeats = async (selectedCourse:number,date: string, tee: n
 
 
 // subadmin tees handler
-export const getSubAdminTeeTimeSeats = async (courseId: number, date: string, tee: number, ) => {
+export const getSubAdminTeeTimeSeats = async (courseId: number, date: string, tee: number,) => {
     try {
         const userId = await AsyncStorage.getItem("userId");
         if (!userId) {
@@ -48,7 +48,7 @@ export const getSubAdminTeeTimeSeats = async (courseId: number, date: string, te
         }
 
 
-        const response = await https.get(`TeeTime/slots/${courseId}?date=${date}&tee=${tee}`);
+        const response = await client.get(`TeeTime/slots/${courseId}?date=${date}&tee=${tee}`);
 
         // console.log("fffff", response.data);
         return response.data;
@@ -64,7 +64,7 @@ export const getSubAdminTeeTimeSeats = async (courseId: number, date: string, te
 
 export const getBookingStatus = async (date: string) => {
     try {
-        const response = await https.get(`booking-status?date=${date}`);
+        const response = await client.get(`booking-status?date=${date}`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -77,7 +77,7 @@ export const getBookingStatus = async (date: string) => {
 
 export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
     try {
-        const response = await https.post(`TeeTime/book`, {
+        const response = await client.post(`TeeTime/book`, {
             courseId,
             date,
             seatNumber,
@@ -96,7 +96,7 @@ export const bookSeat = async (courseId: number, date: string, seatNumber: numbe
 
 export const cancelSeatBooking = async (bookingId: number) => {
     try {
-        const response = await https.delete(`TeeTime/cancel/${bookingId}`);
+        const response = await client.delete(`TeeTime/cancel/${bookingId}`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {

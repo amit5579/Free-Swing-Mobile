@@ -17,10 +17,9 @@ import {
   getAllPlayers,
   getTournamentPlayers,
   removePlayerFromTournament,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
-
 
 export default function managePlayers() {
   const colorScheme = useColorScheme();
@@ -48,7 +47,7 @@ export default function managePlayers() {
       });
     } catch (err) {
       console.log(err);
-       Toast.show({
+      Toast.show({
         type: "error",
         text1: "Failed to add Player",
       });
@@ -152,73 +151,72 @@ export default function managePlayers() {
     );
   };
 
- const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    <HStack
+  const renderHeader = () => (
+    <Box
       style={{
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
-      {/* 🔙 BACK */}
-      <Pressable
-        onPress={() => routePage.back()}
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
           alignItems: "center",
-          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          justifyContent: "space-between",
         }}
-        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      {/* 🧠 TITLE ONLY (NO LABEL) */}
-      {loading ? (
-        <Skeleton
-          isDark={isDark}
-          height={18}
-          width={160}
-          style={{ borderRadius: 6 }}
-        />
-      ) : (
-        <ThemedText
-          numberOfLines={1}
-          ellipsizeMode="tail"
+        {/* 🔙 BACK */}
+        <Pressable
+          onPress={() => routePage.back()}
           style={{
-            flex: 1,
-            fontSize: 18,
-            fontWeight: "700",
-            textAlign: "center",
-            marginHorizontal: 8,
-            color: isDark ? "#fff" : "#020617",
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
           }}
+          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
         >
-          {tournamentsName}
-        </ThemedText>
-      )}
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
 
-      {/* ⚖️ RIGHT SPACER */}
-      <View style={{ width: 40 }} />
-    </HStack>
-  </Box>
-);
+        {/* 🧠 TITLE ONLY (NO LABEL) */}
+        {loading ? (
+          <Skeleton
+            isDark={isDark}
+            height={18}
+            width={160}
+            style={{ borderRadius: 6 }}
+          />
+        ) : (
+          <ThemedText
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{
+              flex: 1,
+              fontSize: 18,
+              fontWeight: "700",
+              textAlign: "center",
+              marginHorizontal: 8,
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            {tournamentsName}
+          </ThemedText>
+        )}
 
+        {/* ⚖️ RIGHT SPACER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+    </Box>
+  );
 
   return (
     <ThemedView
@@ -313,7 +311,9 @@ function PlayerCard({
 
           {isInTournament ? (
             <Pressable
-              onPress={() => handleRemove(Number(tournamentId), Number(player.id))}
+              onPress={() =>
+                handleRemove(Number(tournamentId), Number(player.id))
+              }
               style={[styles.button, styles.removeButton]}
             >
               <ThemedText

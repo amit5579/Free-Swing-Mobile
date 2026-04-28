@@ -21,7 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { Skeleton } from "@/components/Skeleton";
-import { getUser } from "@/api/subAdmin/dashboard";
+import { getUser } from "@/api/modules/subAdmin/dashboard.api";
 
 export default function SubscriptionsPage() {
   const colorScheme = useColorScheme();
@@ -33,8 +33,8 @@ export default function SubscriptionsPage() {
   const fetchSubscriptions = async () => {
     try {
       const uu = await getUser();
-      
-setUserData(uu);
+
+      setUserData(uu);
       setLoading(true);
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
@@ -43,7 +43,7 @@ setUserData(uu);
     }
   };
 
-  useEffect(() => {    
+  useEffect(() => {
     fetchSubscriptions();
   }, []);
 
@@ -61,71 +61,71 @@ setUserData(uu);
       return "N/A";
     }
   };
-   const RenderHeader = () => {
-      return (
-        <Box
+  const RenderHeader = () => {
+    return (
+      <Box
+        style={{
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        }}
+      >
+        <VStack
           style={{
-            backgroundColor: isDark ? "#020617" : "#ffffff",
-            borderBottomWidth: 1,
-            borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: 12,
           }}
         >
-          <VStack
+          {/* 🔝 TOP ROW */}
+          <HStack
             style={{
-              paddingHorizontal: 16,
-              paddingTop: 12,
-              paddingBottom: 12,
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            {/* 🔝 TOP ROW */}
-            <HStack
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
               style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+
+            {/* 🧠 TITLE */}
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: "700",
+                color: isDark ? "#fff" : "#020617",
+                paddingHorizontal: 8,
               }}
             >
-              {/* 🔙 BACK */}
-              <Pressable
-                onPress={() => routePage.back()}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-                }}
-                android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={20}
-                  color={isDark ? "#fff" : "#020617"}
-                />
-              </Pressable>
-  
-              {/* 🧠 TITLE */}
-              <ThemedText
-                numberOfLines={1}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  fontSize: 18,
-                  fontWeight: "700",
-                  color: isDark ? "#fff" : "#020617",
-                  paddingHorizontal: 8,
-                }}
-              >
-                Subscription Details
-              </ThemedText>
-  
-              {/* ⚖️ RIGHT SPACER */}
-              <View style={{ width: 40 }} />
-            </HStack>
-          </VStack>
-        </Box>
-      );
-    };
+              Subscription Details
+            </ThemedText>
+
+            {/* ⚖️ RIGHT SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   const SubscriptionPageSkeleton = ({ isDark }: { isDark: boolean }) => (
     <VStack className="px-4 pt-5 pb-24" space="lg">
@@ -134,16 +134,35 @@ setUserData(uu);
         style={{
           padding: 16,
           borderRadius: 24,
-          backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(255, 255, 255, 0.8)",
+          backgroundColor: isDark
+            ? "rgba(30, 41, 59, 0.4)"
+            : "rgba(255, 255, 255, 0.8)",
           borderWidth: 1,
           borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
         }}
       >
         <HStack className="justify-between items-center">
           <VStack style={{ flex: 1 }}>
-            <Skeleton isDark={isDark} height={20} width={80} borderRadius={8} style={{ marginBottom: 8 }} />
-            <Skeleton isDark={isDark} height={28} width="70%" borderRadius={8} style={{ marginBottom: 6 }} />
-            <Skeleton isDark={isDark} height={16} width="90%" borderRadius={8} />
+            <Skeleton
+              isDark={isDark}
+              height={20}
+              width={80}
+              borderRadius={8}
+              style={{ marginBottom: 8 }}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={28}
+              width="70%"
+              borderRadius={8}
+              style={{ marginBottom: 6 }}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={16}
+              width="90%"
+              borderRadius={8}
+            />
           </VStack>
           <Skeleton isDark={isDark} height={72} width={72} borderRadius={36} />
         </HStack>
@@ -158,14 +177,35 @@ setUserData(uu);
               width: 150,
               padding: 16,
               borderRadius: 20,
-              backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(255, 255, 255, 0.8)",
+              backgroundColor: isDark
+                ? "rgba(30, 41, 59, 0.4)"
+                : "rgba(255, 255, 255, 0.8)",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+              borderColor: isDark
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(0,0,0,0.05)",
             }}
           >
-            <Skeleton isDark={isDark} height={32} width={32} borderRadius={10} style={{ marginBottom: 12 }} />
-            <Skeleton isDark={isDark} height={12} width="40%" borderRadius={6} style={{ marginBottom: 4 }} />
-            <Skeleton isDark={isDark} height={18} width="60%" borderRadius={6} />
+            <Skeleton
+              isDark={isDark}
+              height={32}
+              width={32}
+              borderRadius={10}
+              style={{ marginBottom: 12 }}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={12}
+              width="40%"
+              borderRadius={6}
+              style={{ marginBottom: 4 }}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={18}
+              width="60%"
+              borderRadius={6}
+            />
           </Box>
         ))}
       </HStack>
@@ -175,7 +215,9 @@ setUserData(uu);
         style={{
           padding: 18,
           borderRadius: 24,
-          backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(255, 255, 255, 0.8)",
+          backgroundColor: isDark
+            ? "rgba(30, 41, 59, 0.4)"
+            : "rgba(255, 255, 255, 0.8)",
           borderWidth: 1,
           borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
         }}
@@ -183,12 +225,23 @@ setUserData(uu);
         <HStack className="items-center mb-4" style={{ gap: 8 }}>
           <Skeleton isDark={isDark} height={24} width={24} borderRadius={12} />
           <VStack>
-            <Skeleton isDark={isDark} height={20} width={120} borderRadius={8} />
+            <Skeleton
+              isDark={isDark}
+              height={20}
+              width={120}
+              borderRadius={8}
+            />
           </VStack>
         </HStack>
         <HStack className="flex-wrap justify-between" style={{ rowGap: 12 }}>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} isDark={isDark} height={60} width="48%" borderRadius={16} />
+            <Skeleton
+              key={i}
+              isDark={isDark}
+              height={60}
+              width="48%"
+              borderRadius={16}
+            />
           ))}
         </HStack>
       </Box>
@@ -198,12 +251,20 @@ setUserData(uu);
         style={{
           padding: 18,
           borderRadius: 24,
-          backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(255, 255, 255, 0.8)",
+          backgroundColor: isDark
+            ? "rgba(30, 41, 59, 0.4)"
+            : "rgba(255, 255, 255, 0.8)",
           borderWidth: 1,
           borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
         }}
       >
-        <Skeleton isDark={isDark} height={20} width={140} borderRadius={8} style={{ marginBottom: 12 }} />
+        <Skeleton
+          isDark={isDark}
+          height={20}
+          width={140}
+          borderRadius={8}
+          style={{ marginBottom: 12 }}
+        />
         <Skeleton isDark={isDark} height={50} width="100%" borderRadius={16} />
       </Box>
     </VStack>
@@ -228,17 +289,23 @@ setUserData(uu);
                   ? "rgba(30, 41, 59, 0.4)"
                   : "rgba(255, 255, 255, 0.8)",
                 borderWidth: 1,
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.05)",
               }}
             >
-              <HStack className="justify-between items-center" style={{ gap: 16 }}>
+              <HStack
+                className="justify-between items-center"
+                style={{ gap: 16 }}
+              >
                 {/* LEFT */}
                 <VStack style={{ flex: 1 }}>
                   <Box
                     style={{
-                      backgroundColor: userData?.subscriptionStatus === "Active" 
-                        ? "rgba(132, 204, 22, 0.15)" 
-                        : "rgba(245, 158, 11, 0.15)",
+                      backgroundColor:
+                        userData?.subscriptionStatus === "Active"
+                          ? "rgba(132, 204, 22, 0.15)"
+                          : "rgba(245, 158, 11, 0.15)",
                       paddingHorizontal: 10,
                       paddingVertical: 4,
                       borderRadius: 8,
@@ -250,7 +317,10 @@ setUserData(uu);
                       style={{
                         fontSize: 10,
                         fontWeight: "800",
-                        color: userData?.subscriptionStatus === "Active" ? "#84cc16" : "#f59e0b",
+                        color:
+                          userData?.subscriptionStatus === "Active"
+                            ? "#84cc16"
+                            : "#f59e0b",
                         textTransform: "uppercase",
                         letterSpacing: 0.5,
                       }}
@@ -259,12 +329,20 @@ setUserData(uu);
                     </ThemedText>
                   </Box>
 
-                  <ThemedText style={{ fontSize: 20, fontWeight: "800", letterSpacing: -0.5 }}>
+                  <ThemedText
+                    style={{
+                      fontSize: 20,
+                      fontWeight: "800",
+                      letterSpacing: -0.5,
+                    }}
+                  >
                     {userData?.activeSubscriptionPlanLabel || "No Active Plan"}
                   </ThemedText>
 
-                  <ThemedText style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}>
-                    {userData?.subscriptionStatus === "Active" 
+                  <ThemedText
+                    style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}
+                  >
+                    {userData?.subscriptionStatus === "Active"
                       ? "Your membership is currently active."
                       : "Please renew your plan to enjoy full benefits."}
                   </ThemedText>
@@ -283,15 +361,33 @@ setUserData(uu);
                 >
                   {userData?.daysRemaining !== undefined ? (
                     <VStack className="items-center">
-                      <ThemedText style={{ color: "#fff", fontSize: 22, fontWeight: "900", lineHeight: 24 }}>
+                      <ThemedText
+                        style={{
+                          color: "#fff",
+                          fontSize: 22,
+                          fontWeight: "900",
+                          lineHeight: 24,
+                        }}
+                      >
                         {userData?.daysRemaining}
                       </ThemedText>
-                      <ThemedText style={{ color: "rgba(255,255,255,0.8)", fontSize: 8, fontWeight: "700", textTransform: "uppercase" }}>
+                      <ThemedText
+                        style={{
+                          color: "rgba(255,255,255,0.8)",
+                          fontSize: 8,
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                        }}
+                      >
                         Days Left
                       </ThemedText>
                     </VStack>
                   ) : (
-                    <Ionicons name="alert-circle-outline" size={32} color="#fff" />
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={32}
+                      color="#fff"
+                    />
                   )}
                 </Box>
               </HStack>
@@ -301,23 +397,26 @@ setUserData(uu);
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <HStack space="md" style={{ paddingRight: 20 }}>
                 {[
-                  { 
-                    title: "Plan Type", 
-                    value: userData?.activeSubscriptionPlanLabel || "None", 
+                  {
+                    title: "Plan Type",
+                    value: userData?.activeSubscriptionPlanLabel || "None",
                     icon: "card-outline",
-                    color: "#3b82f6"
+                    color: "#3b82f6",
                   },
                   {
                     title: "Validity",
-                    value: userData?.daysRemaining !== undefined ? `${userData.daysRemaining} Days` : "N/A",
+                    value:
+                      userData?.daysRemaining !== undefined
+                        ? `${userData.daysRemaining} Days`
+                        : "N/A",
                     icon: "time-outline",
-                    color: "#84cc16"
+                    color: "#84cc16",
                   },
                   {
                     title: "Account Status",
                     value: userData?.subscriptionStatus || "Inactive",
                     icon: "shield-checkmark-outline",
-                    color: "#f59e0b"
+                    color: "#f59e0b",
                   },
                 ].map((item, index) => (
                   <Box
@@ -330,30 +429,44 @@ setUserData(uu);
                         ? "rgba(30, 41, 59, 0.4)"
                         : "rgba(255, 255, 255, 0.8)",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                      borderColor: isDark
+                        ? "rgba(255,255,255,0.08)"
+                        : "rgba(0,0,0,0.05)",
                     }}
                   >
-                    <Box 
-                      style={{ 
-                        width: 32, 
-                        height: 32, 
-                        borderRadius: 10, 
+                    <Box
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 10,
                         backgroundColor: `${item.color}15`,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 12
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 12,
                       }}
                     >
-                      <Ionicons name={item.icon as any} size={16} color={item.color} />
+                      <Ionicons
+                        name={item.icon as any}
+                        size={16}
+                        color={item.color}
+                      />
                     </Box>
 
                     <ThemedText
-                      style={{ fontSize: 11, opacity: 0.5, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 }}
+                      style={{
+                        fontSize: 11,
+                        opacity: 0.5,
+                        fontWeight: "600",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
                     >
                       {item.title}
                     </ThemedText>
 
-                    <ThemedText style={{ fontSize: 14, fontWeight: "700", marginTop: 2 }}>
+                    <ThemedText
+                      style={{ fontSize: 14, fontWeight: "700", marginTop: 2 }}
+                    >
                       {item.value}
                     </ThemedText>
                   </Box>
@@ -370,7 +483,9 @@ setUserData(uu);
                   ? "rgba(30, 41, 59, 0.4)"
                   : "rgba(255, 255, 255, 0.8)",
                 borderWidth: 1,
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.05)",
               }}
             >
               <HStack className="items-center mb-4" style={{ gap: 8 }}>
@@ -386,28 +501,31 @@ setUserData(uu);
               </HStack>
 
               {/* Timeline grid */}
-              <HStack className="flex-wrap justify-between" style={{ rowGap: 12 }}>
+              <HStack
+                className="flex-wrap justify-between"
+                style={{ rowGap: 12 }}
+              >
                 {[
-                  { 
-                    "title": "Approved On", 
-                    "value": formatDate(userData?.subscriptionApprovedAtUtc),
-                    "icon": "checkmark-circle-outline"
+                  {
+                    title: "Approved On",
+                    value: formatDate(userData?.subscriptionApprovedAtUtc),
+                    icon: "checkmark-circle-outline",
                   },
-                  { 
-                    "title": "Starts On", 
-                    "value": formatDate(userData?.subscriptionStartsAtUtc),
-                    "icon": "play-circle-outline"
+                  {
+                    title: "Starts On",
+                    value: formatDate(userData?.subscriptionStartsAtUtc),
+                    icon: "play-circle-outline",
                   },
-                  { 
-                    "title": "Expires On", 
-                    "value": formatDate(userData?.subscriptionEndsAtUtc),
-                    "icon": "stop-circle-outline"
+                  {
+                    title: "Expires On",
+                    value: formatDate(userData?.subscriptionEndsAtUtc),
+                    icon: "stop-circle-outline",
                   },
-                  { 
-                    "title": "Plan Duration", 
-                    "value": userData?.activeSubscriptionPlanLabel || "N/A",
-                    "icon": "repeat-outline"
-                  }
+                  {
+                    title: "Plan Duration",
+                    value: userData?.activeSubscriptionPlanLabel || "N/A",
+                    icon: "repeat-outline",
+                  },
                 ].map((item, idx) => (
                   <Box
                     key={idx}
@@ -419,12 +537,25 @@ setUserData(uu);
                         ? "rgba(255,255,255,0.03)"
                         : "rgba(0,0,0,0.02)",
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                      borderColor: isDark
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.03)",
                     }}
                   >
                     <HStack className="items-center mb-1" style={{ gap: 4 }}>
-                      <Ionicons name={item.icon as any} size={12} color="#84cc16" />
-                      <ThemedText style={{ fontSize: 10, opacity: 0.5, fontWeight: "700", textTransform: "uppercase" }}>
+                      <Ionicons
+                        name={item.icon as any}
+                        size={12}
+                        color="#84cc16"
+                      />
+                      <ThemedText
+                        style={{
+                          fontSize: 10,
+                          opacity: 0.5,
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                        }}
+                      >
                         {item.title}
                       </ThemedText>
                     </HStack>
@@ -445,7 +576,9 @@ setUserData(uu);
                   ? "rgba(30, 41, 59, 0.4)"
                   : "rgba(255, 255, 255, 0.8)",
                 borderWidth: 1,
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.05)",
               }}
             >
               <HStack className="items-center mb-3" style={{ gap: 8 }}>
@@ -459,14 +592,24 @@ setUserData(uu);
                 style={{
                   padding: 16,
                   borderRadius: 16,
-                  backgroundColor: isDark ? "rgba(245, 158, 11, 0.1)" : "rgba(245, 158, 11, 0.05)",
+                  backgroundColor: isDark
+                    ? "rgba(245, 158, 11, 0.1)"
+                    : "rgba(245, 158, 11, 0.05)",
                   borderWidth: 1,
                   borderColor: "rgba(245, 158, 11, 0.2)",
                   borderStyle: "dashed",
                 }}
               >
-                <ThemedText style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#fbbf24" : "#d97706", textAlign: 'center' }}>
-                  {userData?.pendingSubscriptionRequestType || "No Pending Subscription Request"}
+                <ThemedText
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: isDark ? "#fbbf24" : "#d97706",
+                    textAlign: "center",
+                  }}
+                >
+                  {userData?.pendingSubscriptionRequestType ||
+                    "No Pending Subscription Request"}
                 </ThemedText>
               </Box>
 
@@ -476,14 +619,21 @@ setUserData(uu);
                   marginTop: 14,
                   padding: 12,
                   borderRadius: 12,
-                  backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                  alignItems: 'center',
-                  gap: 8
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.03)"
+                    : "rgba(0,0,0,0.02)",
+                  alignItems: "center",
+                  gap: 8,
                 }}
               >
-                <Ionicons name="information-circle-outline" size={16} color="#84cc16" />
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color="#84cc16"
+                />
                 <ThemedText style={{ fontSize: 11, opacity: 0.6, flex: 1 }}>
-                  If your plan is expired or renewal is pending, please contact admin for assistance.
+                  If your plan is expired or renewal is pending, please contact
+                  admin for assistance.
                 </ThemedText>
               </HStack>
             </Box>

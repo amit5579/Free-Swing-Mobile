@@ -14,7 +14,7 @@ import { router, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/modules/dashboard.api";
 import { Linking } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -71,7 +71,7 @@ function CustomDrawerContent({ navigation }: any) {
     React.useCallback(() => {
       loadRole();
       fetchProfile();
-    }, [])
+    }, []),
   );
 
   return (

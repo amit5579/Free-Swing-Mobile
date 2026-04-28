@@ -14,10 +14,10 @@ import { HStack } from "@/components/hstack";
 import { ThemedView } from "@/components/themed-view";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getScorecardById } from "@/api/admin/tournaments";
+import { getScorecardById } from "@/api/modules/admin/tournaments.api";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
-import { getSubScorecardHandicap } from "@/api/scoreCard";
+import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
 import { Box } from "@/components/box";
 
 const PlayerScorecard = () => {
@@ -320,106 +320,106 @@ const PlayerScorecard = () => {
   );
 
   const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      paddingBottom: 10,
-    }}
-  >
-    {/* 🔝 TOP HEADER */}
-    <HStack
+    <Box
       style={{
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        // paddingBottom: 2,
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        paddingBottom: 10,
       }}
     >
-      {/* 🔙 BACK BUTTON */}
-      <Pressable
-        onPress={() => routePage.back()}
+      {/* 🔝 TOP HEADER */}
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          // paddingBottom: 2,
           alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* 🔙 BACK BUTTON */}
+        <Pressable
+          onPress={() => routePage.back()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          }}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
+
+        {/* 🧠 TITLE */}
+        <VStack
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ThemedText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginTop: 2,
+            }}
+          >
+            Scorecard
+          </ThemedText>
+        </VStack>
+
+        {/* ⚖️ RIGHT PLACEHOLDER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+
+      {/* 📌 SCORING TYPE */}
+      <ThemedText
+        style={{
+          textAlign: "center",
+          fontSize: 13,
+          fontWeight: "500",
+          color: isDark ? "#94a3b8" : "#64748b",
+        }}
+      >
+        {renderScoring}
+      </ThemedText>
+
+      {/* 📊 STATS ROW */}
+      <HStack
+        style={{
+          marginTop: 8,
+          marginHorizontal: 16,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          borderRadius: 10,
+          justifyContent: "space-between",
           backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
         }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      {/* 🧠 TITLE */}
-      <VStack
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ThemedText
-          style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginTop: 2,
-          }}
-        >
-          Scorecard
+        <ThemedText style={{ fontSize: 12 }}>
+          Handicap:{" "}
+          <ThemedText style={{ fontWeight: "600" }}>
+            {handicap?.handicap ?? "N/A"}
+          </ThemedText>
         </ThemedText>
-      </VStack>
 
-      {/* ⚖️ RIGHT PLACEHOLDER */}
-      <View style={{ width: 40 }} />
-    </HStack>
-
-    {/* 📌 SCORING TYPE */}
-    <ThemedText
-      style={{
-        textAlign: "center",
-        fontSize: 13,
-        fontWeight: "500",
-        color: isDark ? "#94a3b8" : "#64748b",
-      }}
-    >
-      {renderScoring}
-    </ThemedText>
-
-    {/* 📊 STATS ROW */}
-    <HStack
-      style={{
-        marginTop: 8,
-        marginHorizontal: 16,
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-        borderRadius: 10,
-        justifyContent: "space-between",
-        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-      }}
-    >
-      <ThemedText style={{ fontSize: 12 }}>
-        Handicap:{" "}
-        <ThemedText style={{ fontWeight: "600" }}>
-          {handicap?.handicap ?? "N/A"}
+        <ThemedText style={{ fontSize: 12 }}>
+          DP HC:{" "}
+          <ThemedText style={{ fontWeight: "600" }}>
+            {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
+          </ThemedText>
         </ThemedText>
-      </ThemedText>
-
-      <ThemedText style={{ fontSize: 12 }}>
-        DP HC:{" "}
-        <ThemedText style={{ fontWeight: "600" }}>
-          {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
-        </ThemedText>
-      </ThemedText>
-    </HStack>
-  </Box>
-);
+      </HStack>
+    </Box>
+  );
 
   return (
     <ThemedView style={{ flex: 1 }}>

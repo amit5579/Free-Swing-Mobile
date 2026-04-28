@@ -24,9 +24,14 @@ import { ThemedView } from "@/components/themed-view";
 import { HistoryTab } from "./tabs/HistoryTab";
 import { InProgressTab } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/gameFeed";
-import { getFeedApi, likeFeedApi } from "@/api/dashboard";
-import { verifyScoreApi } from "@/api/admin/dashboard";
-import { getScoreStats, ScoreStats, getUserProfile, UserProfile } from "@/api/dashboard";
+import { getFeedApi, likeFeedApi } from "@/api/modules/dashboard.api";
+import { verifyScoreApi } from "@/api/modules/admin/dashboard.api";
+import {
+  getScoreStats,
+  ScoreStats,
+  getUserProfile,
+  UserProfile,
+} from "@/api/modules/dashboard.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Watermark from "@/components/watermark";
 import { Skeleton } from "@/components/Skeleton";
@@ -91,16 +96,16 @@ export default function DashboardScreen() {
     }, []),
   );
 
- const renderHomeCourse = () => {
-  const completedRoundsCount = profile?.totalRounds || 0;
-  if(profile?.homeCourse){
-    return profile?.homeCourse ;
-  }
-if (completedRoundsCount >= 10){
-  return 'No home course could be derived'; ;
-}
-return `Auto after ${10 -completedRoundsCount} more completed ${completedRoundsCount === 1 ? 'game' : 'games'}`
-}
+  const renderHomeCourse = () => {
+    const completedRoundsCount = profile?.totalRounds || 0;
+    if (profile?.homeCourse) {
+      return profile?.homeCourse;
+    }
+    if (completedRoundsCount >= 10) {
+      return "No home course could be derived";
+    }
+    return `Auto after ${10 - completedRoundsCount} more completed ${completedRoundsCount === 1 ? "game" : "games"}`;
+  };
 
   const fetchStats = async () => {
     try {
@@ -693,7 +698,7 @@ return `Auto after ${10 -completedRoundsCount} more completed ${completedRoundsC
                                 icon: "flag",
                                 color: "#EF4444",
                                 badge: "Index",
-                              }
+                              },
                             ].map((stat, index) => (
                               <Box
                                 key={index}
@@ -789,7 +794,7 @@ return `Auto after ${10 -completedRoundsCount} more completed ${completedRoundsC
                               fontWeight: "600",
                             }}
                           >
-                          {renderHomeCourse()}
+                            {renderHomeCourse()}
                           </Text>
                         </Box>
                       </HStack>

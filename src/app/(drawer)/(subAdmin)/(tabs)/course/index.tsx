@@ -23,7 +23,7 @@ import {
   invitePlayer,
   toggleBlockPlayer,
   removePlayer,
-} from "@/api/subAdmin/dashboard";
+} from "@/api/modules/subAdmin/dashboard.api";
 
 const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
   <HStack
@@ -32,7 +32,9 @@ const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
       marginBottom: 16,
       padding: 16,
       borderRadius: 22,
-      backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+      backgroundColor: isDark
+        ? "rgba(26, 26, 26, 0.6)"
+        : "rgba(255, 255, 255, 0.6)",
       borderLeftWidth: 6,
       borderLeftColor: "#8BC34A",
       borderTopWidth: 1,
@@ -45,9 +47,20 @@ const PlayerRowSkeleton = ({ isDark }: { isDark: boolean }) => (
       shadowRadius: 14,
     }}
   >
-    <Skeleton isDark={isDark} width={44} height={44} borderRadius={22} style={{ marginRight: 12 }} />
+    <Skeleton
+      isDark={isDark}
+      width={44}
+      height={44}
+      borderRadius={22}
+      style={{ marginRight: 12 }}
+    />
     <VStack style={{ flex: 1 }}>
-      <Skeleton isDark={isDark} height={14} width="45%" style={{ marginBottom: 5 }} />
+      <Skeleton
+        isDark={isDark}
+        height={14}
+        width="45%"
+        style={{ marginBottom: 5 }}
+      />
       <Skeleton isDark={isDark} height={11} width="65%" />
     </VStack>
     <Skeleton isDark={isDark} height={26} width={60} borderRadius={10} />
@@ -73,15 +86,21 @@ const PlayerRow = ({
       style={{
         padding: 16,
         borderRadius: 22,
-        backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+        backgroundColor: isDark
+          ? "rgba(26,26,26,0.6)"
+          : "rgba(255,255,255,0.6)",
         borderLeftWidth: 6,
         borderLeftColor: isActive ? "#8BC34A" : "#EF4444",
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderBottomWidth: 1,
         borderColor: isActive
-          ? (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0")
-          : (isDark ? "#EF4444" : "#FCA5A5"),
+          ? isDark
+            ? "rgba(139,195,74,0.6)"
+            : "#E0E0E0"
+          : isDark
+            ? "#EF4444"
+            : "#FCA5A5",
         marginBottom: 16,
         shadowColor: isActive ? "#8BC34A" : "#EF4444",
         shadowOffset: { width: 0, height: 6 },
@@ -89,7 +108,13 @@ const PlayerRow = ({
         shadowRadius: 14,
       }}
     >
-      <HStack style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <HStack
+        style={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
         <HStack style={{ alignItems: "center", flex: 1 }}>
           <View
             style={{
@@ -104,15 +129,36 @@ const PlayerRow = ({
               marginRight: 14,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                color: isDark ? "#fff" : "#2E7D32",
+              }}
+            >
               {initial}
             </Text>
           </View>
           <VStack style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: isDark ? "#fff" : "#111" }} numberOfLines={1}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "800",
+                color: isDark ? "#fff" : "#111",
+              }}
+              numberOfLines={1}
+            >
               {player.username}
             </Text>
-            <Text style={{ fontSize: 11, color: isDark ? "#888" : "#6b7280", fontWeight: "600", textTransform: "uppercase", marginTop: 1 }}>
+            <Text
+              style={{
+                fontSize: 11,
+                color: isDark ? "#888" : "#6b7280",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                marginTop: 1,
+              }}
+            >
               Course Marshal
             </Text>
           </VStack>
@@ -123,30 +169,68 @@ const PlayerRow = ({
             paddingHorizontal: 10,
             paddingVertical: 4,
             borderRadius: 10,
-            backgroundColor: isActive ? "rgba(139,195,74,0.15)" : "rgba(239,68,68,0.15)",
+            backgroundColor: isActive
+              ? "rgba(139,195,74,0.15)"
+              : "rgba(239,68,68,0.15)",
             borderWidth: 1,
             borderColor: isActive ? "#8BC34A" : "#ef4444",
           }}
         >
-          <Text style={{ fontSize: 10, fontWeight: "900", color: isActive ? "#8BC34A" : "#ef4444", textTransform: "uppercase" }}>
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: "900",
+              color: isActive ? "#8BC34A" : "#ef4444",
+              textTransform: "uppercase",
+            }}
+          >
             {isActive ? "Active" : "Blocked"}
           </Text>
         </View>
       </HStack>
 
-      <View style={{ height: 1, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", marginBottom: 14 }} />
+      <View
+        style={{
+          height: 1,
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(0,0,0,0.05)",
+          marginBottom: 14,
+        }}
+      />
 
       <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
         <VStack style={{ flex: 1, gap: 6 }}>
           <HStack style={{ alignItems: "center", gap: 8 }}>
-            <Ionicons name="mail-outline" size={16} color={isDark ? "#8BC34A" : "#666"} />
-            <Text style={{ fontSize: 14, color: isDark ? "#fff" : "#444", fontWeight: "500" }} numberOfLines={1}>
+            <Ionicons
+              name="mail-outline"
+              size={16}
+              color={isDark ? "#8BC34A" : "#666"}
+            />
+            <Text
+              style={{
+                fontSize: 14,
+                color: isDark ? "#fff" : "#444",
+                fontWeight: "500",
+              }}
+              numberOfLines={1}
+            >
               {player.email}
             </Text>
           </HStack>
           <HStack style={{ alignItems: "center", gap: 8 }}>
-            <Ionicons name="call-outline" size={16} color={isDark ? "#8BC34A" : "#666"} />
-            <Text style={{ fontSize: 14, color: isDark ? "#fff" : "#444", fontWeight: "600" }}>
+            <Ionicons
+              name="call-outline"
+              size={16}
+              color={isDark ? "#8BC34A" : "#666"}
+            />
+            <Text
+              style={{
+                fontSize: 14,
+                color: isDark ? "#fff" : "#444",
+                fontWeight: "600",
+              }}
+            >
               {player.mobileNumber || "—"}
             </Text>
           </HStack>
@@ -209,7 +293,7 @@ export default function SubAdminCoursePage() {
   useFocusEffect(
     useCallback(() => {
       fetchData();
-    }, [])
+    }, []),
   );
 
   const fetchData = async () => {
@@ -220,7 +304,9 @@ export default function SubAdminCoursePage() {
         getSubAdminPlayers(),
       ]);
       setPlayers(
-        playerData.filter((p: UserApi) => p.role?.toLowerCase() === "coursemarshal")
+        playerData.filter(
+          (p: UserApi) => p.role?.toLowerCase() === "coursemarshal",
+        ),
       );
     } catch (error) {
       console.error("Failed to fetch SubAdmin course data", error);
@@ -247,10 +333,13 @@ export default function SubAdminCoursePage() {
               await toggleBlockPlayer(id);
               setPlayers((prev: UserApi[]) =>
                 prev.map((p: UserApi) =>
-                  p.id === id ? { ...p, isBlocked: !p.isBlocked } : p
-                )
+                  p.id === id ? { ...p, isBlocked: !p.isBlocked } : p,
+                ),
               );
-              Alert.alert("Success", `Player ${player.isBlocked ? "unblocked" : "blocked"} successfully`);
+              Alert.alert(
+                "Success",
+                `Player ${player.isBlocked ? "unblocked" : "blocked"} successfully`,
+              );
             } catch (error) {
               Alert.alert("Error", "Failed to update player status");
             } finally {
@@ -258,7 +347,7 @@ export default function SubAdminCoursePage() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -278,7 +367,9 @@ export default function SubAdminCoursePage() {
             try {
               setLoading(true);
               await removePlayer(id);
-              setPlayers((prev: UserApi[]) => prev.filter((p: UserApi) => p.id !== id));
+              setPlayers((prev: UserApi[]) =>
+                prev.filter((p: UserApi) => p.id !== id),
+              );
               Alert.alert("Success", "Player removed successfully");
             } catch (error) {
               Alert.alert("Error", "Failed to remove player");
@@ -287,26 +378,41 @@ export default function SubAdminCoursePage() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+    >
       <Watermark />
 
       <VStack style={{ paddingHorizontal: 16, paddingBottom: 8, marginTop: 0 }}>
-        <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
+        <HStack
+          style={{ alignItems: "center", justifyContent: "space-between" }}
+        >
           <VStack>
             <HStack style={{ alignItems: "center", gap: 12 }}>
-              <Text style={{ fontSize: 24, fontWeight: "900", color: isDark ? "#fff" : "#111", letterSpacing: -0.5 }}>
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "900",
+                  color: isDark ? "#fff" : "#111",
+                  letterSpacing: -0.5,
+                }}
+              >
                 Course Marshals
               </Text>
             </HStack>
           </VStack>
           <HStack style={{ gap: 8, alignItems: "center" }}>
             <TouchableOpacity
-              onPress={() => router.push("/(drawer)/(subAdmin)/(tabs)/course/invite-marshal" as any)}
+              onPress={() =>
+                router.push(
+                  "/(drawer)/(subAdmin)/(tabs)/course/invite-marshal" as any,
+                )
+              }
               style={{
                 backgroundColor: "#8BC34A",
                 paddingHorizontal: 16,
@@ -333,7 +439,11 @@ export default function SubAdminCoursePage() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120 }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 120,
+        }}
       >
         {loading ? (
           <>
@@ -343,17 +453,26 @@ export default function SubAdminCoursePage() {
           </>
         ) : players.length === 0 ? (
           <View style={{ alignItems: "center", paddingTop: 60 }}>
-             <View
-                                  style={{
-                                    backgroundColor: isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)",
-                                    padding: 18,
-                                    borderRadius: 50,
-                                    // marginBottom: 16,
-                                  }}
-                                >
-            <Ionicons name="person" size={32} color={"#8BC34A"} />
-                                </View>
-            <Text style={{ marginTop: 16, fontSize: 16, color:"#555", fontWeight: "600" }}>
+            <View
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(30,41,59,0.5)"
+                  : "rgba(241,245,249,0.8)",
+                padding: 18,
+                borderRadius: 50,
+                // marginBottom: 16,
+              }}
+            >
+              <Ionicons name="person" size={32} color={"#8BC34A"} />
+            </View>
+            <Text
+              style={{
+                marginTop: 16,
+                fontSize: 16,
+                color: "#555",
+                fontWeight: "600",
+              }}
+            >
               No course marshals found
             </Text>
           </View>
@@ -372,4 +491,3 @@ export default function SubAdminCoursePage() {
     </SafeAreaView>
   );
 }
-

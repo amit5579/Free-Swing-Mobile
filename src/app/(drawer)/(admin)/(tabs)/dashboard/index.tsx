@@ -21,7 +21,11 @@ import { TextInput } from "react-native";
 import PlayerStatistics from "./playerStatistics";
 import GameFeed, { GameFeedContent } from "./gameFeed";
 import Watermark from "@/components/watermark";
-import { getPlayers, getCourses, PlayerApi } from "@/api/admin/dashboard";
+import {
+  getPlayers,
+  getCourses,
+  PlayerApi,
+} from "@/api/modules/admin/dashboard.api";
 import { Skeleton } from "@/components/Skeleton";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -50,7 +54,7 @@ export default function AdminDashboard() {
           if (activeTab === "statistics") setActiveTab("overview");
         }
       },
-    })
+    }),
   ).current;
 
   useFocusEffect(
@@ -69,11 +73,11 @@ export default function AdminDashboard() {
 
       const backHandler = BackHandler.addEventListener(
         "hardwareBackPress",
-        onBackPress
+        onBackPress,
       );
 
       return () => backHandler.remove();
-    }, [activeTab])
+    }, [activeTab]),
   );
 
   const fetchStats = async () => {
@@ -87,10 +91,16 @@ export default function AdminDashboard() {
       let best = "-";
       if (players.length > 0) {
         const handicaps = players
-          .filter(p => !p.isBlocked && (p.totalRounds > 0 || p.handicapIndex !== null))
-          .map(p => {
-            const val = p.handicapIndex !== null ? p.handicapIndex : (p.calculatedHandicap ?? p.handicap);
-            return typeof val === 'string' ? parseFloat(val) : val;
+          .filter(
+            (p) =>
+              !p.isBlocked && (p.totalRounds > 0 || p.handicapIndex !== null),
+          )
+          .map((p) => {
+            const val =
+              p.handicapIndex !== null
+                ? p.handicapIndex
+                : (p.calculatedHandicap ?? p.handicap);
+            return typeof val === "string" ? parseFloat(val) : val;
           })
           .filter((h) => h !== null && !isNaN(h) && typeof h === "number");
 
@@ -130,19 +140,24 @@ export default function AdminDashboard() {
         <VStack className="mb-0">
           <HStack className="items-center">
             <VStack style={{ flex: 1 }}>
-              <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+              <Text
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+              >
                 Dashboard
               </Text>
-              <Text className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+              <Text
+                className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}
+              >
                 Manage your golf league's players, courses, and tournaments.
               </Text>
             </VStack>
             <VStack className="items-end justify-center">
               <Text
-                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded-full ${isDark
-                  ? "text-black bg-yellow-400"
-                  : "text-black bg-yellow-300"
-                  }`}
+                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded-full ${
+                  isDark
+                    ? "text-black bg-yellow-400"
+                    : "text-black bg-yellow-300"
+                }`}
               >
                 Admin
               </Text>
@@ -152,7 +167,9 @@ export default function AdminDashboard() {
 
         <HStack
           className="rounded-full p-1 mb-4"
-          style={{ backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" }}
+          style={{
+            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+          }}
         >
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
@@ -171,7 +188,9 @@ export default function AdminDashboard() {
                   color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
                   className="mr-1"
                 />
-                <Text className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}>
+                <Text
+                  className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}
+                >
                   {tab.label}
                 </Text>
               </Pressable>
@@ -182,8 +201,12 @@ export default function AdminDashboard() {
           className="mb-6 flex-row items-center px-4 rounded-xl border"
           style={{
             height: 44,
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
-            borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(255,255,255,0.9)",
+            borderColor: isDark
+              ? "rgba(139,195,74,0.3)"
+              : "rgba(229,231,235,1)",
           }}
         >
           <Ionicons name="search-outline" size={18} color="#8BC34A" />
@@ -194,14 +217,20 @@ export default function AdminDashboard() {
               color: isDark ? "#fff" : "#111",
               fontSize: 14,
             }}
-            placeholder={activeTab === "overview" ? "Search games..." : "Search players..."}
+            placeholder={
+              activeTab === "overview" ? "Search games..." : "Search players..."
+            }
             placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color={isDark ? "#6B7280" : "#9CA3AF"}
+              />
             </TouchableOpacity>
           )}
         </Box>
@@ -219,20 +248,95 @@ export default function AdminDashboard() {
             {loading ? (
               <VStack className="space-y-4 pt-4">
                 <HStack className="space-x-2 mb-3">
-                  <Box className="flex-1 rounded-xl p-3 mr-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                    <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
-                    <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
-                    <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
+                  <Box
+                    className="flex-1 rounded-xl p-3 mr-1"
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
+                      minHeight: 140,
+                      borderColor: "rgba(139, 195, 74, 0.3)",
+                      borderWidth: 1,
+                    }}
+                  >
+                    <Skeleton
+                      isDark={isDark}
+                      height={28}
+                      width={40}
+                      style={{ marginBottom: 12 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={10}
+                      width="80%"
+                      style={{ marginBottom: 10 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={16}
+                      width="60%"
+                      borderRadius={8}
+                    />
                   </Box>
-                  <Box className="flex-1 rounded-xl p-3 mx-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                    <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
-                    <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
-                    <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
+                  <Box
+                    className="flex-1 rounded-xl p-3 mx-1"
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
+                      minHeight: 140,
+                      borderColor: "rgba(139, 195, 74, 0.3)",
+                      borderWidth: 1,
+                    }}
+                  >
+                    <Skeleton
+                      isDark={isDark}
+                      height={28}
+                      width={40}
+                      style={{ marginBottom: 12 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={10}
+                      width="80%"
+                      style={{ marginBottom: 10 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={16}
+                      width="60%"
+                      borderRadius={8}
+                    />
                   </Box>
-                  <Box className="flex-1 rounded-xl p-3 ml-1" style={{ backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)", minHeight: 140, borderColor: "rgba(139, 195, 74, 0.3)", borderWidth: 1 }}>
-                    <Skeleton isDark={isDark} height={28} width={40} style={{ marginBottom: 12 }} />
-                    <Skeleton isDark={isDark} height={10} width="80%" style={{ marginBottom: 10 }} />
-                    <Skeleton isDark={isDark} height={16} width="60%" borderRadius={8} />
+                  <Box
+                    className="flex-1 rounded-xl p-3 ml-1"
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
+                      minHeight: 140,
+                      borderColor: "rgba(139, 195, 74, 0.3)",
+                      borderWidth: 1,
+                    }}
+                  >
+                    <Skeleton
+                      isDark={isDark}
+                      height={28}
+                      width={40}
+                      style={{ marginBottom: 12 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={10}
+                      width="80%"
+                      style={{ marginBottom: 10 }}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      height={16}
+                      width="60%"
+                      borderRadius={8}
+                    />
                   </Box>
                 </HStack>
               </VStack>
@@ -242,7 +346,9 @@ export default function AdminDashboard() {
                   <Box
                     className="flex-1 rounded-xl p-3 min-h-[140px]"
                     style={{
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
                       borderColor: "#8BC34A",
                       borderWidth: 1.5,
                     }}
@@ -256,7 +362,11 @@ export default function AdminDashboard() {
                             color="#8BC34A"
                           />
                         </Box>
-                        <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.players}</Text>
+                        <Text
+                          className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                        >
+                          {stats.players}
+                        </Text>
                         <Text
                           style={{ textAlign: "center" }}
                           className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
@@ -285,7 +395,9 @@ export default function AdminDashboard() {
                   <Box
                     className="flex-1 rounded-xl p-3 min-h-[140px]"
                     style={{
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
                       borderColor: "#8BC34A",
                       borderWidth: 1.5,
                     }}
@@ -293,9 +405,17 @@ export default function AdminDashboard() {
                     <VStack className="flex-1 justify-between">
                       <VStack className="items-center mt-1">
                         <Box className="bg-blue-100 p-1.5 rounded-full mb-2">
-                          <Ionicons name="flag-outline" size={16} color="#06B6D4" />
+                          <Ionicons
+                            name="flag-outline"
+                            size={16}
+                            color="#06B6D4"
+                          />
                         </Box>
-                        <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.courses}</Text>
+                        <Text
+                          className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                        >
+                          {stats.courses}
+                        </Text>
                         <Text
                           style={{ textAlign: "center" }}
                           className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
@@ -324,7 +444,9 @@ export default function AdminDashboard() {
                   <Box
                     className="flex-1 rounded-xl p-3 min-h-[140px]"
                     style={{
-                      backgroundColor: isDark ? "rgba(22, 22, 24, 0.4)" : "rgba(255, 255, 255, 0.35)",
+                      backgroundColor: isDark
+                        ? "rgba(22, 22, 24, 0.4)"
+                        : "rgba(255, 255, 255, 0.35)",
                       borderColor: "#8BC34A",
                       borderWidth: 1.5,
                     }}
@@ -338,7 +460,11 @@ export default function AdminDashboard() {
                             color="#FBBF24"
                           />
                         </Box>
-                        <Text className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{stats.bestHandicap}</Text>
+                        <Text
+                          className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                        >
+                          {stats.bestHandicap}
+                        </Text>
                         <Text
                           style={{ textAlign: "center" }}
                           className={`text-[9px] font-bold ${isDark ? "text-gray-400" : "text-gray-500"} uppercase tracking-wider`}
@@ -371,7 +497,11 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "statistics" && (
-          <PlayerStatistics players={players} loading={loading} searchQuery={searchQuery} />
+          <PlayerStatistics
+            players={players}
+            loading={loading}
+            searchQuery={searchQuery}
+          />
         )}
       </View>
     </SafeAreaView>

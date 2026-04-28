@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getUpdates, UpdateApi } from "@/api/admin/dashboard";
+import { getUpdates, UpdateApi } from "@/api/modules/admin/dashboard.api";
 import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 
@@ -21,8 +21,12 @@ export default function ImportantUpdatesUser() {
   const [updates, setUpdates] = useState<UpdateApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [imageErrorMap, setImageErrorMap] = useState<{ [key: number]: boolean }>({});
-  const [imageLoadingMap, setImageLoadingMap] = useState<{ [key: number]: boolean }>({});
+  const [imageErrorMap, setImageErrorMap] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [imageLoadingMap, setImageLoadingMap] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
 
@@ -37,8 +41,7 @@ export default function ImportantUpdatesUser() {
 
       const sorted = [...data].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
 
       setUpdates(sorted);
@@ -60,7 +63,6 @@ export default function ImportantUpdatesUser() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView className="px-4 pt-4">
-
           {[1, 2, 3].map((i) => (
             <View
               key={i}
@@ -108,28 +110,27 @@ export default function ImportantUpdatesUser() {
               />
             </View>
           ))}
-
         </ScrollView>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#FFF", }}>
-
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#FFF" }}
+    >
       <View className="flex-row items-center px-4 py-3">
-
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#8BC34A" />
         </TouchableOpacity>
 
         <Text
-          className={`ml-3 text-2xl font-bold ${isDark ? "text-white" : "text-black"
-            }`}
+          className={`ml-3 text-2xl font-bold ${
+            isDark ? "text-white" : "text-black"
+          }`}
         >
           Important Updates
         </Text>
-
       </View>
 
       <ScrollView
@@ -145,13 +146,14 @@ export default function ImportantUpdatesUser() {
         }
       >
         <View className="px-4 pb-10">
-
           {updates.length === 0 ? (
             <View className="items-center mt-20 opacity-60">
-              <Ionicons name="notifications-off-outline" size={60} color="#8BC34A" />
-              <Text className="mt-4 text-gray-500">
-                No updates available
-              </Text>
+              <Ionicons
+                name="notifications-off-outline"
+                size={60}
+                color="#8BC34A"
+              />
+              <Text className="mt-4 text-gray-500">No updates available</Text>
             </View>
           ) : (
             updates.map((item) => (
@@ -164,10 +166,15 @@ export default function ImportantUpdatesUser() {
                   borderColor: "rgba(139,195,74,0.2)",
                 }}
               >
-
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-
                     <View
                       style={{
                         width: 36,
@@ -183,7 +190,13 @@ export default function ImportantUpdatesUser() {
                     </View>
 
                     <View>
-                      <Text style={{ fontSize: 13, fontWeight: "bold", color: isDark ? "#fff" : "#000" }}>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "bold",
+                          color: isDark ? "#fff" : "#000",
+                        }}
+                      >
                         {item.authorName || "Admin"}
                       </Text>
                       <Text style={{ fontSize: 11, color: "#888" }}>
@@ -194,7 +207,9 @@ export default function ImportantUpdatesUser() {
 
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="megaphone" size={14} color="#F59E0B" />
-                    <Text style={{ fontSize: 11, color: "#F59E0B", marginLeft: 4 }}>
+                    <Text
+                      style={{ fontSize: 11, color: "#F59E0B", marginLeft: 4 }}
+                    >
                       Priority
                     </Text>
                   </View>
@@ -223,7 +238,7 @@ export default function ImportantUpdatesUser() {
                   </TouchableOpacity>
                 )}
 
-                {item.mediaUrl && (
+                {item.mediaUrl &&
                   (() => {
                     const finalUrl = item.mediaUrl.startsWith("http")
                       ? item.mediaUrl
@@ -235,12 +250,24 @@ export default function ImportantUpdatesUser() {
                           onPress={() => Linking.openURL(finalUrl)}
                           className="flex-row items-center bg-[#8BC34A]/10 p-3 rounded-xl mb-3 border border-dashed border-[#8BC34A]/30"
                         >
-                          <Ionicons name="image-outline" size={20} color="#8BC34A" />
+                          <Ionicons
+                            name="image-outline"
+                            size={20}
+                            color="#8BC34A"
+                          />
                           <View className="ml-3 flex-1">
-                            <Text className="text-[#8BC34A] font-bold text-sm">Image Attachment Available</Text>
-                            <Text className="text-[#8BC34A]/70 text-[10px]">Tap to view online</Text>
+                            <Text className="text-[#8BC34A] font-bold text-sm">
+                              Image Attachment Available
+                            </Text>
+                            <Text className="text-[#8BC34A]/70 text-[10px]">
+                              Tap to view online
+                            </Text>
                           </View>
-                          <Ionicons name="open-outline" size={16} color="#8BC34A" />
+                          <Ionicons
+                            name="open-outline"
+                            size={16}
+                            color="#8BC34A"
+                          />
                         </TouchableOpacity>
                       );
                     }
@@ -252,7 +279,14 @@ export default function ImportantUpdatesUser() {
                           setFullImageModalVisible(true);
                         }}
                         activeOpacity={0.9}
-                        style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", position: "relative", marginBottom: 12 }}
+                        style={{
+                          width: "100%",
+                          height: 180,
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          position: "relative",
+                          marginBottom: 12,
+                        }}
                       >
                         {imageLoadingMap[item.id] !== false && (
                           <View
@@ -294,14 +328,21 @@ export default function ImportantUpdatesUser() {
                         />
                       </TouchableOpacity>
                     );
-                  })()
-                )}
+                  })()}
 
-                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10, alignItems: "center" }}>
-
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 10,
+                    alignItems: "center",
+                  }}
+                >
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="notifications" size={14} color="#8BC34A" />
-                    <Text style={{ fontSize: 12, color: "#8BC34A", marginLeft: 4 }}>
+                    <Text
+                      style={{ fontSize: 12, color: "#8BC34A", marginLeft: 4 }}
+                    >
                       Announcement
                     </Text>
                   </View>
@@ -323,10 +364,23 @@ export default function ImportantUpdatesUser() {
         animationType="fade"
         onRequestClose={() => setFullImageModalVisible(false)}
       >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.95)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <TouchableOpacity
             onPress={() => setFullImageModalVisible(false)}
-            style={{ position: "absolute", top: 50, right: 20, zIndex: 10, padding: 10 }}
+            style={{
+              position: "absolute",
+              top: 50,
+              right: 20,
+              zIndex: 10,
+              padding: 10,
+            }}
           >
             <Ionicons name="close-circle" size={42} color="white" />
           </TouchableOpacity>

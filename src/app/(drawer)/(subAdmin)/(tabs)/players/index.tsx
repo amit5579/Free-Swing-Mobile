@@ -31,7 +31,7 @@ import {
   deleteSubAdminPlayer,
   blockPlayer,
   unblockPlayer,
-} from "@/api/subAdmin/myPlayers";
+} from "@/api/modules/subAdmin/myPlayers.api";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -152,12 +152,18 @@ export default function SubAdminPlayersPage() {
       const matchesSearch =
         player.username.toLowerCase().includes(searchLower) ||
         player.email.toLowerCase().includes(searchLower) ||
-        (player.membershipNo && player.membershipNo.toLowerCase().includes(searchLower)) && player.role != "CourseMarshal";
+        (player.membershipNo &&
+          player.membershipNo.toLowerCase().includes(searchLower) &&
+          player.role != "CourseMarshal");
 
       const matchesStatus =
-        statusFilter === "All" && player.role != "CourseMarshal"||
-        (statusFilter === "Active" && !player.isBlocked && player.role != "CourseMarshal") ||
-        (statusFilter === "Blocked" && player.isBlocked && player.role != "CourseMarshal");
+        (statusFilter === "All" && player.role != "CourseMarshal") ||
+        (statusFilter === "Active" &&
+          !player.isBlocked &&
+          player.role != "CourseMarshal") ||
+        (statusFilter === "Blocked" &&
+          player.isBlocked &&
+          player.role != "CourseMarshal");
 
       return matchesSearch && matchesStatus;
     });

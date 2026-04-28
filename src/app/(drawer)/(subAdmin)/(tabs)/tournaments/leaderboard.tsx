@@ -20,7 +20,7 @@ import {
   getLeaderboard,
   getTeeboxDetails,
   postSecretHoles,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import { Text } from "@/components/text";
@@ -210,86 +210,86 @@ export default function SubAdminLeaderboardPage() {
   };
 
   const renderHeader = () => {
-     return (
-       <VStack
-         style={{
-           borderBottomWidth: 1,
-           borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-           paddingHorizontal: 16,
-           paddingTop: 14,
-           paddingBottom: 12,
-           marginBottom: 20,
-         }}
-       >
-         <HStack
-           style={{
-             alignItems: "center",
-             justifyContent: "space-between",
-             backgroundColor: isDark ? "#020617" : "#ffffff",
-           }}
-         >
-           {/* 🔙 BACK BUTTON */}
-           <Pressable
-             onPress={() => routePage.back()}
-             style={{
-               width: 40,
-               height: 40,
-               borderRadius: 10,
-               justifyContent: "center",
-               alignItems: "center",
-               backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-             }}
-           >
-             <Ionicons
-               name="arrow-back"
-               size={20}
-               color={isDark ? "#fff" : "#020617"}
-             />
-           </Pressable>
- 
-           {/* 🧠 TITLE BLOCK */}
-           <VStack
-             style={{
-               flex: 1,
-               alignItems: "center",
-               justifyContent: "center",
-               paddingHorizontal: 6,
-             }}
-           >
-             {/* LABEL */}
-             <ThemedText
-               style={{
-                 fontSize: 12,
-                 color: isDark ? "#94a3b8" : "#64748b",
-                 fontWeight: "500",
-               }}
-             >
-Leaderboard
-             </ThemedText>
- 
-             {/* MAIN TITLE */}
-             <ThemedText
-               numberOfLines={1}
-               ellipsizeMode="tail"
-               style={{
-                 fontSize: 17,
-                 fontWeight: "700",
-                 marginTop: 2,
-                 maxWidth: "85%",
-                 textAlign: "center",
-               }}
-             >
-               {tournamentName}
-             </ThemedText>
-           </VStack>
- 
-           {/* ⚖️ RIGHT PLACEHOLDER */}
-           <View style={{ width: 40 }} />
-         </HStack>
-       </VStack>
-     );
-   };
-   
+    return (
+      <VStack
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
+          marginBottom: 20,
+        }}
+      >
+        <HStack
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: isDark ? "#020617" : "#ffffff",
+          }}
+        >
+          {/* 🔙 BACK BUTTON */}
+          <Pressable
+            onPress={() => routePage.back()}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* 🧠 TITLE BLOCK */}
+          <VStack
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 6,
+            }}
+          >
+            {/* LABEL */}
+            <ThemedText
+              style={{
+                fontSize: 12,
+                color: isDark ? "#94a3b8" : "#64748b",
+                fontWeight: "500",
+              }}
+            >
+              Leaderboard
+            </ThemedText>
+
+            {/* MAIN TITLE */}
+            <ThemedText
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={{
+                fontSize: 17,
+                fontWeight: "700",
+                marginTop: 2,
+                maxWidth: "85%",
+                textAlign: "center",
+              }}
+            >
+              {tournamentName}
+            </ThemedText>
+          </VStack>
+
+          {/* ⚖️ RIGHT PLACEHOLDER */}
+          <View style={{ width: 40 }} />
+        </HStack>
+      </VStack>
+    );
+  };
+
   const RenderStatsSection = () => {
     const isDark = colorScheme === "dark";
     const secondaryText = isDark ? "#94a3b8" : "#64748b";

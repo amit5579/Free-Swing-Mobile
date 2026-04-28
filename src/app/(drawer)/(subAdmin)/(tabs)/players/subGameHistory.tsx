@@ -18,10 +18,8 @@ import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 
-
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getPlayerGameHistory } from "@/api/subAdmin/myPlayers";
-
+import { getPlayerGameHistory } from "@/api/modules/subAdmin/myPlayers.api";
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function SubAdminGameHistoryPage() {
@@ -29,15 +27,15 @@ export default function SubAdminGameHistoryPage() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-    const {playerId , playerName} = useLocalSearchParams();
+  const { playerId, playerName } = useLocalSearchParams();
 
-const [gameHistory, setGameHistory] = useState([]);
+  const [gameHistory, setGameHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // ── Colors ──
   const colors = {
     bg: isDark ? "#020617" : "#f8fafc",
-    cardBg: isDark ? "rgba(15, 23, 42, 0.7)"  : "rgba(255, 255, 255, 0.7)",
+    cardBg: isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)",
     cardBorder: isDark ? "#334155" : "#e2e8f0",
     text: isDark ? "#f1f5f9" : "#0f172a",
     subText: isDark ? "#94a3b8" : "#64748b",
@@ -64,14 +62,13 @@ const [gameHistory, setGameHistory] = useState([]);
     });
   };
 
- 
   // ── Fetch ──
   const fetchPlayers = async () => {
     try {
       setLoading(true);
       const response = await getPlayerGameHistory(Number(playerId));
       // console.log(response);
-      
+
       setGameHistory(response || []);
     } catch (error) {
       console.error("Error fetching player game history:", error);
@@ -85,7 +82,7 @@ const [gameHistory, setGameHistory] = useState([]);
   };
 
   useEffect(() => {
-    fetchPlayers();    
+    fetchPlayers();
   }, []);
 
   useFocusEffect(
@@ -93,7 +90,7 @@ const [gameHistory, setGameHistory] = useState([]);
       fetchPlayers();
     }, []),
   );
- 
+
   // ── Skeleton ──
   const GameHistorySkeleton = () => (
     <View
@@ -115,7 +112,10 @@ const [gameHistory, setGameHistory] = useState([]);
         <Skeleton isDark={isDark} height={18} width={100} borderRadius={10} />
       </VStack>
 
-      <HStack className="justify-between p-3 rounded-xl" style={{ backgroundColor: colors.iconBg }}>
+      <HStack
+        className="justify-between p-3 rounded-xl"
+        style={{ backgroundColor: colors.iconBg }}
+      >
         {[1, 2, 3].map((i) => (
           <VStack key={i} className="items-center gap-1" style={{ flex: 1 }}>
             <Skeleton isDark={isDark} height={10} width={30} />
@@ -230,32 +230,49 @@ const [gameHistory, setGameHistory] = useState([]);
       >
         <HStack className="justify-between items-center mb-3">
           <HStack className="items-center gap-2">
-            <Ionicons name="calendar-outline" size={16} color={colors.subText} />
+            <Ionicons
+              name="calendar-outline"
+              size={16}
+              color={colors.subText}
+            />
             <ThemedText style={{ fontSize: 13, color: colors.subText }}>
               {formatDate(item.date)}
             </ThemedText>
           </HStack>
 
           <Pressable
-            onPress={() => routePage.push({
-              pathname: "/(drawer)/(subAdmin)/(tabs)/players/subHistoryScoreCard",
-              params: { scorecardId: item.scorecardId }
-            })}
+            onPress={() =>
+              routePage.push({
+                pathname:
+                  "/(drawer)/(subAdmin)/(tabs)/players/subHistoryScoreCard",
+                params: { scorecardId: item.scorecardId },
+              })
+            }
             style={({ pressed }) => [
               {
                 opacity: pressed ? 0.7 : 1,
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)",
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(0,0,0,0.02)",
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-              }
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.1)",
+              },
             ]}
           >
             <HStack className="items-center gap-1">
               <Ionicons name="eye-outline" size={14} color={colors.accent} />
-              <ThemedText style={{ fontSize: 13, fontWeight: "600", color: colors.accent }}>
+              <ThemedText
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: colors.accent,
+                }}
+              >
                 View
               </ThemedText>
             </HStack>
@@ -273,11 +290,21 @@ const [gameHistory, setGameHistory] = useState([]);
           >
             {item.courseName}
           </ThemedText>
-          
+
           {item.tournamentId && (
-            <HStack className="mt-2 items-center px-2 py-0.5 rounded-md self-start" style={{ backgroundColor: "#facc1520" }}>
+            <HStack
+              className="mt-2 items-center px-2 py-0.5 rounded-md self-start"
+              style={{ backgroundColor: "#facc1520" }}
+            >
               <Ionicons name="trophy" size={12} color="#facc15" />
-              <ThemedText style={{ fontSize: 11, fontWeight: "600", color: "#facc15", marginLeft: 4 }}>
+              <ThemedText
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: "#facc15",
+                  marginLeft: 4,
+                }}
+              >
                 Tournament
               </ThemedText>
             </HStack>
@@ -287,33 +314,81 @@ const [gameHistory, setGameHistory] = useState([]);
         <HStack
           className="justify-between p-3 rounded-xl"
           style={{
-            backgroundColor: isDark ? "rgba(15,23,42,0.4)" : "rgba(241,245,249,0.6)",
+            backgroundColor: isDark
+              ? "rgba(15,23,42,0.4)"
+              : "rgba(241,245,249,0.6)",
           }}
         >
           <VStack className="items-center" style={{ flex: 1 }}>
-            <ThemedText style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}>SCORE</ThemedText>
-            <ThemedText style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>{item.score}</ThemedText>
+            <ThemedText
+              style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}
+            >
+              SCORE
+            </ThemedText>
+            <ThemedText
+              style={{ fontSize: 16, fontWeight: "700", color: colors.text }}
+            >
+              {item.score}
+            </ThemedText>
           </VStack>
-          
-          <View style={{ width: 1, backgroundColor: colors.divider, height: "100%" }} />
-          
+
+          <View
+            style={{
+              width: 1,
+              backgroundColor: colors.divider,
+              height: "100%",
+            }}
+          />
+
           <VStack className="items-center" style={{ flex: 1 }}>
-            <ThemedText style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}>NET SCORE</ThemedText>
-            <ThemedText style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>{item.netScore}</ThemedText>
+            <ThemedText
+              style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}
+            >
+              NET SCORE
+            </ThemedText>
+            <ThemedText
+              style={{ fontSize: 16, fontWeight: "700", color: colors.text }}
+            >
+              {item.netScore}
+            </ThemedText>
           </VStack>
-          
-          <View style={{ width: 1, backgroundColor: colors.divider, height: "100%" }} />
-          
+
+          <View
+            style={{
+              width: 1,
+              backgroundColor: colors.divider,
+              height: "100%",
+            }}
+          />
+
           <VStack className="items-center" style={{ flex: 1 }}>
-            <ThemedText style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}>PAR</ThemedText>
-            <ThemedText style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>{item.par}</ThemedText>
+            <ThemedText
+              style={{ fontSize: 11, color: colors.subText, marginBottom: 2 }}
+            >
+              PAR
+            </ThemedText>
+            <ThemedText
+              style={{ fontSize: 16, fontWeight: "700", color: colors.text }}
+            >
+              {item.par}
+            </ThemedText>
           </VStack>
         </HStack>
 
         {item.isDQ && (
-          <HStack className="mt-3 items-center justify-center py-1 rounded-lg" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}>
+          <HStack
+            className="mt-3 items-center justify-center py-1 rounded-lg"
+            style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+          >
             <Ionicons name="alert-circle" size={14} color="#ef4444" />
-            <ThemedText style={{ fontSize: 12, fontWeight: "600", color: "#ef4444", marginLeft: 4 }}>
+            <ThemedText
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: "#ef4444",
+                marginLeft: 4,
+              }}
+            >
               Disqualified (DQ)
             </ThemedText>
           </HStack>
@@ -323,36 +398,36 @@ const [gameHistory, setGameHistory] = useState([]);
   };
 
   // ── Header ──
-    const renderHeader = () => {
-      return (
-        <View>
-          <HStack
-            className="px-3 items-center"
-            style={{ height: 60, justifyContent: "center" }}
+  const renderHeader = () => {
+    return (
+      <View>
+        <HStack
+          className="px-3 items-center"
+          style={{ height: 60, justifyContent: "center" }}
+        >
+          <Pressable
+            onPress={() => routePage.back()}
+            style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
           >
-            <Pressable
-              onPress={() => routePage.back()}
-              style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
-            >
-              <Ionicons
-                name="arrow-back-outline"
-                size={24}
-                color={isDark ? "#ffffff" : "#020617"}
-              />
-            </Pressable>
-  
-            <ThemedText
-              style={{
-                fontSize: 20,
-                fontWeight: "700",
-                textAlign: "center",
-              }}
-            >
-             {playerName}&apos;s Games
-            </ThemedText>
-          </HStack>
-  
-          {/* <HStack className="justify-between px-5 items-center mb-2">
+            <Ionicons
+              name="arrow-back-outline"
+              size={24}
+              color={isDark ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
+
+          <ThemedText
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            {playerName}&apos;s Games
+          </ThemedText>
+        </HStack>
+
+        {/* <HStack className="justify-between px-5 items-center mb-2">
             <View style={{ flex: 1 }}>
               <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
                 {scoringType ? `(${scoringType})` : "(Net Score)"}
@@ -364,9 +439,9 @@ const [gameHistory, setGameHistory] = useState([]);
               </ThemedText>
             )}
           </HStack> */}
-        </View>
-      );
-    };
+      </View>
+    );
+  };
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -389,18 +464,17 @@ const [gameHistory, setGameHistory] = useState([]);
       ) : (
         <FlatList
           data={gameHistory}
-          keyExtractor={(item, index) => item.scorecardId?.toString() || index.toString()}
+          keyExtractor={(item, index) =>
+            item.scorecardId?.toString() || index.toString()
+          }
           renderItem={renderGameCard}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
       )}
-
-    
     </ThemedView>
   );
 }
-
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({

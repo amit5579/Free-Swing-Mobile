@@ -1,6 +1,6 @@
 import React, { createContext, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginUser } from "@/api/auth";
+import { loginUser } from "@/api/modules/auth.api";
 
 type UserType = {
   id: number;
@@ -18,13 +18,16 @@ type AuthContextType = {
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => null,
-  logout: () => { },
+  logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserType | null>(null);
 
-  const login = async (email: string, password: string): Promise<UserType | null> => {
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<UserType | null> => {
     try {
       const data = await loginUser({
         Email: email.trim(),
@@ -49,7 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await AsyncStorage.setItem("username", data.username);
 
       return userData;
-
     } catch (error) {
       console.log("❌ LOGIN ERROR:", error);
       throw error;

@@ -31,7 +31,7 @@ import {
   updateTournament,
   getSubAdminCourses,
   getCourseDetails,
-} from "@/api/subAdmin/tournaments";
+} from "@/api/modules/subAdmin/tournaments.api";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -333,55 +333,54 @@ export default function SubAdminTournamentsPage() {
 
   const renderHeader = () => (
     <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      {/* 🧠 TITLE */}
+      <ThemedText
         style={{
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          alignItems: "center",
-          justifyContent: "space-between",
-          backgroundColor: isDark ? "#020617" : "#ffffff",
-          borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          fontSize: 20,
+          fontWeight: "700",
+          color: isDark ? "#fff" : "#020617",
         }}
       >
-        {/* 🧠 TITLE */}
+        Tournaments
+      </ThemedText>
+
+      {/* ➕ CREATE BUTTON */}
+      <Pressable
+        onPress={handleCreate}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 10,
+          backgroundColor: "#84cc16",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+      >
+        <Ionicons name="add" size={18} color="#fff" />
+
         <ThemedText
           style={{
-            fontSize: 20,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 13,
+            marginLeft: 6,
           }}
         >
-          Tournaments
+          Create
         </ThemedText>
-    
-        {/* ➕ CREATE BUTTON */}
-        <Pressable
-          onPress={handleCreate}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 10,
-            backgroundColor: "#84cc16",
-          }}
-          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-        >
-          <Ionicons name="add" size={18} color="#fff" />
-    
-          <ThemedText
-            style={{
-              color: "#fff",
-              fontWeight: "600",
-              fontSize: 13,
-              marginLeft: 6,
-            }}
-          >
-            Create
-          </ThemedText>
-        </Pressable>
-      </HStack>
-  
+      </Pressable>
+    </HStack>
   );
 
   return (

@@ -1,8 +1,8 @@
-import https from "../https";
+import client from "../../client";
 
 export const getCourse = async () => {
     try {
-        const response = await https.get(`course`);
+        const response = await client.get(`course`);
         // console.log("Fetching course list:", response.data);
         return response.data;
 
@@ -15,7 +15,7 @@ export const getCourse = async () => {
 // create course  CourseAdmin
 export const createCourse = async (data: any) => {
     try {
-        const response = await https.post(`CourseAdmin`, data);
+        const response = await client.post(`CourseAdmin`, data);
         return response.data;
     } catch (error) {
         console.error("Creating course Error:", error);
@@ -26,7 +26,7 @@ export const createCourse = async (data: any) => {
 // delete course CourseAdmin
 export const deleteCourse = async (courseId: number) => {
     try {
-        const response = await https.delete(`CourseAdmin/${courseId}`);
+        const response = await client.delete(`CourseAdmin/${courseId}`);
         return response.data;
     } catch (error) {
         console.error("Deleting course Error:", error);
@@ -37,7 +37,7 @@ export const deleteCourse = async (courseId: number) => {
 // get tee box by course id course/2/teeBox
 export const getTeeBox = async (courseId: string) => {
     try {
-        const response = await https.get(`course/${courseId}`);
+        const response = await client.get(`course/${courseId}`);
         if (response?.data?.teeBoxes) {
             return response.data.teeBoxes.map((tee: any) => ({
                 id: tee.teeBoxId,
@@ -68,7 +68,7 @@ export const getTeeBox = async (courseId: string) => {
 // get holes by teebox id - holes/teebox/26
 export const getHolesByTeeBox = async (teeboxId: string) => {
     try {
-        const response = await https.get(`holes/teebox/${teeboxId}`);
+        const response = await client.get(`holes/teebox/${teeboxId}`);
         // console.log("Fetching holes by teebox:", response.data);
 
         return response.data;
@@ -83,7 +83,7 @@ export const getHolesByTeeBox = async (teeboxId: string) => {
 
 export const createTeeBox = async (courseId: string, data: any) => {
     try {
-        const response = await https.post(`courseadmin/${courseId}/teebox`, data)
+        const response = await client.post(`courseadmin/${courseId}/teebox`, data)
         return response.data;
     } catch (error) {
         console.error("Creating tee box Error:", error);
@@ -93,9 +93,9 @@ export const createTeeBox = async (courseId: string, data: any) => {
 
 // update teebox - courseadmin/teebox/31
 // color : "Gold" courseId: 10 holes: [] isPredefined: false name: "xpulse" rating: 7 scorecards: null slope: 9 teeBoxId: 31 tournaments: []
-export const updateTeeBox = async(teeboxId: number, data: any) => {
+export const updateTeeBox = async (teeboxId: number, data: any) => {
     try {
-        const response = await https.put(`courseadmin/teebox/${teeboxId}`, data)
+        const response = await client.put(`courseadmin/teebox/${teeboxId}`, data)
         return response.data;
     } catch (error) {
         console.error("Updating tee box Error:", error);
@@ -106,7 +106,7 @@ export const updateTeeBox = async(teeboxId: number, data: any) => {
 // delete teebox - courseadmin/teebox/31
 export const deleteTeeBox = async (teeboxId: number) => {
     try {
-        const response = await https.delete(`courseadmin/teebox/${teeboxId}`);
+        const response = await client.delete(`courseadmin/teebox/${teeboxId}`);
         return response.data;
     } catch (error) {
         console.error("Deleting tee box Error:", error);
@@ -118,7 +118,7 @@ export const deleteTeeBox = async (teeboxId: number) => {
 
 export const updateHoles = async (handicap: string, holeId: string, holeNumber: string, par: string, teeBoxId: string, yardage: string) => {
     try {
-        const response = await https.put(`courseadmin/hole/${holeId}`, { handicap, holeId, holeNumber, par, teeBoxId, yardage });
+        const response = await client.put(`courseadmin/hole/${holeId}`, { handicap, holeId, holeNumber, par, teeBoxId, yardage });
         return response.data;
     } catch (error) {
         console.error("Updating holes Error:", error);

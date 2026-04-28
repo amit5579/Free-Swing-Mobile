@@ -27,7 +27,7 @@ import {
   deleteTeeBox,
   getTeeBox,
   updateTeeBox,
-} from "@/api/admin/courses";
+} from "@/api/modules/admin/courses.api";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teeBoxSchema } from "@/schema/adminSchemas";
@@ -241,76 +241,76 @@ export default function teeBoxPage() {
     );
   };
 
-const handleAddTeeBox = () => {
-  setIsEditMode(false);
-  setEditingCourse(null);
+  const handleAddTeeBox = () => {
+    setIsEditMode(false);
+    setEditingCourse(null);
 
-  reset({
-    name: "",
-    color: "",
-    rating: 0,
-    slope: 0,
-  });
+    reset({
+      name: "",
+      color: "",
+      rating: 0,
+      slope: 0,
+    });
 
-  setSelectedColor(null);
-  setModalVisible(true);
-};
+    setSelectedColor(null);
+    setModalVisible(true);
+  };
 
-const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      paddingBottom: 12,
-    }}
-  >
-    {/* 🔝 TOP BAR */}
-    <HStack
+  const renderHeader = () => (
+    <Box
       style={{
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 8,
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        paddingBottom: 12,
       }}
     >
-      {/* 🔙 BACK */}
-      <Pressable
-        onPress={() => routePage.back()}
+      {/* 🔝 TOP BAR */}
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 8,
           alignItems: "center",
-          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          justifyContent: "space-between",
         }}
-        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      {/* 🧠 TITLE BLOCK */}
-      <VStack style={{ flex: 1, alignItems: "center" }}>
-        <ThemedText
+        {/* 🔙 BACK */}
+        <Pressable
+          onPress={() => routePage.back()}
           style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginTop: 2,
-            color: isDark ? "#fff" : "#020617",
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
           }}
+          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
         >
-          Tee Boxes
-        </ThemedText>
-      </VStack>
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
 
-      {/* ➕ ICON ACTION */}
-      {/* <Pressable
+        {/* 🧠 TITLE BLOCK */}
+        <VStack style={{ flex: 1, alignItems: "center" }}>
+          <ThemedText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginTop: 2,
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Tee Boxes
+          </ThemedText>
+        </VStack>
+
+        {/* ➕ ICON ACTION */}
+        {/* <Pressable
         onPress={handleAddTeeBox}
         style={{
           width: 40,
@@ -335,38 +335,38 @@ const renderHeader = () => (
         Add
       </ThemedText>
       </Pressable> */}
-    </HStack>
+      </HStack>
 
-    {/* 🔥 CTA BUTTON */}
-    <Pressable
-      onPress={handleAddTeeBox}
-      style={{
-        marginHorizontal: 16,
-        marginTop: 6,
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: "center",
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 6,
-        backgroundColor: "#84cc16",
-        elevation: 2, // Android shadow
-      }}
-      android_ripple={{ color: "rgba(255,255,255,0.2)" }}
-    >
-      <Ionicons name="add" size={18} color="#fff" />
-      <ThemedText
+      {/* 🔥 CTA BUTTON */}
+      <Pressable
+        onPress={handleAddTeeBox}
         style={{
-          color: "#fff",
-          fontWeight: "600",
-          fontSize: 14,
+          marginHorizontal: 16,
+          marginTop: 6,
+          paddingVertical: 12,
+          borderRadius: 12,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "center",
+          gap: 6,
+          backgroundColor: "#84cc16",
+          elevation: 2, // Android shadow
         }}
+        android_ripple={{ color: "rgba(255,255,255,0.2)" }}
       >
-        Add Tee Box
-      </ThemedText>
-    </Pressable>
-  </Box>
-);
+        <Ionicons name="add" size={18} color="#fff" />
+        <ThemedText
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 14,
+          }}
+        >
+          Add Tee Box
+        </ThemedText>
+      </Pressable>
+    </Box>
+  );
 
   return (
     <>
@@ -430,8 +430,8 @@ const renderHeader = () => (
                           lineHeight: 20,
                         }}
                       >
-                        You haven't created any tee box yet. Tap "Add
-                        Tee Box" to start managing your tee box.
+                        You haven't created any tee box yet. Tap "Add Tee Box"
+                        to start managing your tee box.
                       </ThemedText>
                     </VStack>
                   )}

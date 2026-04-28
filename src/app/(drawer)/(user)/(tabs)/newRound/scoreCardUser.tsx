@@ -1,6 +1,6 @@
 // strokeIndex
-import { getScoreCardDetails } from "@/api/newRound";
-import { saveScoreCard } from "@/api/scoreCard";
+import { getScoreCardDetails } from "@/api/modules/newRound.api";
+import { saveScoreCard } from "@/api/modules/scoreCard.api";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { ThemedText } from "@/components/themed-text";
@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState, useRef,useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -41,10 +41,10 @@ type ScorePayload = {
 export default function ScoreCardUserPage() {
   const { excluded, stableford, holes, handicap, courseId, teeBoxId } =
     useLocalSearchParams();
-    // useEffect(() => {
-    // console.log("holes", holes);
-   
-    // }, [holes]);
+  // useEffect(() => {
+  // console.log("holes", holes);
+
+  // }, [holes]);
 
   const routePage = useRouter();
   const navigation = useNavigation();
@@ -69,18 +69,17 @@ export default function ScoreCardUserPage() {
   }, [scoreCardDetails]);
 
   // const holesCount = Number(holes);
-  
-const getScoringLabel = () => {
-  if (excluded === "true" && stableford === "false")
-    return "Net Score • Exclude Par 3";
-  if (excluded === "false" && stableford === "true")
-    return "Stableford";
-  if (excluded === "false" && stableford === "false")
-    return "Net Score • Include Par 3";
-  if (excluded === "true" && stableford === "true")
-    return "Stableford • Exclude Par 3";
-  return "";
-};
+
+  const getScoringLabel = () => {
+    if (excluded === "true" && stableford === "false")
+      return "Net Score • Exclude Par 3";
+    if (excluded === "false" && stableford === "true") return "Stableford";
+    if (excluded === "false" && stableford === "false")
+      return "Net Score • Include Par 3";
+    if (excluded === "true" && stableford === "true")
+      return "Stableford • Exclude Par 3";
+    return "";
+  };
 
   const fetchScoreCard = async () => {
     try {
@@ -91,7 +90,7 @@ const getScoringLabel = () => {
       const response = await getScoreCardDetails(
         Number(teeBoxId),
         Number(courseId),
-        holes as string
+        holes as string,
       );
 
       // console.log("response: ", response);
@@ -231,8 +230,12 @@ const getScoringLabel = () => {
 
   const processedAllHoles = scoreCardDetails.map(calculateHole);
 
-  const processedFront9 = processedAllHoles.filter((h: any) => h.holeNumber <= 9);
-  const processedBack9 = processedAllHoles.filter((h: any) => h.holeNumber >= 10);
+  const processedFront9 = processedAllHoles.filter(
+    (h: any) => h.holeNumber <= 9,
+  );
+  const processedBack9 = processedAllHoles.filter(
+    (h: any) => h.holeNumber >= 10,
+  );
   const legendCounts = getScoreLegendCounts(processedAllHoles);
 
   const getTotals = (holes: any[]) => ({
@@ -556,110 +559,110 @@ const getScoringLabel = () => {
   };
 
   const renderHeader = () => {
-  return (
-    <Box
-      style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      <VStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 14,
-          paddingBottom: 12,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🔝 TOP ROW */}
-        <HStack
+        <VStack
           style={{
-            alignItems: "center",
-            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingTop: 14,
+            paddingBottom: 12,
           }}
         >
-          {/* 🔙 BACK */}
-          <Pressable
-            onPress={() => routePage.back()}
+          {/* 🔝 TOP ROW */}
+          <HStack
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              justifyContent: "center",
               alignItems: "center",
-              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              justifyContent: "space-between",
             }}
-            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
           >
-            <Ionicons
-              name="arrow-back"
-              size={20}
-              color={isDark ? "#fff" : "#020617"}
-            />
-          </Pressable>
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
 
-          {/* 🧠 TITLE */}
-          <ThemedText
+            {/* 🧠 TITLE */}
+            <ThemedText
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: "700",
+                color: isDark ? "#fff" : "#020617",
+              }}
+            >
+              Scorecard
+            </ThemedText>
+
+            {/* ⚖️ SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+
+          {/* 📌 META INFO ROW */}
+          <HStack
             style={{
-              flex: 1,
-              textAlign: "center",
-              fontSize: 18,
-              fontWeight: "700",
-              color: isDark ? "#fff" : "#020617",
+              marginTop: 8,
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            Scorecard
-          </ThemedText>
-
-          {/* ⚖️ SPACER */}
-          <View style={{ width: 40 }} />
-        </HStack>
-
-        {/* 📌 META INFO ROW */}
-        <HStack
-          style={{
-            marginTop: 8,
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* 📝 SCORING TYPE */}
-          <ThemedText
-            style={{
-              fontSize: 12,
-              color: isDark ? "#94a3b8" : "#64748b",
-              flex: 1,
-            }}
-          >
-            {getScoringLabel()}
-          </ThemedText>
-
-          {/* 🟢 HANDICAP BADGE */}
-          <Box
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 10,
-              backgroundColor: "rgba(139,195,74,0.15)",
-              borderWidth: 1,
-              borderColor: "rgba(139,195,74,0.3)",
-            }}
-          >
+            {/* 📝 SCORING TYPE */}
             <ThemedText
               style={{
                 fontSize: 12,
-                fontWeight: "600",
-                color: "#2E7D32",
+                color: isDark ? "#94a3b8" : "#64748b",
+                flex: 1,
               }}
             >
-              HC: {handicap ?? "N/A"}
+              {getScoringLabel()}
             </ThemedText>
-          </Box>
-        </HStack>
-      </VStack>
-    </Box>
-  );
-};
+
+            {/* 🟢 HANDICAP BADGE */}
+            <Box
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 10,
+                backgroundColor: "rgba(139,195,74,0.15)",
+                borderWidth: 1,
+                borderColor: "rgba(139,195,74,0.3)",
+              }}
+            >
+              <ThemedText
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: "#2E7D32",
+                }}
+              >
+                HC: {handicap ?? "N/A"}
+              </ThemedText>
+            </Box>
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   return (
     <>

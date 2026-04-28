@@ -1,9 +1,9 @@
-import https from "../https";
+import client from "../../client";
 
 // create tournament - post - Tournament
 export const createTournament = async (payload: any) => {
     try {
-        const response = await https.post(`Tournament`, payload);
+        const response = await client.post(`Tournament`, payload);
         return response.data;
     } catch (error) {
         console.error("Error creating tournament:", error);
@@ -15,7 +15,7 @@ export const createTournament = async (payload: any) => {
 // update tournament - put - Tournament/29
 export const updateTournament = async (tournamentId: number, payload: any) => {
     try {
-        const response = await https.put(`Tournament/${tournamentId}`, payload);
+        const response = await client.put(`Tournament/${tournamentId}`, payload);
         return response.data;
     } catch (error) {
         console.error("Error updating tournament:", error);
@@ -26,7 +26,7 @@ export const updateTournament = async (tournamentId: number, payload: any) => {
 // delete tournament - delete - Tournament/29
 export const deleteTournament = async (tournamentId: number) => {
     try {
-        const response = await https.delete(`Tournament/${tournamentId}`);
+        const response = await client.delete(`Tournament/${tournamentId}`);
         return response.data;
     } catch (error) {
         console.error("Error deleting tournament:", error);
@@ -38,7 +38,7 @@ export const deleteTournament = async (tournamentId: number) => {
 // get sub admin tournaments - Tournament
 export const getSubAdminTournaments = async () => {
     try {
-        const response = await https.get(`Tournament`);
+        const response = await client.get(`Tournament`);
         return response.data;
     } catch (error) {
         console.error("Error fetching tournaments:", error);
@@ -51,7 +51,7 @@ export const getSubAdminTournaments = async () => {
 
 export const getSubAdminCourses = async () => {
     try {
-        const response = await https.get(`SubAdmin/my-courses`);
+        const response = await client.get(`SubAdmin/my-courses`);
         return response.data;
     } catch (error) {
         console.error("Error fetching courses:", error);
@@ -62,7 +62,7 @@ export const getSubAdminCourses = async () => {
 // get coursedetails for teeboxes - course/10
 export const getCourseDetails = async (courseId: number) => {
     try {
-        const response = await https.get(`course/${courseId}`);
+        const response = await client.get(`course/${courseId}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching course details:", error);
@@ -75,7 +75,7 @@ export const getCourseDetails = async (courseId: number) => {
 
 export const getTournamentPlayers = async (tournamentId: number) => {
     try {
-        const response = await https.get(`Tournament/${tournamentId}/players`);
+        const response = await client.get(`Tournament/${tournamentId}/players`);
         return response.data;
     } catch (error) {
         console.error("Error fetching tournament players:", error);
@@ -88,7 +88,7 @@ export const getTournamentPlayers = async (tournamentId: number) => {
 
 export const getRoasterPlayers = async () => {
     try {
-        const response = await https.get(`SubAdmin/my-players`);
+        const response = await client.get(`SubAdmin/my-players`);
         return response.data;
     } catch (error) {
         console.error("Error fetching roaster players:", error);
@@ -102,7 +102,7 @@ export const getRoasterPlayers = async () => {
 
 export const addToRoaster = async (tournamentId: number, userId: number) => {
     try {
-        const response = await https.post(`Tournament/join`, {tournamentId, userId});
+        const response = await client.post(`Tournament/join`, { tournamentId, userId });
         return response.data;
     } catch (error) {
         console.error("Error adding to roaster:", error);
@@ -115,7 +115,7 @@ export const addToRoaster = async (tournamentId: number, userId: number) => {
 
 export const removeFromRoaster = async (tournamentId: number, userId: number) => {
     try {
-        const response = await https.delete(`Tournament/${tournamentId}/players/${userId}`);
+        const response = await client.delete(`Tournament/${tournamentId}/players/${userId}`);
         return response.data;
     } catch (error) {
         console.error("Error removing from roaster:", error);

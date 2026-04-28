@@ -1,8 +1,8 @@
-import https from "../https";
+import client from "../../client";
 
 export const getSubAdminList = async () => {
   try {
-    const response = await https.get(`SubAdmin/list`);
+    const response = await client.get(`SubAdmin/list`);
     return response.data;
 
   } catch (error) {
@@ -14,7 +14,7 @@ export const getSubAdminList = async () => {
 
 export const createSubAdmin = async (data: any) => {
   try {
-    const response = await https.post(`SubAdmin/create`, data);
+    const response = await client.post(`SubAdmin/create`, data);
     return response.data;
   } catch (error) {
     console.error("Create SubAdmin Error:", error);
@@ -36,7 +36,7 @@ export const createSubAdmin = async (data: any) => {
 
 export const updateSubAdmin = async (subAdminId: number, data: any) => {
   try {
-    const response = await https.put(`SubAdmin/${subAdminId}`, data);
+    const response = await client.put(`SubAdmin/${subAdminId}`, data);
     return response.data;
   } catch (error) {
     console.error("Update SubAdmin Error:", error);
@@ -46,7 +46,7 @@ export const updateSubAdmin = async (subAdminId: number, data: any) => {
 
 export const deleteSubAdmin = async (id: number) => {
   try {
-    const response = await https.delete(`SubAdmin/${id}`);
+    const response = await client.delete(`SubAdmin/${id}`);
     // console.log("subbb id", id);
 
     return response.data;

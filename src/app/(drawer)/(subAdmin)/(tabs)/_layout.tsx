@@ -13,7 +13,7 @@ import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/modules/dashboard.api";
 
 export default function SubAdminTabLayout() {
   const scheme = useColorScheme();
@@ -58,26 +58,59 @@ export default function SubAdminTabLayout() {
         headerLeft: () => (
           <Image
             source={require("@/assets/FreeSwing.png")}
-            style={{ width: 150, height: 80, marginLeft: -20, resizeMode: "contain" }}
+            style={{
+              width: 150,
+              height: 80,
+              marginLeft: -20,
+              resizeMode: "contain",
+            }}
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginRight: 16,
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.push("/(drawer)/(admin)/(importantUpdate)")}
-              style={{ marginRight: 16, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.1)", padding: 8, borderRadius: 20 }}
+              style={{
+                marginRight: 16,
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(139,195,74,0.1)",
+                padding: 8,
+                borderRadius: 20,
+              }}
             >
-              <Ionicons
-                name="megaphone-outline"
-                size={22}
-                color="#8BC34A"
+              <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "#FF5252",
+                  borderWidth: 1.5,
+                  borderColor: isDark ? "#000" : "#f2f2f2",
+                }}
               />
-              <View style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF5252", borderWidth: 1.5, borderColor: isDark ? "#000" : "#f2f2f2" }} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-              style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
+              onPress={() =>
+                navigation.getParent()?.dispatch(DrawerActions.openDrawer())
+              }
+              style={{
+                borderRadius: 21,
+                overflow: "hidden",
+                width: 42,
+                height: 42,
+              }}
             >
               {loading ? (
                 <View
@@ -95,9 +128,9 @@ export default function SubAdminTabLayout() {
                   <Ionicons name="person" size={24} color="#8BC34A" />
                 </View>
               ) : profile?.profilePictureUrl &&
-              profile.profilePictureUrl.trim() !== "" &&
-              profile.profilePictureUrl !== "null" &&
-              !imageError ? (
+                profile.profilePictureUrl.trim() !== "" &&
+                profile.profilePictureUrl !== "null" &&
+                !imageError ? (
                 <Image
                   source={{
                     uri: profile.profilePictureUrl.startsWith("http")
@@ -121,7 +154,11 @@ export default function SubAdminTabLayout() {
                   }}
                 >
                   <Text
-                    style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}
+                    style={{
+                      color: isDark ? "#fff" : "#2E7D32",
+                      fontSize: 18,
+                      fontWeight: "bold",
+                    }}
                   >
                     {profile?.username?.trim()
                       ? profile.username.trim()[0].toUpperCase()
@@ -146,7 +183,11 @@ export default function SubAdminTabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -156,7 +197,11 @@ export default function SubAdminTabLayout() {
         options={{
           title: "Players",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -189,7 +234,11 @@ export default function SubAdminTabLayout() {
         options={{
           title: "Courses",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "flag" : "flag-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "flag" : "flag-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -203,14 +252,16 @@ export default function SubAdminTabLayout() {
         }}
       />
 
-
-
       <Tabs.Screen
         name="teeTimeBooking/index"
         options={{
           title: "Tee Time",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "calendar" : "calendar-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

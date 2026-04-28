@@ -24,7 +24,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { contactAdminSchema, ContactAdminType } from "@/schema/userSchemas";
 
 import { Dropdown } from "react-native-element-dropdown";
-import { getFeedbackHistory, sendFeedback } from "@/api/admin/feedback";
+import {
+  getFeedbackHistory,
+  sendFeedback,
+} from "@/api/modules/admin/feedback.api";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function SubAdminContactAdminPage() {
@@ -91,64 +94,64 @@ export default function SubAdminContactAdminPage() {
       hour12: true,
     });
   };
- const RenderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    <HStack
+  const RenderHeader = () => (
+    <Box
       style={{
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
-      {/* 🔙 BACK */}
-      <Pressable
-        onPress={() =>
-          routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")
-        }
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
           alignItems: "center",
-          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          justifyContent: "space-between",
         }}
-        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      {/* 🧠 TITLE BLOCK */}
-      <VStack style={{ flex: 1, alignItems: "center" }}>
-        <ThemedText
+        {/* 🔙 BACK */}
+        <Pressable
+          onPress={() =>
+            routePage.replace("/(drawer)/(subAdmin)/(tabs)/dashboard")
+          }
           style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginTop: 2,
-            color: isDark ? "#fff" : "#020617",
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
           }}
+          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
         >
-          Contact Admin
-        </ThemedText>
-      </VStack>
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
 
-      {/* ⚖️ RIGHT SPACER */}
-      <View style={{ width: 40 }} />
-    </HStack>
-  </Box>
-);
+        {/* 🧠 TITLE BLOCK */}
+        <VStack style={{ flex: 1, alignItems: "center" }}>
+          <ThemedText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginTop: 2,
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Contact Admin
+          </ThemedText>
+        </VStack>
+
+        {/* ⚖️ RIGHT SPACER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+    </Box>
+  );
 
   const renderFeedbackItem = ({ item }: any) => (
     <Box
@@ -195,20 +198,22 @@ export default function SubAdminContactAdminPage() {
       <ThemedText style={{ marginTop: 6 }}>{item.message}</ThemedText>
 
       <HStack className="gap-3 my-3 w-full">
-          <View
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-              borderRadius: 8,
-              backgroundColor: "rgba(123, 124, 48, 0.5)",
-            }}
+        <View
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 8,
+            backgroundColor: "rgba(123, 124, 48, 0.5)",
+          }}
+        >
+          <ThemedText
+            style={{ fontSize: 13, fontWeight: 700, color: "#facc15" }}
           >
-            <ThemedText style={{ fontSize: 13, fontWeight: 700, color: "#facc15" }}>
-              Admin Response
-            </ThemedText>
-            <ThemedText style={{fontSize: 13}}>{item.adminResponse}</ThemedText>
-          </View>
-          </HStack>
+            Admin Response
+          </ThemedText>
+          <ThemedText style={{ fontSize: 13 }}>{item.adminResponse}</ThemedText>
+        </View>
+      </HStack>
     </Box>
   );
 
@@ -285,8 +290,7 @@ export default function SubAdminContactAdminPage() {
             <HStack className="justify-end mb-3 ">
               <Box className="border border-gray-400 rounded-full px-3 py-1">
                 <ThemedText>
-                  {feedbacks.length}{" "}
-                  {feedbacks.length == 1 ? "item" : "items"}
+                  {feedbacks.length} {feedbacks.length == 1 ? "item" : "items"}
                 </ThemedText>
               </Box>
             </HStack>

@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { getProfile, uploadProfileImage } from "@/api/profile";
+import { getProfile, uploadProfileImage } from "@/api/modules/profile.api";
 import { Image } from "expo-image";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,10 +44,13 @@ export default function AdminProfile() {
         return true;
       };
 
-      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
 
       return () => backHandler.remove();
-    }, [router])
+    }, [router]),
   );
 
   const {
@@ -72,44 +75,44 @@ export default function AdminProfile() {
   const [passwordModal, setPasswordModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
- const pickImage = async () => {
-       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-   
-       if (!permission.granted) {
-         alert("Permission required to access gallery");
-         return;
-       }
-   
-       const result = await ImagePicker.launchImageLibraryAsync({
-         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-         allowsEditing: true,
-         aspect: [1, 1],
-         quality: 0.8,
-       });
-   
-       if (!result.canceled) {
-         const selectedImage = result.assets[0];
-         setImageError(false);
-   
-         try {
-           setUploading(true);
-           await uploadProfileImage(selectedImage);
-           Toast.show({
-             type: "success",
-             text1: "Profile  Uploaded",
-           });
-           await fetchAdminProfile();
-         } catch (error) {
-           console.log("Upload failed", error);
-           Toast.show({
-             type: "error",
-             text1: "Failed to upload profile Picture",
-           });
-         } finally {
-           setUploading(false);
-         }
-       }
-     };
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      alert("Permission required to access gallery");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const selectedImage = result.assets[0];
+      setImageError(false);
+
+      try {
+        setUploading(true);
+        await uploadProfileImage(selectedImage);
+        Toast.show({
+          type: "success",
+          text1: "Profile  Uploaded",
+        });
+        await fetchAdminProfile();
+      } catch (error) {
+        console.log("Upload failed", error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to upload profile Picture",
+        });
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
   const fetchAdminProfile = async () => {
     try {
       setPageLoading(true);
@@ -130,7 +133,6 @@ export default function AdminProfile() {
 
   const onSubmit = (data: any) => {
     console.log("Validated Data:", data);
-
   };
 
   const AdminProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
@@ -249,10 +251,17 @@ export default function AdminProfile() {
                           position: "relative",
                         }}
                       >
-                        {(adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null") && !imageError ? (
+                        {adminProfile?.profilePictureUrl &&
+                        adminProfile.profilePictureUrl.trim() !== "" &&
+                        adminProfile.profilePictureUrl !== "null" &&
+                        !imageError ? (
                           <Image
                             source={{
-                              uri: adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`,
+                              uri: adminProfile?.profilePictureUrl?.startsWith(
+                                "http",
+                              )
+                                ? adminProfile.profilePictureUrl
+                                : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`,
                             }}
                             style={{
                               width: 90,
@@ -274,8 +283,16 @@ export default function AdminProfile() {
                               borderColor: "#8BC34A",
                             }}
                           >
-                            <Text style={{ fontSize: 40, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
-                              {adminProfile?.username?.trim() ? adminProfile.username.trim()[0].toUpperCase() : "A"}
+                            <Text
+                              style={{
+                                fontSize: 40,
+                                fontWeight: "bold",
+                                color: isDark ? "#fff" : "#2E7D32",
+                              }}
+                            >
+                              {adminProfile?.username?.trim()
+                                ? adminProfile.username.trim()[0].toUpperCase()
+                                : "A"}
                             </Text>
                           </View>
                         )}

@@ -11,10 +11,13 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { Provider } from "react-redux";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import NoConnectionScreen from "@/components/NoConnectionScreen";
+import { store } from "@/redux/store";
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,21 +41,23 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          {isConnected === false ? (
-            <NoConnectionScreen />
-          ) : (
-            <>
-              <Stack screenOptions={{ headerShown: false }} />
-              <Toast />
-            </>
-          )}
-        </ThemeProvider>
-      </AuthProvider>
-    </GestureHandlerRootView>
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            {isConnected === false ? (
+              <NoConnectionScreen />
+            ) : (
+              <>
+                <Stack screenOptions={{ headerShown: false }} />
+                <Toast />
+              </>
+            )}
+          </ThemeProvider>
+        </AuthProvider>
+      </GestureHandlerRootView>
+    </Provider>
   );
 }

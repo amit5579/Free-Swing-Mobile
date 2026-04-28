@@ -1,4 +1,7 @@
-import { getScorecardDetails, ScorecardHole } from "@/api/dashboard";
+import {
+  getScorecardDetails,
+  ScorecardHole,
+} from "@/api/modules/dashboard.api";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
@@ -48,11 +51,9 @@ const ScoreCard: React.FC = () => {
 
   const renderScoring =
     holes && holes.length > 0
-      ? holes[0].stablefordPoints == null &&
-        holes[0].isExcluded == false
+      ? holes[0].stablefordPoints == null && holes[0].isExcluded == false
         ? "Net Score Include Par 3"
-        : holes[0].stablefordPoints == null &&
-            holes[0].isExcluded == true
+        : holes[0].stablefordPoints == null && holes[0].isExcluded == true
           ? "Net Score Exclude Par 3"
           : "Stableford"
       : "";

@@ -1,4 +1,4 @@
-import https from "./https";
+import client from "../client";
 
 /* -*-*-*-*- Feedsw API -*-*-*-*- */
 
@@ -26,7 +26,7 @@ export interface FeedItem {
 
 export const getFeedApi = async () => {
   try {
-    const response = await https.get(`feed`);
+    const response = await client.get(`feed`);
     return response.data as FeedItem[];
   } catch (error) {
     console.error("Fetching Feed Error:", error);
@@ -36,7 +36,7 @@ export const getFeedApi = async () => {
 
 export const likeFeedApi = async (id: string | number) => {
   try {
-    const response = await https.post(`feed/like/${id}`);
+    const response = await client.post(`feed/like/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error liking feed item ${id}:`, error);
@@ -53,7 +53,7 @@ export interface LikedUser {
 
 export const getLikedUsersApi = async (roundRefId: number | string) => {
   try {
-    const response = await https.get(`feed/interactions/${roundRefId}`);
+    const response = await client.get(`feed/interactions/${roundRefId}`);
     return (response.data || []) as LikedUser[];
   } catch (error) {
     console.error(`Fetching Liked Users Error for ${roundRefId}:`, error);
@@ -77,7 +77,7 @@ export interface InProgressApiItem {
 
 export const getInProgressGames = async (playerId: number) => {
   try {
-    const response = await https.get(`scorecard/history-inprogress/${playerId}`);
+    const response = await client.get(`scorecard/history-inprogress/${playerId}`);
     return response.data as InProgressApiItem[];
   } catch (error) {
     console.error("Fetching InProgress Games Error:", error);
@@ -97,14 +97,14 @@ export interface UserProfile {
   handicapIndex: number;
   homeCourse: string | null;
   isBlocked: boolean;
-  totalRounds : number | null;
+  totalRounds: number | null;
   profilePictureUrl: string | null;
   resolvedHomeCourse: string | null;
 }
 
 export const getUserProfile = async (userId: number) => {
   try {
-    const response = await https.get(`User/${userId}`);
+    const response = await client.get(`User/${userId}`);
     return response.data as UserProfile;
   } catch (error) {
     console.error(`Fetching user profile ${userId} error:`, error);
@@ -122,7 +122,7 @@ export interface LeaderboardPlayer {
 
 export const getLeaderboard = async () => {
   try {
-    const response = await https.get(`user/leaderboard`);
+    const response = await client.get(`user/leaderboard`);
     return response.data as LeaderboardPlayer[];
   } catch (error) {
     console.error("Fetching Leaderboard Error:", error);
@@ -138,7 +138,7 @@ export interface PlayerCount {
 
 export const getPlayerCount = async () => {
   try {
-    const response = await https.get(`user/count`);
+    const response = await client.get(`user/count`);
     return response.data as PlayerCount;
   } catch (error) {
     console.error("Fetching Player Count Error:", error);
@@ -157,7 +157,7 @@ export interface ScoreStats {
 
 export const getScoreStats = async (playerId: number) => {
   try {
-    const response = await https.get(`scorecard/stats/${playerId}`);
+    const response = await client.get(`scorecard/stats/${playerId}`);
     return response.data as ScoreStats;
   } catch (error) {
     console.error(`Fetching Score Stats for player ${playerId} error:`, error);
@@ -180,7 +180,7 @@ export interface ScoreHistoryItem {
 
 export const getScoreHistory = async (playerId: number) => {
   try {
-    const response = await https.get(`scorecard/history/${playerId}`);
+    const response = await client.get(`scorecard/history/${playerId}`);
     return response.data as ScoreHistoryItem[];
   } catch (error) {
     console.error(`Fetching Score History for player ${playerId} error:`, error);
@@ -202,7 +202,7 @@ export interface UpdateItem {
 
 export const getUpdates = async () => {
   try {
-    const response = await https.get(`Updates`);
+    const response = await client.get(`Updates`);
     return response.data as UpdateItem[];
   } catch (error) {
     console.error("Fetching Updates Error:", error);
@@ -235,8 +235,8 @@ export type ScorecardHole = {
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
   try {
-    console.log("scorecardid",scorecardId);
-    const response = await https.get(`scorecard/details/${scorecardId}`);
+    console.log("scorecardid", scorecardId);
+    const response = await client.get(`scorecard/details/${scorecardId}`);
     return response.data as ScorecardHole[];
   } catch (error) {
     console.error("Failed to fetch scorecard details:", error);
@@ -246,7 +246,7 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
 
 export const deleteScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.delete(`scorecard/${scorecardId}`);
+    const response = await client.delete(`/scorecard/${scorecardId}`);
     return response.data;
   } catch (error) {
     console.error("Delete Scorecard Error:", error);
@@ -257,7 +257,7 @@ export const deleteScorecardApi = async (scorecardId: string | number) => {
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
-    const response = await https.put(`scorecard/update`, { scorecardId, holeScores });
+    const response = await client.put(`/scorecard/update`, { scorecardId, holeScores });
     return response.data;
   } catch (error) {
     console.error("Updating scorecard error:", error);
@@ -267,7 +267,7 @@ export const updateScorecardApi = async (scorecardId: string | number, holeScore
 
 export const finishScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.post(`scorecard/save`, { scorecardId });
+    const response = await client.post(`/scorecard/save`, { scorecardId });
     return response.data;
   } catch (error) {
     console.error("Finishing scorecard error:", error);
@@ -287,7 +287,7 @@ export const updateHoleScoresApi = async (scorecardId: string | number, holes: a
       userId: userId || h.userId
     }));
 
-    const response = await https.post(`scorecard/save`, payload);
+    const response = await client.post(`/scorecard/save`, payload);
     console.log("updateHoleScoresApi response:", response.status, response.data);
     return response.data;
   } catch (error: any) {

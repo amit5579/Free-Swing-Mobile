@@ -20,13 +20,13 @@ import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useRef } from "react";
-import { getCertificateByUserId } from "@/api/profile";
+import { getCertificateByUserId } from "@/api/modules/profile.api";
 import ViewShot, { captureRef } from "react-native-view-shot";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Skeleton } from "@/components/Skeleton";
-import { Asset } from 'expo-asset';
-import * as FileSystem from 'expo-file-system';
+import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system";
 // import { generateCertificateHTML } from "@/utils/certificateTemplate";
 import { Image } from "expo-image";
 import { Alert } from "react-native";
@@ -64,11 +64,11 @@ export default function CertificatePage() {
 
       const backHandler = BackHandler.addEventListener(
         "hardwareBackPress",
-        onBackPress
+        onBackPress,
       );
 
       return () => backHandler.remove();
-    }, [handleBack])
+    }, [handleBack]),
   );
 
   const [userCertificate, setUserCertificate] = useState<any>(null);
@@ -80,20 +80,27 @@ export default function CertificatePage() {
     try {
       console.log("Starting to load certificate assets...");
 
-      const watermarkAsset = Asset.fromModule(require("../../../../assets/images/freeswing-watermark.png"));
+      const watermarkAsset = Asset.fromModule(
+        require("../../../../assets/images/freeswing-watermark.png"),
+      );
       await watermarkAsset.downloadAsync();
       const watermarkLocalUri = watermarkAsset.localUri || watermarkAsset.uri;
 
       if (watermarkLocalUri) {
-        const watermarkBase64 = await FileSystem.readAsStringAsync(watermarkLocalUri, {
-          encoding: "base64",
-        });
+        const watermarkBase64 = await FileSystem.readAsStringAsync(
+          watermarkLocalUri,
+          {
+            encoding: "base64",
+          },
+        );
         setWatermarkUri(`data:image/png;base64,${watermarkBase64}`);
         console.log("Watermark loaded successfully");
       }
 
       // Load logo
-      const logoAsset = Asset.fromModule(require("../../../../assets/FreeSwing.png"));
+      const logoAsset = Asset.fromModule(
+        require("../../../../assets/FreeSwing.png"),
+      );
       await logoAsset.downloadAsync();
       const logoLocalUri = logoAsset.localUri || logoAsset.uri;
 
@@ -187,9 +194,9 @@ export default function CertificatePage() {
 
       const { uri: pdfUri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(pdfUri, {
-        UTI: '.pdf',
-        mimeType: 'application/pdf',
-        dialogTitle: 'Share Handicap Certificate'
+        UTI: ".pdf",
+        mimeType: "application/pdf",
+        dialogTitle: "Share Handicap Certificate",
       });
     } catch (error) {
       console.log("Share Error:", error);
@@ -199,40 +206,96 @@ export default function CertificatePage() {
 
   const CertificateSkeleton = () => {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+        edges={["top", "left", "right"]}
+      >
         <ThemedView className="flex-1 px-5">
           <HStack className="items-center my-6">
-            <Skeleton isDark={isDark} height={40} width={40} borderRadius={20} />
-            <Skeleton isDark={isDark} height={24} width="50%" borderRadius={4} style={{ marginLeft: 12 }} />
+            <Skeleton
+              isDark={isDark}
+              height={40}
+              width={40}
+              borderRadius={20}
+            />
+            <Skeleton
+              isDark={isDark}
+              height={24}
+              width="50%"
+              borderRadius={4}
+              style={{ marginLeft: 12 }}
+            />
           </HStack>
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <Box className="rounded-2xl p-4 mb-6 bg-white/5 border border-white/5">
               <VStack className="items-center mb-6">
-                <Skeleton isDark={isDark} height={18} width="30%" borderRadius={4} style={{ marginBottom: 8 }} />
-                <Skeleton isDark={isDark} height={28} width="50%" borderRadius={4} style={{ marginBottom: 6 }} />
-                <Skeleton isDark={isDark} height={12} width="40%" borderRadius={4} />
+                <Skeleton
+                  isDark={isDark}
+                  height={18}
+                  width="30%"
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={28}
+                  width="50%"
+                  borderRadius={4}
+                  style={{ marginBottom: 6 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={12}
+                  width="40%"
+                  borderRadius={4}
+                />
               </VStack>
 
               <Divider style={{ marginBottom: 20, opacity: 0.1 }} />
 
-              <Skeleton isDark={isDark} height={20} width="60%" style={{ alignSelf: 'center', marginBottom: 20 }} />
+              <Skeleton
+                isDark={isDark}
+                height={20}
+                width="60%"
+                style={{ alignSelf: "center", marginBottom: 20 }}
+              />
 
               <VStack style={{ marginBottom: 24 }}>
-                <Skeleton isDark={isDark} height={14} width="30%" style={{ marginBottom: 10 }} />
-                <Skeleton isDark={isDark} height={32} width="80%" style={{ marginBottom: 8 }} />
+                <Skeleton
+                  isDark={isDark}
+                  height={14}
+                  width="30%"
+                  style={{ marginBottom: 10 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={32}
+                  width="80%"
+                  style={{ marginBottom: 8 }}
+                />
                 <Skeleton isDark={isDark} height={14} width="50%" />
               </VStack>
 
               <Box className="rounded-xl p-5 mb-6 bg-white/5 border border-white/5">
                 <HStack className="justify-between items-center mb-4">
                   <VStack className="items-center flex-1">
-                    <Skeleton isDark={isDark} height={12} width="30%" style={{ marginBottom: 8 }} />
+                    <Skeleton
+                      isDark={isDark}
+                      height={12}
+                      width="30%"
+                      style={{ marginBottom: 8 }}
+                    />
                     <Skeleton isDark={isDark} height={24} width="50%" />
                   </VStack>
                   <Skeleton isDark={isDark} height={30} width={1} />
                   <VStack className="items-center flex-1">
-                    <Skeleton isDark={isDark} height={12} width="30%" style={{ marginBottom: 8 }} />
+                    <Skeleton
+                      isDark={isDark}
+                      height={12}
+                      width="30%"
+                      style={{ marginBottom: 8 }}
+                    />
                     <Skeleton isDark={isDark} height={24} width="50%" />
                   </VStack>
                 </HStack>
@@ -244,22 +307,57 @@ export default function CertificatePage() {
                 </HStack>
               </Box>
 
-              <Skeleton isDark={isDark} height={14} width="90%" style={{ alignSelf: 'center', marginBottom: 10 }} />
-              <Skeleton isDark={isDark} height={14} width="70%" style={{ alignSelf: 'center' }} />
+              <Skeleton
+                isDark={isDark}
+                height={14}
+                width="90%"
+                style={{ alignSelf: "center", marginBottom: 10 }}
+              />
+              <Skeleton
+                isDark={isDark}
+                height={14}
+                width="70%"
+                style={{ alignSelf: "center" }}
+              />
 
               <HStack className="justify-between items-end mt-10">
                 <VStack>
-                  <Skeleton isDark={isDark} height={2} width={100} style={{ marginBottom: 6 }} />
+                  <Skeleton
+                    isDark={isDark}
+                    height={2}
+                    width={100}
+                    style={{ marginBottom: 6 }}
+                  />
                   <Skeleton isDark={isDark} height={10} width={80} />
                 </VStack>
-                <Skeleton isDark={isDark} height={60} width={60} borderRadius={30} />
+                <Skeleton
+                  isDark={isDark}
+                  height={60}
+                  width={60}
+                  borderRadius={30}
+                />
               </HStack>
             </Box>
 
             <HStack style={{ gap: 10, marginTop: 10 }}>
-              <Skeleton isDark={isDark} height={44} width="25%" borderRadius={12} />
-              <Skeleton isDark={isDark} height={44} width="35%" borderRadius={12} />
-              <Skeleton isDark={isDark} height={44} width="35%" borderRadius={12} />
+              <Skeleton
+                isDark={isDark}
+                height={44}
+                width="25%"
+                borderRadius={12}
+              />
+              <Skeleton
+                isDark={isDark}
+                height={44}
+                width="35%"
+                borderRadius={12}
+              />
+              <Skeleton
+                isDark={isDark}
+                height={44}
+                width="35%"
+                borderRadius={12}
+              />
             </HStack>
           </ScrollView>
         </ThemedView>
@@ -272,18 +370,34 @@ export default function CertificatePage() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+      edges={["top", "left", "right"]}
+    >
       <ThemedView className="flex-1 px-5">
         <HStack className="items-center my-6">
-          <Pressable onPress={handleBack} hitSlop={20} style={{ padding: 10, borderRadius: 50, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9" }}>
+          <Pressable
+            onPress={handleBack}
+            hitSlop={20}
+            style={{
+              padding: 10,
+              borderRadius: 50,
+              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
+            }}
+          >
             <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
           </Pressable>
-          <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
+          <ThemedText
+            style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}
+          >
             Handicap Certificate
           </ThemedText>
         </HStack>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
           <ViewShot
             ref={certificateRef}
             options={{
@@ -304,10 +418,10 @@ export default function CertificatePage() {
                 shadowOpacity: 0.1,
                 shadowRadius: 10,
                 elevation: 4,
-                position: 'relative',
-                overflow: 'hidden',
+                position: "relative",
+                overflow: "hidden",
                 minHeight: 400,
-                justifyContent: 'center'
+                justifyContent: "center",
               }}
             >
               <Watermark opacity={0.25} />
@@ -335,7 +449,6 @@ export default function CertificatePage() {
               </ThemedText> */}
 
               <VStack className="items-center">
-
                 <ThemedText
                   style={{
                     textAlign: "center",
@@ -412,53 +525,139 @@ export default function CertificatePage() {
                 />
 
                 <View style={{ marginTop: 20 }}>
-                  <Text style={{ fontSize: 12, color: isDark ? "#888" : "#666", letterSpacing: 0.5 }}>
-                    Membership No: <Text style={{ fontWeight: '800', color: '#8BC34A' }}>#{userCertificate?.membershipNo}</Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDark ? "#888" : "#666",
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    Membership No:{" "}
+                    <Text style={{ fontWeight: "800", color: "#8BC34A" }}>
+                      #{userCertificate?.membershipNo}
+                    </Text>
                   </Text>
                 </View>
               </VStack>
 
-              <View style={{
-                backgroundColor: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(139, 195, 74, 0.05)',
-                padding: 14,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(139,195,74,0.1)',
-                marginBottom: 20
-              }}>
+              <View
+                style={{
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,0.01)"
+                    : "rgba(139, 195, 74, 0.05)",
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(139,195,74,0.1)",
+                  marginBottom: 20,
+                }}
+              >
                 <HStack className="justify-between items-center">
                   <VStack className="items-center flex-1">
-                    <Text style={{ fontSize: 10, color: '#888', fontWeight: '700', marginBottom: 4 }}>HC INDEX</Text>
-                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#8BC34A' }}>{userCertificate?.handicapIndex}</Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: "#888",
+                        fontWeight: "700",
+                        marginBottom: 4,
+                      }}
+                    >
+                      HC INDEX
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "900",
+                        color: "#8BC34A",
+                      }}
+                    >
+                      {userCertificate?.handicapIndex}
+                    </Text>
                   </VStack>
-                  <View style={{ width: 1, height: 30, backgroundColor: '#ddd', opacity: 0.4 }} />
+                  <View
+                    style={{
+                      width: 1,
+                      height: 30,
+                      backgroundColor: "#ddd",
+                      opacity: 0.4,
+                    }}
+                  />
                   <VStack className="items-center flex-1">
-                    <Text style={{ fontSize: 10, color: '#888', fontWeight: '700', marginBottom: 4 }}>HANDICAP</Text>
-                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#8BC34A' }}>{userCertificate?.handicap}</Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: "#888",
+                        fontWeight: "700",
+                        marginBottom: 4,
+                      }}
+                    >
+                      HANDICAP
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "900",
+                        color: "#8BC34A",
+                      }}
+                    >
+                      {userCertificate?.handicap}
+                    </Text>
                   </VStack>
                 </HStack>
 
                 <Divider style={{ marginVertical: 12, opacity: 0.1 }} />
 
                 <HStack className="justify-between">
-                  <Text style={{ fontSize: 11, color: '#888' }}>Slope: <Text style={{ fontWeight: '800', color: isDark ? '#fff' : '#444' }}>{userCertificate?.slope}</Text></Text>
-                  <Text style={{ fontSize: 11, color: '#888' }}>Rating: <Text style={{ fontWeight: '800', color: isDark ? '#fff' : '#444' }}>{userCertificate?.rating}</Text></Text>
-                  <Text style={{ fontSize: 11, color: '#888' }}>Holes: <Text style={{ fontWeight: '800', color: isDark ? '#fff' : '#444' }}>{userCertificate?.completedHolesCount || 0}</Text></Text>
+                  <Text style={{ fontSize: 11, color: "#888" }}>
+                    Slope:{" "}
+                    <Text
+                      style={{
+                        fontWeight: "800",
+                        color: isDark ? "#fff" : "#444",
+                      }}
+                    >
+                      {userCertificate?.slope}
+                    </Text>
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "#888" }}>
+                    Rating:{" "}
+                    <Text
+                      style={{
+                        fontWeight: "800",
+                        color: isDark ? "#fff" : "#444",
+                      }}
+                    >
+                      {userCertificate?.rating}
+                    </Text>
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "#888" }}>
+                    Holes:{" "}
+                    <Text
+                      style={{
+                        fontWeight: "800",
+                        color: isDark ? "#fff" : "#444",
+                      }}
+                    >
+                      {userCertificate?.completedHolesCount || 0}
+                    </Text>
+                  </Text>
                 </HStack>
               </View>
 
               <Text
                 style={{
                   fontSize: 11,
-                  fontStyle: 'italic',
+                  fontStyle: "italic",
                   color: isDark ? "#888" : "#666",
-                  textAlign: 'center',
+                  textAlign: "center",
                   lineHeight: 18,
                   marginBottom: 8,
                 }}
               >
                 {"Issued on "}
-                <Text style={{ fontWeight: 'bold' }}>
+                <Text style={{ fontWeight: "bold" }}>
                   {userCertificate?.date}
                 </Text>
                 {" for scores submitted at "}
@@ -466,7 +665,7 @@ export default function CertificatePage() {
                 {"."}
               </Text>
 
-                {/* <HStack className="justify-between items-end mt-4">
+              {/* <HStack className="justify-between items-end mt-4">
                   <VStack>
                     <View style={{ width: 100, height: 1.5, backgroundColor: '#8BC34A', marginBottom: 4 }} />
                     <Text style={{ fontSize: 10, fontWeight: '700', color: '#8BC34A' }}>COURSE OFFICIAL</Text>
@@ -482,14 +681,23 @@ export default function CertificatePage() {
                 </HStack> */}
 
               <View style={{ marginTop: 16 }}>
-                <Text style={{ fontSize: 8, color: "#aaa", textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  This is an electronically generated document. Valid without physical signature.
+                <Text
+                  style={{
+                    fontSize: 8,
+                    color: "#aaa",
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  This is an electronically generated document. Valid without
+                  physical signature.
                 </Text>
               </View>
             </View>
           </ViewShot>
 
-          <HStack style={{ gap: 8, marginTop: 24, alignItems: 'center' }}>
+          <HStack style={{ gap: 8, marginTop: 24, alignItems: "center" }}>
             {/* <Pressable
               onPress={handleBack}
               style={{
@@ -524,7 +732,9 @@ export default function CertificatePage() {
               }}
             >
               <Ionicons name="share-social-outline" size={16} color="#8BC34A" />
-              <ThemedText style={{ color: "#8BC34A", fontWeight: "600", fontSize: 13 }}>
+              <ThemedText
+                style={{ color: "#8BC34A", fontWeight: "600", fontSize: 13 }}
+              >
                 Share PDF
               </ThemedText>
             </Pressable>
@@ -548,7 +758,9 @@ export default function CertificatePage() {
               }}
             >
               <Ionicons name="download-outline" size={16} color="white" />
-              <ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>
+              <ThemedText
+                style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}
+              >
                 Download
               </ThemedText>
             </Pressable>

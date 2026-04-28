@@ -9,7 +9,10 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getScorecardDetails, ScorecardHoleApi } from "@/api/admin/dashboard";
+import {
+  getScorecardDetails,
+  ScorecardHoleApi,
+} from "@/api/modules/admin/dashboard.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";

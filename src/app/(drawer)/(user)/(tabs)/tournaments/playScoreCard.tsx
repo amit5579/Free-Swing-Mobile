@@ -13,19 +13,23 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { updateHoleScoresApi } from "@/api/dashboard";
+import { updateHoleScoresApi } from "@/api/modules/dashboard.api";
 import Watermark from "@/components/watermark";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  getScorecardHandicap,
-  getScoreCardOpen,
-  saveScoreCard,
-} from "@/api/scoreCard";
+// import {
+//   getScorecardHandicap,
+//   getScoreCardOpen,
+//   saveScoreCard,
+// } from "@/api/modules/scoreCard.api";
 import Toast from "react-native-toast-message";
 import { Box } from "@/components/box";
+
+import { fetchScoreCardOpen, fetchHandicap } from "@/redux/slices/userScorecard.slice";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
 
 export default function PlayScoreCard() {
   const colorScheme = useColorScheme();
@@ -36,18 +40,32 @@ export default function PlayScoreCard() {
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
 
-  const [loading, setLoading] = useState(false);
+const dispatch = useAppDispatch();
+
+const { loading, scorecardData, handicapData, error } = useAppSelector(
+  (state) => state.userScoreCard
+);
+
+  const [loadingLocal, setLoading] = useState(false);
   const [scoreCard, setScoreCard] = useState<any>([]);
-  const [handicap, setHandicap] = useState<any>([]);
+  // const [handicapData, setHandicap] = useState<any>([]);
   const [visible, setVisible] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const userIdRef = useRef<number | null>(null);
   const scoreCardRef = useRef<any>([]);
   const timeoutRef = useRef<any>(null);
 
+
   useEffect(() => {
-    scoreCardRef.current = scoreCard;
-  }, [scoreCard]);
+    if (scorecardData) {
+      setScoreCard(scorecardData);
+    }
+  }, [scorecardData]);
+
+ 
+  useEffect(() => {
+    scoreCardRef.current = scorecardData;
+  }, [scorecardData]);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -77,29 +95,30 @@ export default function PlayScoreCard() {
             ? "Standard"
             : "Net Score Include Par 3";
 
-  const fetchScoreCard = async () => {
-    try {
-      setLoading(true);
-      const response = await getScoreCardOpen(Number(tournamentId));
-      const hcDetails = await getScorecardHandicap(Number(teeBoxId));
+  // const fetchScoreCard = async () => {
+  //   try {
+  //     // setLoading(true);
 
-      // console.log("hcDetails", hcDetails);
-      // console.log("scorecard details", response);
+  //     const response = await getScoreCardOpen(Number(tournamentId));
 
-      const clearedScores = response.map((h: any) => ({
-        ...h,
-        score: null,
-        netScore: null,
-        stablefordPoints: null,
-      }));
-      setScoreCard(clearedScores);
-      setHandicap(hcDetails);
-    } catch (error) {
-      console.error("Fetching scorecard Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     const hcDetails = await getScorecardHandicap(Number(teeBoxId));
+
+  //     // console.log("hcDetails", hcDetails);
+  //     // console.log("scorecard details", response);
+
+  //     const clearedScores = response.map((h: any) => ({
+  //       ...h,
+  //       score: null,
+  //       netScore: null,
+  //       stablefordPoints: null,
+  //     }));
+  //     setScoreCard(clearedScores);
+  //   } catch (error) {
+  //     console.error("Fetching scorecard Error:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     const getUserId = async () => {
@@ -107,7 +126,12 @@ export default function PlayScoreCard() {
       if (storedUserId) setUserId(Number(storedUserId));
     };
     getUserId();
-    fetchScoreCard();
+
+    dispatch(fetchScoreCardOpen(Number(tournamentId)));
+    dispatch(fetchHandicap(Number(teeBoxId)));
+
+    // fetchScoreCard();
+
   }, []);
 
   // ── Calculation helpers ──
@@ -133,9 +157,9 @@ export default function PlayScoreCard() {
 
     const score = Number(hole.score);
     const playerHandicapVal =
-      typeof handicap === "object"
-        ? (handicap.courseHandicap ?? handicap.handicap ?? 0)
-        : Number(handicap || 0);
+      handicapData && typeof handicapData === "object"
+        ? (handicapData.courseHandicap ?? handicapData.handicap ?? 0)
+        : Number(handicapData || 0);
 
     let strokesReceived = calculateStrokes(
       Number(playerHandicapVal),
@@ -143,7 +167,7 @@ export default function PlayScoreCard() {
     );
 
     const calculateStrokesReceived = (strokeIndex: number) => {
-      const handicapValue = handicap.userHandicap;
+      const handicapValue = handicapData?.userHandicap || 0;
       let strokes = 0;
 
       if (handicapValue > 0) {
@@ -361,7 +385,12 @@ export default function PlayScoreCard() {
       userId: Number(userId),
     }));
     try {
-      await updateHoleScoresApi(tournamentId ? Number(tournamentId) : (scoreCardRef.current[0]?.scorecardId || 0), payload);
+      await updateHoleScoresApi(
+        tournamentId
+          ? Number(tournamentId)
+          : scoreCardRef.current[0]?.scorecardId || 0,
+        payload,
+      );
     } catch (err) {
       console.error("Final save failed:", err);
     }
@@ -413,7 +442,15 @@ export default function PlayScoreCard() {
         console.log("Error saving round:", error);
       }
     },
-    [courseId, isExcluded, scoringType, teeBoxId, tournamentId, userId, routePage],
+    [
+      courseId,
+      isExcluded,
+      scoringType,
+      teeBoxId,
+      tournamentId,
+      userId,
+      routePage,
+    ],
   );
 
   useEffect(() => {
@@ -592,7 +629,7 @@ export default function PlayScoreCard() {
               }}
             >
               <Text style={{ color: "#fff", fontWeight: 700 }}>
-                Handicap: {handicap.handicap}
+                Handicap: {handicapData?.handicap}
               </Text>
             </Box>
           </HStack>
@@ -610,8 +647,8 @@ export default function PlayScoreCard() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-2 pb-20">
             <VStack className="gap-4">
-              {loading ? (
-                <ThemedText>Loading...</ThemedText>
+              {loadingLocal ? (
+                <ThemedText>LoadingLocal...</ThemedText>
               ) : (
                 <>
                   <VStack
@@ -895,7 +932,7 @@ export default function PlayScoreCard() {
                       </View>
                     ))}
 
-                    {scoreCard.length == 0 && (
+                    {scorecardData && scorecardData.length == 0  && (
                       <ThemedText style={{ textAlign: "center" }}>
                         No games played in this tournament yet.
                       </ThemedText>

@@ -16,8 +16,8 @@ import { Text } from "@/components/text";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { getTournaments } from "@/api/admin/tournaments";
-import { getCombinedLeaderboard } from "@/api/combinedLeaderboard";
+import { getTournaments } from "@/api/modules/admin/tournaments.api";
+import { getCombinedLeaderboard } from "@/api/modules/combinedLeaderboard.api";
 import { Box } from "@/components/box";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -158,80 +158,83 @@ export default function CombinedLeaderboardsPage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
-const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    <VStack style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12 }}>
-      
-      {/* 🔝 TOP ROW */}
-      <HStack
-        style={{
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+  const renderHeader = () => (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      <VStack
+        style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12 }}
       >
-        {/* 🔙 BACK */}
-         <Pressable
-              onPress={() => routePage.back()}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-              }}
-              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-            >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={isDark ? "#fff" : "#020617"}
-              />
-            </Pressable>
-
-        {/* 🧠 TITLE */}
-        <ThemedText
-          numberOfLines={1}
+        {/* 🔝 TOP ROW */}
+        <HStack
           style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 18,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
-            paddingHorizontal: 8,
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          Combined Leaderboards
+          {/* 🔙 BACK */}
+          <Pressable
+            onPress={() => routePage.back()}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* 🧠 TITLE */}
+          <ThemedText
+            numberOfLines={1}
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontSize: 18,
+              fontWeight: "700",
+              color: isDark ? "#fff" : "#020617",
+              paddingHorizontal: 8,
+            }}
+          >
+            Combined Leaderboards
+          </ThemedText>
+
+          {/* ⚖️ RIGHT SPACER */}
+          <View style={{ width: 40 }} />
+        </HStack>
+
+        {/* 📌 SUBTITLE */}
+        <ThemedText
+          style={{
+            fontSize: 12,
+            color: isDark ? "#94a3b8" : "#64748b",
+            marginTop: 6,
+            textAlign: "center",
+          }}
+        >
+          Aggregate scores across multiple tournaments
         </ThemedText>
-
-        {/* ⚖️ RIGHT SPACER */}
-        <View style={{ width: 40 }} />
-      </HStack>
-
-      {/* 📌 SUBTITLE */}
-      <ThemedText
-        style={{
-          fontSize: 12,
-          color: isDark ? "#94a3b8" : "#64748b",
-          marginTop: 6,
-          textAlign: "center",
-        }}
-      >
-        Aggregate scores across multiple tournaments
-      </ThemedText>
-    </VStack>
-  </Box>
-);
+      </VStack>
+    </Box>
+  );
 
   return (
     <>
-      <SafeAreaView style={{ flex: 1,backgroundColor:isDark ? "#020617" : "#ffffff" }}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: isDark ? "#020617" : "#ffffff" }}
+      >
         {renderHeader()}
 
         <Watermark />
@@ -254,66 +257,72 @@ const renderHeader = () => (
               </Text>
             </Pressable>
 
-{/* Empty state */}
-{selectedTournamentNames.length === 0 && (
-    <VStack
-                                    style={{
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      paddingVertical: 60,
-                                      paddingHorizontal: 24,
-                                    }}
-                                  >
-                                    <View
-                                      style={{
-                                        backgroundColor: isDark
-                                          ? "rgba(30,41,59,0.5)"
-                                          : "rgba(241,245,249,0.8)",
-                                        padding: 18,
-                                        borderRadius: 50,
-                                        marginBottom: 16,
-                                      }}
-                                    >
-                                      <Ionicons
-                                        name="trophy"
-                                        size={32}
-                                        color={"#8bc34a"}
-                                      />
-                                    </View>
-                                    <ThemedText
-                                      style={{
-                                        fontSize: 18,
-                                        fontWeight: "600",
-                                        color: isDark ? "#f1f5f9" : "#0f172a",
-                                        marginBottom: 6,
-                                      }}
-                                    >
-No Leaderboard Generated
-                                    </ThemedText>
-                                    <ThemedText
-                                      style={{
-                                        fontSize: 14,
-                                        color: isDark ? "#94a3b8" : "#64748b",
-                                        textAlign: "center",
-                                        lineHeight: 20,
-                                      }}
-                                    >
-                                      Select tournaments from above and generate the combined standings.
-                                    </ThemedText>
-                                  </VStack>
-)}
+            {/* Empty state */}
+            {selectedTournamentNames.length === 0 && (
+              <VStack
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 60,
+                  paddingHorizontal: 24,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(30,41,59,0.5)"
+                      : "rgba(241,245,249,0.8)",
+                    padding: 18,
+                    borderRadius: 50,
+                    marginBottom: 16,
+                  }}
+                >
+                  <Ionicons name="trophy" size={32} color={"#8bc34a"} />
+                </View>
+                <ThemedText
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "600",
+                    color: isDark ? "#f1f5f9" : "#0f172a",
+                    marginBottom: 6,
+                  }}
+                >
+                  No Leaderboard Generated
+                </ThemedText>
+                <ThemedText
+                  style={{
+                    fontSize: 14,
+                    color: isDark ? "#94a3b8" : "#64748b",
+                    textAlign: "center",
+                    lineHeight: 20,
+                  }}
+                >
+                  Select tournaments from above and generate the combined
+                  standings.
+                </ThemedText>
+              </VStack>
+            )}
             {/* Selected tournament chips */}
             {selectedTournamentNames.length > 0 && (
               <>
-              <ThemedText style={{fontSize:16,fontWeight:"600",marginTop:10,marginBottom:5}}>Selected Tournaments:</ThemedText>
-               <HStack className="flex-wrap gap-2">
-                {selectedTournamentNames.map((name, i) => (
-                  <View key={i} style={styles.chip}>
-                    <Text style={styles.chipText}>{name}</Text>
-                  </View>
-                ))}
-              </HStack></>
-             
+                <ThemedText
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    marginTop: 10,
+                    marginBottom: 5,
+                  }}
+                >
+                  Selected Tournaments:
+                </ThemedText>
+                <HStack className="flex-wrap gap-2">
+                  {selectedTournamentNames.map((name, i) => (
+                    <View key={i} style={styles.chip}>
+                      <Text style={styles.chipText}>{name}</Text>
+                    </View>
+                  ))}
+                </HStack>
+              </>
             )}
 
             {/* Generate button */}
@@ -566,16 +575,20 @@ function CombinedPlayerCard({
     <View
       style={[
         cardStyles.card,
-        { borderColor: rank <= 3 ? rankColor : isDark ? "#333" : "#ddd", backgroundColor: isDark
-          ? "rgba(15, 23, 42, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
- },
+        {
+          borderColor: rank <= 3 ? rankColor : isDark ? "#333" : "#ddd",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+        },
       ]}
     >
       {/* HEADER */}
       <HStack style={cardStyles.header}>
         <View style={[cardStyles.rank, { backgroundColor: rankColor }]}>
-          <ThemedText style={{ fontWeight: "700", fontSize: 13, color: "#fff" }}>
+          <ThemedText
+            style={{ fontWeight: "700", fontSize: 13, color: "#fff" }}
+          >
             {rank}
           </ThemedText>
         </View>
@@ -628,7 +641,13 @@ function LeaderboardCardSkeleton({ isDark }: { isDark: boolean }) {
     >
       {/* Header row: rank circle + name + pts */}
       <HStack style={{ alignItems: "center" }}>
-        <Skeleton isDark={isDark} height={32} width={32} borderRadius={16} style={{ marginRight: 10 }} />
+        <Skeleton
+          isDark={isDark}
+          height={32}
+          width={32}
+          borderRadius={16}
+          style={{ marginRight: 10 }}
+        />
         <VStack style={{ flex: 1, gap: 6 }}>
           <Skeleton isDark={isDark} height={14} width="55%" />
           <Skeleton isDark={isDark} height={11} width="35%" />
@@ -724,8 +743,6 @@ const cardStyles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-
-
 
 const styles = StyleSheet.create({
   selectButton: {

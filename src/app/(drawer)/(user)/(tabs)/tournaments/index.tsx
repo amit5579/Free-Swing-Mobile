@@ -25,9 +25,9 @@ import {
   createMiniTournament,
   getAllTournaments,
   postAcceptanceWeiver,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getCourse } from "@/api/admin/courses";
+import { getCourse } from "@/api/modules/admin/courses.api";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -39,7 +39,6 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
-
 
 export default function TournamentsScreen() {
   const colorScheme = useColorScheme();
@@ -123,7 +122,7 @@ export default function TournamentsScreen() {
   // const renderHomeCourse = () => {
 
   //   return(
-      
+
   //   )
   // }
 
@@ -295,74 +294,79 @@ export default function TournamentsScreen() {
     );
   };
 
-const renderHeader = () => {
-  const handleCreate = () => setTModalVisible(true);
+  const renderHeader = () => {
+    const handleCreate = () => setTModalVisible(true);
 
-  return (
-    <Box
-      style={{
-        paddingVertical: 10,
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      {/* 🔝 TOP ROW */}
-      <HStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          // paddingTop: 14,
-          paddingBottom: 10,
-          alignItems: "center",
-          justifyContent: "center",
+          paddingVertical: 10,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🧠 TITLE */}
-        <ThemedText
+        {/* 🔝 TOP ROW */}
+        <HStack
           style={{
-            fontSize: 18,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
+            paddingHorizontal: 16,
+            // paddingTop: 14,
+            paddingBottom: 10,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          Tournaments
-        </ThemedText>
-      </HStack>
+          {/* 🧠 TITLE */}
+          <ThemedText
+            style={{
+              fontSize: 18,
+              fontWeight: "700",
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Tournaments
+          </ThemedText>
+        </HStack>
 
-      {/* 🔥 PRIMARY CTA */}
-      <Pressable
-        onPress={handleCreate}
-        style={{
-          marginHorizontal: 16,
-          marginBottom: 12,
-          paddingVertical: 12,
-          borderRadius: 12,
-          alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: 6,
-          backgroundColor: "#84cc16",
-        }}
-        android_ripple={{ color: "rgba(255,255,255,0.2)" }}
-      >
-        <Ionicons name="add" size={18} color="#fff" />
-        <ThemedText
+        {/* 🔥 PRIMARY CTA */}
+        <Pressable
+          onPress={handleCreate}
           style={{
-            color: "#fff",
-            fontWeight: "600",
-            fontSize: 14,
+            marginHorizontal: 16,
+            marginBottom: 12,
+            paddingVertical: 12,
+            borderRadius: 12,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 6,
+            backgroundColor: "#84cc16",
           }}
+          android_ripple={{ color: "rgba(255,255,255,0.2)" }}
         >
-          Create Mini Tournament
-        </ThemedText>
-      </Pressable>
-    </Box>
-  );
-};
+          <Ionicons name="add" size={18} color="#fff" />
+          <ThemedText
+            style={{
+              color: "#fff",
+              fontWeight: "600",
+              fontSize: 14,
+            }}
+          >
+            Create Mini Tournament
+          </ThemedText>
+        </Pressable>
+      </Box>
+    );
+  };
 
   return (
     <>
-      <View style={[styles.container, {backgroundColor: isDark ? "#020617" : "#ffffff",}]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: isDark ? "#020617" : "#ffffff" },
+        ]}
+      >
         <View style={styles.safeArea}>
           <Watermark />
 
@@ -1507,7 +1511,14 @@ const renderHeader = () => {
                         .find((c: any) => c.courseId === selectedCourse)
                         ?.teeBoxes?.map((item: any) => {
                           return {
-                            label: item.name + " (Slope:" + item.slope + " / " + "Rating:" + item.rating + ")",
+                            label:
+                              item.name +
+                              " (Slope:" +
+                              item.slope +
+                              " / " +
+                              "Rating:" +
+                              item.rating +
+                              ")",
                             value: item.teeBoxId,
                           };
                         }) || []
@@ -1687,7 +1698,7 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     marginBottom: 50,
   },
-  
+
   createButton: {
     backgroundColor: "#8bc34a",
     paddingHorizontal: 7,

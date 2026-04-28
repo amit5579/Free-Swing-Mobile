@@ -13,7 +13,7 @@ import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/modules/dashboard.api";
 
 import { Colors } from "@/constants/theme";
 
@@ -61,26 +61,59 @@ export default function AdminTabLayout() {
         headerLeft: () => (
           <Image
             source={require("@/assets/FreeSwing.png")}
-            style={{ width: 150, height: 80, marginLeft: -20, resizeMode: "contain" }}
+            style={{
+              width: 150,
+              height: 80,
+              marginLeft: -20,
+              resizeMode: "contain",
+            }}
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginRight: 16,
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.push("/(drawer)/(admin)/(importantUpdate)")}
-              style={{ marginRight: 16, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(139,195,74,0.1)", padding: 8, borderRadius: 20 }}
+              style={{
+                marginRight: 16,
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(139,195,74,0.1)",
+                padding: 8,
+                borderRadius: 20,
+              }}
             >
-              <Ionicons
-                name="megaphone-outline"
-                size={22}
-                color="#8BC34A"
+              <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "#FF5252",
+                  borderWidth: 1.5,
+                  borderColor: isDark ? "#000" : "#f2f2f2",
+                }}
               />
-              <View style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF5252", borderWidth: 1.5, borderColor: isDark ? "#000" : "#f2f2f2" }} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-              style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
+              onPress={() =>
+                navigation.getParent()?.dispatch(DrawerActions.openDrawer())
+              }
+              style={{
+                borderRadius: 21,
+                overflow: "hidden",
+                width: 42,
+                height: 42,
+              }}
             >
               {loading ? (
                 <View
@@ -124,7 +157,11 @@ export default function AdminTabLayout() {
                   }}
                 >
                   <Text
-                    style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}
+                    style={{
+                      color: isDark ? "#fff" : "#2E7D32",
+                      fontSize: 18,
+                      fontWeight: "bold",
+                    }}
                   >
                     {profile?.username?.trim()
                       ? profile.username.trim()[0].toUpperCase()
@@ -139,32 +176,29 @@ export default function AdminTabLayout() {
         tabBarInactiveTintColor: "#9E9E9E",
         tabBarStyle: {
           // backgroundColor: "#ffffff",
-          backgroundColor: isDark
-            ? "rgba(30,30,30,0.75)"
-            : "#fff",
+          backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff",
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
       }}
     >
-
       <Tabs.Screen
         name="dashboard"
         options={{
           // headerLeft: () => (
           //   <View style={{ marginLeft: 20, paddingVertical: 10 }}>
-          //     <Text style={{ 
-          //       color: "#8BC34A", 
-          //       fontSize: 22, 
+          //     <Text style={{
+          //       color: "#8BC34A",
+          //       fontSize: 22,
           //       fontWeight: "900",
           //       letterSpacing: -1,
           //       lineHeight: 22
           //     }}>
           //       FREE SWING
           //     </Text>
-          //     <Text style={{ 
-          //       color: isDark ? "#A3A3A3" : "#737373", 
-          //       fontSize: 8, 
+          //     <Text style={{
+          //       color: isDark ? "#A3A3A3" : "#737373",
+          //       fontSize: 8,
           //       fontWeight: "900",
           //       letterSpacing: 2.5,
           //       textTransform: "uppercase",
@@ -177,7 +211,11 @@ export default function AdminTabLayout() {
 
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -187,7 +225,11 @@ export default function AdminTabLayout() {
         options={{
           title: "Members",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -215,7 +257,11 @@ export default function AdminTabLayout() {
         options={{
           title: "Courses",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "flag" : "flag-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "flag" : "flag-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -225,7 +271,11 @@ export default function AdminTabLayout() {
         options={{
           title: "Pro Shop",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "cart" : "cart-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "cart" : "cart-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -247,7 +297,7 @@ export default function AdminTabLayout() {
           tabBarStyle: { display: "none" },
         }}
       />
-      
+
       {/* <Tabs.Screen
         name="playerStatistics"
         options={{

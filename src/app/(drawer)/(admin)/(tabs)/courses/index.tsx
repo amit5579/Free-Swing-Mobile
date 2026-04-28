@@ -23,8 +23,8 @@ import { Dropdown } from "react-native-element-dropdown";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createCourse, deleteCourse } from "@/api/admin/courses";
-import { getCourse } from "@/api/admin/courses";
+import { createCourse, deleteCourse } from "@/api/modules/admin/courses.api";
+import { getCourse } from "@/api/modules/admin/courses.api";
 import { courseSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
 import { Badge, BadgeText } from "@/components/badge";
@@ -183,80 +183,80 @@ export default function adminCoursePage() {
     );
   };
 
-const renderHeader = () => (
-  <Box
-    style={{
-      paddingHorizontal: 16,
-      paddingTop: 14,
-      paddingBottom: 12,
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    <HStack
+  const renderHeader = () => (
+    <Box
       style={{
-        alignItems: "center",
-        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
-      {/* 🧠 LEFT CONTENT */}
-      <VStack style={{ flex: 1, paddingRight: 10 }}>
-        <ThemedText
-          style={{
-            fontSize: 18,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
-          }}
-        >
-          Golf Courses
-        </ThemedText>
-
-        <ThemedText
-          style={{
-            fontSize: 12,
-            color: isDark ? "#94a3b8" : "#64748b",
-            marginTop: 2,
-          }}
-        >
-          Manage and explore your courses
-        </ThemedText>
-      </VStack>
-
-      {/* ➕ ADD BUTTON */}
-      <Pressable
-        onPress={() => {
-          setIsEditMode(false);
-          setEditingCourse(null);
-          reset();
-          setModalVisible(true);
-        }}
+      <HStack
         style={{
-          flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderRadius: 10,
-          backgroundColor: "#84cc16",
+          justifyContent: "space-between",
         }}
-        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
       >
-        <Ionicons name="add" size={18} color="#fff" />
+        {/* 🧠 LEFT CONTENT */}
+        <VStack style={{ flex: 1, paddingRight: 10 }}>
+          <ThemedText
+            style={{
+              fontSize: 18,
+              fontWeight: "700",
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Golf Courses
+          </ThemedText>
 
-        <ThemedText
-          style={{
-            color: "#fff",
-            fontWeight: "600",
-            fontSize: 13,
-            marginLeft: 6,
+          <ThemedText
+            style={{
+              fontSize: 12,
+              color: isDark ? "#94a3b8" : "#64748b",
+              marginTop: 2,
+            }}
+          >
+            Manage and explore your courses
+          </ThemedText>
+        </VStack>
+
+        {/* ➕ ADD BUTTON */}
+        <Pressable
+          onPress={() => {
+            setIsEditMode(false);
+            setEditingCourse(null);
+            reset();
+            setModalVisible(true);
           }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderRadius: 10,
+            backgroundColor: "#84cc16",
+          }}
+          android_ripple={{ color: "rgba(0,0,0,0.1)" }}
         >
-          Add
-        </ThemedText>
-      </Pressable>
-    </HStack>
-  </Box>
-);
+          <Ionicons name="add" size={18} color="#fff" />
+
+          <ThemedText
+            style={{
+              color: "#fff",
+              fontWeight: "600",
+              fontSize: 13,
+              marginLeft: 6,
+            }}
+          >
+            Add
+          </ThemedText>
+        </Pressable>
+      </HStack>
+    </Box>
+  );
 
   return (
     <>
@@ -707,8 +707,8 @@ function CourseCardAdmin({
                     paddingVertical: 5,
                     borderRadius: 7,
                     backgroundColor: "#ef4444",
-                    alignItems:"center",
-                    justifyContent:"center"
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                   onPress={() => {
                     setDeleteModalVisible(false);

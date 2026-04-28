@@ -1,4 +1,4 @@
-import https from "./https";
+import client from "../client";
 
 export type ProductApi = {
   id: number;
@@ -13,7 +13,7 @@ export type ProductApi = {
 
 export const getProducts = async (): Promise<ProductApi[]> => {
   try {
-    const response = await https.get("Products");
+    const response = await client.get("/Products");
     return response.data;
   } catch (error) {
     console.error("Get Products API Error:", error);

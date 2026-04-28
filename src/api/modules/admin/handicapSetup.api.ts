@@ -1,4 +1,4 @@
-import https from "../https";
+import client from "../../client";
 
 export type User = {
   id: string;
@@ -20,7 +20,7 @@ export type User = {
 
 export const getUsers = async (): Promise<User[]> => {
   try {
-    const response = await https.get("/User/list");
+    const response = await client.get("/User/list");
     return response.data;
   } catch (error) {
     console.error("Fetching Users Error:", error);
@@ -34,16 +34,16 @@ export const updateHandicapApi = async (
 ): Promise<boolean> => {
   try {
 
-    const response = await https.put(
+    const response = await client.put(
       `/User/set-handicap/${userId}`,
-      handicap, 
+      handicap,
       {
         headers: {
           "Content-Type": "application/json",
         },
       }
     );
-    
+
     console.log(`📡 Update status for ${userId}:`, response.status);
     return response.status >= 200 && response.status < 300;
   } catch (error: any) {

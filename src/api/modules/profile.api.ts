@@ -1,4 +1,4 @@
-import https from "./https";
+import client from "../client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const getProfile = async () => {
@@ -8,7 +8,7 @@ export const getProfile = async () => {
       throw new Error("User ID not found in storage");
     }
 
-    const response = await https.get(`User/${userId}`);
+    const response = await client.get(`User/${userId}`);
     // console.log('getProfile response lag', response);
     return response.data;
   } catch (error) {
@@ -31,7 +31,7 @@ export const uploadProfileImage = async (image: any) => {
       type: image.mimeType || "image/jpeg",
     } as any);
 
-    const response = await https.post(`User/${userId}/profile-picture`, formData, {
+    const response = await client.post(`User/${userId}/profile-picture`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -51,7 +51,7 @@ export const getCertificateByUserId = async () => {
       throw new Error("User ID not found in storage");
     }
 
-    const response = await https.get(`User/${userId}/certificate`);
+    const response = await client.get(`User/${userId}/certificate`);
     // console.log('getCertificateByUserId response lag', response);
     return response.data;
   } catch (error) {
