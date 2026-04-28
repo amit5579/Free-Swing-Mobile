@@ -18,7 +18,7 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFeed, FeedApi } from "@/api/admin/dashboard";
+import { getFeed, FeedApi, verifyScoreApi } from "@/api/admin/dashboard";
 import { likeFeedApi, getLikedUsersApi, LikedUser } from "@/api/dashboard";
 import Watermark from "@/components/watermark";
 import { Button, ButtonText } from "@/components/button";
@@ -578,6 +578,7 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
           text: "Verify",
           onPress: async () => {
             try {
+              // Optimistic update
               setCards((prev) =>
                 prev.map((c) =>
                   c.id === id
@@ -590,8 +591,13 @@ export function GameFeedContent({ hideHeader = false, searchQuery = "" }: { hide
                     : c
                 )
               );
+              
+              await verifyScoreApi(id);
             } catch (error) {
               console.error("verify score error:", error);
+              // Revert optimistic update on error
+              fetchFeed();
+              Alert.alert("Error", "Failed to verify scorecard. Please try again.");
             }
           }
         }

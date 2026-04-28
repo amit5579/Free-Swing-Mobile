@@ -1,6 +1,6 @@
 import https from "./https";
 
-/* -*-*-*-*- Feed API -*-*-*-*- */
+/* -*-*-*-*- Feedsw API -*-*-*-*- */
 
 export interface FeedItem {
   roundRefId: number;
@@ -246,7 +246,7 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
 
 export const deleteScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.delete(`/scorecard/${scorecardId}`);
+    const response = await https.delete(`scorecard/${scorecardId}`);
     return response.data;
   } catch (error) {
     console.error("Delete Scorecard Error:", error);
@@ -257,7 +257,7 @@ export const deleteScorecardApi = async (scorecardId: string | number) => {
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
-    const response = await https.put(`/scorecard/update`, { scorecardId, holeScores });
+    const response = await https.put(`scorecard/update`, { scorecardId, holeScores });
     return response.data;
   } catch (error) {
     console.error("Updating scorecard error:", error);
@@ -267,7 +267,7 @@ export const updateScorecardApi = async (scorecardId: string | number, holeScore
 
 export const finishScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.post(`/scorecard/save`, { scorecardId });
+    const response = await https.post(`scorecard/save`, { scorecardId });
     return response.data;
   } catch (error) {
     console.error("Finishing scorecard error:", error);
@@ -287,7 +287,7 @@ export const updateHoleScoresApi = async (scorecardId: string | number, holes: a
       userId: userId || h.userId
     }));
 
-    const response = await https.post(`/scorecard/save`, payload);
+    const response = await https.post(`scorecard/save`, payload);
     console.log("updateHoleScoresApi response:", response.status, response.data);
     return response.data;
   } catch (error: any) {
