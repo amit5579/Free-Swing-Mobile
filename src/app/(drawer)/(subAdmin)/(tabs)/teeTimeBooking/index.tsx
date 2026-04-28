@@ -641,22 +641,31 @@ export default function SubAdminTeeBookingPage() {
             {/* Date tabs */}
             <ThemedView
               style={{
-                 backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                paddingVertical: 10,
-                paddingHorizontal: 16,
+                backgroundColor: isDark
+                  ? "rgba(30, 41, 59, 0.5)"
+                  : "rgba(255, 255, 255, 0.8)",
+                borderColor: isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0",
+                borderWidth: 1,
+                borderRadius: 20,
+                paddingVertical: 16,
+                paddingHorizontal: 12,
+                shadowColor: "#000",
+                // shadowOffset: { width: 0, height: 4 },
+                // shadowOpacity: isDark ? 0.3 : 0.05,
+                // shadowRadius: 12,
+                // elevation: 2,
               }}
-              className="mb-6 rounded-xl"
+              className="mb-6"
             >
               <ThemedText
                 style={{
-                  fontSize: 16,
-                  fontWeight: "600",
-                  marginBottom: 10,
-                  color: isDark ? "#ffffff" : "#020617",
+                  fontSize: 14,
+                  fontWeight: "700",
+                  marginBottom: 16,
+                  color: isDark ? "#94a3b8" : "#64748b",
                   textAlign: "center",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
                 }}
               >
                 Select Date
@@ -665,39 +674,87 @@ export default function SubAdminTeeBookingPage() {
               <HStack
                 style={{
                   justifyContent: "space-between",
-                  gap: 8,
+                  gap: 10,
                 }}
               >
                 {availableDates.map((date: string, index: number) => {
+                  const dateObj = new Date(date);
+                  const dayName = dateObj.toLocaleDateString("en-US", {
+                    weekday: "short",
+                  });
+                  const dayNumber = dateObj.getDate();
+                  const monthName = dateObj.toLocaleDateString("en-US", {
+                    month: "short",
+                  });
                   const active = selectedDateIndex === index;
+
                   return (
                     <Pressable
                       key={index}
                       onPress={() => setSelectedDateIndex(index)}
                       style={{
                         flex: 1,
-                        paddingVertical: 10,
-                        borderRadius: 10,
+                        paddingVertical: 12,
+                        borderRadius: 15,
                         alignItems: "center",
                         backgroundColor: active
                           ? "#8BC34A"
                           : isDark
-                            ? "#1e293b"
-                            : "#f3f4f6",
+                            ? "rgba(255,255,255,0.05)"
+                            : "#f8fafc",
+                        borderWidth: 1,
+                        borderColor: active
+                          ? "#8BC34A"
+                          : isDark
+                            ? "rgba(255,255,255,0.1)"
+                            : "#e2e8f0",
+                        shadowColor: active ? "#8BC34A" : "transparent",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: active ? 4 : 0,
                       }}
                     >
                       <Text
                         style={{
-                          fontSize: 12,
-                          fontWeight: "500",
+                          fontSize: 10,
+                          fontWeight: "700",
+                          color: active
+                            ? "rgba(255,255,255,0.9)"
+                            : isDark
+                              ? "#94a3b8"
+                              : "#64748b",
+                          textTransform: "uppercase",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {dayName}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "800",
                           color: active
                             ? "#fff"
                             : isDark
-                              ? "#cbd5f5"
-                              : "#374151",
+                              ? "#f1f5f9"
+                              : "#1e293b",
                         }}
                       >
-                        {formatDateString(date)}
+                        {dayNumber}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          fontWeight: "600",
+                          color: active
+                            ? "rgba(255,255,255,0.8)"
+                            : isDark
+                              ? "#64748b"
+                              : "#94a3b8",
+                        }}
+                      >
+                        {monthName}
                       </Text>
                     </Pressable>
                   );

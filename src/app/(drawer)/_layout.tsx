@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { useColorScheme, useThemeControls } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
 import { getUserProfile, UserProfile } from "@/api/dashboard";
@@ -49,23 +49,30 @@ function CustomDrawerContent({ navigation }: any) {
     }
   };
 
+  const loadRole = async () => {
+    const storedRole = await AsyncStorage.getItem("role");
+    const normalizedRole =
+      storedRole?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
+
+    if (normalizedRole === "admin") {
+      setIsAdmin(true);
+    } else if (normalizedRole === "subadmin") {
+      setIsSubAdmin(true);
+    }
+    setRole(storedRole);
+  };
+
   useEffect(() => {
-    const loadRole = async () => {
-      const storedRole = await AsyncStorage.getItem("role");
-      const normalizedRole =
-        storedRole?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
-
-      if (normalizedRole === "admin") {
-        setIsAdmin(true);
-      } else if (normalizedRole === "subadmin") {
-        setIsSubAdmin(true);
-      }
-      setRole(storedRole);
-    };
-
     loadRole();
     fetchProfile();
-  }, []);
+  }, [fetchProfile, loadRole]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadRole();
+      fetchProfile();
+    }, [])
+  );
 
   return (
     <LinearGradient
@@ -200,7 +207,7 @@ function CustomDrawerContent({ navigation }: any) {
                   },
                 ]}
               />
-              
+
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
@@ -314,7 +321,6 @@ function CustomDrawerContent({ navigation }: any) {
 
           {!isAdmin && !isSubAdmin && (
             <>
-              
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
@@ -326,11 +332,7 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons
-                    name="diamond-outline"
-                    size={22}
-                    color="#8bc34a"
-                  />
+                  <Ionicons name="diamond-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Subscription</Text>
                 <Ionicons
