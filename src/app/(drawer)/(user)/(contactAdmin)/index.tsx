@@ -24,7 +24,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { contactAdminSchema, ContactAdminType } from "@/schema/userSchemas";
 
 import { Dropdown } from "react-native-element-dropdown";
-import { getFeedbackHistory, sendFeedback } from "@/api/admin/feedback";
+import {
+  getFeedbackHistory,
+  sendFeedback,
+} from "@/api/modules/admin/feedback.api";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function ContactAdminPage() {
@@ -87,71 +90,71 @@ export default function ContactAdminPage() {
     });
   };
 
- const RenderHeader = () => {
-       return (
-         <Box
-           style={{
-             backgroundColor: isDark ? "#020617" : "#ffffff",
-             borderBottomWidth: 1,
-             borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-           }}
-         >
-           <VStack
-             style={{
-               paddingHorizontal: 16,
-               paddingTop: 12,
-               paddingBottom: 12,
-             }}
-           >
-             {/* 🔝 TOP ROW */}
-             <HStack
-               style={{
-                 alignItems: "center",
-                 justifyContent: "space-between",
-               }}
-             >
-               {/* 🔙 BACK */}
-               <Pressable
-                 onPress={() => routePage.back()}
-                 style={{
-                   width: 40,
-                   height: 40,
-                   borderRadius: 10,
-                   justifyContent: "center",
-                   alignItems: "center",
-                   backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-                 }}
-                 android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-               >
-                 <Ionicons
-                   name="arrow-back"
-                   size={20}
-                   color={isDark ? "#fff" : "#020617"}
-                 />
-               </Pressable>
-   
-               {/* 🧠 TITLE */}
-               <ThemedText
-                 numberOfLines={1}
-                 style={{
-                   flex: 1,
-                   textAlign: "center",
-                   fontSize: 18,
-                   fontWeight: "700",
-                   color: isDark ? "#fff" : "#020617",
-                   paddingHorizontal: 8,
-                 }}
-               >
-                Contact Admin
-               </ThemedText>
-   
-               {/* ⚖️ RIGHT SPACER */}
-               <View style={{ width: 40 }} />
-             </HStack>
-           </VStack>
-         </Box>
-       );
-     };
+  const RenderHeader = () => {
+    return (
+      <Box
+        style={{
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        }}
+      >
+        <VStack
+          style={{
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: 12,
+          }}
+        >
+          {/* 🔝 TOP ROW */}
+          <HStack
+            style={{
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+
+            {/* 🧠 TITLE */}
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: "700",
+                color: isDark ? "#fff" : "#020617",
+                paddingHorizontal: 8,
+              }}
+            >
+              Contact Admin
+            </ThemedText>
+
+            {/* ⚖️ RIGHT SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   const renderFeedbackItem = ({ item }: any) => (
     <Box
@@ -186,7 +189,9 @@ export default function ContactAdminPage() {
               backgroundColor: "#facc15",
             }}
           >
-            <ThemedText style={{ fontSize: 12 }}>{item.status == "InProgress" ? "In Progress" : item.status}</ThemedText>
+            <ThemedText style={{ fontSize: 12 }}>
+              {item.status == "InProgress" ? "In Progress" : item.status}
+            </ThemedText>
           </View>
         </HStack>
       </HStack>

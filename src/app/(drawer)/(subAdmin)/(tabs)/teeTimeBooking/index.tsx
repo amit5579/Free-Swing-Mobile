@@ -25,7 +25,7 @@ import {
   cancelSeatBooking,
   getSubAdminCourses,
   getSubAdminTeeTimeSeats,
-} from "@/api/teeTime";
+} from "@/api/modules/teeTime.api";
 
 export default function SubAdminTeeBookingPage() {
   const colorScheme = useColorScheme();
@@ -276,69 +276,69 @@ export default function SubAdminTeeBookingPage() {
   }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
 
   const RenderHeader = () => {
-  return (
-    <Box
-      style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      <VStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 14,
-          alignItems: "center",
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🧠 TITLE */}
-        <ThemedText
+        <VStack
           style={{
-            fontSize: 18,
-            fontWeight: "700",
-            textAlign: "center",
-            color: isDark ? "#fff" : "#020617",
-          }}
-        >
-          Tee Time Booking
-        </ThemedText>
-
-        {/* 🔽 ACTION BUTTON */}
-        <Pressable
-          onPress={handleDownloadPDF}
-          style={{
-            marginTop: 10,
-            flexDirection: "row",
-            paddingHorizontal: 14,
-            paddingVertical: 10,
-            borderRadius: 10,
-            backgroundColor: "rgba(139,195,74,0.12)",
-            borderWidth: 1,
-            borderColor: "rgba(139,195,74,0.3)",
-            width: "100%",
-            justifyContent: "center",
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 14,
             alignItems: "center",
           }}
-          android_ripple={{ color: "rgba(0,0,0,0.05)" }}
         >
-          <Ionicons name="download-outline" size={16} color="#2E7D32" />
-
+          {/* 🧠 TITLE */}
           <ThemedText
             style={{
-              marginLeft: 6,
-              fontSize: 13,
-              fontWeight: "600",
-              color: "#2E7D32",
+              fontSize: 18,
+              fontWeight: "700",
+              textAlign: "center",
+              color: isDark ? "#fff" : "#020617",
             }}
           >
-            Download Report
+            Tee Time Booking
           </ThemedText>
-        </Pressable>
-      </VStack>
-    </Box>
-  );
-};
+
+          {/* 🔽 ACTION BUTTON */}
+          <Pressable
+            onPress={handleDownloadPDF}
+            style={{
+              marginTop: 10,
+              flexDirection: "row",
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              borderRadius: 10,
+              backgroundColor: "rgba(139,195,74,0.12)",
+              borderWidth: 1,
+              borderColor: "rgba(139,195,74,0.3)",
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.05)" }}
+          >
+            <Ionicons name="download-outline" size={16} color="#2E7D32" />
+
+            <ThemedText
+              style={{
+                marginLeft: 6,
+                fontSize: 13,
+                fontWeight: "600",
+                color: "#2E7D32",
+              }}
+            >
+              Download Report
+            </ThemedText>
+          </Pressable>
+        </VStack>
+      </Box>
+    );
+  };
 
   const TeeRow = ({ slot }: any) => {
     return (
@@ -348,10 +348,11 @@ export default function SubAdminTeeBookingPage() {
           borderRadius: 14,
           padding: 14,
           borderWidth: 1,
- backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",          shadowColor: "#000",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          shadowColor: "#000",
           shadowOpacity: isDark ? 0.2 : 0.05,
         }}
       >
@@ -821,10 +822,10 @@ export default function SubAdminTeeBookingPage() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                 backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
               }}
             >
               {tabs.map((tab) => {

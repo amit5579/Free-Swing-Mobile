@@ -2,12 +2,12 @@
 
 // get players - SubAdmin/my-players
 
-import https from "../https";
+import client from "../../client";
 
 
 export const getSubAdminPlayers = async () => {
     try {
-        const response = await https.get(`SubAdmin/my-players`);
+        const response = await client.get(`SubAdmin/my-players`);
         return response.data;
     } catch (error) {
         console.error("Error fetching players:", error);
@@ -20,7 +20,7 @@ export const getSubAdminPlayers = async () => {
 
 export const getSubAdminCourses = async () => {
     try {
-        const response = await https.get(`SubAdmin/my-courses`);
+        const response = await client.get(`SubAdmin/my-courses`);
         return response.data;
     } catch (error) {
         console.error("Error fetching courses:", error);
@@ -33,7 +33,7 @@ export const getSubAdminCourses = async () => {
 
 export const invitePlayer = async (data: any) => {
     try {
-        const response = await https.post(`SubAdmin/invite-player`, data);
+        const response = await client.post(`SubAdmin/invite-player`, data);
         return response.data;
     } catch (error) {
         console.error("Error inviting player:", error);
@@ -45,7 +45,7 @@ export const invitePlayer = async (data: any) => {
 // get certificate by userId - User/2/certificate
 export const getPlayerCertificateById = async (userId: number) => {
     try {
-        const response = await https.get(`User/${userId}/certificate`);
+        const response = await client.get(`User/${userId}/certificate`);
         return response.data;
     } catch (error) {
         console.error("Fetching certificate by userId Error:", error);
@@ -56,7 +56,7 @@ export const getPlayerCertificateById = async (userId: number) => {
 // block player - SubAdmin/block-player/43
 export const blockPlayer = async (id: number) => {
     try {
-        const response = await https.put(`SubAdmin/block-player/${id}`);
+        const response = await client.put(`SubAdmin/block-player/${id}`);
         return response.data;
     } catch (error) {
         console.error("Error blocking player:", error);
@@ -66,7 +66,7 @@ export const blockPlayer = async (id: number) => {
 
 export const unblockPlayer = async (id: number) => {
     try {
-        const response = await https.put(`SubAdmin/unblock-player/${id}`);
+        const response = await client.put(`SubAdmin/unblock-player/${id}`);
         return response.data;
     } catch (error) {
         console.error("Error unblocking player:", error);
@@ -79,7 +79,7 @@ export const unblockPlayer = async (id: number) => {
 
 export const deleteSubAdminPlayer = async (id: number) => {
     try {
-        const response = await https.delete(`SubAdmin/remove-player/${id}`);
+        const response = await client.delete(`SubAdmin/remove-player/${id}`);
         return response.data;
     } catch (error) {
         console.error("Error deleting player:", error);
@@ -92,7 +92,7 @@ export const deleteSubAdminPlayer = async (id: number) => {
 
 export const getPlayerGameHistory = async (id: number) => {
     try {
-        const response = await https.get(`SubAdmin/my-players/${id}/history`);
+        const response = await client.get(`SubAdmin/my-players/${id}/history`);
         // console.log("response", response.data);
         return response.data;
     } catch (error) {
@@ -106,7 +106,7 @@ export const getPlayerGameHistory = async (id: number) => {
 
 export const getPlayerScorecard = async (id: number) => {
     try {
-        const response = await https.get(`scorecard/details/${id}`);
+        const response = await client.get(`scorecard/details/${id}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching player scorecard:", error);

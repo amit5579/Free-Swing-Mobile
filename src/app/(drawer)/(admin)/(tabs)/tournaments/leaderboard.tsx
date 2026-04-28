@@ -18,7 +18,7 @@ import {
   getLeaderboard,
   getTeeboxDetails,
   postSecretHoles,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import { Text } from "@/components/text";
@@ -116,88 +116,88 @@ export default function LeaderboardPage() {
   };
 
   const RenderHeader = () => {
-  return (
-    <HStack
-      style={{
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      {/* 🔙 BACK BUTTON */}
-      <Pressable
-        onPress={() => routePage.back()}
+    return (
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 12,
           alignItems: "center",
-          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          justifyContent: "space-between",
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
-      </Pressable>
-
-      {/* 🧠 TITLE BLOCK */}
-      <VStack
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          paddingHorizontal: 6,
-        }}
-      >
-        {/* LABEL */}
-        <ThemedText
+        {/* 🔙 BACK BUTTON */}
+        <Pressable
+          onPress={() => routePage.back()}
           style={{
-            fontSize: 12,
-            color: isDark ? "#94a3b8" : "#64748b",
-            fontWeight: "500",
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
           }}
         >
-          Leaderboard
-        </ThemedText>
-
-        {/* MAIN TITLE */}
-        {loading ? (
-          <Skeleton
-            isDark={isDark}
-            height={18}
-            width={140}
-            style={{ marginTop: 2, borderRadius: 6 }}
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
           />
-        ) : (
+        </Pressable>
+
+        {/* 🧠 TITLE BLOCK */}
+        <VStack
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 6,
+          }}
+        >
+          {/* LABEL */}
           <ThemedText
-            numberOfLines={1}
-            ellipsizeMode="tail"
             style={{
-              fontSize: 17,
-              fontWeight: "700",
-              marginTop: 2,
-              maxWidth: "85%",
-              textAlign: "center",
+              fontSize: 12,
+              color: isDark ? "#94a3b8" : "#64748b",
+              fontWeight: "500",
             }}
           >
-            {tournamentName}
+            Leaderboard
           </ThemedText>
-        )}
-      </VStack>
 
-      {/* ⚖️ RIGHT PLACEHOLDER */}
-      <View style={{ width: 40 }} />
-    </HStack>
-  );
-};
+          {/* MAIN TITLE */}
+          {loading ? (
+            <Skeleton
+              isDark={isDark}
+              height={18}
+              width={140}
+              style={{ marginTop: 2, borderRadius: 6 }}
+            />
+          ) : (
+            <ThemedText
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={{
+                fontSize: 17,
+                fontWeight: "700",
+                marginTop: 2,
+                maxWidth: "85%",
+                textAlign: "center",
+              }}
+            >
+              {tournamentName}
+            </ThemedText>
+          )}
+        </VStack>
+
+        {/* ⚖️ RIGHT PLACEHOLDER */}
+        <View style={{ width: 40 }} />
+      </HStack>
+    );
+  };
 
   const RenderSecretHoles = () => {
     const isDark = colorScheme === "dark";
@@ -666,7 +666,13 @@ export default function LeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowRight = ({ data, type }: { data: any[]; type: "par" | "si" }) => (
+  const InfoRowRight = ({
+    data,
+    type,
+  }: {
+    data: any[];
+    type: "par" | "si";
+  }) => (
     <HStack
       style={{
         height: 40,
@@ -687,7 +693,9 @@ export default function LeaderboardPage() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       {data.slice(9, 18).map((h, i) => (
         <ThemedText
@@ -700,7 +708,9 @@ export default function LeaderboardPage() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       <ThemedText
         style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
@@ -758,7 +768,13 @@ export default function LeaderboardPage() {
     );
   };
 
-  const PlayerRowRight = ({ player, index }: { player: any; index: number }) => {
+  const PlayerRowRight = ({
+    player,
+    index,
+  }: {
+    player: any;
+    index: number;
+  }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? isDark
@@ -814,7 +830,9 @@ export default function LeaderboardPage() {
         >
           {player.back9}
         </ThemedText>
-        <ThemedText style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}>
+        <ThemedText
+          style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}
+        >
           {player.gross}
         </ThemedText>
         <ThemedText
@@ -850,8 +868,16 @@ export default function LeaderboardPage() {
     const rows = 8;
 
     return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
-        <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        <HStack
+          style={{
+            borderTopWidth: 1,
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          }}
+        >
           {/* Left fixed skeleton */}
           <VStack style={{ width: LEFT_FIXED_WIDTH }}>
             <View
@@ -978,7 +1004,11 @@ export default function LeaderboardPage() {
                     </>
                   )}
                   {leaderboard.map((player, idx) => (
-                    <PlayerRowLeft key={player.userId} player={player} index={idx} />
+                    <PlayerRowLeft
+                      key={player.userId}
+                      player={player}
+                      index={idx}
+                    />
                   ))}
                 </VStack>
 
@@ -993,14 +1023,20 @@ export default function LeaderboardPage() {
                       </>
                     )}
                     {leaderboard.map((player, idx) => (
-                      <PlayerRowRight key={player.userId} player={player} index={idx} />
+                      <PlayerRowRight
+                        key={player.userId}
+                        player={player}
+                        index={idx}
+                      />
                     ))}
                   </VStack>
                 </ScrollView>
               </HStack>
-               {leaderboard.length ==0 && (
-                      <ThemedText style={{textAlign:"center" , marginTop: 3}}>No Players or scores available yet.</ThemedText>
-                    )}
+              {leaderboard.length == 0 && (
+                <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
+                  No Players or scores available yet.
+                </ThemedText>
+              )}
             </ScrollView>
           )}
         </View>

@@ -30,8 +30,8 @@ import {
   deleteTournament,
   getTournaments,
   updateTournament,
-} from "@/api/admin/tournaments";
-import { getCourse, getTeeBox } from "@/api/admin/courses";
+} from "@/api/modules/admin/tournaments.api";
+import { getCourse, getTeeBox } from "@/api/modules/admin/courses.api";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -289,69 +289,69 @@ export default function adminTournamentsPage() {
     );
   };
 
- const renderHeader = () => (
-  <HStack
-    style={{
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    {/* 🧠 TITLE */}
-    <ThemedText
+  const renderHeader = () => (
+    <HStack
       style={{
-        fontSize: 20,
-        fontWeight: "700",
-        color: isDark ? "#fff" : "#020617",
-      }}
-    >
-      Tournaments
-    </ThemedText>
-
-    {/* ➕ CREATE BUTTON */}
-    <Pressable
-      onPress={() => {
-        setIsEditMode(false);
-        reset({
-          name: "",
-          courseId: [],
-          teeColor: [],
-          scoringType: [],
-          startDate: null,
-          endDate: null,
-        });
-        setEditingCourse(null);
-        setModalVisible(true);
-      }}
-      style={{
-        flexDirection: "row",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 10,
-        backgroundColor: "#84cc16",
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
-      android_ripple={{ color: "rgba(0,0,0,0.1)" }}
     >
-      <Ionicons name="add" size={18} color="#fff" />
-
+      {/* 🧠 TITLE */}
       <ThemedText
         style={{
-          color: "#fff",
-          fontWeight: "600",
-          fontSize: 13,
-          marginLeft: 6,
+          fontSize: 20,
+          fontWeight: "700",
+          color: isDark ? "#fff" : "#020617",
         }}
       >
-        Create
+        Tournaments
       </ThemedText>
-    </Pressable>
-  </HStack>
-);
+
+      {/* ➕ CREATE BUTTON */}
+      <Pressable
+        onPress={() => {
+          setIsEditMode(false);
+          reset({
+            name: "",
+            courseId: [],
+            teeColor: [],
+            scoringType: [],
+            startDate: null,
+            endDate: null,
+          });
+          setEditingCourse(null);
+          setModalVisible(true);
+        }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 10,
+          backgroundColor: "#84cc16",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+      >
+        <Ionicons name="add" size={18} color="#fff" />
+
+        <ThemedText
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 13,
+            marginLeft: 6,
+          }}
+        >
+          Create
+        </ThemedText>
+      </Pressable>
+    </HStack>
+  );
 
   return (
     <>

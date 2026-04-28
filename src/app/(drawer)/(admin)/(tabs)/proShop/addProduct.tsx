@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useColorScheme, TextInput, Image, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
+import {
+  useColorScheme,
+  TextInput,
+  Image,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
@@ -14,7 +21,7 @@ import { Text } from "@/components/text";
 import { Ionicons } from "@expo/vector-icons";
 
 import Watermark from "@/components/watermark";
-import { addProduct, updateProduct } from "@/api/admin/proShop";
+import { addProduct, updateProduct } from "@/api/modules/admin/proShop.api";
 
 export default function AddProduct() {
   const colorScheme = useColorScheme();
@@ -24,7 +31,9 @@ export default function AddProduct() {
 
   const [name, setName] = useState((params.name as string) || "");
   const [price, setPrice] = useState((params.price as string) || "");
-  const [description, setDescription] = useState((params.description as string) || "");
+  const [description, setDescription] = useState(
+    (params.description as string) || "",
+  );
   const [image, setImage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +59,10 @@ export default function AddProduct() {
 
   const handleSave = async () => {
     if (!name || !price) {
-      Alert.alert("Error", "Please fill in all required fields (Name and Price)");
+      Alert.alert(
+        "Error",
+        "Please fill in all required fields (Name and Price)",
+      );
       return;
     }
 
@@ -59,7 +71,7 @@ export default function AddProduct() {
       const formData = new FormData();
       formData.append("Name", name.trim());
       formData.append("Price", price.trim());
-      formData.append("Description", (description || '').trim());
+      formData.append("Description", (description || "").trim());
 
       if (image) {
         formData.append("Image", {
@@ -72,17 +84,20 @@ export default function AddProduct() {
       if (isEdit) {
         await updateProduct(Number(params.id), formData);
         Alert.alert("Success", "Product updated successfully", [
-          { text: "OK", onPress: () => router.back() }
+          { text: "OK", onPress: () => router.back() },
         ]);
       } else {
         await addProduct(formData);
         Alert.alert("Success", "Product added successfully", [
-          { text: "OK", onPress: () => router.back() }
+          { text: "OK", onPress: () => router.back() },
         ]);
       }
     } catch (error) {
       console.error("Save Product Error:", error);
-      Alert.alert("Error", `Failed to ${isEdit ? 'update' : 'add'} product. Please try again.`);
+      Alert.alert(
+        "Error",
+        `Failed to ${isEdit ? "update" : "add"} product. Please try again.`,
+      );
     } finally {
       setLoading(false);
     }
@@ -90,7 +105,8 @@ export default function AddProduct() {
 
   const getImageUri = () => {
     if (image?.uri) return image.uri;
-    if (params.imageUrl) return `https://kolve18freeswing.com${params.imageUrl}`;
+    if (params.imageUrl)
+      return `https://kolve18freeswing.com${params.imageUrl}`;
     return null;
   };
 
@@ -109,20 +125,23 @@ export default function AddProduct() {
         contentContainerStyle={{ paddingBottom: 150 }}
       >
         <VStack className="px-4">
-
-          <HStack style={{ marginBottom: 10, alignItems: 'center' }}>
+          <HStack style={{ marginBottom: 10, alignItems: "center" }}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
                 marginRight: 12,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
                 padding: 8,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#eee'
+                borderColor: isDark ? "rgba(255,255,255,0.1)" : "#eee",
               }}
             >
-              <Ionicons name="arrow-back" size={20} color={isDark ? "#fff" : "#000"} />
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#000"}
+              />
             </TouchableOpacity>
             <VStack>
               <Text
@@ -134,7 +153,7 @@ export default function AddProduct() {
               >
                 {isEdit ? "Edit Item" : "New Item"}
               </Text>
-              <Text style={{ fontSize: 12, color: '#999', fontWeight: '600' }}>
+              <Text style={{ fontSize: 12, color: "#999", fontWeight: "600" }}>
                 {isEdit ? "Modify product details" : "Add product to inventory"}
               </Text>
             </VStack>
@@ -148,7 +167,9 @@ export default function AddProduct() {
               padding: 24,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(139,195,74,0.15)",
+              borderColor: isDark
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(139,195,74,0.15)",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: isDark ? 0.3 : 0.05,
@@ -157,9 +178,7 @@ export default function AddProduct() {
             }}
           >
             <VStack space="lg">
-
               <VStack space="xs">
-
                 <Text
                   style={{
                     fontWeight: "600",
@@ -182,25 +201,30 @@ export default function AddProduct() {
                     minHeight: 280,
                   }}
                 >
-
                   {getImageUri() ? (
                     <Image
                       source={{ uri: getImageUri() }}
                       style={{
-                        width: '100%',
+                        width: "100%",
                         height: 250,
                         borderRadius: 10,
                       }}
                       resizeMode="contain"
                     />
                   ) : (
-                    <VStack style={{ alignItems: 'center' }}>
+                    <VStack style={{ alignItems: "center" }}>
                       <Ionicons
                         name="image-outline"
                         size={60}
                         color={isDark ? "#aaa" : "#9E9E9E"}
                       />
-                      <Text style={{ marginTop: 12, color: isDark ? "#aaa" : "#888", fontWeight: "600" }}>
+                      <Text
+                        style={{
+                          marginTop: 12,
+                          color: isDark ? "#aaa" : "#888",
+                          fontWeight: "600",
+                        }}
+                      >
                         Click to select product image
                       </Text>
                     </VStack>
@@ -208,15 +232,15 @@ export default function AddProduct() {
 
                   <Box className="bg-[#8bc34a] rounded-lg mt-4 px-8 py-3">
                     <Text className="text-white font-bold">
-                      {getImageUri() ? "Change Product Photo" : "Upload Product Photo"}
+                      {getImageUri()
+                        ? "Change Product Photo"
+                        : "Upload Product Photo"}
                     </Text>
                   </Box>
-
                 </TouchableOpacity>
               </VStack>
 
               <VStack space="xs">
-
                 <Text
                   style={{
                     fontWeight: "600",
@@ -240,11 +264,9 @@ export default function AddProduct() {
                     color: isDark ? "#fff" : "#000",
                   }}
                 />
-
               </VStack>
 
               <VStack space="xs">
-
                 <Text
                   style={{
                     fontWeight: "600",
@@ -264,7 +286,6 @@ export default function AddProduct() {
                     paddingHorizontal: 12,
                   }}
                 >
-
                   <Text
                     style={{
                       fontSize: 18,
@@ -351,10 +372,8 @@ export default function AddProduct() {
               </HStack>
             </VStack>
           </Box>
-
         </VStack>
       </ScrollView>
     </SafeAreaView>
   );
 }
-

@@ -25,7 +25,7 @@ import {
   getRoasterPlayers,
   getTournamentPlayers,
   removeFromRoaster,
-} from "@/api/subAdmin/tournaments";
+} from "@/api/modules/subAdmin/tournaments.api";
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ManageRoasterPage() {

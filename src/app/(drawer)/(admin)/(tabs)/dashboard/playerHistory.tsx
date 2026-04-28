@@ -1,4 +1,4 @@
-   import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   FlatList,
@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   getScorecardHistory,
   ScorecardHistoryApi,
-} from "@/api/admin/dashboard";
+} from "@/api/modules/admin/dashboard.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
@@ -260,8 +260,7 @@ const HistoryCard = ({
               }}
               onPress={() =>
                 router.push({
-                  pathname:
-                    "/(drawer)/(admin)/scorecard/view/[scoreCard]",
+                  pathname: "/(drawer)/(admin)/scorecard/view/[scoreCard]",
                   params: {
                     scoreCard: item.scorecardId.toString(),
                     courseName: item.courseName,
@@ -318,7 +317,10 @@ export default function PlayerHistoryScreen() {
     });
     return () => {
       navigation.getParent()?.setOptions({
-        tabBarStyle: { display: "flex", backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff" },
+        tabBarStyle: {
+          display: "flex",
+          backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff",
+        },
         headerShown: true,
       });
     };
@@ -401,7 +403,9 @@ export default function PlayerHistoryScreen() {
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: isDark ? 0.4 : 0.15,
                 shadowRadius: 14,
-                backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+                backgroundColor: isDark
+                  ? "rgba(26,26,26,0.6)"
+                  : "rgba(255,255,255,0.6)",
                 borderRadius: 22,
                 borderLeftWidth: 6,
                 borderLeftColor: "#8BC34A",
@@ -415,38 +419,81 @@ export default function PlayerHistoryScreen() {
             >
               <HStack className="justify-between items-center mb-2">
                 <VStack space="xs">
-                  <Skeleton isDark={isDark} width={180} height={18} borderRadius={8} />
-                  <Skeleton isDark={isDark} width={100} height={12} borderRadius={6} />
+                  <Skeleton
+                    isDark={isDark}
+                    width={180}
+                    height={18}
+                    borderRadius={8}
+                  />
+                  <Skeleton
+                    isDark={isDark}
+                    width={100}
+                    height={12}
+                    borderRadius={6}
+                  />
                 </VStack>
-                <Skeleton isDark={isDark} width={20} height={20} borderRadius={10} />
+                <Skeleton
+                  isDark={isDark}
+                  width={20}
+                  height={20}
+                  borderRadius={10}
+                />
               </HStack>
 
               {key === 0 && (
                 <VStack style={{ marginTop: 12 }}>
-                  <Skeleton isDark={isDark} width="100%" height={1} style={{ marginBottom: 12 }} />
+                  <Skeleton
+                    isDark={isDark}
+                    width="100%"
+                    height={1}
+                    style={{ marginBottom: 12 }}
+                  />
                   <Box
                     style={{
                       height: 60,
-                      backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.03)",
                       borderRadius: 14,
                       padding: 8,
                       marginBottom: 10,
                       borderWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "#E5E7EB",
+                      borderColor: isDark
+                        ? "rgba(139, 195, 74, 0.3)"
+                        : "#E5E7EB",
                       justifyContent: "center",
                     }}
                   >
                     <HStack className="justify-between items-center px-4">
                       {[1, 2, 3].map((i) => (
-                        <VStack key={i} style={{ alignItems: "center", flex: 1 }}>
-                          <Skeleton isDark={isDark} width={16} height={16} borderRadius={8} style={{ marginBottom: 4 }} />
-                          <Skeleton isDark={isDark} width={30} height={16} borderRadius={4} />
+                        <VStack
+                          key={i}
+                          style={{ alignItems: "center", flex: 1 }}
+                        >
+                          <Skeleton
+                            isDark={isDark}
+                            width={16}
+                            height={16}
+                            borderRadius={8}
+                            style={{ marginBottom: 4 }}
+                          />
+                          <Skeleton
+                            isDark={isDark}
+                            width={30}
+                            height={16}
+                            borderRadius={4}
+                          />
                         </VStack>
                       ))}
                     </HStack>
                   </Box>
                   <HStack style={{ justifyContent: "flex-end" }}>
-                    <Skeleton isDark={isDark} width={100} height={30} borderRadius={8} />
+                    <Skeleton
+                      isDark={isDark}
+                      width={100}
+                      height={30}
+                      borderRadius={8}
+                    />
                   </HStack>
                 </VStack>
               )}

@@ -10,15 +10,13 @@ import Watermark from "@/components/watermark";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  getTournamentHistoryByUserId,
-} from "@/api/admin/tournaments";
+import { getTournamentHistoryByUserId } from "@/api/modules/admin/tournaments.api";
 
 import {
   getScorecardHandicap,
   getScorecardDetails,
   getScoreCardOpen,
-} from "@/api/scoreCard";
+} from "@/api/modules/scoreCard.api";
 
 import { Skeleton } from "@/components/Skeleton";
 import { VStack } from "@/components/vstack";
@@ -57,8 +55,7 @@ export default function TournamentHistory() {
   const [scorecardDetails, setScorecardDetails] = useState<any[]>([]);
   useEffect(() => {
     console.log("hhhhccc", handicap);
-
-  }, [handicap])
+  }, [handicap]);
   // ── Helper Functions (Defined early to avoid hoisting issues) ──
 
   // ── Score Indicator Helper ──
@@ -320,7 +317,10 @@ export default function TournamentHistory() {
             scoringType === "double-peoria-net" ||
             scoringType === "Net Score Include Par 3" ? (
               <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
-                DP HC: {getTotals(scorecardDetails).sumDoublePieora > 0 ? getTotals(scorecardDetails).sumDoublePieora : "NIL"}
+                DP HC:{" "}
+                {getTotals(scorecardDetails).sumDoublePieora > 0
+                  ? getTotals(scorecardDetails).sumDoublePieora
+                  : "NIL"}
               </ThemedText>
             ) : null}
           </HStack>
@@ -340,7 +340,10 @@ export default function TournamentHistory() {
       (sum, h) => sum + (Number(h.stablefordPoints) || 0),
       0,
     ),
-    sumDoublePieora: holes.reduce((sum, h) => sum + (Number(h.score) - Number(h.netScore)) || 0, 0),
+    sumDoublePieora: holes.reduce(
+      (sum, h) => sum + (Number(h.score) - Number(h.netScore)) || 0,
+      0,
+    ),
   });
   // const sumDoublePieora = sumScores(scorecardDetails) - sumNet(scorecardDetails);
 
@@ -431,10 +434,11 @@ export default function TournamentHistory() {
     },
   ];
 
- 
   return (
     <>
-      <ThemedView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}>
+      <ThemedView
+        style={{ flex: 1, backgroundColor: isDark ? "#000" : "#fff" }}
+      >
         <Watermark />
         {/* Header */}
         <RenderHeader />
@@ -511,7 +515,9 @@ export default function TournamentHistory() {
                             }}
                           >
                             {/* Hole Number */}
-                            <ThemedText style={{ flex: 1, textAlign: "center" }}>
+                            <ThemedText
+                              style={{ flex: 1, textAlign: "center" }}
+                            >
                               {h.holeNumber}
                             </ThemedText>
 
@@ -527,7 +533,9 @@ export default function TournamentHistory() {
                             </ThemedText>
 
                             {/* Par */}
-                            <ThemedText style={{ flex: 1, textAlign: "center" }}>
+                            <ThemedText
+                              style={{ flex: 1, textAlign: "center" }}
+                            >
                               {h.par}
                             </ThemedText>
 

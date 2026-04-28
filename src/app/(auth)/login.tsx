@@ -19,7 +19,7 @@ import { AuthContext } from "@/context/AuthContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/schema/authSchemas";
-import { forgotPassword } from "@/api/auth";
+import { forgotPassword } from "@/api/modules/auth.api";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -69,18 +69,26 @@ export default function LoginScreen() {
       const loggedUser = await login(data.email, data.password);
       if (!loggedUser) throw new Error("Invalid credentials");
 
-      if (loggedUser.role === "Player" || loggedUser.role?.toLowerCase() === "player") {
+      if (
+        loggedUser.role === "Player" ||
+        loggedUser.role?.toLowerCase() === "player"
+      ) {
         router.replace("/(drawer)/(user)/(tabs)/dashboard");
-      } else if (loggedUser.role?.toLowerCase().replace(/[^a-z]/g, '') === "subadmin") {
+      } else if (
+        loggedUser.role?.toLowerCase().replace(/[^a-z]/g, "") === "subadmin"
+      ) {
         router.replace("/(drawer)/(subAdmin)/(tabs)/dashboard" as any);
       } else {
         router.replace("/(drawer)/(admin)/(tabs)/dashboard");
       }
     } catch (error: any) {
       console.log("🚨 HANDLE LOGIN ERROR:", error);
-      const errorMsg = error?.response?.data?.message || "Login failed. Please check your credentials.";
+      const errorMsg =
+        error?.response?.data?.message ||
+        "Login failed. Please check your credentials.";
 
-      const isPending = errorMsg.toLowerCase().includes("approve") ||
+      const isPending =
+        errorMsg.toLowerCase().includes("approve") ||
         errorMsg.toLowerCase().includes("pending") ||
         errorMsg.toLowerCase().includes("waiting") ||
         errorMsg.toLowerCase().includes("membership");
@@ -111,14 +119,20 @@ export default function LoginScreen() {
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
-            paddingBottom: showApprovalPopup ? (isPopupExpanded ? 280 : 80) : 40
+            paddingBottom: showApprovalPopup
+              ? isPopupExpanded
+                ? 280
+                : 80
+              : 40,
           }}
           scrollEnabled={!showResetModal}
           keyboardShouldPersistTaps="handled"
           style={{ opacity: showResetModal ? 0.3 : 1 }}
         >
           <View style={{ alignItems: "center", marginBottom: 40 }}>
-            <Text style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}>
+            <Text
+              style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}
+            >
               Login
             </Text>
             <Text style={{ color: "#8bc34a", fontSize: 16, marginTop: 6 }}>
@@ -159,9 +173,7 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   style={{
                     borderWidth: 1,
-                    borderColor: errors.email
-                      ? "#ef4444"
-                      : "rgba(0,0,0,0.1)",
+                    borderColor: errors.email ? "#ef4444" : "rgba(0,0,0,0.1)",
                     borderRadius: 14,
                     paddingHorizontal: 16,
                     height: 50,
@@ -234,7 +246,15 @@ export default function LoginScreen() {
             )}
 
             {errors.root && (
-              <Text style={{ color: "#ef4444", fontSize: 13, marginBottom: 16, textAlign: "center", fontWeight: "500" }}>
+              <Text
+                style={{
+                  color: "#ef4444",
+                  fontSize: 13,
+                  marginBottom: 16,
+                  textAlign: "center",
+                  fontWeight: "500",
+                }}
+              >
                 {errors.root.message}
               </Text>
             )}
@@ -328,7 +348,9 @@ export default function LoginScreen() {
                 <View style={{ alignItems: "center", marginBottom: 10 }}>
                   <View
                     style={{
-                      backgroundColor: isDark ? "rgba(139, 195, 74, 0.2)" : "rgba(139, 195, 74, 0.1)",
+                      backgroundColor: isDark
+                        ? "rgba(139, 195, 74, 0.2)"
+                        : "rgba(139, 195, 74, 0.1)",
                       width: 50,
                       height: 50,
                       borderRadius: 9999,
@@ -339,7 +361,13 @@ export default function LoginScreen() {
                   >
                     <Ionicons name="key-outline" size={28} color="#8bc34a" />
                   </View>
-                  <Text style={{ fontSize: 24, fontWeight: "bold", color: isDark ? "#f9fafb" : "#1f2937" }}>
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      color: isDark ? "#f9fafb" : "#1f2937",
+                    }}
+                  >
                     Reset Password
                   </Text>
                   <Text
@@ -365,25 +393,42 @@ export default function LoginScreen() {
                       borderColor: "rgba(239, 68, 68, 0.2)",
                     }}
                   >
-                    <Text style={{ color: "#ef4444", fontSize: 12, textAlign: "center" }}>
+                    <Text
+                      style={{
+                        color: "#ef4444",
+                        fontSize: 12,
+                        textAlign: "center",
+                      }}
+                    >
                       {resetError}
                     </Text>
                   </View>
                 ) : null}
 
-                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: 4,
+                    color: isDark ? "#e5e7eb" : "#374151",
+                    fontSize: 12,
+                  }}
+                >
                   Email Address
                 </Text>
                 <TextInput
                   placeholder="Enter email"
-                  placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                  placeholderTextColor={
+                    isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"
+                  }
                   value={resetEmail}
                   onChangeText={setResetEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   style={{
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.1)",
                     borderRadius: 12,
                     paddingHorizontal: 12,
                     height: 44,
@@ -394,19 +439,30 @@ export default function LoginScreen() {
                   }}
                 />
 
-                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: 4,
+                    color: isDark ? "#e5e7eb" : "#374151",
+                    fontSize: 12,
+                  }}
+                >
                   Phone Number
                 </Text>
                 <TextInput
                   placeholder="Enter phone"
-                  placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                  placeholderTextColor={
+                    isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"
+                  }
                   value={resetPhoneNumber}
                   onChangeText={setResetPhoneNumber}
                   keyboardType="phone-pad"
                   autoCapitalize="none"
                   style={{
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.1)",
                     borderRadius: 12,
                     paddingHorizontal: 12,
                     height: 44,
@@ -417,13 +473,22 @@ export default function LoginScreen() {
                   }}
                 />
 
-                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: 4,
+                    color: isDark ? "#e5e7eb" : "#374151",
+                    fontSize: 12,
+                  }}
+                >
                   New Password
                 </Text>
                 <View
                   style={{
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.1)",
                     borderRadius: 12,
                     flexDirection: "row",
                     alignItems: "center",
@@ -435,24 +500,46 @@ export default function LoginScreen() {
                 >
                   <TextInput
                     placeholder="Password"
-                    placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                    placeholderTextColor={
+                      isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"
+                    }
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry={!showNewPassword}
-                    style={{ flex: 1, height: "100%", color: isDark ? "#fff" : "#000", fontSize: 14 }}
+                    style={{
+                      flex: 1,
+                      height: "100%",
+                      color: isDark ? "#fff" : "#000",
+                      fontSize: 14,
+                    }}
                   />
-                  <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-                    <Ionicons name={showNewPassword ? "eye" : "eye-off"} size={20} color={isDark ? "#9ca3af" : "#374151"} />
+                  <TouchableOpacity
+                    onPress={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    <Ionicons
+                      name={showNewPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color={isDark ? "#9ca3af" : "#374151"}
+                    />
                   </TouchableOpacity>
                 </View>
 
-                <Text style={{ fontWeight: "600", marginBottom: 4, color: isDark ? "#e5e7eb" : "#374151", fontSize: 12 }}>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: 4,
+                    color: isDark ? "#e5e7eb" : "#374151",
+                    fontSize: 12,
+                  }}
+                >
                   Confirm Password
                 </Text>
                 <View
                   style={{
                     borderWidth: 1,
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.1)",
                     borderRadius: 12,
                     flexDirection: "row",
                     alignItems: "center",
@@ -464,14 +551,27 @@ export default function LoginScreen() {
                 >
                   <TextInput
                     placeholder="Confirm"
-                    placeholderTextColor={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                    placeholderTextColor={
+                      isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"
+                    }
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
-                    style={{ flex: 1, height: "100%", color: isDark ? "#fff" : "#000", fontSize: 14 }}
+                    style={{
+                      flex: 1,
+                      height: "100%",
+                      color: isDark ? "#fff" : "#000",
+                      fontSize: 14,
+                    }}
                   />
-                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    <Ionicons name={showConfirmPassword ? "eye" : "eye-off"} size={20} color={isDark ? "#9ca3af" : "#374151"} />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color={isDark ? "#9ca3af" : "#374151"}
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -480,7 +580,12 @@ export default function LoginScreen() {
                   disabled={resetLoading}
                   onPress={async () => {
                     setResetError("");
-                    if (!resetEmail || !resetPhoneNumber || !newPassword || !confirmPassword) {
+                    if (
+                      !resetEmail ||
+                      !resetPhoneNumber ||
+                      !newPassword ||
+                      !confirmPassword
+                    ) {
                       setResetError("Please fill in all fields");
                       return;
                     }
@@ -507,11 +612,13 @@ export default function LoginScreen() {
                             setNewPassword("");
                             setConfirmPassword("");
                             setResetError("");
-                          }
-                        }
+                          },
+                        },
                       ]);
                     } catch (error: any) {
-                      const errorMsg = error?.response?.data?.message || "Details not found or an unexpected error occurred.";
+                      const errorMsg =
+                        error?.response?.data?.message ||
+                        "Details not found or an unexpected error occurred.";
                       setResetError(errorMsg);
                     } finally {
                       setResetLoading(false);
@@ -526,13 +633,25 @@ export default function LoginScreen() {
                     opacity: resetLoading ? 0.7 : 1,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                  <Text
+                    style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}
+                  >
                     {resetLoading ? "Processing..." : "Reset Password"}
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setShowResetModal(false)} style={{ paddingVertical: 4 }}>
-                  <Text style={{ color: isDark ? "#9ca3af" : "#6b7280", textAlign: "center", fontWeight: "500", fontSize: 14 }}>
+                <TouchableOpacity
+                  onPress={() => setShowResetModal(false)}
+                  style={{ paddingVertical: 4 }}
+                >
+                  <Text
+                    style={{
+                      color: isDark ? "#9ca3af" : "#6b7280",
+                      textAlign: "center",
+                      fontWeight: "500",
+                      fontSize: 14,
+                    }}
+                  >
                     Cancel
                   </Text>
                 </TouchableOpacity>
@@ -543,21 +662,23 @@ export default function LoginScreen() {
       </Modal>
 
       {showApprovalPopup && (
-        <View style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "#fff",
-          padding: isPopupExpanded ? 20 : 10,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 20,
-        }}>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#fff",
+            padding: isPopupExpanded ? 20 : 10,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 10,
+            elevation: 20,
+          }}
+        >
           <View
             onStartShouldSetResponder={(evt) => {
               setTouchY(evt.nativeEvent.pageY);
@@ -577,7 +698,7 @@ export default function LoginScreen() {
               alignSelf: "center",
               paddingVertical: 5,
               width: "100%",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             <TouchableOpacity
@@ -594,15 +715,35 @@ export default function LoginScreen() {
 
           {isPopupExpanded && (
             <>
-              <Text style={{ fontSize: 16, fontWeight: "600", color: "#1f2937", textAlign: "center", marginBottom: 10 }}>
-                {months ? `${months} Months ` : ""}Membership request is waiting for admin approval.
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  textAlign: "center",
+                  marginBottom: 10,
+                }}
+              >
+                {months ? `${months} Months ` : ""}Membership request is waiting
+                for admin approval.
               </Text>
-              <Text style={{ fontSize: 14, color: "#4b5563", textAlign: "center", marginBottom: 20 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#4b5563",
+                  textAlign: "center",
+                  marginBottom: 20,
+                }}
+              >
                 Please confirm payment with admin on WhatsApp.
               </Text>
 
               <TouchableOpacity
-                onPress={() => Linking.openURL(`https://wa.me/919876543210?text=Hello Admin, I am waiting for my account approval. Please check my payment confirmation.`)}
+                onPress={() =>
+                  Linking.openURL(
+                    `https://wa.me/919876543210?text=Hello Admin, I am waiting for my account approval. Please check my payment confirmation.`,
+                  )
+                }
                 style={{
                   backgroundColor: "#25D366",
                   flexDirection: "row",
@@ -610,15 +751,27 @@ export default function LoginScreen() {
                   borderRadius: 12,
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: 10
+                  marginBottom: 10,
                 }}
               >
-                <Ionicons name="logo-whatsapp" size={24} color="#fff" style={{ marginRight: 10 }} />
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Open WhatsApp</Text>
+                <Ionicons
+                  name="logo-whatsapp"
+                  size={24}
+                  color="#fff"
+                  style={{ marginRight: 10 }}
+                />
+                <Text
+                  style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}
+                >
+                  Open WhatsApp
+                </Text>
               </TouchableOpacity>
 
-              <Text style={{ fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
-                Your account is pending admin approval after payment confirmation.
+              <Text
+                style={{ fontSize: 12, color: "#9ca3af", textAlign: "center" }}
+              >
+                Your account is pending admin approval after payment
+                confirmation.
               </Text>
             </>
           )}

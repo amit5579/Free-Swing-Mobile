@@ -21,8 +21,10 @@ import {
   getSubAdminPlayers,
   getSubAdminCourses,
   getUpdates,
-} from "@/api/subAdmin/dashboard";
-import GameFeed, { GameFeedContent } from "@/app/(drawer)/(admin)/(tabs)/dashboard/gameFeed";
+} from "@/api/modules/subAdmin/dashboard.api";
+import GameFeed, {
+  GameFeedContent,
+} from "@/app/(drawer)/(admin)/(tabs)/dashboard/gameFeed";
 
 export default function SubAdminDashboard() {
   const colorScheme = useColorScheme();
@@ -47,11 +49,11 @@ export default function SubAdminDashboard() {
 
       const backHandler = BackHandler.addEventListener(
         "hardwareBackPress",
-        onBackPress
+        onBackPress,
       );
 
       return () => backHandler.remove();
-    }, [])
+    }, []),
   );
 
   const fetchStats = async () => {
@@ -79,7 +81,6 @@ export default function SubAdminDashboard() {
       edges={["left", "right"]}
       style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
     >
-
       <Watermark />
 
       <VStack className="px-4 bg-transparent">
@@ -99,10 +100,11 @@ export default function SubAdminDashboard() {
             </VStack>
             <VStack className="items-end justify-center">
               <Text
-                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded-full ${isDark
-                  ? "text-black bg-yellow-400"
-                  : "text-black bg-yellow-300"
-                  }`}
+                className={`text-xs font-black tracking-widest uppercase px-2 py-1 rounded-full ${
+                  isDark
+                    ? "text-black bg-yellow-400"
+                    : "text-black bg-yellow-300"
+                }`}
               >
                 Sub Admin
               </Text>
@@ -114,8 +116,12 @@ export default function SubAdminDashboard() {
           className="mb-4 flex-row items-center px-4 rounded-xl border"
           style={{
             height: 44,
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.9)",
-            borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,1)",
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(255,255,255,0.9)",
+            borderColor: isDark
+              ? "rgba(139,195,74,0.3)"
+              : "rgba(229,231,235,1)",
           }}
         >
           <Ionicons name="search-outline" size={18} color="#8BC34A" />
@@ -133,7 +139,11 @@ export default function SubAdminDashboard() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={18} color={isDark ? "#6B7280" : "#9CA3AF"} />
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color={isDark ? "#6B7280" : "#9CA3AF"}
+              />
             </TouchableOpacity>
           )}
         </Box>
@@ -197,11 +207,7 @@ export default function SubAdminDashboard() {
               <VStack className="flex-1 justify-between">
                 <VStack className="items-center mt-1">
                   <Box className="bg-green-100 p-1.5 rounded-full mb-2">
-                    <Ionicons
-                      name="people-outline"
-                      size={16}
-                      color="#8BC34A"
-                    />
+                    <Ionicons name="people-outline" size={16} color="#8BC34A" />
                   </Box>
                   <Text
                     className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}

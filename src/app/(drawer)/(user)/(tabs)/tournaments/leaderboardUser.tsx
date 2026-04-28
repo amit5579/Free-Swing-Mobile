@@ -15,7 +15,10 @@ import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import Watermark from "@/components/watermark";
 
-import { getLeaderboard, getTeeboxDetails } from "@/api/admin/tournaments";
+import {
+  getLeaderboard,
+  getTeeboxDetails,
+} from "@/api/modules/admin/tournaments.api";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import { Box } from "@/components/box";
@@ -82,101 +85,101 @@ export default function LeaderboardUser() {
   };
 
   const RenderHeader = () => {
-  return (
-    <Box
-      style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      <VStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 14,
-          paddingBottom: 12,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🔝 TOP ROW */}
-        <HStack
+        <VStack
           style={{
-            alignItems: "center",
-            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingTop: 14,
+            paddingBottom: 12,
           }}
         >
-          {/* 🔙 BACK */}
-          <Pressable
-            onPress={() => routePage.back()}
+          {/* 🔝 TOP ROW */}
+          <HStack
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              justifyContent: "center",
               alignItems: "center",
-              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-            }}
-            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={20}
-              color={isDark ? "#fff" : "#020617"}
-            />
-          </Pressable>
-
-          {/* 🧠 TITLE BLOCK */}
-          <VStack
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 6,
+              justifyContent: "space-between",
             }}
           >
-            {/* LABEL */}
-            <ThemedText
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
               style={{
-                fontSize: 12,
-                color: isDark ? "#94a3b8" : "#64748b",
-                fontWeight: "500",
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+
+            {/* 🧠 TITLE BLOCK */}
+            <VStack
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 6,
               }}
             >
-              Leaderboard
-            </ThemedText>
-
-            {/* MAIN TITLE */}
-            {loading ? (
-              <Skeleton
-                isDark={isDark}
-                height={18}
-                width={140}
-                style={{ marginTop: 2, borderRadius: 6 }}
-              />
-            ) : (
+              {/* LABEL */}
               <ThemedText
-                numberOfLines={1}
-                ellipsizeMode="tail"
                 style={{
-                  fontSize: 17,
-                  fontWeight: "700",
-                  marginTop: 2,
-                  maxWidth: "85%",
-                  textAlign: "center",
-                  color: isDark ? "#fff" : "#020617",
+                  fontSize: 12,
+                  color: isDark ? "#94a3b8" : "#64748b",
+                  fontWeight: "500",
                 }}
               >
-                {tournamentName}
+                Leaderboard
               </ThemedText>
-            )}
-          </VStack>
 
-          {/* ⚖️ RIGHT SPACER */}
-          <View style={{ width: 40 }} />
-        </HStack>
-      </VStack>
-    </Box>
-  );
-};
+              {/* MAIN TITLE */}
+              {loading ? (
+                <Skeleton
+                  isDark={isDark}
+                  height={18}
+                  width={140}
+                  style={{ marginTop: 2, borderRadius: 6 }}
+                />
+              ) : (
+                <ThemedText
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "700",
+                    marginTop: 2,
+                    maxWidth: "85%",
+                    textAlign: "center",
+                    color: isDark ? "#fff" : "#020617",
+                  }}
+                >
+                  {tournamentName}
+                </ThemedText>
+              )}
+            </VStack>
+
+            {/* ⚖️ RIGHT SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   const RenderStatsSection = () => {
     const isDark = colorScheme === "dark";
@@ -439,7 +442,6 @@ export default function LeaderboardUser() {
 
   const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
 
-
   const rightContentWidth = useMemo(() => {
     const holeCols = HOLE_WIDTH * 18;
     const totals = TOTAL_WIDTH * 2;
@@ -551,7 +553,13 @@ export default function LeaderboardUser() {
     </HStack>
   );
 
-  const InfoRowRight = ({ data, type }: { data: any[]; type: "par" | "si" }) => (
+  const InfoRowRight = ({
+    data,
+    type,
+  }: {
+    data: any[];
+    type: "par" | "si";
+  }) => (
     <HStack
       style={{
         height: 40,
@@ -572,7 +580,9 @@ export default function LeaderboardUser() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(0, 9).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       {data.slice(9, 18).map((h, i) => (
         <ThemedText
@@ -585,7 +595,9 @@ export default function LeaderboardUser() {
       <ThemedText
         style={[styles.infoCellText, { width: TOTAL_WIDTH, fontWeight: "700" }]}
       >
-        {type === "par" ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0) : "-"}
+        {type === "par"
+          ? data.slice(9, 18).reduce((s, h) => s + (h.par || 0), 0)
+          : "-"}
       </ThemedText>
       <ThemedText
         style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
@@ -643,7 +655,13 @@ export default function LeaderboardUser() {
     );
   };
 
-  const PlayerRowRight = ({ player, index }: { player: any; index: number }) => {
+  const PlayerRowRight = ({
+    player,
+    index,
+  }: {
+    player: any;
+    index: number;
+  }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? isDark
@@ -699,7 +717,9 @@ export default function LeaderboardUser() {
         >
           {player.back9}
         </ThemedText>
-        <ThemedText style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}>
+        <ThemedText
+          style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800" }]}
+        >
           {player.gross}
         </ThemedText>
         <ThemedText
@@ -735,8 +755,16 @@ export default function LeaderboardUser() {
     const rows = 8;
 
     return (
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
-        <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        <HStack
+          style={{
+            borderTopWidth: 1,
+            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          }}
+        >
           {/* Left fixed skeleton */}
           <VStack style={{ width: LEFT_FIXED_WIDTH }}>
             <View
@@ -845,8 +873,16 @@ export default function LeaderboardUser() {
         {loading ? (
           <TableLoadingSkeleton />
         ) : (
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
-            <HStack style={{ borderTopWidth: 1, borderColor: isDark ? "#1e293b" : "#e2e8f0" }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
+            <HStack
+              style={{
+                borderTopWidth: 1,
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+              }}
+            >
               {/* Fixed left block */}
               <VStack style={{ width: LEFT_FIXED_WIDTH }}>
                 <TableHeaderLeft />
@@ -857,7 +893,11 @@ export default function LeaderboardUser() {
                   </>
                 )}
                 {leaderboard.map((player, idx) => (
-                  <PlayerRowLeft key={player.userId} player={player} index={idx} />
+                  <PlayerRowLeft
+                    key={player.userId}
+                    player={player}
+                    index={idx}
+                  />
                 ))}
               </VStack>
 
@@ -872,7 +912,11 @@ export default function LeaderboardUser() {
                     </>
                   )}
                   {leaderboard.map((player, idx) => (
-                    <PlayerRowRight key={player.userId} player={player} index={idx} />
+                    <PlayerRowRight
+                      key={player.userId}
+                      player={player}
+                      index={idx}
+                    />
                   ))}
                 </VStack>
               </ScrollView>
@@ -928,18 +972,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
   },
-  card: { /* removed as we move to table */ },
-  header: { /* removed as we move to table */ },
-  rank: { /* removed as we move to table */ },
-  name: { /* removed as we move to table */ },
-  sub: { /* removed as we move to table */ },
-  points: { /* removed as we move to table */ },
-  holeCell: { /* removed as we move to table */ },
-  holeNumber: { /* removed as we move to table */ },
-  summary: { /* removed as we move to table */ },
-  stat: { /* removed as we move to table */ },
-  statValue: { /* removed as we move to table */ },
-  statLabel: { /* removed as we move to table */ },
-  gridRow: { /* removed as we move to table */ },
-  gridCell: { /* removed as we move to table */ },
+  card: {
+    /* removed as we move to table */
+  },
+  header: {
+    /* removed as we move to table */
+  },
+  rank: {
+    /* removed as we move to table */
+  },
+  name: {
+    /* removed as we move to table */
+  },
+  sub: {
+    /* removed as we move to table */
+  },
+  points: {
+    /* removed as we move to table */
+  },
+  holeCell: {
+    /* removed as we move to table */
+  },
+  holeNumber: {
+    /* removed as we move to table */
+  },
+  summary: {
+    /* removed as we move to table */
+  },
+  stat: {
+    /* removed as we move to table */
+  },
+  statValue: {
+    /* removed as we move to table */
+  },
+  statLabel: {
+    /* removed as we move to table */
+  },
+  gridRow: {
+    /* removed as we move to table */
+  },
+  gridCell: {
+    /* removed as we move to table */
+  },
 });

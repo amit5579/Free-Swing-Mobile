@@ -1,4 +1,4 @@
-import https from "../https";
+import client from "../../client";
 
 export type UserListApi = {
   id: number;
@@ -50,7 +50,7 @@ export type User = {
 
 export const getUsers = async (): Promise<UserListApi[]> => {
   try {
-    const response = await https.get("/User/list");
+    const response = await client.get("/User/list");
     return response.data;
   } catch (error) {
     console.error("Get Users API Error:", error);
@@ -75,7 +75,7 @@ export const getUsers = async (): Promise<UserListApi[]> => {
 
 export const createMember = async (payload: any): Promise<any> => {
   try {
-    const response = await https.post("/User/create-player", payload);
+    const response = await client.post("/User/create-player", payload);
     return response.data;
   } catch (error) {
     console.error("Create User API Error:", error);
@@ -89,7 +89,7 @@ export const createMember = async (payload: any): Promise<any> => {
 
 export const approveSubscription = async (userId: number): Promise<any> => {
   try {
-    const response = await https.post(`User/${userId}/approve-subscription`);
+    const response = await client.post(`User/${userId}/approve-subscription`);
     return response.data;
   } catch (error) {
     console.error("Approve Subscription API Error:", error);
@@ -100,7 +100,7 @@ export const approveSubscription = async (userId: number): Promise<any> => {
 // reject request - User/82/reject-subscription-request
 export const rejectSubscription = async (userId: number): Promise<any> => {
   try {
-    const response = await https.post(`User/${userId}/reject-subscription-request`);
+    const response = await client.post(`User/${userId}/reject-subscription-request`);
     return response.data;
   } catch (error) {
     console.error("Reject Subscription API Error:", error);
@@ -113,7 +113,7 @@ export const rejectSubscription = async (userId: number): Promise<any> => {
 
 export const approveUser = async (userId: number) => {
   try {
-    const response = await https.put(`User/unblock/${userId}`);
+    const response = await client.put(`User/unblock/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Unblock User API Error:", error);
@@ -125,7 +125,7 @@ export const approveUser = async (userId: number) => {
 
 export const blockUser = async (userId: number) => {
   try {
-    const response = await https.put(`User/block/${userId}`);
+    const response = await client.put(`User/block/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Block User API Error:", error);

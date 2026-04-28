@@ -6,8 +6,19 @@ import { Text } from "@/components/text";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, useColorScheme, View, ScrollView, Pressable, Alert } from "react-native";
-import { getInProgressGames, InProgressApiItem, deleteScorecardApi } from "@/api/dashboard";
+import {
+  ActivityIndicator,
+  useColorScheme,
+  View,
+  ScrollView,
+  Pressable,
+  Alert,
+} from "react-native";
+import {
+  getInProgressGames,
+  InProgressApiItem,
+  deleteScorecardApi,
+} from "@/api/modules/dashboard.api";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "expo-router";
 
@@ -28,8 +39,8 @@ type InProgressTabProps = {
 
 export function InProgressTab({
   playerId,
-  onDelete = () => { },
-  onResume = () => { },
+  onDelete = () => {},
+  onResume = () => {},
   searchQuery = "",
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
@@ -69,7 +80,7 @@ export function InProgressTab({
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -79,7 +90,7 @@ export function InProgressTab({
   useFocusEffect(
     useCallback(() => {
       fetchGames();
-    }, [playerId])
+    }, [playerId]),
   );
 
   const fetchGames = async () => {
@@ -105,56 +116,92 @@ export function InProgressTab({
   };
 
   const filteredGames = games.filter((game) =>
-    game.courseName.toLowerCase().includes(searchQuery.toLowerCase())
+    game.courseName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
+      <View
+        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+      >
         <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
           <VStack>
-            <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
+            <Text
+              className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`}
+              style={{ marginTop: 0 }}
+            >
               In Progress
             </Text>
-            <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+            <Text
+              className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}
+            >
               Games you are currently playing
             </Text>
           </VStack>
           <Pressable onPress={fetchGames} className="p-2 rounded-full">
-            <Ionicons name="sync-outline" size={20} color={isDark ? "#fff" : "#6B7280"} />
+            <Ionicons
+              name="sync-outline"
+              size={20}
+              color={isDark ? "#fff" : "#6B7280"}
+            />
           </Pressable>
         </HStack>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        >
           <VStack space="md" className="pt-4">
             {[1, 2].map((key) => (
-                  <Box
-                    key={key}
-                    className="mb-4"
-                    style={{
-                      shadowColor: "#8BC34A",
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: isDark ? 0.4 : 0.15,
-                      shadowRadius: 14,
-                      backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
-                      borderLeftWidth: 6,
-                      borderLeftColor: "#8BC34A",
-                      borderTopWidth: 1,
-                      borderRightWidth: 1,
-                      borderBottomWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
-                      borderRadius: 22,
-                      overflow: "hidden",
-                    }}
-                  >
+              <Box
+                key={key}
+                className="mb-4"
+                style={{
+                  shadowColor: "#8BC34A",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowRadius: 14,
+                  backgroundColor: isDark
+                    ? "rgba(26,26,26,0.6)"
+                    : "rgba(255,255,255,0.6)",
+                  borderLeftWidth: 6,
+                  borderLeftColor: "#8BC34A",
+                  borderTopWidth: 1,
+                  borderRightWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                  borderRadius: 22,
+                  overflow: "hidden",
+                }}
+              >
                 <Box className="p-4">
-                  <Skeleton isDark={isDark} width="60%" height={24} style={{ marginBottom: 8 }} />
+                  <Skeleton
+                    isDark={isDark}
+                    width="60%"
+                    height={24}
+                    style={{ marginBottom: 8 }}
+                  />
                   <HStack space="sm" className="items-center mb-4">
                     <Skeleton isDark={isDark} width={80} height={14} />
-                    <Skeleton isDark={isDark} width={100} height={20} borderRadius={6} />
+                    <Skeleton
+                      isDark={isDark}
+                      width={100}
+                      height={20}
+                      borderRadius={6}
+                    />
                   </HStack>
                   <HStack space="sm">
-                    <Skeleton isDark={isDark} width="48%" height={36} borderRadius={20} />
-                    <Skeleton isDark={isDark} width="48%" height={36} borderRadius={20} />
+                    <Skeleton
+                      isDark={isDark}
+                      width="48%"
+                      height={36}
+                      borderRadius={20}
+                    />
+                    <Skeleton
+                      isDark={isDark}
+                      width="48%"
+                      height={36}
+                      borderRadius={20}
+                    />
                   </HStack>
                 </Box>
               </Box>
@@ -169,19 +216,31 @@ export function InProgressTab({
     <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
       <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
         <VStack>
-          <Text className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`} style={{ marginTop: 0 }}>
+          <Text
+            className={`font-bold ${isDark ? "text-white" : "text-gray-900"} text-lg`}
+            style={{ marginTop: 0 }}
+          >
             In Progress
           </Text>
-          <Text className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+          <Text
+            className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}
+          >
             Games you are currently playing
           </Text>
         </VStack>
         <Pressable onPress={fetchGames} className="p-2 rounded-full">
-          <Ionicons name="sync-outline" size={20} color={isDark ? "#fff" : "#6B7280"} />
+          <Ionicons
+            name="sync-outline"
+            size={20}
+            color={isDark ? "#fff" : "#6B7280"}
+          />
         </Pressable>
       </HStack>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+      >
         {!filteredGames.length ? (
           <Box
             className="p-8 rounded-xl items-center mt-4"
@@ -221,7 +280,12 @@ export function InProgressTab({
                   borderTopWidth: 1,
                   borderRightWidth: 1,
                   borderBottomWidth: 1,
-                  borderColor: game.isDQ && isDark ? "#ef4444" : (isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0"),
+                  borderColor:
+                    game.isDQ && isDark
+                      ? "#ef4444"
+                      : isDark
+                        ? "rgba(139,195,74,0.6)"
+                        : "#E0E0E0",
                   borderRadius: 22,
                   overflow: "hidden",
                 }}
@@ -263,7 +327,9 @@ export function InProgressTab({
 
                     <Badge
                       style={{
-                        backgroundColor: isDark ? "rgba(22, 22, 24, 0.8)" : "rgba(243, 244, 246, 0.8)",
+                        backgroundColor: isDark
+                          ? "rgba(22, 22, 24, 0.8)"
+                          : "rgba(243, 244, 246, 0.8)",
                         borderWidth: 1,
                         borderColor: "rgba(139, 195, 74, 0.3)",
                         borderRadius: 6,
@@ -318,7 +384,10 @@ export function InProgressTab({
                       }}
                     >
                       {deletingId === game.id ? (
-                        <ActivityIndicator size="small" color={isDark ? "#EF4444" : "#DC2626"} />
+                        <ActivityIndicator
+                          size="small"
+                          color={isDark ? "#EF4444" : "#DC2626"}
+                        />
                       ) : (
                         <>
                           <Ionicons
@@ -345,7 +414,8 @@ export function InProgressTab({
                       onPress={() => handleResume(game.id)}
                       className="rounded-full flex-row items-center justify-center"
                       style={{
-                        backgroundColor: resumingId === game.id ? "#A5D6A7" : "#8BC34A",
+                        backgroundColor:
+                          resumingId === game.id ? "#A5D6A7" : "#8BC34A",
                         width: "48%",
                         opacity: resumingId === game.id ? 0.7 : 1,
                       }}
@@ -359,7 +429,13 @@ export function InProgressTab({
                       >
                         {resumingId === game.id ? "Opening..." : "Resume"}
                       </Text>
-                      {resumingId !== game.id && <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />}
+                      {resumingId !== game.id && (
+                        <Ionicons
+                          name="arrow-forward"
+                          size={14}
+                          color="#FFFFFF"
+                        />
+                      )}
                     </Button>
                   </HStack>
                 </Box>

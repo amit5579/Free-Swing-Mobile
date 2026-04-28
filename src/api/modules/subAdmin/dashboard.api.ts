@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import https from "../https";
+import client from "../../client";
 
 
 export type UserApi = {
@@ -24,7 +24,7 @@ export const getUser = async () => {
     if (!userId) {
       throw new Error("User ID not found in storage");
     }
-    const response = await https.get(`/User/${userId}`);
+    const response = await client.get(`/User/${userId}`);
     return response.data;
   } catch (error: any) {
     console.error("Error fetching user:", error?.response?.data || error.message);
@@ -33,7 +33,7 @@ export const getUser = async () => {
 };
 export const getUserById = async (id: number): Promise<UserApi> => {
   try {
-    const response = await https.get(`/User/${id}`);
+    const response = await client.get(`/User/${id}`);
     return response.data;
   } catch (error: any) {
     console.error("Error fetching user:", error?.response?.data || error.message);
@@ -43,7 +43,7 @@ export const getUserById = async (id: number): Promise<UserApi> => {
 
 export const getSubAdminPlayers = async (): Promise<UserApi[]> => {
   try {
-    const response = await https.get("/SubAdmin/my-players");
+    const response = await client.get("/SubAdmin/my-players");
     return response.data;
   } catch (error: any) {
     console.error("Error fetching subAdmin players:", error?.response?.data || error.message);
@@ -59,7 +59,7 @@ export type SubAdminCourse = {
 
 export const getSubAdminCourses = async (): Promise<SubAdminCourse[]> => {
   try {
-    const response = await https.get("/SubAdmin/my-courses");
+    const response = await client.get("/SubAdmin/my-courses");
     return response.data;
   } catch (error: any) {
     console.error("Error fetching subAdmin courses:", error?.response?.data || error.message);
@@ -80,7 +80,7 @@ export type UpdateApi = {
 
 export const getUpdates = async (): Promise<UpdateApi[]> => {
   try {
-    const response = await https.get("/Updates");
+    const response = await client.get("/Updates");
     return response.data;
   } catch (error: any) {
     console.error("Error fetching updates:", error?.response?.data || error.message);
@@ -112,7 +112,7 @@ export type FeedApi = {
 
 export const getFeed = async (): Promise<FeedApi[]> => {
   try {
-    const response = await https.get("/feed");
+    const response = await client.get("/feed");
     return response.data;
   } catch (error: any) {
     console.error("Error fetching feed:", error?.response?.data || error.message);
@@ -122,7 +122,7 @@ export const getFeed = async (): Promise<FeedApi[]> => {
 
 export const invitePlayer = async (data: any) => {
   try {
-    const response = await https.post("/SubAdmin/invite-player", data);
+    const response = await client.post("/SubAdmin/invite-player", data);
     return response.data;
   } catch (error: any) {
     console.error("Error inviting player:", error?.response?.data || error.message);
@@ -132,7 +132,7 @@ export const invitePlayer = async (data: any) => {
 
 export const toggleBlockPlayer = async (id: number) => {
   try {
-    const response = await https.put(`/SubAdmin/block-player/${id}`);
+    const response = await client.put(`/SubAdmin/block-player/${id}`);
     return response.data;
   } catch (error: any) {
     console.error("Error toggling block player:", error?.response?.data || error.message);
@@ -142,7 +142,7 @@ export const toggleBlockPlayer = async (id: number) => {
 
 export const removePlayer = async (id: number) => {
   try {
-    const response = await https.delete(`/SubAdmin/remove-player/${id}`);
+    const response = await client.delete(`/SubAdmin/remove-player/${id}`);
     return response.data;
   } catch (error: any) {
     console.error("Error removing player:", error?.response?.data || error.message);

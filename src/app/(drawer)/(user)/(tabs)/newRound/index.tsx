@@ -14,7 +14,7 @@ import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
 import { Modal, Pressable, useColorScheme, View, Text } from "react-native";
 
-import { getCourse } from "@/api/admin/courses";
+import { getCourse } from "@/api/modules/admin/courses.api";
 import { Divider } from "@/components/divider";
 import { Skeleton } from "@/components/Skeleton";
 import { Dropdown } from "react-native-element-dropdown";
@@ -24,7 +24,7 @@ import {
   RadioIndicator,
   RadioLabel,
 } from "@/components/radio";
-import { getHandicapDetails } from "@/api/newRound";
+import { getHandicapDetails } from "@/api/modules/newRound.api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
@@ -55,49 +55,49 @@ export default function StartNewRoundPage() {
   }, []);
 
   const RenderHeader = () => {
-  return (
-    <Box
-      style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      <VStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 14,
-          alignItems: "center",
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🧠 TITLE */}
-        <ThemedText
+        <VStack
           style={{
-            fontSize: 18,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 14,
+            alignItems: "center",
           }}
         >
-          Start New Round
-        </ThemedText>
+          {/* 🧠 TITLE */}
+          <ThemedText
+            style={{
+              fontSize: 18,
+              fontWeight: "700",
+              color: isDark ? "#fff" : "#020617",
+            }}
+          >
+            Start New Round
+          </ThemedText>
 
-        {/* 📌 SUBTITLE */}
-        <ThemedText
-          style={{
-            marginTop: 4,
-            fontSize: 13,
-            color: isDark ? "#94a3b8" : "#64748b",
-            textAlign: "center",
-            maxWidth: "90%",
-          }}
-        >
-          Select a course to begin your round
-        </ThemedText>
-      </VStack>
-    </Box>
-  );
-};
+          {/* 📌 SUBTITLE */}
+          <ThemedText
+            style={{
+              marginTop: 4,
+              fontSize: 13,
+              color: isDark ? "#94a3b8" : "#64748b",
+              textAlign: "center",
+              maxWidth: "90%",
+            }}
+          >
+            Select a course to begin your round
+          </ThemedText>
+        </VStack>
+      </Box>
+    );
+  };
 
   const CourseCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
@@ -277,10 +277,17 @@ function CourseCard({ course, isDark }: any) {
         <Box
           className="absolute top-3 right-3 px-3 py-1 rounded-full"
           style={{
-            backgroundColor: course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
+            backgroundColor:
+              course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
           }}
         >
-          <ThemedText style={{ fontSize: 12, fontWeight: "600", color:course.isPremium? "#3D2412" : "#fff" }}>
+          <ThemedText
+            style={{
+              fontSize: 12,
+              fontWeight: "600",
+              color: course.isPremium ? "#3D2412" : "#fff",
+            }}
+          >
             {course.isPremium === false ? "Free" : "Premium"}
           </ThemedText>
         </Box>
@@ -528,7 +535,9 @@ function CourseCard({ course, isDark }: any) {
                   )}
                 />
                 {errors.scoreType && (
-                  <Text style={styles.errorText}>{errors.scoreType.message}</Text>
+                  <Text style={styles.errorText}>
+                    {errors.scoreType.message}
+                  </Text>
                 )}
               </View>
 
@@ -617,7 +626,7 @@ function CourseCard({ course, isDark }: any) {
                 onPress={handleSubmit((data) => {
                   const selectedScore = scoringOptions[data.scoreType];
                   const selectedHoles = holesOptions[data.holesToPlay];
-                  
+
                   setHandicapView(false);
                   setModalVisible(false);
                   routePage.push(

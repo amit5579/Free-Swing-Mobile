@@ -3,7 +3,7 @@ import {
   addPlayerToTournament,
   getMembersList,
   removePlayerFromTournament,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import Toast from "react-native-toast-message";
 import { HStack } from "@/components/hstack";
 import { Skeleton } from "@/components/Skeleton";
@@ -106,101 +106,101 @@ export default function ManageTournament() {
   const dataToShow = isSearching ? filteredMembers : members;
 
   const RenderHeader = () => {
-  return (
-    <Box
-      style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
-        borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      }}
-    >
-      <VStack
+    return (
+      <Box
         style={{
-          paddingHorizontal: 16,
-          paddingTop: 14,
-          paddingBottom: 12,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
         }}
       >
-        {/* 🔝 TOP ROW */}
-        <HStack
+        <VStack
           style={{
-            alignItems: "center",
-            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingTop: 14,
+            paddingBottom: 12,
           }}
         >
-          {/* 🔙 BACK */}
-          <Pressable
-            onPress={() => routePage.back()}
+          {/* 🔝 TOP ROW */}
+          <HStack
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              justifyContent: "center",
               alignItems: "center",
-              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-            }}
-            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={20}
-              color={isDark ? "#fff" : "#020617"}
-            />
-          </Pressable>
-
-          {/* 🧠 TITLE BLOCK */}
-          <VStack
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 6,
+              justifyContent: "space-between",
             }}
           >
-            {/* LABEL */}
-            <ThemedText
+            {/* 🔙 BACK */}
+            <Pressable
+              onPress={() => routePage.back()}
               style={{
-                fontSize: 12,
-                color: isDark ? "#94a3b8" : "#64748b",
-                fontWeight: "500",
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+
+            {/* 🧠 TITLE BLOCK */}
+            <VStack
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 6,
               }}
             >
-              Manage Tournament
-            </ThemedText>
-
-            {/* MAIN TITLE */}
-            {loading ? (
-              <Skeleton
-                isDark={isDark}
-                height={18}
-                width={140}
-                style={{ marginTop: 2, borderRadius: 6 }}
-              />
-            ) : (
+              {/* LABEL */}
               <ThemedText
-                numberOfLines={1}
-                ellipsizeMode="tail"
                 style={{
-                  fontSize: 17,
-                  fontWeight: "700",
-                  marginTop: 2,
-                  maxWidth: "85%",
-                  textAlign: "center",
-                  color: isDark ? "#fff" : "#020617",
+                  fontSize: 12,
+                  color: isDark ? "#94a3b8" : "#64748b",
+                  fontWeight: "500",
                 }}
               >
-                {tournamentName}
+                Manage Tournament
               </ThemedText>
-            )}
-          </VStack>
 
-          {/* ⚖️ RIGHT SPACER */}
-          <View style={{ width: 40 }} />
-        </HStack>
-      </VStack>
-    </Box>
-  );
-};
+              {/* MAIN TITLE */}
+              {loading ? (
+                <Skeleton
+                  isDark={isDark}
+                  height={18}
+                  width={140}
+                  style={{ marginTop: 2, borderRadius: 6 }}
+                />
+              ) : (
+                <ThemedText
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "700",
+                    marginTop: 2,
+                    maxWidth: "85%",
+                    textAlign: "center",
+                    color: isDark ? "#fff" : "#020617",
+                  }}
+                >
+                  {tournamentName}
+                </ThemedText>
+              )}
+            </VStack>
+
+            {/* ⚖️ RIGHT SPACER */}
+            <View style={{ width: 40 }} />
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
 
   const SearchSkeleton = ({ isDark }: { isDark: boolean }) => (
     <Skeleton

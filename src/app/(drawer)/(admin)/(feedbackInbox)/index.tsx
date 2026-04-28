@@ -16,7 +16,7 @@ import { ThemedView } from "@/components/themed-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/text";
 import { Box } from "@/components/box";
-import { getFeedback, updateFeedback } from "@/api/admin/feedback";
+import { getFeedback, updateFeedback } from "@/api/modules/admin/feedback.api";
 import { Dropdown } from "react-native-element-dropdown";
 import { Skeleton } from "@/components/Skeleton";
 
@@ -233,245 +233,244 @@ export default function FeedbackInboxPage() {
     );
   };
 
-const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-      marginBottom: 20,
-    }}
-  >
-    <VStack style={{ paddingTop: 14, paddingBottom: 12 }}>
-      
-      {/* 🔝 TOP ROW */}
-      <HStack
-        style={{
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* 🔙 BACK */}
-         <Pressable
-              onPress={() => router.back()}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-              }}
-              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-            >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={isDark ? "#fff" : "#020617"}
-              />
-            </Pressable>
-
-        {/* 🧠 TITLE */}
-        <ThemedText
-          numberOfLines={1}
+  const renderHeader = () => (
+    <Box
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        marginBottom: 20,
+      }}
+    >
+      <VStack style={{ paddingTop: 14, paddingBottom: 12 }}>
+        {/* 🔝 TOP ROW */}
+        <HStack
           style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 18,
-            fontWeight: "700",
-            color: isDark ? "#fff" : "#020617",
-            paddingHorizontal: 8,
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-Feedback Inbox
-        </ThemedText>
+          {/* 🔙 BACK */}
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
 
-        {/* ⚖️ RIGHT SPACER */}
-        <View style={{ width: 40 }} />
-      </HStack>
-    </VStack>
-  </Box>
-);
+          {/* 🧠 TITLE */}
+          <ThemedText
+            numberOfLines={1}
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontSize: 18,
+              fontWeight: "700",
+              color: isDark ? "#fff" : "#020617",
+              paddingHorizontal: 8,
+            }}
+          >
+            Feedback Inbox
+          </ThemedText>
+
+          {/* ⚖️ RIGHT SPACER */}
+          <View style={{ width: 40 }} />
+        </HStack>
+      </VStack>
+    </Box>
+  );
 
   return (
     <>
-        <SafeAreaView
-          style={{
-            flex: 1,
-            backgroundColor: isDark ? "#020617" : "#ffffff",
-          }}
-        >
-          <Watermark />
-          <ScrollView>
-            <VStack className="flex-1 p-4">
-              {/* HEADER (FIXED) */}
-             {renderHeader()}
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
+        }}
+      >
+        <Watermark />
+        <ScrollView>
+          <VStack className="flex-1 p-4">
+            {/* HEADER (FIXED) */}
+            {renderHeader()}
 
-              <VStack
+            <VStack
+              style={{
+                padding: 14,
+                borderRadius: 16,
+                borderWidth: 1,
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                marginBottom: 16,
+              }}
+            >
+              {/* Badge */}
+              <Text
                 style={{
-                  padding: 14,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  backgroundColor: isDark
-                    ? "rgba(15, 23, 42, 0.7)"
-                    : "rgba(255, 255, 255, 0.7)",
-                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                  marginBottom: 16,
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: "#8BC34A",
+                  marginBottom: 6,
                 }}
               >
-                {/* Badge */}
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    color: "#8BC34A",
-                    marginBottom: 6,
-                  }}
-                >
-                  ADMIN INBOX
-                </Text>
+                ADMIN INBOX
+              </Text>
 
-                {/* Title */}
-                <Text
-                  style={{
-                    fontSize: 17,
-                    fontWeight: "700",
-                    marginBottom: 4,
-                    color: isDark ? "#ccd1dbff" : "black",
-                  }}
-                >
-                  Feedback & Requests
-                </Text>
-
-                {/* Subtitle */}
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: isDark ? "#ccd1dbff" : "black",
-                    marginBottom: 12,
-                  }}
-                >
-                  Manage user feedback and updates
-                </Text>
-
-                {/* Stats Grid */}
-                {isLoading ? (
-                  <StatsSkeleton />
-                ) : (
-                  <HStack
-                    style={{
-                      flexWrap: "wrap",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    {[
-                      { label: "Total", value: feedbackData.length || 0 },
-                      {
-                        label: "Open",
-                        value:
-                          feedbackData.filter(
-                            (item: any) => item.status === "Open",
-                          ).length || 0,
-                      },
-                      {
-                        label: "Ongoing",
-                        value:
-                          feedbackData.filter(
-                            (item: any) => item.status === "InProgress",
-                          ).length || 0,
-                      },
-                      {
-                        label: "Resolved",
-                        value:
-                          feedbackData.filter(
-                            (item: any) => item.status === "Resolved",
-                          ).length || 0,
-                      },
-                    ].map((item, index) => (
-                      <Box
-                        key={index}
-                        style={{
-                          width: "48%",
-                          padding: 10,
-                          borderRadius: 12,
-                          borderWidth: 1,
-                          borderColor: isDark ? "#262626" : "#e5e7eb",
-                          marginBottom: 8,
-                          alignItems: "center",
-                        }}
-                      >
-                        <ThemedText style={{ fontSize: 19, fontWeight: "700" }}>
-                          {item.value}
-                        </ThemedText>
-                        <ThemedText style={{ fontSize: 11 }}>
-                          {item.label}
-                        </ThemedText>
-                      </Box>
-                    ))}
-                  </HStack>
-                )}
-              </VStack>
-              {/* Tab Buttons */}
-              <HStack
-                className="rounded-full p-1 mb-6"
+              {/* Title */}
+              <Text
                 style={{
-                  backgroundColor: isDark
-                    ? "rgba(15, 23, 42, 0.7)"
-                    : "rgba(255, 255, 255, 0.7)",
-                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                  borderWidth: 1,
+                  fontSize: 17,
+                  fontWeight: "700",
+                  marginBottom: 4,
+                  color: isDark ? "#ccd1dbff" : "black",
                 }}
               >
-                {tabs.map((tab) => {
-                  const active = activeTab === tab.key;
-                  return (
-                    <Pressable
-                      key={tab.key}
-                      onPress={() => setActiveTab(tab.key)}
-                      className="flex-1 px-4 py-4 rounded-full flex-row items-center justify-center"
-                      style={active ? { backgroundColor: "#8BC34A" } : {}}
+                Feedback & Requests
+              </Text>
+
+              {/* Subtitle */}
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: isDark ? "#ccd1dbff" : "black",
+                  marginBottom: 12,
+                }}
+              >
+                Manage user feedback and updates
+              </Text>
+
+              {/* Stats Grid */}
+              {isLoading ? (
+                <StatsSkeleton />
+              ) : (
+                <HStack
+                  style={{
+                    flexWrap: "wrap",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  {[
+                    { label: "Total", value: feedbackData.length || 0 },
+                    {
+                      label: "Open",
+                      value:
+                        feedbackData.filter(
+                          (item: any) => item.status === "Open",
+                        ).length || 0,
+                    },
+                    {
+                      label: "Ongoing",
+                      value:
+                        feedbackData.filter(
+                          (item: any) => item.status === "InProgress",
+                        ).length || 0,
+                    },
+                    {
+                      label: "Resolved",
+                      value:
+                        feedbackData.filter(
+                          (item: any) => item.status === "Resolved",
+                        ).length || 0,
+                    },
+                  ].map((item, index) => (
+                    <Box
+                      key={index}
+                      style={{
+                        width: "48%",
+                        padding: 10,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: isDark ? "#262626" : "#e5e7eb",
+                        marginBottom: 8,
+                        alignItems: "center",
+                      }}
                     >
-                      {/* <Ionicons
+                      <ThemedText style={{ fontSize: 19, fontWeight: "700" }}>
+                        {item.value}
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 11 }}>
+                        {item.label}
+                      </ThemedText>
+                    </Box>
+                  ))}
+                </HStack>
+              )}
+            </VStack>
+            {/* Tab Buttons */}
+            <HStack
+              className="rounded-full p-1 mb-6"
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                borderWidth: 1,
+              }}
+            >
+              {tabs.map((tab) => {
+                const active = activeTab === tab.key;
+                return (
+                  <Pressable
+                    key={tab.key}
+                    onPress={() => setActiveTab(tab.key)}
+                    className="flex-1 px-4 py-4 rounded-full flex-row items-center justify-center"
+                    style={active ? { backgroundColor: "#8BC34A" } : {}}
+                  >
+                    {/* <Ionicons
                   name={tab.icon as any}
                   size={16}
                   color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
                   className="mr-1"
                 /> */}
-                      <Text
-                        className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-300" : "text-gray-600"}`}
-                      >
-                        {tab.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </HStack>
-              {/* CONTENT */}
+                    <Text
+                      className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-300" : "text-gray-600"}`}
+                    >
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </HStack>
+            {/* CONTENT */}
 
-              {activeTab === "all" && (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {renderContent()}
-                </ScrollView>
-              )}
+            {activeTab === "all" && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {renderContent()}
+              </ScrollView>
+            )}
 
-              {activeTab === "open" && (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {renderContent()}
-                </ScrollView>
-              )}
-              {activeTab === "InProgress" && (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {renderContent()}
-                </ScrollView>
-              )}
-              {activeTab === "resolved" && (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {renderContent()}
-                </ScrollView>
-              )}
-            </VStack>
-          </ScrollView>
-        </SafeAreaView>
+            {activeTab === "open" && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {renderContent()}
+              </ScrollView>
+            )}
+            {activeTab === "InProgress" && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {renderContent()}
+              </ScrollView>
+            )}
+            {activeTab === "resolved" && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {renderContent()}
+              </ScrollView>
+            )}
+          </VStack>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

@@ -1,10 +1,10 @@
-import https from "../https";
+import client from "../../client";
 
 
 // get feedback list endpoint : Feedback/manage
 export const getFeedback = async () => {
     try {
-        const response = await https.get(`Feedback/manage`);
+        const response = await client.get(`Feedback/manage`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -16,9 +16,9 @@ export const getFeedback = async () => {
 
 
 // update feedback status endpoint : Feedback/1/manage
-export const updateFeedback = async (feedbackId: number, adminResponse: string , status:string) => {
+export const updateFeedback = async (feedbackId: number, adminResponse: string, status: string) => {
     try {
-        const response = await https.put(`Feedback/${feedbackId}/manage`, {adminResponse,status});
+        const response = await client.put(`Feedback/${feedbackId}/manage`, { adminResponse, status });
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -31,7 +31,7 @@ export const updateFeedback = async (feedbackId: number, adminResponse: string ,
 // send feedback to admin - post - Feedback category , subject , message
 export const sendFeedback = async (category: string, subject: string, message: string) => {
     try {
-        const response = await https.post(`Feedback`, {category,subject,message});
+        const response = await client.post(`Feedback`, { category, subject, message });
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {
@@ -58,7 +58,7 @@ export const sendFeedback = async (category: string, subject: string, message: s
 //     }
 export const getFeedbackHistory = async () => {
     try {
-        const response = await https.get(`Feedback/mine`);
+        const response = await client.get(`Feedback/mine`);
         // console.log("fffff",response.data);
         return response.data;
     } catch (error) {

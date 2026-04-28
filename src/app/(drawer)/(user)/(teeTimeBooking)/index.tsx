@@ -22,7 +22,7 @@ import {
   cancelSeatBooking,
   getSubAdminCourses,
   getTeeTimeSeats,
-} from "@/api/teeTime";
+} from "@/api/modules/teeTime.api";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -705,7 +705,6 @@ export default function TeeTimeBookingPage() {
                   );
                 })}
               </HStack>
-
 
               <HStack
                 style={{

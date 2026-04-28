@@ -19,12 +19,12 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 
 import { Ionicons } from "@expo/vector-icons";
-import { createMember } from "@/api/admin/allMembers";
+import { createMember } from "@/api/modules/admin/allMembers.api";
 import { addMemberSchema, AddMemberType } from "@/schema/adminSchemas";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Toast from "react-native-toast-message";
-import { getCourse } from "@/api/admin/courses";
+import { getCourse } from "@/api/modules/admin/courses.api";
 import { Dropdown } from "react-native-element-dropdown";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -161,14 +161,17 @@ export default function AddMemberScreen() {
             />
           </Pressable>
           <VStack style={{ flex: 1 }}>
-            <ThemedText style={{ fontSize: 20, fontWeight: "800", letterSpacing: -0.4 }}>
+            <ThemedText
+              style={{ fontSize: 20, fontWeight: "800", letterSpacing: -0.4 }}
+            >
               Add Member
             </ThemedText>
-            <ThemedText style={{ fontSize: 12, color: colors.subText, marginTop: 1 }}>
+            <ThemedText
+              style={{ fontSize: 12, color: colors.subText, marginTop: 1 }}
+            >
               Fill in the details to create a new member
             </ThemedText>
           </VStack>
-
         </HStack>
 
         <ScrollView
@@ -177,7 +180,13 @@ export default function AddMemberScreen() {
         >
           {/* ── Row: Name + Email ── */}
           <View style={styles.formRow}>
-            <FormField label="Name" required error={errors.username?.message} halfWidth colors={colors}>
+            <FormField
+              label="Name"
+              required
+              error={errors.username?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="username"
@@ -187,13 +196,28 @@ export default function AddMemberScreen() {
                     placeholderTextColor={colors.dimText}
                     value={value}
                     onChangeText={onChange}
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.username ? "#ef4444" : colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.username
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
             </FormField>
 
-            <FormField label="Email" required error={errors.email?.message} halfWidth colors={colors}>
+            <FormField
+              label="Email"
+              required
+              error={errors.email?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="email"
@@ -205,7 +229,16 @@ export default function AddMemberScreen() {
                     onChangeText={onChange}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.email ? "#ef4444" : colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.email
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
@@ -214,7 +247,13 @@ export default function AddMemberScreen() {
 
           {/* ── Row: Password + Membership ── */}
           <View style={styles.formRow}>
-            <FormField label="Password" required error={errors.password?.message} halfWidth colors={colors}>
+            <FormField
+              label="Password"
+              required
+              error={errors.password?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="password"
@@ -225,13 +264,28 @@ export default function AddMemberScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.password ? "#ef4444" : colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.password
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
             </FormField>
 
-            <FormField label="Membership No." required error={errors.membershipNo?.message} halfWidth colors={colors}>
+            <FormField
+              label="Membership No."
+              required
+              error={errors.membershipNo?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="membershipNo"
@@ -241,7 +295,16 @@ export default function AddMemberScreen() {
                     placeholderTextColor={colors.dimText}
                     value={value}
                     onChangeText={onChange}
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.membershipNo ? "#ef4444" : colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.membershipNo
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
@@ -250,7 +313,13 @@ export default function AddMemberScreen() {
 
           {/* ── Row: Mobile + Date of Birth ── */}
           <View style={styles.formRow}>
-            <FormField label="Mobile" required error={errors.mobileNumber?.message} halfWidth colors={colors}>
+            <FormField
+              label="Mobile"
+              required
+              error={errors.mobileNumber?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="mobileNumber"
@@ -261,13 +330,27 @@ export default function AddMemberScreen() {
                     value={value}
                     onChangeText={onChange}
                     keyboardType="phone-pad"
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.mobileNumber ? "#ef4444" : colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.mobileNumber
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
             </FormField>
 
-            <FormField label="Date of Birth" error={errors.dateOfBirth?.message} halfWidth colors={colors}>
+            <FormField
+              label="Date of Birth"
+              error={errors.dateOfBirth?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="dateOfBirth"
@@ -275,12 +358,30 @@ export default function AddMemberScreen() {
                   <>
                     <Pressable
                       onPress={() => setShowDatePicker(true)}
-                      style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        },
+                      ]}
                     >
-                      <ThemedText style={{ fontSize: 14, color: value ? colors.text : colors.dimText }}>
+                      <ThemedText
+                        style={{
+                          fontSize: 14,
+                          color: value ? colors.text : colors.dimText,
+                        }}
+                      >
                         {formatDateDisplay(value || "")}
                       </ThemedText>
-                      <Ionicons name="calendar-outline" size={18} color={colors.dimText} />
+                      <Ionicons
+                        name="calendar-outline"
+                        size={18}
+                        color={colors.dimText}
+                      />
                     </Pressable>
                     {showDatePicker && (
                       <DateTimePicker
@@ -303,16 +404,33 @@ export default function AddMemberScreen() {
 
           {/* ── Row: Home Course + Tee Box ── */}
           <View style={styles.formRow}>
-            <FormField label="Home Course" required error={errors.homeCourseId?.message} halfWidth colors={colors}>
+            <FormField
+              label="Home Course"
+              required
+              error={errors.homeCourseId?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="homeCourseId"
                 render={({ field: { onChange, value } }) => (
                   <Dropdown
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.homeCourseId ? "#ef4444" : colors.inputBorder }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.homeCourseId
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                      },
+                    ]}
                     placeholderStyle={{ color: colors.dimText, fontSize: 14 }}
                     selectedTextStyle={{ color: colors.text, fontSize: 14 }}
-                    data={courses.map((c: any) => ({ label: c.name, value: c.courseId }))}
+                    data={courses.map((c: any) => ({
+                      label: c.name,
+                      value: c.courseId,
+                    }))}
                     labelField="label"
                     valueField="value"
                     placeholder="Select Course"
@@ -330,21 +448,39 @@ export default function AddMemberScreen() {
               />
             </FormField>
 
-            <FormField label="Tee Box" required error={errors.teeBoxId?.message} halfWidth colors={colors}>
+            <FormField
+              label="Tee Box"
+              required
+              error={errors.teeBoxId?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="teeBoxId"
                 render={({ field: { onChange, value } }) => (
                   <Dropdown
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: errors.teeBoxId ? "#ef4444" : colors.inputBorder }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: errors.teeBoxId
+                          ? "#ef4444"
+                          : colors.inputBorder,
+                      },
+                    ]}
                     placeholderStyle={{ color: colors.dimText, fontSize: 14 }}
                     selectedTextStyle={{ color: colors.text, fontSize: 14 }}
-                    data={courses.find((c: any) => c.courseId === watch("homeCourseId"))?.teeBoxes?.map((t: any) => ({
-                      label: `${t.name} (S:${t.slope} R:${t.rating})`,
-                      value: t.teeBoxId,
-                      slope: t.slope,
-                      rating: t.rating,
-                    })) || []}
+                    data={
+                      courses
+                        .find((c: any) => c.courseId === watch("homeCourseId"))
+                        ?.teeBoxes?.map((t: any) => ({
+                          label: `${t.name} (S:${t.slope} R:${t.rating})`,
+                          value: t.teeBoxId,
+                          slope: t.slope,
+                          rating: t.rating,
+                        })) || []
+                    }
                     labelField="label"
                     valueField="value"
                     placeholder="Select Tee"
@@ -362,7 +498,12 @@ export default function AddMemberScreen() {
 
           {/* ── Row: Handicap + Handicap Index ── */}
           <View style={styles.formRow}>
-            <FormField label="Handicap" error={errors.handicap?.message} halfWidth colors={colors}>
+            <FormField
+              label="Handicap"
+              error={errors.handicap?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="handicap"
@@ -373,13 +514,25 @@ export default function AddMemberScreen() {
                     value={value?.toString() || ""}
                     onChangeText={(t) => onChange(t === "" ? 0 : Number(t))}
                     keyboardType="numeric"
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
             </FormField>
 
-            <FormField label="Handicap Index" error={errors.handicapIndex?.message} halfWidth colors={colors}>
+            <FormField
+              label="Handicap Index"
+              error={errors.handicapIndex?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="handicapIndex"
@@ -390,7 +543,14 @@ export default function AddMemberScreen() {
                     value={value?.toString() || ""}
                     onChangeText={(t) => onChange(t === "" ? 0 : Number(t))}
                     keyboardType="decimal-pad"
-                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
@@ -399,7 +559,12 @@ export default function AddMemberScreen() {
 
           {/* ── Row: Course Slope + Course Rating ── */}
           <View style={styles.formRow}>
-            <FormField label="Course Slope" error={errors.courseSlope?.message} halfWidth colors={colors}>
+            <FormField
+              label="Course Slope"
+              error={errors.courseSlope?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="courseSlope"
@@ -410,13 +575,25 @@ export default function AddMemberScreen() {
                     value={value?.toString() || ""}
                     onChangeText={(t) => onChange(t === "" ? 0 : Number(t))}
                     keyboardType="numeric"
-                    style={[styles.input, { backgroundColor: colors.disabledBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.disabledBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
             </FormField>
 
-            <FormField label="Course Rating" error={errors.courseRating?.message} halfWidth colors={colors}>
+            <FormField
+              label="Course Rating"
+              error={errors.courseRating?.message}
+              halfWidth
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="courseRating"
@@ -427,7 +604,14 @@ export default function AddMemberScreen() {
                     value={value?.toString() || ""}
                     onChangeText={(t) => onChange(t === "" ? 0 : Number(t))}
                     keyboardType="decimal-pad"
-                    style={[styles.input, { backgroundColor: colors.disabledBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.disabledBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text,
+                      },
+                    ]}
                   />
                 )}
               />
@@ -457,7 +641,9 @@ export default function AddMemberScreen() {
               backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "#e2e8f0",
             }}
           >
-            <ThemedText style={{ fontSize: 14, fontWeight: "600", color: colors.subText }}>
+            <ThemedText
+              style={{ fontSize: 14, fontWeight: "600", color: colors.subText }}
+            >
               Cancel
             </ThemedText>
           </Pressable>
@@ -484,7 +670,9 @@ export default function AddMemberScreen() {
             {submitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <ThemedText style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>
+              <ThemedText
+                style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
+              >
                 Create Member
               </ThemedText>
             )}
@@ -514,7 +702,9 @@ function FormField({
   return (
     <VStack style={{ width: halfWidth ? "48%" : "100%", marginBottom: 12 }}>
       <HStack style={{ marginBottom: 6, gap: 4 }}>
-        <ThemedText style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}>
+        <ThemedText
+          style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}
+        >
           {label}
         </ThemedText>
         {required && <ThemedText style={{ color: "#ef4444" }}>*</ThemedText>}

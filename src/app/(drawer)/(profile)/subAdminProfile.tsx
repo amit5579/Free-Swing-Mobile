@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { getProfile, uploadProfileImage } from "@/api/profile";
+import { getProfile, uploadProfileImage } from "@/api/modules/profile.api";
 import { Image } from "expo-image";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,10 +43,13 @@ export default function SubAdminProfile() {
         return true;
       };
 
-      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
 
       return () => backHandler.remove();
-    }, [router])
+    }, [router]),
   );
 
   const {
@@ -75,43 +78,43 @@ export default function SubAdminProfile() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const pickImage = async () => {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
-      if (!permission.granted) {
-        alert("Permission required to access gallery");
-        return;
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      alert("Permission required to access gallery");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const selectedImage = result.assets[0];
+      setImageError(false);
+
+      try {
+        setUploading(true);
+        await uploadProfileImage(selectedImage);
+        Toast.show({
+          type: "success",
+          text1: "Profile  Picture Updated",
+        });
+        await fetchProfile();
+      } catch (error) {
+        console.log("Upload failed", error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to upload profile Picture",
+        });
+      } finally {
+        setUploading(false);
       }
-  
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-  
-      if (!result.canceled) {
-        const selectedImage = result.assets[0];
-        setImageError(false);
-  
-        try {
-          setUploading(true);
-          await uploadProfileImage(selectedImage);
-          Toast.show({
-            type: "success",
-            text1: "Profile  Picture Updated",
-          });
-          await fetchProfile();
-        } catch (error) {
-          console.log("Upload failed", error);
-          Toast.show({
-            type: "error",
-             text1: "Failed to upload profile Picture",
-          });
-        } finally {
-          setUploading(false);
-        }
-      }
-    };
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -173,7 +176,10 @@ export default function SubAdminProfile() {
   // };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+      edges={["top", "left", "right"]}
+    >
       <ThemedView className="flex-1 px-5">
         <Watermark />
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -181,22 +187,44 @@ export default function SubAdminProfile() {
             <>
               <HStack className="items-center my-6">
                 <Skeleton isDark={isDark} height={24} width={24} />
-                <Skeleton isDark={isDark} height={20} width="30%" borderRadius={4} style={{ marginLeft: 12 }} />
+                <Skeleton
+                  isDark={isDark}
+                  height={20}
+                  width="30%"
+                  borderRadius={4}
+                  style={{ marginLeft: 12 }}
+                />
               </HStack>
               <ProfileCardSkeleton isDark={isDark} />
               {/* <StatsSkeleton isDark={isDark} /> */}
               <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
-                <Skeleton isDark={isDark} height={20} width="60%" style={{ marginBottom: 10 }} />
+                <Skeleton
+                  isDark={isDark}
+                  height={20}
+                  width="60%"
+                  style={{ marginBottom: 10 }}
+                />
                 <Skeleton isDark={isDark} height={14} width="80%" />
               </Box>
             </>
           ) : (
             <>
               <HStack className="items-center my-6">
-                <Pressable onPress={() => router.navigate("/(drawer)/(subAdmin)/(tabs)/dashboard")} hitSlop={20}>
-                  <Ionicons name="arrow-back-outline" size={24} color="#8BC34A" />
+                <Pressable
+                  onPress={() =>
+                    router.navigate("/(drawer)/(subAdmin)/(tabs)/dashboard")
+                  }
+                  hitSlop={20}
+                >
+                  <Ionicons
+                    name="arrow-back-outline"
+                    size={24}
+                    color="#8BC34A"
+                  />
                 </Pressable>
-                <ThemedText style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}>
+                <ThemedText
+                  style={{ fontSize: 20, fontWeight: "700", marginLeft: 12 }}
+                >
                   Profile
                 </ThemedText>
               </HStack>
@@ -204,32 +232,94 @@ export default function SubAdminProfile() {
               <Box className="rounded-3xl p-6 mb-6 bg-white/5">
                 <VStack className="items-center">
                   <Pressable onPress={pickImage}>
-                    <View style={{ borderWidth: 3, borderColor: "#8bc34a", borderRadius: 999, padding: 3, marginBottom: 14, position: "relative" }}>
-                      {((profileData?.profilePictureUrl && profileData.profilePictureUrl.trim() !== "" && profileData.profilePictureUrl !== "null")) && !imageError ? (
+                    <View
+                      style={{
+                        borderWidth: 3,
+                        borderColor: "#8bc34a",
+                        borderRadius: 999,
+                        padding: 3,
+                        marginBottom: 14,
+                        position: "relative",
+                      }}
+                    >
+                      {profileData?.profilePictureUrl &&
+                      profileData.profilePictureUrl.trim() !== "" &&
+                      profileData.profilePictureUrl !== "null" &&
+                      !imageError ? (
                         <Image
-                          source={{ uri:(profileData?.profilePictureUrl?.startsWith('http') ? profileData.profilePictureUrl : `https://kolve18freeswing.com${profileData.profilePictureUrl}`) }}
+                          source={{
+                            uri: profileData?.profilePictureUrl?.startsWith(
+                              "http",
+                            )
+                              ? profileData.profilePictureUrl
+                              : `https://kolve18freeswing.com${profileData.profilePictureUrl}`,
+                          }}
                           style={{ width: 90, height: 90, borderRadius: 45 }}
                           onError={() => setImageError(true)}
                         />
                       ) : (
-                        <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#8BC34A" }}>
-                          <Text style={{ fontSize: 40, fontWeight: "bold", color: isDark ? "#fff" : "#2E7D32" }}>
-                            {profileData?.username?.trim() ? profileData.username.trim()[0].toUpperCase() : "S"}
+                        <View
+                          style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 45,
+                            backgroundColor: isDark ? "#333" : "#C5E1A5",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderWidth: 2,
+                            borderColor: "#8BC34A",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 40,
+                              fontWeight: "bold",
+                              color: isDark ? "#fff" : "#2E7D32",
+                            }}
+                          >
+                            {profileData?.username?.trim()
+                              ? profileData.username.trim()[0].toUpperCase()
+                              : "S"}
                           </Text>
                         </View>
                       )}
-                      <View style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#8bc34a", borderRadius: 20, padding: 6 }}>
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          backgroundColor: "#8bc34a",
+                          borderRadius: 20,
+                          padding: 6,
+                        }}
+                      >
                         <Ionicons name="camera" size={14} color="white" />
                       </View>
                       {uploading && (
-                        <View style={{ position: "absolute", width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
-                          <Ionicons name="cloud-upload-outline" size={22} color="white" />
+                        <View
+                          style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "rgba(0,0,0,0.5)",
+                            borderRadius: 999,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Ionicons
+                            name="cloud-upload-outline"
+                            size={22}
+                            color="white"
+                          />
                         </View>
                       )}
                     </View>
                   </Pressable>
 
-                  <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>{profileData?.username}</ThemedText>
+                  <ThemedText style={{ fontSize: 22, fontWeight: "700" }}>
+                    {profileData?.username}
+                  </ThemedText>
                   {/* <Box className="border border-gray-400 mt-3 px-5 py-2 rounded-full">
                     <ThemedText style={{ fontSize: 14 }}>{profileData?.role || "Sub Admin"}</ThemedText>
                   </Box> */}
@@ -262,16 +352,28 @@ export default function SubAdminProfile() {
                   <HStack className="items-center gap-3">
                     <Mail size={20} color="#8bc34a" />
                     <VStack>
-                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>Email Address</ThemedText>
-                      <ThemedText style={{ fontSize: 15, fontWeight: "500" }}>{profileData?.email}</ThemedText>
+                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                        Email Address
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 15, fontWeight: "500" }}>
+                        {profileData?.email}
+                      </ThemedText>
                     </VStack>
                   </HStack>
                   <Divider />
                   <HStack className="items-center gap-3">
-                    <Ionicons name="shield-checkmark" size={20} color="#8bc34a" />
+                    <Ionicons
+                      name="shield-checkmark"
+                      size={20}
+                      color="#8bc34a"
+                    />
                     <VStack>
-                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>Role Control</ThemedText>
-                      <ThemedText style={{ fontSize: 15, fontWeight: "500" }}>Exclusive Sub-Administrator</ThemedText>
+                      <ThemedText style={{ fontSize: 12, opacity: 0.6 }}>
+                        Role Control
+                      </ThemedText>
+                      <ThemedText style={{ fontSize: 15, fontWeight: "500" }}>
+                        Exclusive Sub-Administrator
+                      </ThemedText>
                     </VStack>
                   </HStack>
                 </VStack>
@@ -280,9 +382,16 @@ export default function SubAdminProfile() {
               <VStack space="md" className="mt-6">
                 <Pressable
                   onPress={() => setPasswordModal(true)}
-                  style={{ backgroundColor: "#8BC34A", padding: 14, borderRadius: 12, alignItems: "center" }}
+                  style={{
+                    backgroundColor: "#8BC34A",
+                    padding: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                  }}
                 >
-                  <ThemedText style={{ color: "#fff", fontWeight: "600" }}>Change Password</ThemedText>
+                  <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+                    Change Password
+                  </ThemedText>
                 </Pressable>
 
                 {/* <Pressable
@@ -297,16 +406,50 @@ export default function SubAdminProfile() {
         </ScrollView>
       </ThemedView>
 
-      <Modal animationType="slide" transparent visible={passwordModal} onRequestClose={() => setPasswordModal(false)}>
-        <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)", padding: 16 }}>
-          <View style={{ backgroundColor: isDark ? "#111" : "#fff", borderRadius: 16, padding: 18 }}>
-            <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>Change Password</ThemedText>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={passwordModal}
+        onRequestClose={() => setPasswordModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            padding: 16,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: isDark ? "#111" : "#fff",
+              borderRadius: 16,
+              padding: 18,
+            }}
+          >
+            <HStack
+              style={{
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+                Change Password
+              </ThemedText>
               <Pressable onPress={() => setPasswordModal(false)}>
-                <Ionicons name="close" size={22} color={isDark ? "#fff" : "#000"} />
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDark ? "#fff" : "#000"}
+                />
               </Pressable>
             </HStack>
-            <ThemedText style={{ fontSize: 13, opacity: 0.6, marginBottom: 14 }}>Update your account security</ThemedText>
+            <ThemedText
+              style={{ fontSize: 13, opacity: 0.6, marginBottom: 14 }}
+            >
+              Update your account security
+            </ThemedText>
 
             <VStack space="md">
               <Controller
@@ -323,7 +466,9 @@ export default function SubAdminProfile() {
                         placeholderTextColor={isDark ? "#888" : "#9ca3af"}
                         style={{
                           borderWidth: 1,
-                          borderColor: errors.currentPassword ? "red" : "#e5e5e5",
+                          borderColor: errors.currentPassword
+                            ? "red"
+                            : "#e5e5e5",
                           borderRadius: 10,
                           padding: 12,
                           paddingRight: 45,
@@ -331,18 +476,26 @@ export default function SubAdminProfile() {
                         }}
                       />
                       <Pressable
-                        onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                        onPress={() =>
+                          setShowCurrentPassword(!showCurrentPassword)
+                        }
                         style={{ position: "absolute", right: 12, top: 12 }}
                       >
                         <Ionicons
-                          name={showCurrentPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showCurrentPassword
+                              ? "eye-outline"
+                              : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#666"}
                         />
                       </Pressable>
                     </View>
                     {errors.currentPassword && (
-                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                      <Text
+                        style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                      >
                         *{errors.currentPassword.message}
                       </Text>
                     )}
@@ -375,14 +528,18 @@ export default function SubAdminProfile() {
                         style={{ position: "absolute", right: 12, top: 12 }}
                       >
                         <Ionicons
-                          name={showNewPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showNewPassword ? "eye-outline" : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#666"}
                         />
                       </Pressable>
                     </View>
                     {errors.newPassword && (
-                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                      <Text
+                        style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                      >
                         *{errors.newPassword.message}
                       </Text>
                     )}
@@ -403,7 +560,9 @@ export default function SubAdminProfile() {
                         placeholderTextColor={isDark ? "#888" : "#9ca3af"}
                         style={{
                           borderWidth: 1,
-                          borderColor: errors.confirmPassword ? "red" : "#e5e5e5",
+                          borderColor: errors.confirmPassword
+                            ? "red"
+                            : "#e5e5e5",
                           borderRadius: 10,
                           padding: 12,
                           paddingRight: 45,
@@ -411,18 +570,26 @@ export default function SubAdminProfile() {
                         }}
                       />
                       <Pressable
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onPress={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         style={{ position: "absolute", right: 12, top: 12 }}
                       >
                         <Ionicons
-                          name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showConfirmPassword
+                              ? "eye-outline"
+                              : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#666"}
                         />
                       </Pressable>
                     </View>
                     {errors.confirmPassword && (
-                      <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+                      <Text
+                        style={{ color: "red", fontSize: 12, marginTop: 4 }}
+                      >
                         *{errors.confirmPassword.message}
                       </Text>
                     )}
@@ -434,13 +601,28 @@ export default function SubAdminProfile() {
             <HStack style={{ marginTop: 18, justifyContent: "space-between" }}>
               <Pressable
                 onPress={() => setPasswordModal(false)}
-                style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#d1d5db", alignItems: "center", marginRight: 8 }}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "#d1d5db",
+                  alignItems: "center",
+                  marginRight: 8,
+                }}
               >
                 <ThemedText style={{ fontWeight: "600" }}>Cancel</ThemedText>
               </Pressable>
               <Pressable
                 onPress={handleSubmit(onSubmit)}
-                style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#8BC34A", alignItems: "center", marginLeft: 8 }}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#8BC34A",
+                  alignItems: "center",
+                  marginLeft: 8,
+                }}
               >
                 <Text style={{ color: "#fff", fontWeight: "600" }}>Update</Text>
               </Pressable>

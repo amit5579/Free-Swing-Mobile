@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   getTournamentHistory,
   getTournamentHistoryByUserId,
-} from "@/api/admin/tournaments";
+} from "@/api/modules/admin/tournaments.api";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function subAdminTournamentHistory() {

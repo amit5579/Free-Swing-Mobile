@@ -1,9 +1,9 @@
-import https from "../https";
+import client from "../../client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const getTournaments = async () => {
     try {
-        const response = await https.get(`Tournament`);
+        const response = await client.get(`Tournament`);
         // console.log("Fetching Tournament list:", response.data);
         return response.data;
 
@@ -22,7 +22,7 @@ export const getAllTournaments = async () => {
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await https.get(`/Tournament/player/${userId}`);
+        const response = await client.get(`/Tournament/player/${userId}`);
         return response.data;
     } catch (error) {
         console.error("Fetching all tournaments Error:", error);
@@ -35,7 +35,7 @@ export const getAllTournaments = async () => {
 
 export const createTournament = async (tournamentData: any) => {
     try {
-        const response = await https.post(`Tournament`, tournamentData);
+        const response = await client.post(`Tournament`, tournamentData);
         // console.log("Created Tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -54,7 +54,7 @@ export const createMiniTournament = async (courseId: number, description: string
             throw new Error("creatorId not found in storage");
         }
 
-        const response = await https.post(`Tournament`, { courseId, creatorId, description, endDate, maxPlayers, name, scoringType, startDate, teeBoxId });
+        const response = await client.post(`Tournament`, { courseId, creatorId, description, endDate, maxPlayers, name, scoringType, startDate, teeBoxId });
         // console.log("Created Tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -68,9 +68,9 @@ export const createMiniTournament = async (courseId: number, description: string
 
 // Update Tournament Tournament/16
 
-export const updateTournament = async ( tournamentData: any , tournamentId: number) => {
+export const updateTournament = async (tournamentData: any, tournamentId: number) => {
     try {
-        const response = await https.put(`Tournament/${tournamentId}`, tournamentData);
+        const response = await client.put(`Tournament/${tournamentId}`, tournamentData);
         console.log("Updated Tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -83,7 +83,7 @@ export const updateTournament = async ( tournamentData: any , tournamentId: numb
 
 export const deleteTournament = async (tournamentId: number) => {
     try {
-        const response = await https.delete(`Tournament/${tournamentId}`);
+        const response = await client.delete(`Tournament/${tournamentId}`);
         console.log("Deleted Tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -100,7 +100,7 @@ export const postAcceptanceWeiver = async (tournamentId: number, isUnder18: bool
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await https.post(`Tournament/${tournamentId}/accept-waiver`, { isUnder18, parentGuardianMobile, parentGuardianName, parentGuardianRelation, userId});
+        const response = await client.post(`Tournament/${tournamentId}/accept-waiver`, { isUnder18, parentGuardianMobile, parentGuardianName, parentGuardianRelation, userId });
         // console.log("Acceptance Weiver:", response.data);
         return response.data;
     } catch (error) {
@@ -114,7 +114,7 @@ export const postAcceptanceWeiver = async (tournamentId: number, isUnder18: bool
 
 export const getAllPlayers = async () => {
     try {
-        const response = await https.get(`User/list`);
+        const response = await client.get(`User/list`);
         // console.log("Fetching all players list:", response.data);
         return response.data;
 
@@ -128,7 +128,7 @@ export const getAllPlayers = async () => {
 
 export const getTournamentPlayers = async (tournamentId: number) => {
     try {
-        const response = await https.get(`Tournament/${tournamentId}/players`);
+        const response = await client.get(`Tournament/${tournamentId}/players`);
         // console.log("Fetching Tournament players list:", response.data);
         return response.data;
 
@@ -142,7 +142,7 @@ export const getTournamentPlayers = async (tournamentId: number) => {
 
 export const addPlayerToTournament = async (tournamentId: number, userId: number) => {
     try {
-        const response = await https.post(`Tournament/join`, { tournamentId, userId });
+        const response = await client.post(`Tournament/join`, { tournamentId, userId });
         // console.log("Added Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", userId);
         return response.data;
 
@@ -156,7 +156,7 @@ export const addPlayerToTournament = async (tournamentId: number, userId: number
 
 export const getAddedPlayers = async (tournamentId: number) => {
     try {
-        const response = await https.get(`Tournament/${tournamentId}/players`);
+        const response = await client.get(`Tournament/${tournamentId}/players`);
         // console.log("Compare toggle player:", response.data);
         return response.data;
     } catch (error) {
@@ -173,11 +173,11 @@ export const removePlayerFromTournament = async (tournamentId: any, userId?: num
         if (!finalUserId) {
             finalUserId = Number(await AsyncStorage.getItem("userId"));
         }
-        
+
         if (!finalUserId) {
             throw new Error("User ID not found");
         }
-        const response = await https.delete(`Tournament/${tournamentId}/players/${finalUserId}`);
+        const response = await client.delete(`Tournament/${tournamentId}/players/${finalUserId}`);
         // console.log("Removed Tournament players :", response.data, "tournamentId:", tournamentId, "userId:", finalUserId);
         return response.data;
     } catch (error) {
@@ -190,7 +190,7 @@ export const removePlayerFromTournament = async (tournamentId: any, userId?: num
 
 export const getTournamentHistory = async (tournamentId: number) => {
     try {
-        const response = await https.get(`scorecard/tournament-history/${tournamentId}`);
+        const response = await client.get(`scorecard/tournament-history/${tournamentId}`);
         // console.log("Fetching Tournament history list:", response.data);
         return response.data;
     } catch (error) {
@@ -207,7 +207,7 @@ export const getTournamentHistoryByUserId = async (tournamentId: number) => {
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await https.get(`scorecard/my-tournament-history/${tournamentId}/${userId}`);
+        const response = await client.get(`scorecard/my-tournament-history/${tournamentId}/${userId}`);
         // console.log("Fetching tournament history list:", response.data);
         return response.data;
     } catch (error) {
@@ -232,7 +232,7 @@ export const getTournamentHistoryByUserId = async (tournamentId: number) => {
 //         if (!userId) {
 //             throw new Error("User ID not found in storage");
 //         }
-//         const response = await https.get(`scorecard/handicap/${userId}/${tournamentId}`);
+//         const response = await client.get(`scorecard/handicap/${userId}/${tournamentId}`);
 //         // console.log("Fetching handicap:", response.data);
 //         return response.data;
 //     } catch (error) {
@@ -246,7 +246,7 @@ export const getTournamentHistoryByUserId = async (tournamentId: number) => {
 
 export const getScorecardById = async (scorecardId: number) => {
     try {
-        const response = await https.get(`scorecard/details/${scorecardId}`);
+        const response = await client.get(`scorecard/details/${scorecardId}`);
         // console.log("Fetching scorecard details:", response.data);
         return response.data;
     } catch (error) {
@@ -260,7 +260,7 @@ export const getScorecardById = async (scorecardId: number) => {
 
 export const getLeaderboard = async (tournamentId: number) => {
     try {
-        const response = await https.get(`Tournament/${tournamentId}/leaderboard`);
+        const response = await client.get(`Tournament/${tournamentId}/leaderboard`);
         // console.log("Fetching leaderboard list:", response.data);
         return response.data;
     } catch (error) {
@@ -274,7 +274,7 @@ export const getLeaderboard = async (tournamentId: number) => {
 
 export const getTeeboxDetails = async (holeId: number) => {
     try {
-        const response = await https.get(`holes/teebox/${holeId}`);
+        const response = await client.get(`holes/teebox/${holeId}`);
         // console.log("Fetching teebox details:", response.data);
         return response.data;
     } catch (error) {
@@ -288,7 +288,7 @@ export const getTeeboxDetails = async (holeId: number) => {
 
 export const getMembersList = async () => {
     try {
-        const response = await https.get(`User/list`);
+        const response = await client.get(`User/list`);
         // console.log("Fetching members list:", response.data);
         return response.data;
     } catch (error) {
@@ -306,7 +306,7 @@ export const addUsersToTournament = async (tournamentId: number) => {
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await https.post(`Tournament/join`, { tournamentId, userId });
+        const response = await client.post(`Tournament/join`, { tournamentId, userId });
         // console.log("Added users to tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -324,7 +324,7 @@ export const removeFromTournament = async (tournamentId: number) => {
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await https.delete(`Tournament/${tournamentId}/players/${userId}`);
+        const response = await client.delete(`Tournament/${tournamentId}/players/${userId}`);
         // console.log("Removed from tournament:", response.data);
         return response.data;
     } catch (error) {
@@ -338,7 +338,7 @@ export const removeFromTournament = async (tournamentId: number) => {
 
 export const postSecretHoles = async (tournamentId: number, secretHoles: number[]) => {
     try {
-        const response = await https.post(`Tournament/${tournamentId}/secret-holes`, secretHoles);
+        const response = await client.post(`Tournament/${tournamentId}/secret-holes`, secretHoles);
         // console.log("Posted secret holes:", response.data);
         return response.data;
     } catch (error) {

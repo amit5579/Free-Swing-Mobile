@@ -1,12 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, TouchableOpacity, useColorScheme, View, Text, StyleSheet } from "react-native";
+import {
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+  Text,
+  StyleSheet,
+} from "react-native";
 import { useNavigation } from "expo-router";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserProfile, UserProfile } from "@/api/dashboard";
+import { getUserProfile, UserProfile } from "@/api/modules/dashboard.api";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Skeleton } from "@/components/Skeleton";
@@ -25,20 +32,20 @@ export default function TabLayout() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const userId = await AsyncStorage.getItem("userId");
-        if (!userId) return;
-        const data = await getUserProfile(Number(userId));
-        if (data.profilePictureUrl != null || data.username != null) {
-          setProfile(data);
-        }
-      } catch (error) {
-        console.log("Profile error:", error);
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) return;
+      const data = await getUserProfile(Number(userId));
+      if (data.profilePictureUrl != null || data.username != null) {
+        setProfile(data);
       }
-    };
+    } catch (error) {
+      console.log("Profile error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -47,8 +54,8 @@ export default function TabLayout() {
   useFocusEffect(
     React.useCallback(() => {
       fetchProfile();
-    }, [])
-  )
+    }, []),
+  );
   return (
     <Tabs
       screenOptions={{
@@ -62,11 +69,23 @@ export default function TabLayout() {
         headerLeft: () => (
           <Image
             source={require("@/assets/FreeSwing.png")}
-            style={{ width: 150, height: 80, marginLeft: -20, resizeMode: "contain" }}
+            style={{
+              width: 150,
+              height: 80,
+              marginLeft: -20,
+              resizeMode: "contain",
+            }}
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, gap: 12 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginRight: 16,
+              gap: 12,
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
               style={{
@@ -83,8 +102,15 @@ export default function TabLayout() {
               <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigation.getParent()?.dispatch(DrawerActions.openDrawer())}
-              style={{ borderRadius: 21, overflow: "hidden", width: 42, height: 42 }}
+              onPress={() =>
+                navigation.getParent()?.dispatch(DrawerActions.openDrawer())
+              }
+              style={{
+                borderRadius: 21,
+                overflow: "hidden",
+                width: 42,
+                height: 42,
+              }}
             >
               {loading ? (
                 <View
@@ -101,16 +127,42 @@ export default function TabLayout() {
                 >
                   <Ionicons name="person" size={24} color="#8BC34A" />
                 </View>
-              ) : profile?.profilePictureUrl && profile.profilePictureUrl.trim() !== "" && profile.profilePictureUrl !== "null" && !imageError ? (
+              ) : profile?.profilePictureUrl &&
+                profile.profilePictureUrl.trim() !== "" &&
+                profile.profilePictureUrl !== "null" &&
+                !imageError ? (
                 <Image
-                  source={{ uri: profile.profilePictureUrl.startsWith('http') ? profile.profilePictureUrl : `https://kolve18freeswing.com${profile.profilePictureUrl}` }}
+                  source={{
+                    uri: profile.profilePictureUrl.startsWith("http")
+                      ? profile.profilePictureUrl
+                      : `https://kolve18freeswing.com${profile.profilePictureUrl}`,
+                  }}
                   style={{ width: 42, height: 42, borderRadius: 21 }}
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: isDark ? "#333" : "#C5E1A5", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#8BC34A" }}>
-                  <Text style={{ color: isDark ? "#fff" : "#2E7D32", fontSize: 18, fontWeight: "bold" }}>
-                    {profile?.username?.trim() ? profile.username.trim()[0].toUpperCase() : "U"}
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isDark ? "#333" : "#C5E1A5",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isDark ? "#fff" : "#2E7D32",
+                      fontSize: 18,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {profile?.username?.trim()
+                      ? profile.username.trim()[0].toUpperCase()
+                      : "U"}
                   </Text>
                 </View>
               )}
@@ -120,9 +172,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#8bc34a",
         tabBarInactiveTintColor: "#9E9E9E",
         tabBarStyle: {
-          backgroundColor: isDark
-            ? "rgba(30,30,30,0.75)"
-            : "#fff", height: 60 + insets.bottom,
+          backgroundColor: isDark ? "rgba(30,30,30,0.75)" : "#fff",
+          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
       }}
@@ -138,42 +189,59 @@ export default function TabLayout() {
             if (!profile) {
               return (
                 <View style={{ marginLeft: 20, paddingVertical: 10 }}>
-                  <Skeleton isDark={isDark} width={80} height={12} style={{ marginBottom: 8 }} borderRadius={4} />
-                  <Skeleton isDark={isDark} width={140} height={28} borderRadius={4} />
+                  <Skeleton
+                    isDark={isDark}
+                    width={80}
+                    height={12}
+                    style={{ marginBottom: 8 }}
+                    borderRadius={4}
+                  />
+                  <Skeleton
+                    isDark={isDark}
+                    width={140}
+                    height={28}
+                    borderRadius={4}
+                  />
                 </View>
               );
             }
-            
+
             return (
               <View style={{ marginLeft: 20, paddingVertical: 10 }}>
                 <HStack space="xs" className="items-center">
-                  <Text style={{ 
-                    color: isDark ? "#A3A3A3" : "#737373", 
-                    fontSize: 10, 
-                    fontWeight: "900",
-                    letterSpacing: 2.5,
-                    textTransform: "uppercase"
-                  }}>
+                  <Text
+                    style={{
+                      color: isDark ? "#A3A3A3" : "#737373",
+                      fontSize: 10,
+                      fontWeight: "900",
+                      letterSpacing: 2.5,
+                      textTransform: "uppercase",
+                    }}
+                  >
                     Welcome Back
                   </Text>
                   <Text style={{ fontSize: 12 }}>👋</Text>
                 </HStack>
                 <HStack space="xs" className="items-baseline">
-                  <Text style={{ 
-                    color: "#8BC34A", 
-                    fontSize: 24, 
-                    fontWeight: "900",
-                    letterSpacing: -0.8,
-                    marginTop: -2
-                  }}>
+                  <Text
+                    style={{
+                      color: "#8BC34A",
+                      fontSize: 24,
+                      fontWeight: "900",
+                      letterSpacing: -0.8,
+                      marginTop: -2,
+                    }}
+                  >
                     {profile.username.toUpperCase()}
                   </Text>
-                  <Text style={{ 
-                    color: "#8BC34A", 
-                    fontSize: 24, 
-                    fontWeight: "900",
-                    marginLeft: 2
-                  }}>
+                  <Text
+                    style={{
+                      color: "#8BC34A",
+                      fontSize: 24,
+                      fontWeight: "900",
+                      marginLeft: 2,
+                    }}
+                  >
                     !
                   </Text>
                 </HStack>
@@ -182,7 +250,11 @@ export default function TabLayout() {
           },
           title: "Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -193,7 +265,11 @@ export default function TabLayout() {
         options={{
           title: "Tournaments",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "trophy" : "trophy-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "trophy" : "trophy-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -230,7 +306,11 @@ export default function TabLayout() {
         options={{
           title: "Book Game",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "calendar" : "calendar-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -241,7 +321,11 @@ export default function TabLayout() {
         options={{
           title: "Shop",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "cart" : "cart-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "cart" : "cart-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

@@ -7,7 +7,7 @@ import {
   useColorScheme,
   Pressable,
 } from "react-native";
-import { PlayerApi } from "@/api/admin/dashboard";
+import { PlayerApi } from "@/api/modules/admin/dashboard.api";
 import { useRouter } from "expo-router";
 import { Avatar, AvatarImage } from "@/components/avatar";
 import { ThemedText } from "@/components/themed-text";

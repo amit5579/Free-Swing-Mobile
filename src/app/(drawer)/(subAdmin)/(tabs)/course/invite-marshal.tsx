@@ -17,10 +17,13 @@ import { useRouter } from "expo-router";
 import Watermark from "@/components/watermark";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
-import { invitePlayer } from "@/api/subAdmin/dashboard";
+import { invitePlayer } from "@/api/modules/subAdmin/dashboard.api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { inviteMarshalSchema, InviteMarshalFormData } from "@/schema/marshalSchema";
+import {
+  inviteMarshalSchema,
+  InviteMarshalFormData,
+} from "@/schema/marshalSchema";
 
 export default function InviteMarshalPage() {
   const colorScheme = useColorScheme();
@@ -68,7 +71,9 @@ export default function InviteMarshalPage() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
+    >
       <Watermark />
 
       <VStack style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
@@ -86,10 +91,21 @@ export default function InviteMarshalPage() {
               borderColor: isDark ? "rgba(255,255,255,0.1)" : "#e0e0e0",
             }}
           >
-            <Ionicons name="chevron-back" size={24} color={isDark ? "#fff" : "#111"} />
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={isDark ? "#fff" : "#111"}
+            />
           </TouchableOpacity>
           <VStack>
-            <Text style={{ fontSize: 24, fontWeight: "900", color: isDark ? "#fff" : "#111", letterSpacing: -0.5 }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "900",
+                color: isDark ? "#fff" : "#111",
+                letterSpacing: -0.5,
+              }}
+            >
               Invite Marshal
             </Text>
             <Text style={{ fontSize: 13, color: isDark ? "#aaa" : "#6b7280" }}>
@@ -110,13 +126,28 @@ export default function InviteMarshalPage() {
         >
           <VStack style={styles.card}>
             <VStack style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Full Name *</Text>
+              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>
+                Full Name *
+              </Text>
               <Controller
                 control={control}
                 name="fullName"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.fullName ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    style={[
+                      styles.input,
+                      {
+                        color: isDark ? "#fff" : "#000",
+                        borderColor: errors.fullName
+                          ? "#ef4444"
+                          : isDark
+                            ? "#333"
+                            : "#e0e0e0",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "#fff",
+                      },
+                    ]}
                     placeholder="Enter full name"
                     placeholderTextColor={isDark ? "#555" : "#999"}
                     onBlur={onBlur}
@@ -125,17 +156,34 @@ export default function InviteMarshalPage() {
                   />
                 )}
               />
-              {errors.fullName && <Text style={styles.errorText}>{errors.fullName.message}</Text>}
+              {errors.fullName && (
+                <Text style={styles.errorText}>{errors.fullName.message}</Text>
+              )}
             </VStack>
 
             <VStack style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Email *</Text>
+              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>
+                Email *
+              </Text>
               <Controller
                 control={control}
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.email ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    style={[
+                      styles.input,
+                      {
+                        color: isDark ? "#fff" : "#000",
+                        borderColor: errors.email
+                          ? "#ef4444"
+                          : isDark
+                            ? "#333"
+                            : "#e0e0e0",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "#fff",
+                      },
+                    ]}
                     placeholder="email@example.com"
                     placeholderTextColor={isDark ? "#555" : "#999"}
                     keyboardType="email-address"
@@ -146,17 +194,34 @@ export default function InviteMarshalPage() {
                   />
                 )}
               />
-              {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
             </VStack>
 
             <VStack style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Password *</Text>
+              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>
+                Password *
+              </Text>
               <Controller
                 control={control}
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.password ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    style={[
+                      styles.input,
+                      {
+                        color: isDark ? "#fff" : "#000",
+                        borderColor: errors.password
+                          ? "#ef4444"
+                          : isDark
+                            ? "#333"
+                            : "#e0e0e0",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "#fff",
+                      },
+                    ]}
                     placeholder="Set password"
                     placeholderTextColor={isDark ? "#555" : "#999"}
                     secureTextEntry
@@ -166,34 +231,76 @@ export default function InviteMarshalPage() {
                   />
                 )}
               />
-              {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password.message}</Text>
+              )}
             </VStack>
 
             <VStack style={styles.inputGroup}>
-              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>Mobile</Text>
+              <Text style={[styles.label, { color: isDark ? "#aaa" : "#666" }]}>
+                Mobile
+              </Text>
               <Controller
                 control={control}
                 name="mobileNumber"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    style={[styles.input, { color: isDark ? "#fff" : "#000", borderColor: errors.mobileNumber ? "#ef4444" : (isDark ? "#333" : "#e0e0e0"), backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#fff" }]}
+                    style={[
+                      styles.input,
+                      {
+                        color: isDark ? "#fff" : "#000",
+                        borderColor: errors.mobileNumber
+                          ? "#ef4444"
+                          : isDark
+                            ? "#333"
+                            : "#e0e0e0",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.03)"
+                          : "#fff",
+                      },
+                    ]}
                     placeholder="Phone number"
                     placeholderTextColor={isDark ? "#555" : "#999"}
                     keyboardType="phone-pad"
                     onBlur={onBlur}
-                    onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
+                    onChangeText={(text) =>
+                      onChange(text.replace(/[^0-9]/g, ""))
+                    }
                     value={value}
                   />
                 )}
               />
-              {errors.mobileNumber && <Text style={styles.errorText}>{errors.mobileNumber.message}</Text>}
+              {errors.mobileNumber && (
+                <Text style={styles.errorText}>
+                  {errors.mobileNumber.message}
+                </Text>
+              )}
             </VStack>
 
             <HStack style={{ gap: 12 }}>
-              <VStack style={[styles.inputGroup, { flex: 1 }]} pointerEvents="none">
-                <Text style={[styles.label, { color: isDark ? "rgba(170,170,170,0.5)" : "#999" }]}>Course Slope</Text>
+              <VStack
+                style={[styles.inputGroup, { flex: 1 }]}
+                pointerEvents="none"
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    { color: isDark ? "rgba(170,170,170,0.5)" : "#999" },
+                  ]}
+                >
+                  Course Slope
+                </Text>
                 <TextInput
-                  style={[styles.input, { color: isDark ? "#666" : "#888", borderColor: isDark ? "#222" : "#eee", backgroundColor: isDark ? "rgba(255,255,255,0.01)" : "#f9f9f9" }]}
+                  style={[
+                    styles.input,
+                    {
+                      color: isDark ? "#666" : "#888",
+                      borderColor: isDark ? "#222" : "#eee",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.01)"
+                        : "#f9f9f9",
+                    },
+                  ]}
                   placeholder="120"
                   placeholderTextColor={isDark ? "#333" : "#ccc"}
                   keyboardType="numeric"
@@ -202,10 +309,29 @@ export default function InviteMarshalPage() {
                 />
               </VStack>
 
-              <VStack style={[styles.inputGroup, { flex: 1 }]} pointerEvents="none">
-                <Text style={[styles.label, { color: isDark ? "rgba(170,170,170,0.5)" : "#999" }]}>Course Rating</Text>
+              <VStack
+                style={[styles.inputGroup, { flex: 1 }]}
+                pointerEvents="none"
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    { color: isDark ? "rgba(170,170,170,0.5)" : "#999" },
+                  ]}
+                >
+                  Course Rating
+                </Text>
                 <TextInput
-                  style={[styles.input, { color: isDark ? "#666" : "#888", borderColor: isDark ? "#222" : "#eee", backgroundColor: isDark ? "rgba(255,255,255,0.01)" : "#f9f9f9" }]}
+                  style={[
+                    styles.input,
+                    {
+                      color: isDark ? "#666" : "#888",
+                      borderColor: isDark ? "#222" : "#eee",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.01)"
+                        : "#f9f9f9",
+                    },
+                  ]}
                   placeholder="68.8"
                   placeholderTextColor={isDark ? "#333" : "#ccc"}
                   keyboardType="numeric"
@@ -280,4 +406,3 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
-

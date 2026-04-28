@@ -1,6 +1,6 @@
-// import https from "./https";
+// import client from "./client";
 
-import https from "../https";
+import client from "../../client";
 
 export type UserApi = {
   id: number;
@@ -17,7 +17,7 @@ export type UserApi = {
 
 export const getUserById = async (id: number): Promise<UserApi | null> => {
   try {
-    const response = await https.get(`User/${id}`);
+    const response = await client.get(`User/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get User API Error:", error);
@@ -49,7 +49,7 @@ export type CourseApi = {
 
 export const getCourses = async (): Promise<CourseApi[]> => {
   try {
-    const response = await https.get("/course");
+    const response = await client.get("/course");
     return response.data;
   } catch (error) {
     console.error("Get Courses API Error:", error);
@@ -90,7 +90,7 @@ export type Player = {
 
 export const getPlayers = async (): Promise<PlayerApi[]> => {
   try {
-    const response = await https.get("/user/list");
+    const response = await client.get("/user/list");
     return response.data;
   } catch (error) {
     console.error("Get Players API Error:", error);
@@ -123,7 +123,7 @@ export type Update = {
 
 export const getUpdates = async (): Promise<UpdateApi[]> => {
   try {
-    const response = await https.get("/Updates");
+    const response = await client.get("/Updates");
     return response.data;
   } catch (error) {
     console.error("Get Updates API Error:", error);
@@ -133,7 +133,7 @@ export const getUpdates = async (): Promise<UpdateApi[]> => {
 
 export const addUpdate = async (formData: FormData): Promise<any> => {
   try {
-    const response = await https.post("/Updates", formData, {
+    const response = await client.post("/Updates", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -147,7 +147,7 @@ export const addUpdate = async (formData: FormData): Promise<any> => {
 
 export const deleteUpdate = async (id: number): Promise<any> => {
   try {
-    const response = await https.delete(`/Updates/${id}`);
+    const response = await client.delete(`/Updates/${id}`);
     return response.data;
   } catch (error) {
     console.error("Deleting Update Error:", error);
@@ -202,7 +202,7 @@ export type FeedItem = {
 
 export const getFeed = async (): Promise<FeedApi[]> => {
   try {
-    const response = await https.get("/feed");
+    const response = await client.get("/feed");
     return response.data;
   } catch (error) {
     console.error("Get Feed API Error:", error);
@@ -239,7 +239,7 @@ export const getScorecardHistory = async (
   userId: number
 ): Promise<ScorecardHistoryApi[]> => {
   try {
-    const response = await https.get(`/scorecard/history/${userId}`);
+    const response = await client.get(`/scorecard/history/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Scorecard History API Error:", error);
@@ -250,23 +250,23 @@ export const getScorecardHistory = async (
 
 
 export type ScorecardHoleApi = {
-   "holeId": number,
-        "holeNumber": number,
-        "par": number,
-        "strokeIndex": number,
-        "yardage": number,
-        "teeBoxId": number,
-        "courseId": number,
-        "score": number | null,
-        "netScore": number | null,
-        "roundNumber": number,
-        "stablefordPoints": number | null,
-        "isCompleted": boolean,
-        "isDQ": boolean,
-        "tournamentId": number | null,
-        "isDoublePeoria": boolean,
-        "courseHalf": string,
-        "isExcluded": boolean
+  "holeId": number,
+  "holeNumber": number,
+  "par": number,
+  "strokeIndex": number,
+  "yardage": number,
+  "teeBoxId": number,
+  "courseId": number,
+  "score": number | null,
+  "netScore": number | null,
+  "roundNumber": number,
+  "stablefordPoints": number | null,
+  "isCompleted": boolean,
+  "isDQ": boolean,
+  "tournamentId": number | null,
+  "isDoublePeoria": boolean,
+  "courseHalf": string,
+  "isExcluded": boolean
 };
 
 export type ScorecardHole = {
@@ -289,7 +289,7 @@ export const getScorecardDetails = async (
   scorecardId: number | string
 ): Promise<ScorecardHoleApi[]> => {
   try {
-    const response = await https.get(
+    const response = await client.get(
       `/scorecard/details/${scorecardId}`
     );
     return response.data;
@@ -301,7 +301,7 @@ export const getScorecardDetails = async (
 
 export const verifyScoreApi = async (roundRefId: number | string) => {
   try {
-    const response = await https.post(`/scorecard/authenticate/${roundRefId}`);
+    const response = await client.post(`/scorecard/authenticate/${roundRefId}`);
     return response.data;
   } catch (error) {
     console.error(`Error verifying scorecard ${roundRefId}:`, error);
@@ -311,7 +311,7 @@ export const verifyScoreApi = async (roundRefId: number | string) => {
 
 export const updateScorecardApi = async (scorecardId: string | number, holeScores: { holeId: number, score: number }[]) => {
   try {
-    const response = await https.put(`/scorecard/update`, { scorecardId, holeScores });
+    const response = await client.put(`/scorecard/update`, { scorecardId, holeScores });
     return response.data;
   } catch (error) {
     console.error("Updating scorecard error:", error);
@@ -321,7 +321,7 @@ export const updateScorecardApi = async (scorecardId: string | number, holeScore
 
 export const saveScorecardApi = async (scorecardId: string | number) => {
   try {
-    const response = await https.post(`/scorecard/save`, { scorecardId });
+    const response = await client.post(`/scorecard/save`, { scorecardId });
     return response.data;
   } catch (error) {
     console.error("Saving scorecard error:", error);

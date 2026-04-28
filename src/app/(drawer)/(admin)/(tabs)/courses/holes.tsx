@@ -16,7 +16,7 @@ import { HStack } from "@/components/hstack";
 import { Pressable } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { useEffect as useReactEffect } from "react";
-import { getHolesByTeeBox, updateHoles } from "@/api/admin/courses";
+import { getHolesByTeeBox, updateHoles } from "@/api/modules/admin/courses.api";
 import { VStack } from "@/components/vstack";
 import { Box } from "@/components/box";
 import { Skeleton } from "@/components/Skeleton";
@@ -68,17 +68,17 @@ export default function EditHolesPage() {
           hole.holeNumber,
           hole.par,
           teeBoxId as string,
-          hole.yardage
+          hole.yardage,
         );
       }
       Toast.show({
         type: "success",
         text1: "Holes updated successfully",
       });
-    fetchHoles();
+      fetchHoles();
     } catch (error) {
       console.error("Error saving holes:", error);
-       Toast.show({
+      Toast.show({
         type: "error",
         text1: "Failed to update Holes",
       });
@@ -94,104 +94,98 @@ export default function EditHolesPage() {
     setHoles(updated);
   };
 
-
   const HoleCardSkeleton = ({ isDark }: { isDark: boolean }) => {
-  return (
-    <Box
-      className="p-4 rounded-xl"
-      style={{
-        borderWidth: 1,
-        borderColor: isDark ? "#262626" : "#e5e5e5",
-        marginBottom: 12,
-      }}
-    >
-      <VStack>
-        {/* Title */}
-        <Skeleton
-          isDark={isDark}
-          height={14}
-          width="30%"
-          style={{ marginBottom: 10 }}
-        />
-
-        {/* Inputs Row */}
-        <HStack style={{ justifyContent: "space-between" }}>
-          {[1, 2, 3].map((_, i) => (
-            <View key={i} style={{ width: "30%" }}>
-              {/* Label */}
-              <Skeleton
-                isDark={isDark}
-                height={10}
-                width="60%"
-                style={{ marginBottom: 6 }}
-              />
-
-              {/* Input Box */}
-              <Skeleton
-                isDark={isDark}
-                height={36}
-                borderRadius={8}
-              />
-            </View>
-          ))}
-        </HStack>
-      </VStack>
-    </Box>
-  );
-};
-
-const renderHeader = () => (
-  <HStack
-    style={{
-      paddingHorizontal: 16,
-      paddingTop: 14,
-      paddingBottom: 12,
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    {/* 🔙 BACK BUTTON */}
-    <Pressable
-      onPress={() => routePage.back()}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-      }}
-      android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-    >
-      <Ionicons
-        name="arrow-back"
-        size={20}
-        color={isDark ? "#fff" : "#020617"}
-      />
-    </Pressable>
-
-    {/* 🧠 TITLE */}
-    <VStack style={{ flex: 1, alignItems: "center" }}>
-
-      <ThemedText
+    return (
+      <Box
+        className="p-4 rounded-xl"
         style={{
-          fontSize: 17,
-          fontWeight: "700",
-          marginTop: 2,
-          color: isDark ? "#fff" : "#020617",
+          borderWidth: 1,
+          borderColor: isDark ? "#262626" : "#e5e5e5",
+          marginBottom: 12,
         }}
       >
-        Edit Holes
-      </ThemedText>
-    </VStack>
+        <VStack>
+          {/* Title */}
+          <Skeleton
+            isDark={isDark}
+            height={14}
+            width="30%"
+            style={{ marginBottom: 10 }}
+          />
 
-    {/* ⚖️ RIGHT SPACER (MATCHES BACK BUTTON WIDTH) */}
-    <View style={{ width: 40 }} />
-  </HStack>
-);
+          {/* Inputs Row */}
+          <HStack style={{ justifyContent: "space-between" }}>
+            {[1, 2, 3].map((_, i) => (
+              <View key={i} style={{ width: "30%" }}>
+                {/* Label */}
+                <Skeleton
+                  isDark={isDark}
+                  height={10}
+                  width="60%"
+                  style={{ marginBottom: 6 }}
+                />
+
+                {/* Input Box */}
+                <Skeleton isDark={isDark} height={36} borderRadius={8} />
+              </View>
+            ))}
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
+
+  const renderHeader = () => (
+    <HStack
+      style={{
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
+    >
+      {/* 🔙 BACK BUTTON */}
+      <Pressable
+        onPress={() => routePage.back()}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        }}
+        android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={20}
+          color={isDark ? "#fff" : "#020617"}
+        />
+      </Pressable>
+
+      {/* 🧠 TITLE */}
+      <VStack style={{ flex: 1, alignItems: "center" }}>
+        <ThemedText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginTop: 2,
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Edit Holes
+        </ThemedText>
+      </VStack>
+
+      {/* ⚖️ RIGHT SPACER (MATCHES BACK BUTTON WIDTH) */}
+      <View style={{ width: 40 }} />
+    </HStack>
+  );
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -205,21 +199,24 @@ const renderHeader = () => (
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       >
-       {loading ? (
-    <>
-      {Array.from({ length: 9 }).map((_, i) => (
-        <HoleCardSkeleton key={i} isDark={isDark} />
-      ))}
-    </>
-  ) : (
-     <>{holes.map((hole, index) => (
+        {loading ? (
+          <>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <HoleCardSkeleton key={i} isDark={isDark} />
+            ))}
+          </>
+        ) : (
+          <>
+            {holes.map((hole, index) => (
               <Box
                 key={hole.holeId}
                 className="p-4 rounded-xl border border-neutral-200 mb-3"
-                style = {{ backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",}}
+                style={{
+                  backgroundColor: isDark
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                }}
               >
                 <VStack space="sm">
                   {/* Hole Title */}
@@ -248,9 +245,7 @@ const renderHeader = () => (
                       <TextInput
                         value={hole.par}
                         keyboardType="numeric"
-                        onChangeText={(text) =>
-                          updateField(index, "par", text)
-                        }
+                        onChangeText={(text) => updateField(index, "par", text)}
                         style={{
                           borderWidth: 1,
                           borderColor: "#e5e5e5",
@@ -308,24 +303,23 @@ const renderHeader = () => (
                   </HStack>
                 </VStack>
               </Box>
-            ))}</>)}
-            
+            ))}
+          </>
+        )}
 
-            {/* SAVE BUTTON */}
-            <Pressable
-              onPress={handleSave}
-              style={{
-                backgroundColor: "#8BC34A",
-                padding: 14,
-                borderRadius: 10,
-                alignItems: "center",
-                marginTop: 10,
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>
-                Save Changes
-              </Text>
-            </Pressable>
+        {/* SAVE BUTTON */}
+        <Pressable
+          onPress={handleSave}
+          style={{
+            backgroundColor: "#8BC34A",
+            padding: 14,
+            borderRadius: 10,
+            alignItems: "center",
+            marginTop: 10,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>Save Changes</Text>
+        </Pressable>
       </ScrollView>
     </ThemedView>
   );

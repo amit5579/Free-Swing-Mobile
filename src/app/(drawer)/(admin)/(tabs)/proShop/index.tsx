@@ -1,5 +1,14 @@
 import React, { useState, useCallback } from "react";
-import { useColorScheme, Image, ActivityIndicator, TouchableOpacity, ScrollView, View, Alert, RefreshControl } from "react-native";
+import {
+  useColorScheme,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+  View,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 
@@ -11,8 +20,8 @@ import { ThemedText } from "@/components/themed-text";
 
 import { Ionicons } from "@expo/vector-icons";
 import Watermark from "@/components/watermark";
-import { getProducts } from "@/api/shop";
-import { deleteProduct, Product } from "@/api/admin/proShop";
+import { getProducts } from "@/api/modules/shop.api";
+import { deleteProduct, Product } from "@/api/modules/admin/proShop.api";
 import { Skeleton } from "@/components/Skeleton";
 // import { getProducts, deleteProduct, Product } from "@/api/adminAPI/proShop";
 
@@ -22,13 +31,17 @@ export default function ProShop() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [imgLoadingMap, setImgLoadingMap] = useState<{ [key: number]: boolean }>({});
-  const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>({});
+  const [imgLoadingMap, setImgLoadingMap] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [imgErrorMap, setImgErrorMap] = useState<{ [key: number]: boolean }>(
+    {},
+  );
 
   useFocusEffect(
     useCallback(() => {
       fetchProducts();
-    }, [])
+    }, []),
   );
 
   const fetchProducts = async () => {
@@ -45,24 +58,27 @@ export default function ProShop() {
   };
 
   const handleDelete = async (id: number) => {
-    Alert.alert("Delete Product", "Are you sure you want to delete this product?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteProduct(id);
-            Alert.alert("Success", "Product deleted successfully");
-            fetchProducts();
-          } catch (error) {
-            Alert.alert("Error", "Failed to delete product");
-          }
+    Alert.alert(
+      "Delete Product",
+      "Are you sure you want to delete this product?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteProduct(id);
+              Alert.alert("Success", "Product deleted successfully");
+              fetchProducts();
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete product");
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
-
 
   return (
     <SafeAreaView
@@ -75,7 +91,14 @@ export default function ProShop() {
       <Watermark opacity={0.1} />
 
       <VStack className="flex-1">
-        <HStack style={{ marginBottom: 24, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+        <HStack
+          style={{
+            marginBottom: 24,
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+          }}
+        >
           <VStack className="mt-4">
             <ThemedText
               style={{
@@ -86,7 +109,9 @@ export default function ProShop() {
             >
               Pro Shop
             </ThemedText>
-            <ThemedText style={{ fontSize: 12, color: '#999', fontWeight: '600' }}>
+            <ThemedText
+              style={{ fontSize: 12, color: "#999", fontWeight: "600" }}
+            >
               Manage Inventory
             </ThemedText>
           </VStack>
@@ -96,21 +121,28 @@ export default function ProShop() {
               router.push("/(drawer)/(admin)/(tabs)/proShop/addProduct")
             }
             style={{
-              backgroundColor: '#8bc34a',
+              backgroundColor: "#8bc34a",
               paddingHorizontal: 16,
               paddingVertical: 10,
               borderRadius: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-              shadowColor: '#8bc34a',
+              flexDirection: "row",
+              alignItems: "center",
+              shadowColor: "#8bc34a",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,
-              elevation: 4
+              elevation: 4,
             }}
           >
             <Ionicons name="add-circle-outline" size={18} color="#fff" />
-            <ThemedText style={{ color: 'white', fontWeight: '800', marginLeft: 6, fontSize: 14 }}>
+            <ThemedText
+              style={{
+                color: "white",
+                fontWeight: "800",
+                marginLeft: 6,
+                fontSize: 14,
+              }}
+            >
               Add Item
             </ThemedText>
           </TouchableOpacity>
@@ -119,7 +151,10 @@ export default function ProShop() {
         {loading ? (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 150, paddingHorizontal: 16 }}
+            contentContainerStyle={{
+              paddingBottom: 150,
+              paddingHorizontal: 16,
+            }}
           >
             <VStack style={{ gap: 20 }}>
               {[1, 2, 3, 4].map((item) => (
@@ -130,7 +165,9 @@ export default function ProShop() {
                     shadowOffset: { width: 0, height: 6 },
                     shadowOpacity: isDark ? 0.3 : 0.1,
                     shadowRadius: 12,
-                    backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                    backgroundColor: isDark
+                      ? "rgba(26, 26, 26, 0.6)"
+                      : "rgba(255, 255, 255, 0.6)",
                     borderRadius: 22,
                     borderLeftWidth: 6,
                     borderLeftColor: "#8BC34A",
@@ -143,19 +180,50 @@ export default function ProShop() {
                   }}
                 >
                   <HStack space="md" className="items-center">
-                    <Skeleton isDark={isDark} width={90} height={90} borderRadius={18} style={{ borderWidth: 2, borderColor: "#8BC34A" }} />
+                    <Skeleton
+                      isDark={isDark}
+                      width={90}
+                      height={90}
+                      borderRadius={18}
+                      style={{ borderWidth: 2, borderColor: "#8BC34A" }}
+                    />
                     <VStack style={{ flex: 1 }}>
                       <HStack className="justify-between items-start">
                         <Skeleton isDark={isDark} width={120} height={20} />
-                        <Skeleton isDark={isDark} width={40} height={16} borderRadius={6} />
+                        <Skeleton
+                          isDark={isDark}
+                          width={40}
+                          height={16}
+                          borderRadius={6}
+                        />
                       </HStack>
-                      <Skeleton isDark={isDark} width="90%" height={12} style={{ marginTop: 8 }} />
-                      <Skeleton isDark={isDark} width="60%" height={12} style={{ marginTop: 4 }} />
+                      <Skeleton
+                        isDark={isDark}
+                        width="90%"
+                        height={12}
+                        style={{ marginTop: 8 }}
+                      />
+                      <Skeleton
+                        isDark={isDark}
+                        width="60%"
+                        height={12}
+                        style={{ marginTop: 4 }}
+                      />
                       <HStack className="items-center justify-between mt-4">
                         <Skeleton isDark={isDark} width={60} height={24} />
                         <HStack space="sm">
-                          <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
-                          <Skeleton isDark={isDark} width={32} height={32} borderRadius={8} />
+                          <Skeleton
+                            isDark={isDark}
+                            width={32}
+                            height={32}
+                            borderRadius={8}
+                          />
+                          <Skeleton
+                            isDark={isDark}
+                            width={32}
+                            height={32}
+                            borderRadius={8}
+                          />
                         </HStack>
                       </HStack>
                     </VStack>
@@ -167,7 +235,11 @@ export default function ProShop() {
         ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 150, paddingHorizontal: 16, flexGrow: 1 }}
+            contentContainerStyle={{
+              paddingBottom: 150,
+              paddingHorizontal: 16,
+              flexGrow: 1,
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={loading}
@@ -187,37 +259,60 @@ export default function ProShop() {
                       shadowOffset: { width: 0, height: 6 },
                       shadowOpacity: isDark ? 0.3 : 0.1,
                       shadowRadius: 12,
-                      backgroundColor: isDark ? "rgba(26, 26, 26, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                      backgroundColor: isDark
+                        ? "rgba(26, 26, 26, 0.6)"
+                        : "rgba(255, 255, 255, 0.6)",
                       borderRadius: 22,
                       borderLeftWidth: 6,
                       borderLeftColor: "#8BC34A",
                       borderTopWidth: 1,
                       borderRightWidth: 1,
                       borderBottomWidth: 1,
-                      borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#D1D5DB",
+                      borderColor: isDark
+                        ? "rgba(139, 195, 74, 0.6)"
+                        : "#D1D5DB",
                       padding: 12,
                       marginBottom: 16,
                       overflow: "hidden",
                     }}
                   >
                     <HStack space="md" className="items-center">
-                      <Box style={{
-                        width: 90,
-                        height: 90,
-                        backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
-                        borderRadius: 18,
-                        overflow: 'hidden',
-                        borderWidth: 2,
-                        borderColor: "#8BC34A",
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}>
+                      <Box
+                        style={{
+                          width: 90,
+                          height: 90,
+                          backgroundColor: isDark ? "#1a1a1c" : "#ffffff",
+                          borderRadius: 18,
+                          overflow: "hidden",
+                          borderWidth: 2,
+                          borderColor: "#8BC34A",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
                         {imgErrorMap[item.id] ? (
-                          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
-                            <Ionicons name="bag-outline" size={28} color={isDark ? "#8BC34A" : "#aaa"} />
+                          <View
+                            style={{
+                              flex: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: 8,
+                            }}
+                          >
+                            <Ionicons
+                              name="bag-outline"
+                              size={28}
+                              color={isDark ? "#8BC34A" : "#aaa"}
+                            />
                             <ThemedText
                               numberOfLines={2}
-                              style={{ fontSize: 9, color: isDark ? "#8BC34A" : "#888", textAlign: 'center', marginTop: 4, fontWeight: '700' }}
+                              style={{
+                                fontSize: 9,
+                                color: isDark ? "#8BC34A" : "#888",
+                                textAlign: "center",
+                                marginTop: 4,
+                                fontWeight: "700",
+                              }}
                             >
                               {item.name}
                             </ThemedText>
@@ -225,15 +320,38 @@ export default function ProShop() {
                         ) : (
                           <>
                             {imgLoadingMap[item.id] !== false && (
-                              <ActivityIndicator style={{ position: 'absolute' }} color="#8BC34A" size="small" />
+                              <ActivityIndicator
+                                style={{ position: "absolute" }}
+                                color="#8BC34A"
+                                size="small"
+                              />
                             )}
                             <Image
-                              source={{ uri: item.imageUrl ? `https://kolve18freeswing.com${item.imageUrl}` : '' }}
-                              style={{ width: '100%', height: '100%' }}
+                              source={{
+                                uri: item.imageUrl
+                                  ? `https://kolve18freeswing.com${item.imageUrl}`
+                                  : "",
+                              }}
+                              style={{ width: "100%", height: "100%" }}
                               resizeMode="cover"
-                              onLoadStart={() => setImgLoadingMap(prev => ({ ...prev, [item.id]: true }))}
-                              onLoadEnd={() => setImgLoadingMap(prev => ({ ...prev, [item.id]: false }))}
-                              onError={() => setImgErrorMap(prev => ({ ...prev, [item.id]: true }))}
+                              onLoadStart={() =>
+                                setImgLoadingMap((prev) => ({
+                                  ...prev,
+                                  [item.id]: true,
+                                }))
+                              }
+                              onLoadEnd={() =>
+                                setImgLoadingMap((prev) => ({
+                                  ...prev,
+                                  [item.id]: false,
+                                }))
+                              }
+                              onError={() =>
+                                setImgErrorMap((prev) => ({
+                                  ...prev,
+                                  [item.id]: true,
+                                }))
+                              }
                             />
                           </>
                         )}
@@ -247,19 +365,27 @@ export default function ProShop() {
                               fontWeight: "900",
                               fontSize: 16,
                               letterSpacing: -0.5,
-                              flex: 1
+                              flex: 1,
                             }}
                           >
                             {item.name}
                           </ThemedText>
 
-                          <Box style={{
-                            backgroundColor: 'rgba(139,195,74,0.1)',
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                            borderRadius: 6
-                          }}>
-                            <ThemedText style={{ color: '#8bc34a', fontSize: 9, fontWeight: '800' }}>
+                          <Box
+                            style={{
+                              backgroundColor: "rgba(139,195,74,0.1)",
+                              paddingHorizontal: 8,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                color: "#8bc34a",
+                                fontSize: 9,
+                                fontWeight: "800",
+                              }}
+                            >
                               STOCK
                             </ThemedText>
                           </Box>
@@ -269,9 +395,9 @@ export default function ProShop() {
                           numberOfLines={2}
                           style={{
                             fontSize: 11,
-                            color: isDark ? '#94a3b8' : '#64748b',
+                            color: isDark ? "#94a3b8" : "#64748b",
                             marginTop: 2,
-                            lineHeight: 15
+                            lineHeight: 15,
                           }}
                         >
                           {item.description || "No description provided"}
@@ -290,26 +416,35 @@ export default function ProShop() {
 
                           <HStack space="sm">
                             <TouchableOpacity
-                              onPress={() => router.push({
-                                pathname: "/(drawer)/(admin)/(tabs)/proShop/addProduct",
-                                params: {
-                                  id: item.id,
-                                  name: item.name,
-                                  price: item.price.toString(),
-                                  description: item.description,
-                                  imageUrl: item.imageUrl
-                                }
-                              })}
+                              onPress={() =>
+                                router.push({
+                                  pathname:
+                                    "/(drawer)/(admin)/(tabs)/proShop/addProduct",
+                                  params: {
+                                    id: item.id,
+                                    name: item.name,
+                                    price: item.price.toString(),
+                                    description: item.description,
+                                    imageUrl: item.imageUrl,
+                                  },
+                                })
+                              }
                               style={{
                                 width: 32,
                                 height: 32,
                                 borderRadius: 8,
-                                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                backgroundColor: isDark
+                                  ? "rgba(255,255,255,0.05)"
+                                  : "#f1f5f9",
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              <Ionicons name="create-outline" size={16} color="#8bc34a" />
+                              <Ionicons
+                                name="create-outline"
+                                size={16}
+                                color="#8bc34a"
+                              />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -318,12 +453,18 @@ export default function ProShop() {
                                 width: 32,
                                 height: 32,
                                 borderRadius: 8,
-                                backgroundColor: isDark ? "rgba(239,68,68,0.1)" : "#fee2e2",
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                backgroundColor: isDark
+                                  ? "rgba(239,68,68,0.1)"
+                                  : "#fee2e2",
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                              <Ionicons
+                                name="trash-outline"
+                                size={16}
+                                color="#EF4444"
+                              />
                             </TouchableOpacity>
                           </HStack>
                         </HStack>
@@ -333,15 +474,51 @@ export default function ProShop() {
                 ))}
               </VStack>
             ) : (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, marginTop: 40 }}>
-                <Box style={{ backgroundColor: isDark ? "#222" : "#f0f0f0", padding: 30, borderRadius: 100, marginBottom: 24 }}>
-                  <Ionicons name="storefront-outline" size={80} color="#8BC34A" style={{ opacity: 0.5 }} />
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingHorizontal: 40,
+                  marginTop: 40,
+                }}
+              >
+                <Box
+                  style={{
+                    backgroundColor: isDark ? "#222" : "#f0f0f0",
+                    padding: 30,
+                    borderRadius: 100,
+                    marginBottom: 24,
+                  }}
+                >
+                  <Ionicons
+                    name="storefront-outline"
+                    size={80}
+                    color="#8BC34A"
+                    style={{ opacity: 0.5 }}
+                  />
                 </Box>
-                <ThemedText style={{ fontSize: 20, fontWeight: "800", textAlign: "center", marginBottom: 10 }}>
+                <ThemedText
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "800",
+                    textAlign: "center",
+                    marginBottom: 10,
+                  }}
+                >
                   Inventory Empty
                 </ThemedText>
-                <ThemedText style={{ fontSize: 14, color: "#9CA3AF", textAlign: "center", marginBottom: 30, lineHeight: 20 }}>
-                  You haven't added any products to the shop yet. Click "Add Item" to start managing your inventory.
+                <ThemedText
+                  style={{
+                    fontSize: 14,
+                    color: "#9CA3AF",
+                    textAlign: "center",
+                    marginBottom: 30,
+                    lineHeight: 20,
+                  }}
+                >
+                  You haven't added any products to the shop yet. Click "Add
+                  Item" to start managing your inventory.
                 </ThemedText>
                 <TouchableOpacity
                   onPress={fetchProducts}
@@ -350,13 +527,15 @@ export default function ProShop() {
                     paddingHorizontal: 24,
                     paddingVertical: 12,
                     borderRadius: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
+                    flexDirection: "row",
+                    alignItems: "center",
                     gap: 8,
                   }}
                 >
                   <Ionicons name="refresh" size={20} color="white" />
-                  <ThemedText style={{ color: "white", fontWeight: "700" }}>Refresh Inventory</ThemedText>
+                  <ThemedText style={{ color: "white", fontWeight: "700" }}>
+                    Refresh Inventory
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             )}

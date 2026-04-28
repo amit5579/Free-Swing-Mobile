@@ -1,4 +1,4 @@
-import https from "./https";
+import client from "../client";
 
 export interface LoginPayload {
   Email: string;
@@ -31,7 +31,7 @@ export interface RegisterPayload {
 
 export const loginUser = async (payload: LoginPayload) => {
   try {
-    const response = await https.post(`Auth/login`, payload);
+    const response = await client.post(`Auth/login`, payload);
     return response.data;
   } catch (error: any) {
     console.error("Login Error:", error?.response?.data || error.message);
@@ -41,7 +41,7 @@ export const loginUser = async (payload: LoginPayload) => {
 
 export const forgotPassword = async (payload: ForgotPasswordPayload) => {
   try {
-    const response = await https.post(`Auth/forgot-password`, payload);
+    const response = await client.post(`Auth/forgot-password`, payload);
     return response.data;
   } catch (error: any) {
     console.error("forgotPassword Error:", error?.response?.data || error.message);
@@ -51,7 +51,7 @@ export const forgotPassword = async (payload: ForgotPasswordPayload) => {
 
 export const registerUser = async (payload: RegisterPayload) => {
   try {
-    const response = await https.post(`Auth/register`, payload);
+    const response = await client.post(`Auth/register`, payload);
     return response.data;
   } catch (error: any) {
     console.error("Signup Error:", error?.response?.data || error.message);

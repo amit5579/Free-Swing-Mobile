@@ -30,13 +30,13 @@ import {
   // getCourse,
   getSubAdminList,
   updateSubAdmin,
-} from "@/api/admin/subAdmins";
+} from "@/api/modules/admin/subAdmins.api";
 import { MultiSelect } from "react-native-element-dropdown";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { subAdminSchema } from "@/schema/adminSchemas";
 import { Controller } from "react-hook-form";
-import { getCourse } from "@/api/admin/courses";
+import { getCourse } from "@/api/modules/admin/courses.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
@@ -228,93 +228,91 @@ export default function subAdminsPage() {
     );
   };
 
-
   const handleCreate = () => {
-  setIsEditMode(false);
-  setEditingAdmin(null);
-  reset();
-  setModalVisible(true);
-};
+    setIsEditMode(false);
+    setEditingAdmin(null);
+    reset();
+    setModalVisible(true);
+  };
 
-
-const renderHeader = () => (
-  <Box
-    style={{
-      backgroundColor: isDark ? "#020617" : "#ffffff",
-      borderBottomWidth: 1,
-      borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-    }}
-  >
-    <HStack
+  const renderHeader = () => (
+    <Box
       style={{
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 10,
-        alignItems: "center",
-        justifyContent: "space-between",
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
-      {/* 🔙 BACK */}
-      <Pressable
-        onPress={() => router.back()}
+      <HStack
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          justifyContent: "center",
+          paddingHorizontal: 16,
+          paddingTop: 14,
+          paddingBottom: 10,
           alignItems: "center",
-          backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          justifyContent: "space-between",
         }}
       >
-        <Ionicons
-          name="arrow-back"
-          size={20}
-          color={isDark ? "#fff" : "#020617"}
-        />
+        {/* 🔙 BACK */}
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          }}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={isDark ? "#fff" : "#020617"}
+          />
+        </Pressable>
+
+        {/* 🧠 TITLE */}
+        <ThemedText
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 18,
+            fontWeight: "700",
+            color: isDark ? "#fff" : "#020617",
+          }}
+        >
+          Sub Admins
+        </ThemedText>
+      </HStack>
+
+      {/* 🔥 PRIMARY CTA */}
+      <Pressable
+        onPress={handleCreate}
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 12,
+          paddingVertical: 12,
+          borderRadius: 12,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "center",
+          gap: 6,
+          backgroundColor: "#84cc16",
+        }}
+      >
+        <Ionicons name="add" size={18} color="#fff" />
+        <ThemedText
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 14,
+          }}
+        >
+          Create Sub-Admin
+        </ThemedText>
       </Pressable>
-
-      {/* 🧠 TITLE */}
-      <ThemedText
-        style={{
-          flex: 1,
-          textAlign: "center",
-          fontSize: 18,
-          fontWeight: "700",
-          color: isDark ? "#fff" : "#020617",
-        }}
-      >
-        Sub Admins
-      </ThemedText>
-    </HStack>
-
-    {/* 🔥 PRIMARY CTA */}
-    <Pressable
-      onPress={handleCreate}
-      style={{
-        marginHorizontal: 16,
-        marginBottom: 12,
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: "center",
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 6,
-        backgroundColor: "#84cc16",
-      }}
-    >
-      <Ionicons name="add" size={18} color="#fff" />
-      <ThemedText
-        style={{
-          color: "#fff",
-          fontWeight: "600",
-          fontSize: 14,
-        }}
-      >
-        Create Sub-Admin
-      </ThemedText>
-    </Pressable>
-  </Box>
-);
+    </Box>
+  );
 
   return (
     <>
@@ -327,7 +325,7 @@ const renderHeader = () => (
         <Watermark />
 
         {/* Header */}
-       {renderHeader()}
+        {renderHeader()}
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pb-20 mt-4 gap-4">

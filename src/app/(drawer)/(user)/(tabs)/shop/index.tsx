@@ -24,7 +24,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { getProducts, ProductApi } from "@/api/shop";
+import { getProducts, ProductApi } from "@/api/modules/shop.api";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 
@@ -40,7 +40,13 @@ type CartItem = Product & {
   quantity: number;
 };
 
-const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }) => {
+const ProductCard = ({
+  product,
+  onAdd,
+}: {
+  product: Product;
+  onAdd: () => void;
+}) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -48,12 +54,22 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
   const [hasError, setHasError] = useState(false);
 
   const fallbackImages = [
-    { uri: `https://placehold.co/400x400/8BC34A/FFFFFF/png?text=${encodeURIComponent(product.name)}` },
-    { uri: `https://placehold.co/400x400/222222/FFFFFF/png?text=${encodeURIComponent(product.name)}` }
+    {
+      uri: `https://placehold.co/400x400/8BC34A/FFFFFF/png?text=${encodeURIComponent(product.name)}`,
+    },
+    {
+      uri: `https://placehold.co/400x400/222222/FFFFFF/png?text=${encodeURIComponent(product.name)}`,
+    },
   ];
 
-  const hasEmptyOrPlaceholder = !product.images || product.images.length === 0 || product.images[0].uri.includes('placeholder.png');
-  const displayImages = (hasError || hasEmptyOrPlaceholder) ? fallbackImages : product.images.slice(0, 3);
+  const hasEmptyOrPlaceholder =
+    !product.images ||
+    product.images.length === 0 ||
+    product.images[0].uri.includes("placeholder.png");
+  const displayImages =
+    hasError || hasEmptyOrPlaceholder
+      ? fallbackImages
+      : product.images.slice(0, 3);
 
   const handleScroll = (event: any) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
@@ -69,7 +85,9 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
       style={{
         width: "48%",
         marginBottom: 20,
-        backgroundColor: isDark ? "rgba(22,22,24,0.6)" : "rgba(255,255,255,0.7)",
+        backgroundColor: isDark
+          ? "rgba(22,22,24,0.6)"
+          : "rgba(255,255,255,0.7)",
         borderRadius: 20,
         overflow: "hidden",
         borderWidth: 1,
@@ -80,7 +98,13 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
         shadowRadius: 8,
       }}
     >
-      <Box style={{ width: "100%", height: 160, backgroundColor: isDark ? "#222" : "#f5f5f5" }}>
+      <Box
+        style={{
+          width: "100%",
+          height: 160,
+          backgroundColor: isDark ? "#222" : "#f5f5f5",
+        }}
+      >
         <ScrollView
           horizontal
           pagingEnabled
@@ -143,7 +167,10 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
       </Box>
 
       <VStack style={{ padding: 12 }}>
-        <ThemedText style={{ fontSize: 13, fontWeight: "700" }} numberOfLines={1}>
+        <ThemedText
+          style={{ fontSize: 13, fontWeight: "700" }}
+          numberOfLines={1}
+        >
           {product.name}
         </ThemedText>
 
@@ -180,7 +207,12 @@ const ProductCard = ({ product, onAdd }: { product: Product; onAdd: () => void }
         >
           <Ionicons name="cart-outline" size={16} color="#8BC34A" />
           <ThemedText
-            style={{ color: "#8BC34A", fontSize: 11, fontWeight: "800", marginLeft: 6 }}
+            style={{
+              color: "#8BC34A",
+              fontSize: 11,
+              fontWeight: "800",
+              marginLeft: 6,
+            }}
           >
             Add to Cart
           </ThemedText>
@@ -207,7 +239,7 @@ export default function ShopScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchProducts();
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -227,7 +259,9 @@ export default function ShopScreen() {
         price: item.price,
         description: item.description,
         images: item.imageUrl
-          ? item.imageUrl.split(',').map(url => ({ uri: `https://kolve18freeswing.com${url.trim()}` }))
+          ? item.imageUrl.split(",").map((url) => ({
+              uri: `https://kolve18freeswing.com${url.trim()}`,
+            }))
           : [{ uri: `https://kolve18freeswing.com/placeholder.png` }],
       }));
 
@@ -247,12 +281,12 @@ export default function ShopScreen() {
         updated = prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       } else {
         updated = [...prev, { ...product, quantity: 1 }];
       }
-      console.log('Cart updated. New count:', updated.length);
+      console.log("Cart updated. New count:", updated.length);
       return updated;
     });
   };
@@ -266,8 +300,8 @@ export default function ShopScreen() {
       prev.map((item) =>
         item.id === productId
           ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -289,12 +323,15 @@ export default function ShopScreen() {
     const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
 
     Linking.openURL(whatsappUrl).catch(() =>
-      alert("WhatsApp is not installed")
+      alert("WhatsApp is not installed"),
     );
   };
 
   return (
-    <ThemedView className="flex-1 self-center w-full max-w-[1200px]" style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}>
+    <ThemedView
+      className="flex-1 self-center w-full max-w-[1200px]"
+      style={{ backgroundColor: isDark ? "#161618" : "#F9FAFB" }}
+    >
       <Watermark opacity={0.1} />
 
       <VStack className="mx-5 my-3">
@@ -318,25 +355,27 @@ export default function ShopScreen() {
               {cart.length > 0 && (
                 <View
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: -8,
                     right: -8,
-                    backgroundColor: '#EF4444',
+                    backgroundColor: "#EF4444",
                     borderRadius: 12,
                     minWidth: 22,
                     height: 22,
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    justifyContent: "center",
+                    alignItems: "center",
                     borderWidth: 2,
-                    borderColor: 'white',
+                    borderColor: "white",
                     elevation: 3,
-                    shadowColor: '#000',
+                    shadowColor: "#000",
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.2,
                     shadowRadius: 1,
                   }}
                 >
-                  <ThemedText style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>
+                  <ThemedText
+                    style={{ color: "white", fontSize: 10, fontWeight: "900" }}
+                  >
                     {cart.length}
                   </ThemedText>
                 </View>
@@ -355,8 +394,8 @@ export default function ShopScreen() {
           Gear up with official equipment
         </ThemedText>
       </VStack>
- 
-       <ScrollView
+
+      <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
@@ -370,14 +409,23 @@ export default function ShopScreen() {
         }
       >
         {loading && products.length === 0 ? (
-          <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
+          <HStack
+            style={{
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              paddingHorizontal: 20,
+              marginTop: 10,
+            }}
+          >
             {[1, 2, 3, 4].map((i) => (
               <Box
                 key={i}
                 style={{
                   width: "48%",
                   marginBottom: 20,
-                  backgroundColor: isDark ? "rgba(22,22,24,0.4)" : "rgba(255,255,255,0.35)",
+                  backgroundColor: isDark
+                    ? "rgba(22,22,24,0.4)"
+                    : "rgba(255,255,255,0.35)",
                   borderRadius: 20,
                   overflow: "hidden",
                   borderWidth: 1,
@@ -386,15 +434,43 @@ export default function ShopScreen() {
                   padding: 12,
                 }}
               >
-                <Skeleton isDark={isDark} height={140} width="100%" borderRadius={12} style={{ marginBottom: 12 }} />
-                <Skeleton isDark={isDark} height={16} width="80%" style={{ marginBottom: 8 }} />
-                <Skeleton isDark={isDark} height={20} width="40%" style={{ marginBottom: 12 }} />
-                <Skeleton isDark={isDark} height={32} width="100%" borderRadius={8} />
+                <Skeleton
+                  isDark={isDark}
+                  height={140}
+                  width="100%"
+                  borderRadius={12}
+                  style={{ marginBottom: 12 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={16}
+                  width="80%"
+                  style={{ marginBottom: 8 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={20}
+                  width="40%"
+                  style={{ marginBottom: 12 }}
+                />
+                <Skeleton
+                  isDark={isDark}
+                  height={32}
+                  width="100%"
+                  borderRadius={8}
+                />
               </Box>
             ))}
           </HStack>
         ) : products.length > 0 ? (
-          <HStack style={{ flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 10 }}>
+          <HStack
+            style={{
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              paddingHorizontal: 20,
+              marginTop: 10,
+            }}
+          >
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -404,15 +480,51 @@ export default function ShopScreen() {
             ))}
           </HStack>
         ) : (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, marginTop: 40 }}>
-            <Box style={{ backgroundColor: isDark ? "#222" : "#f0f0f0", padding: 30, borderRadius: 100, marginBottom: 24 }}>
-              <Ionicons name="storefront-outline" size={80} color="#8BC34A" style={{ opacity: 0.5 }} />
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 40,
+              marginTop: 40,
+            }}
+          >
+            <Box
+              style={{
+                backgroundColor: isDark ? "#222" : "#f0f0f0",
+                padding: 30,
+                borderRadius: 100,
+                marginBottom: 24,
+              }}
+            >
+              <Ionicons
+                name="storefront-outline"
+                size={80}
+                color="#8BC34A"
+                style={{ opacity: 0.5 }}
+              />
             </Box>
-            <ThemedText style={{ fontSize: 20, fontWeight: "800", textAlign: "center", marginBottom: 10 }}>
+            <ThemedText
+              style={{
+                fontSize: 20,
+                fontWeight: "800",
+                textAlign: "center",
+                marginBottom: 10,
+              }}
+            >
               No Products Found
             </ThemedText>
-            <ThemedText style={{ fontSize: 14, color: "#9CA3AF", textAlign: "center", marginBottom: 30, lineHeight: 20 }}>
-              The Pro Shop is currently being restocked with new gear. Please check back later!
+            <ThemedText
+              style={{
+                fontSize: 14,
+                color: "#9CA3AF",
+                textAlign: "center",
+                marginBottom: 30,
+                lineHeight: 20,
+              }}
+            >
+              The Pro Shop is currently being restocked with new gear. Please
+              check back later!
             </ThemedText>
             <TouchableOpacity
               onPress={fetchProducts}
@@ -421,23 +533,24 @@ export default function ShopScreen() {
                 paddingHorizontal: 24,
                 paddingVertical: 12,
                 borderRadius: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: "row",
+                alignItems: "center",
                 gap: 8,
               }}
             >
               <Ionicons name="refresh" size={20} color="white" />
-              <ThemedText style={{ color: "white", fontWeight: "700" }}>Refresh Shop</ThemedText>
+              <ThemedText style={{ color: "white", fontWeight: "700" }}>
+                Refresh Shop
+              </ThemedText>
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
- 
+
       <Modal visible={isCartOpen} transparent animationType="slide">
         <View className="flex-1 bg-black/50 justify-center items-center">
           <ThemedView className="w-[94%] h-[92%] rounded-[20px] overflow-hidden">
             <HStack className="p-4 border-b border-gray-100 justify-between items-center bg-gray-50/50">
-
               <HStack className="items-center gap-2">
                 <Ionicons name="cart-outline" size={24} color="#8BC34A" />
 
@@ -449,18 +562,34 @@ export default function ShopScreen() {
               <TouchableOpacity onPress={() => setIsCartOpen(false)}>
                 <Ionicons name="close-circle" size={28} color="#8BC34A" />
               </TouchableOpacity>
-
             </HStack>
 
             <FlatList
               data={cart}
               keyExtractor={(item) => item.id}
               style={{ flex: 1, minHeight: 200 }}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, flexGrow: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                flexGrow: 1,
+              }}
               ListEmptyComponent={() => (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingVertical: 40,
+                  }}
+                >
                   <Ionicons name="cart-outline" size={64} color="#E0E0E0" />
-                  <ThemedText style={{ textAlign: "center", marginTop: 10, color: "#999" }}>
+                  <ThemedText
+                    style={{
+                      textAlign: "center",
+                      marginTop: 10,
+                      color: "#999",
+                    }}
+                  >
                     Your cart is empty
                   </ThemedText>
                 </View>
@@ -468,7 +597,7 @@ export default function ShopScreen() {
               renderItem={({ item }) => (
                 <View
                   style={{
-                    flexDirection: 'row',
+                    flexDirection: "row",
                     paddingVertical: 16,
                     borderBottomWidth: 1,
                     borderBottomColor: "#f0f0f0",
@@ -500,12 +629,27 @@ export default function ShopScreen() {
                     >
                       {item.name}
                     </ThemedText>
-                    <ThemedText style={{ color: '#8BC34A', fontWeight: 'bold', fontSize: 12 }}>
+                    <ThemedText
+                      style={{
+                        color: "#8BC34A",
+                        fontWeight: "bold",
+                        fontSize: 12,
+                      }}
+                    >
                       ₹{item.price.toLocaleString()}
                     </ThemedText>
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: "#f9f9f9",
+                      borderRadius: 20,
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                    }}
+                  >
                     <TouchableOpacity
                       onPress={() => updateQuantity(item.id, -1)}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -513,7 +657,14 @@ export default function ShopScreen() {
                       <Ionicons name="remove" size={18} color="#8BC34A" />
                     </TouchableOpacity>
 
-                    <ThemedText style={{ fontWeight: 'bold', fontSize: 14, minWidth: 30, textAlign: 'center' }}>
+                    <ThemedText
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: 14,
+                        minWidth: 30,
+                        textAlign: "center",
+                      }}
+                    >
                       {item.quantity}
                     </ThemedText>
 
@@ -525,8 +676,8 @@ export default function ShopScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={{ minWidth: 80, alignItems: 'flex-end' }}>
-                    <ThemedText style={{ fontWeight: 'bold', fontSize: 14 }}>
+                  <View style={{ minWidth: 80, alignItems: "flex-end" }}>
+                    <ThemedText style={{ fontWeight: "bold", fontSize: 14 }}>
                       ₹{(item.price * item.quantity).toLocaleString()}
                     </ThemedText>
                   </View>
@@ -546,20 +697,42 @@ export default function ShopScreen() {
               <View
                 style={{
                   padding: 24,
-                  backgroundColor: '#ffffff',
+                  backgroundColor: "#ffffff",
                   borderTopWidth: 1,
-                  borderTopColor: '#f0f0f0',
-                  shadowColor: '#000',
+                  borderTopColor: "#f0f0f0",
+                  shadowColor: "#000",
                   shadowOffset: { width: 0, height: -3 },
                   shadowOpacity: 0.1,
                   shadowRadius: 5,
-                  elevation: 5
+                  elevation: 5,
                 }}
               >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 15,
+                  }}
+                >
                   <View>
-                    <ThemedText style={{ fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 'bold' }}>Grand Total</ThemedText>
-                    <ThemedText style={{ fontSize: 26, fontWeight: '900', color: '#2E7D32' }}>
+                    <ThemedText
+                      style={{
+                        fontSize: 10,
+                        color: "#999",
+                        textTransform: "uppercase",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Grand Total
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 26,
+                        fontWeight: "900",
+                        color: "#2E7D32",
+                      }}
+                    >
                       ₹{calculateSubtotal().toLocaleString()}
                     </ThemedText>
                   </View>
@@ -567,20 +740,30 @@ export default function ShopScreen() {
                   <TouchableOpacity
                     onPress={() => setIsCartOpen(false)}
                     style={{
-                      backgroundColor: '#F5F5F5',
+                      backgroundColor: "#F5F5F5",
                       height: 52,
                       paddingHorizontal: 20,
                       borderRadius: 14,
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <ThemedText style={{ color: '#666', fontWeight: 'bold', fontSize: 14 }}>Continue Shopping</ThemedText>
+                    <ThemedText
+                      style={{
+                        color: "#666",
+                        fontWeight: "bold",
+                        fontSize: 14,
+                      }}
+                    >
+                      Continue Shopping
+                    </ThemedText>
                   </TouchableOpacity>
                 </View>
 
-                <View style={{ marginBottom: 15, alignItems: 'center' }}>
-                  <ThemedText style={{ fontSize: 11, color: '#666', textAlign: 'center' }}>
+                <View style={{ marginBottom: 15, alignItems: "center" }}>
+                  <ThemedText
+                    style={{ fontSize: 11, color: "#666", textAlign: "center" }}
+                  >
                     You will be redirected to WhatsApp to confirm this order.
                   </ThemedText>
                 </View>
@@ -588,22 +771,26 @@ export default function ShopScreen() {
                 <TouchableOpacity
                   onPress={checkoutViaWhatsApp}
                   style={{
-                    backgroundColor: '#8BC34A',
+                    backgroundColor: "#8BC34A",
                     height: 56,
                     borderRadius: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
                     gap: 10,
-                    shadowColor: '#8BC34A',
+                    shadowColor: "#8BC34A",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.3,
                     shadowRadius: 8,
-                    elevation: 4
+                    elevation: 4,
                   }}
                 >
                   <Ionicons name="logo-whatsapp" size={24} color="white" />
-                  <ThemedText style={{ color: 'white', fontWeight: 'bold', fontSize: 17 }}>Checkout</ThemedText>
+                  <ThemedText
+                    style={{ color: "white", fontWeight: "bold", fontSize: 17 }}
+                  >
+                    Checkout
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             )}
