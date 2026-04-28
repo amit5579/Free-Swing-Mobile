@@ -1,6 +1,6 @@
 import https from "./https";
 
-/* -*-*-*-*- Feed API -*-*-*-*- */
+/* -*-*-*-*- Feedsw API -*-*-*-*- */
 
 export interface FeedItem {
   roundRefId: number;
