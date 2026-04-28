@@ -29,6 +29,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function SubAdminProfile() {
   const colorScheme = useColorScheme();
@@ -65,7 +66,7 @@ export default function SubAdminProfile() {
   const [pageLoading, setPageLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
-  const [image, setImage] = useState<string | null>(null);
+  // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -74,37 +75,43 @@ export default function SubAdminProfile() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      alert("Permission required to access gallery");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      const selectedImage = result.assets[0];
-
-      setImage(selectedImage.uri);
-      setImageError(false);
-
-      try {
-        setUploading(true);
-        await uploadProfileImage(selectedImage);
-        await fetchProfile();
-      } catch (error) {
-        console.log("Upload failed", error);
-      } finally {
-        setUploading(false);
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  
+      if (!permission.granted) {
+        alert("Permission required to access gallery");
+        return;
       }
-    }
-  };
+  
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+  
+      if (!result.canceled) {
+        const selectedImage = result.assets[0];
+        setImageError(false);
+  
+        try {
+          setUploading(true);
+          await uploadProfileImage(selectedImage);
+          Toast.show({
+            type: "success",
+            text1: "Profile  Picture Updated",
+          });
+          await fetchProfile();
+        } catch (error) {
+          console.log("Upload failed", error);
+          Toast.show({
+            type: "error",
+             text1: "Failed to upload profile Picture",
+          });
+        } finally {
+          setUploading(false);
+        }
+      }
+    };
 
   const fetchProfile = async () => {
     try {
@@ -198,9 +205,9 @@ export default function SubAdminProfile() {
                 <VStack className="items-center">
                   <Pressable onPress={pickImage}>
                     <View style={{ borderWidth: 3, borderColor: "#8bc34a", borderRadius: 999, padding: 3, marginBottom: 14, position: "relative" }}>
-                      {(image || (profileData?.profilePictureUrl && profileData.profilePictureUrl.trim() !== "" && profileData.profilePictureUrl !== "null")) && !imageError ? (
+                      {((profileData?.profilePictureUrl && profileData.profilePictureUrl.trim() !== "" && profileData.profilePictureUrl !== "null")) && !imageError ? (
                         <Image
-                          source={{ uri: image ? image : (profileData?.profilePictureUrl?.startsWith('http') ? profileData.profilePictureUrl : `https://kolve18freeswing.com${profileData.profilePictureUrl}`) }}
+                          source={{ uri:(profileData?.profilePictureUrl?.startsWith('http') ? profileData.profilePictureUrl : `https://kolve18freeswing.com${profileData.profilePictureUrl}`) }}
                           style={{ width: 90, height: 90, borderRadius: 45 }}
                           onError={() => setImageError(true)}
                         />

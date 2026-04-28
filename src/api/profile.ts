@@ -18,22 +18,29 @@ export const getProfile = async () => {
 };
 
 export const uploadProfileImage = async (image: any) => {
-  const formData = new FormData();
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) {
+      throw new Error("User ID not found in storage");
+    }
 
-  formData.append("profileImage", {
-    uri: image.uri,
-    name: image.fileName || "profile.jpg",
-    type: image.mimeType || "image/jpeg",
-  } as any);
+    const formData = new FormData();
+    formData.append("image", {
+      uri: image.uri,
+      name: image.fileName || "profile.jpg",
+      type: image.mimeType || "image/jpeg",
+    } as any);
 
-  const response = await https.post("User/upload-profile", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  console.log("profile response:", response);
-
-  return response.data;
+    const response = await https.post(`User/${userId}/profile-picture`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Uploading profile image Error:", error);
+    throw error;
+  }
 };
 
 // get certificate by userId - User/2/certificate

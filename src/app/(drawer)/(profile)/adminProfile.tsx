@@ -30,6 +30,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
+import Toast from "react-native-toast-message";
 
 export default function AdminProfile() {
   const colorScheme = useColorScheme();
@@ -67,44 +68,48 @@ export default function AdminProfile() {
 
   const [uploading, setUploading] = useState(false);
   const [adminProfile, setAdminProfile] = useState<any>(null);
-  const [image, setImage] = useState<string | null>(null);
+  // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      alert("Permission required to access gallery");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      const selectedImage = result.assets[0];
-
-      setImage(selectedImage.uri);
-      setImageError(false);
-
-      try {
-        setUploading(true);
-
-        await uploadProfileImage(selectedImage);
-
-        await fetchAdminProfile();
-      } catch (error) {
-        console.log("Upload failed", error);
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
+ const pickImage = async () => {
+       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+   
+       if (!permission.granted) {
+         alert("Permission required to access gallery");
+         return;
+       }
+   
+       const result = await ImagePicker.launchImageLibraryAsync({
+         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+         allowsEditing: true,
+         aspect: [1, 1],
+         quality: 0.8,
+       });
+   
+       if (!result.canceled) {
+         const selectedImage = result.assets[0];
+         setImageError(false);
+   
+         try {
+           setUploading(true);
+           await uploadProfileImage(selectedImage);
+           Toast.show({
+             type: "success",
+             text1: "Profile  Uploaded",
+           });
+           await fetchAdminProfile();
+         } catch (error) {
+           console.log("Upload failed", error);
+           Toast.show({
+             type: "error",
+             text1: "Failed to upload profile Picture",
+           });
+         } finally {
+           setUploading(false);
+         }
+       }
+     };
   const fetchAdminProfile = async () => {
     try {
       setPageLoading(true);
@@ -244,10 +249,10 @@ export default function AdminProfile() {
                           position: "relative",
                         }}
                       >
-                        {(image || (adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null")) && !imageError ? (
+                        {(adminProfile?.profilePictureUrl && adminProfile.profilePictureUrl.trim() !== "" && adminProfile.profilePictureUrl !== "null") && !imageError ? (
                           <Image
                             source={{
-                              uri: image ? image : (adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`),
+                              uri: adminProfile?.profilePictureUrl?.startsWith('http') ? adminProfile.profilePictureUrl : `https://kolve18freeswing.com${adminProfile.profilePictureUrl}`,
                             }}
                             style={{
                               width: 90,

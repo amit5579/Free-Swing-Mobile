@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, Tabs } from "expo-router";
+import { router, Tabs, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, TouchableOpacity, useColorScheme, View, Text, StyleSheet } from "react-native";
 import { useNavigation } from "expo-router";
@@ -24,8 +24,7 @@ export default function TabLayout() {
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  const fetchProfile = async () => {
       try {
         setLoading(true);
         const userId = await AsyncStorage.getItem("userId");
@@ -40,9 +39,16 @@ export default function TabLayout() {
         setLoading(false);
       }
     };
+
+  useEffect(() => {
     fetchProfile();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchProfile();
+    }, [])
+  )
   return (
     <Tabs
       screenOptions={{
