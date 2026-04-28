@@ -83,7 +83,7 @@ const PostImage = ({ imageUrl, isDark, onImagePress }: { imageUrl: string; isDar
 export default function GolferParadise({ searchQuery = "" }: { searchQuery?: string }) {
     const router = useRouter();
     const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
+    const isDark = colorScheme === "dark" ;
     const [posts, setPosts] = useState<ParadisePost[]>([]);
     const [loading, setLoading] = useState(true);
     const [caption, setCaption] = useState("");
