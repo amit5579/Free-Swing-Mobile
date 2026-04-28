@@ -74,7 +74,7 @@ export default function AddProduct() {
       formData.append("Description", (description || "").trim());
 
       if (image) {
-        formData.append("Image", {
+        formData.append("Images", {
           uri: image.uri,
           name: image.fileName || "product.jpg",
           type: image.mimeType || "image/jpeg",
@@ -92,7 +92,7 @@ export default function AddProduct() {
           { text: "OK", onPress: () => router.back() },
         ]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save Product Error:", error);
       Alert.alert(
         "Error",
@@ -358,7 +358,7 @@ export default function AddProduct() {
 
                 <Button
                   className="bg-[#8bc34a] px-6"
-                  onPress={handleSave}
+                  onPress={() => handleSave()}
                   disabled={loading}
                 >
                   {loading ? (

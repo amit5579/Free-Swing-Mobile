@@ -255,45 +255,94 @@ export default function SubAdminPlayersPage() {
   // ── Skeleton ──
   const PlayerCardSkeleton = () => (
     <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors.cardBg,
-          borderColor: colors.cardBorder,
-        },
-      ]}
+      style={{
+        shadowColor: "#8BC34A",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: isDark ? 0.4 : 0.15,
+        shadowRadius: 14,
+        backgroundColor: isDark
+          ? "rgba(26, 26, 26, 0.3)"
+          : "rgba(255, 255, 255, 0.4)",
+        borderRadius: 22,
+        borderLeftWidth: 6,
+        borderLeftColor: "#8BC34A",
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+        padding: 16,
+        marginBottom: 16,
+        overflow: "hidden",
+      }}
     >
-      <HStack style={{ alignItems: "center", marginBottom: 14 }}>
-        <Skeleton isDark={isDark} height={44} width={44} borderRadius={22} />
-        <VStack style={{ flex: 1, marginLeft: 12 }}>
-          <Skeleton isDark={isDark} height={16} width="55%" />
+      <HStack className="items-center justify-between">
+        <HStack className="items-center" style={{ flex: 1 }}>
           <Skeleton
             isDark={isDark}
-            height={12}
-            width="75%"
-            style={{ marginTop: 6 }}
+            width={44}
+            height={44}
+            borderRadius={22}
+            style={{ marginRight: 12 }}
           />
-        </VStack>
-        <Skeleton isDark={isDark} height={22} width={55} borderRadius={11} />
-      </HStack>
-
-      <View style={styles.statsRow}>
-        {[1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.statBox}>
-            <Skeleton isDark={isDark} height={10} width={40} />
+          <VStack style={{ gap: 5 }}>
             <Skeleton
               isDark={isDark}
-              height={18}
-              width={30}
-              style={{ marginTop: 6 }}
+              width={130}
+              height={17}
+              borderRadius={6}
             />
-          </View>
-        ))}
-      </View>
+            <Skeleton
+              isDark={isDark}
+              width={80}
+              height={11}
+              borderRadius={4}
+            />
+          </VStack>
+        </HStack>
 
-      <View style={[styles.cardFooter, { borderTopColor: colors.divider }]}>
-        <Skeleton isDark={isDark} height={12} width="40%" />
-      </View>
+        <HStack className="items-center">
+          <Skeleton
+            isDark={isDark}
+            width={62}
+            height={22}
+            borderRadius={12}
+            style={{ marginRight: 8 }}
+          />
+          <Skeleton
+            isDark={isDark}
+            width={20}
+            height={20}
+            borderRadius={10}
+          />
+        </HStack>
+      </HStack>
+
+      <View
+        style={{
+          height: 1,
+          backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+          marginVertical: 16,
+        }}
+      />
+
+      <HStack style={{ justifyContent: "space-between", marginBottom: 16 }}>
+        <VStack style={{ flex: 1 }}>
+          <Skeleton isDark={isDark} width={70} height={10} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width={100} height={14} />
+        </VStack>
+        <VStack style={{ alignItems: "flex-end" }}>
+          <Skeleton isDark={isDark} width={50} height={10} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width={40} height={14} />
+        </VStack>
+      </HStack>
+
+      <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <VStack style={{ flex: 1 }}>
+          <Skeleton isDark={isDark} width={60} height={10} style={{ marginBottom: 4 }} />
+          <Skeleton isDark={isDark} width={90} height={14} />
+        </VStack>
+        <Skeleton isDark={isDark} width={100} height={36} borderRadius={12} />
+      </HStack>
     </View>
   );
 
@@ -1490,7 +1539,7 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    padding: 16,
+    padding: 8,
     paddingBottom: 80,
   },
 

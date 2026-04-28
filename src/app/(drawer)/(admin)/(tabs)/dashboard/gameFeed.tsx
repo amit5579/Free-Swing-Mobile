@@ -680,6 +680,7 @@ export function GameFeedContent({
           text: "Verify",
           onPress: async () => {
             try {
+              // Optimistic update
               setCards((prev) =>
                 prev.map((c) =>
                   c.id === id
@@ -692,8 +693,13 @@ export function GameFeedContent({
                     : c,
                 ),
               );
+              
+              await verifyScoreApi(id);
             } catch (error) {
               console.error("verify score error:", error);
+              // Revert optimistic update on error
+              fetchFeed();
+              Alert.alert("Error", "Failed to verify scorecard. Please try again.");
             }
           },
         },

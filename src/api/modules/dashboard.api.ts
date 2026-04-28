@@ -1,6 +1,6 @@
 import client from "../client";
 
-/* -*-*-*-*- Feed API -*-*-*-*- */
+/* -*-*-*-*- Feedsw API -*-*-*-*- */
 
 export interface FeedItem {
   roundRefId: number;

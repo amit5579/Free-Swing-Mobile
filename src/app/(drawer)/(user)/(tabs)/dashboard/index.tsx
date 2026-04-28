@@ -204,22 +204,26 @@ export default function DashboardScreen() {
           text: "Authenticate",
           onPress: async () => {
             try {
-              await verifyScoreApi(id);
+              // Optimistic update
               setCards((prev) =>
                 prev.map((card) =>
                   card.id === id
                     ? {
                         ...card,
                         isAuthenticated: true,
+                        canAuthenticate: false,
                         authenticatedBy: "Authorized User",
                       }
                     : card,
                 ),
               );
-              Alert.alert("Success", "Round authenticated successfully.");
+
+              await verifyScoreApi(id);
             } catch (err) {
               console.error(err);
-              Alert.alert("Error", "Failed to authenticate round.");
+              // Revert on error
+              fetchFeed();
+              Alert.alert("Error", "Failed to authenticate round. Please try again.");
             }
           },
         },

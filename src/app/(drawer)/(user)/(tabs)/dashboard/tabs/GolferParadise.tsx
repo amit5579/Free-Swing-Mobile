@@ -38,6 +38,7 @@ export interface ParadisePost {
   isLikedByMe: boolean;
   commentCount: number;
   comments: ParadiseComment[];
+    canDelete?: boolean;
 }
 
 export interface ParadiseComment {
@@ -222,16 +223,20 @@ export default function GolferParadise({
         const filename =
           selectedImage.fileName || uri.split("/").pop() || "image.jpg";
         const type = selectedImage.mimeType || "image/jpeg";
-        formData.append("image", { uri, name: filename, type } as any);
+        formData.append("Images", { uri, name: filename, type } as any);
       }
 
-      await https.post("paradise", formData);
+      await https.post("paradise", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
       setCaption("");
       setSelectedImage(null);
       fetchPosts();
-    } catch (error) {
-      console.error("Post error:", error);
+    } catch (error: any) {
+      console.error("Post error:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to create post.");
     } finally {
       setPosting(false);
@@ -239,14 +244,27 @@ export default function GolferParadise({
   };
 
   const handleDeletePost = async (postId: number) => {
-    try {
-      await https.delete(`paradise/${postId}`);
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
-      setActiveOptionsPostId(null);
-    } catch (error) {
-      console.error("Delete error:", error);
-      Alert.alert("Error", "Failed to delete post.");
-    }
+        Alert.alert(
+            "Delete Post",
+            "Are you sure you want to delete this post?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                    try {
+                      await https.delete(`paradise/${postId}`);
+                      setPosts((prev) => prev.filter((p) => p.id !== postId));
+                      setActiveOptionsPostId(null);
+                    } catch (error) {
+                      console.error("Delete error:", error);
+                      Alert.alert("Error", "Failed to delete post.");
+                    }
+                    }
+                }
+            ]
+        );
   };
 
   const handleLike = async (postId: number) => {
