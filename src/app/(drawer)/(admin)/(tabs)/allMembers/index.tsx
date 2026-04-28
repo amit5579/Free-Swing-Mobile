@@ -382,30 +382,6 @@ export default function AllMembersScreen({
     isDark: boolean;
     hideAdminControls?: boolean;
   }) => {
-    if (hideAdminControls) {
-        return (
-            <Box className="border-b px-4 py-4" style={{ borderColor: isDark ? "#222" : "#f3f4f6" }}>
-                <HStack className="items-center">
-                    <HStack style={{ flex: 1.5, alignItems: 'center' }} space="sm">
-                        <Skeleton isDark={isDark} width={28} height={28} borderRadius={14} />
-                        <Skeleton isDark={isDark} width={80} height={14} borderRadius={4} />
-                    </HStack>
-                    <Box style={{ flex: 1 }}>
-                        <Skeleton isDark={isDark} width={80} height={12} borderRadius={4} />
-                    </Box>
-                    <Box style={{ flex: 0.7, alignItems: 'center' }}>
-                        <Skeleton isDark={isDark} width={30} height={14} borderRadius={4} />
-                    </Box>
-                    <Box style={{ flex: 1 }}>
-                        <Skeleton isDark={isDark} width={80} height={12} borderRadius={4} />
-                    </Box>
-                    <Box style={{ flex: 0.8, alignItems: 'flex-end' }}>
-                        <Skeleton isDark={isDark} width={50} height={28} borderRadius={10} />
-                    </Box>
-                </HStack>
-            </Box>
-        );
-    }
     return (
       <View
         style={{
@@ -423,7 +399,7 @@ export default function AllMembersScreen({
           borderRightWidth: 1,
           borderBottomWidth: 1,
           borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
-          padding: 12,
+          padding: 16,
           marginBottom: 16,
           overflow: "hidden",
         }}
@@ -475,7 +451,7 @@ export default function AllMembersScreen({
           </HStack>
         </HStack>
 
-        {isExpanded && (
+        {(isExpanded || hideAdminControls) && (
           <VStack style={{ marginTop: 16 }}>
             <View
               style={{
@@ -484,48 +460,24 @@ export default function AllMembersScreen({
                 marginBottom: 12,
               }}
             />
-            <HStack style={{ flexWrap: "wrap", rowGap: 16, columnGap: 8 }}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                <VStack key={i} style={{ width: "47%" }}>
-                  <Skeleton
-                    isDark={isDark}
-                    width={55}
-                    height={9}
-                    borderRadius={4}
-                    style={{ marginBottom: 4 }}
-                  />
-                  <HStack style={{ alignItems: "center", gap: 5 }}>
-                    <Skeleton
-                      isDark={isDark}
-                      width={14}
-                      height={14}
-                      borderRadius={7}
-                    />
-                    <Skeleton
-                      isDark={isDark}
-                      width={"70%"}
-                      height={13}
-                      borderRadius={4}
-                    />
-                  </HStack>
+            
+            <HStack style={{ justifyContent: "space-between", marginBottom: 16 }}>
+                <VStack style={{ flex: 1 }}>
+                    <Skeleton isDark={isDark} width={70} height={10} style={{ marginBottom: 4 }} />
+                    <Skeleton isDark={isDark} width={100} height={14} />
                 </VStack>
-              ))}
+                <VStack style={{ alignItems: "flex-end" }}>
+                    <Skeleton isDark={isDark} width={50} height={10} style={{ marginBottom: 4 }} />
+                    <Skeleton isDark={isDark} width={40} height={14} />
+                </VStack>
             </HStack>
-            <HStack
-              style={{ marginTop: 20, justifyContent: "flex-end", gap: 10 }}
-            >
-              <Skeleton
-                isDark={isDark}
-                width={76}
-                height={36}
-                borderRadius={12}
-              />
-              <Skeleton
-                isDark={isDark}
-                width={90}
-                height={36}
-                borderRadius={12}
-              />
+
+            <HStack style={{ justifyContent: "space-between", alignItems: "center" }}>
+                <VStack style={{ flex: 1 }}>
+                    <Skeleton isDark={isDark} width={60} height={10} style={{ marginBottom: 4 }} />
+                    <Skeleton isDark={isDark} width={90} height={14} />
+                </VStack>
+                <Skeleton isDark={isDark} width={100} height={36} borderRadius={12} />
             </HStack>
           </VStack>
         )}
@@ -733,7 +685,7 @@ export default function AllMembersScreen({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
         >
-          <VStack className={hideAdminControls ? "px-4" : "px-4"}>
+          <VStack className={hideAdminControls ? "px-2" : "px-2"}>
             <VStack space="md" style={{ gap: 16 }}>
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => {

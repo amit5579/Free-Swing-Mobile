@@ -62,7 +62,7 @@ export default function AddProduct() {
       formData.append("Description", (description || '').trim());
 
       if (image) {
-        formData.append("Image", {
+        formData.append("Images", {
           uri: image.uri,
           name: image.fileName || "product.jpg",
           type: image.mimeType || "image/jpeg",
@@ -80,9 +80,11 @@ export default function AddProduct() {
           { text: "OK", onPress: () => router.back() }
         ]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save Product Error:", error);
-      Alert.alert("Error", `Failed to ${isEdit ? 'update' : 'add'} product. Please try again.`);
+      const errorData = error.response?.data;
+      const errorMessage = typeof errorData === 'object' ? JSON.stringify(errorData) : (errorData || error.message);
+      Alert.alert("Error", `Failed to ${isEdit ? 'update' : 'add'} product: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -337,7 +339,7 @@ export default function AddProduct() {
 
                 <Button
                   className="bg-[#8bc34a] px-6"
-                  onPress={handleSave}
+                  onPress={() => handleSave()}
                   disabled={loading}
                 >
                   {loading ? (
