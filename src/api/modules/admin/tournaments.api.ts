@@ -84,7 +84,7 @@ export const updateTournament = async (tournamentData: any, tournamentId: number
 export const deleteTournament = async (tournamentId: number) => {
     try {
         const response = await client.delete(`Tournament/${tournamentId}`);
-        console.log("Deleted Tournament:", response.data);
+        // console.log("Deleted Tournament:", response.data);
         return response.data;
     } catch (error) {
         console.error("Delete Tournament Error:", error);

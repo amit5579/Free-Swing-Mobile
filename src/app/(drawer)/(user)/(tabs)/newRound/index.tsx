@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { Box } from "@/components/box";
@@ -24,16 +24,20 @@ import {
   RadioIndicator,
   RadioLabel,
 } from "@/components/radio";
-import { getHandicapDetails } from "@/api/modules/newRound.api";
+import { getCourseBySearch, getHandicapDetails, saveExternalCourse } from "@/api/modules/newRound.api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
+import Toast from "react-native-toast-message";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  const [search, setSearch] = useState("");
   const [courseList, setCourseList] = useState<any>([]);
+  const [searchedCourseList, setSearchedCourseList] = useState<any>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchCourses = async () => {
@@ -51,8 +55,57 @@ export default function StartNewRoundPage() {
   };
 
   useEffect(() => {
+    handleSearch();
     fetchCourses();
   }, []);
+
+  const handleSearch = async () => {
+    if (!search.trim()) {
+      setSearchedCourseList([]);
+      return;
+    }
+    try {
+      setSearchLoading(true);
+      const response = await getCourseBySearch(search);
+      setSearchedCourseList(response || []);
+    } catch (error) {
+      console.error("Error searching courses", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleCourseSave = async (sourceCourse: any) => {
+    try {
+      setSearchLoading(true);
+      await saveExternalCourse(sourceCourse);
+      Toast.show({ type: "success", text1: "Course added successfully" });
+      
+      // Refresh local course list
+      fetchCourses();
+      
+      // Update the searched list to show "Saved" for this course
+      setSearchedCourseList((prevList: any[]) => 
+        prevList.map(c => 
+          c.externalCourseId === sourceCourse.id 
+            ? { ...c, alreadyImported: true } 
+            : c
+        )
+      );
+    } catch (error) {
+      console.error("Error saving courses", error);
+      Toast.show({ type: "error", text1: "Failed to add course" });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleSearch();
+  }, [search]);
+
+
+
 
   const RenderHeader = () => {
     return (
@@ -156,6 +209,36 @@ export default function StartNewRoundPage() {
     );
   };
 
+  const SearchCourseSkeleton = ({ isDark }: { isDark: boolean }) => {
+    return (
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          backgroundColor: isDark ? "rgba(15, 23, 42, 0.5)" : "#fff",
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 12,
+        }}
+      >
+        <HStack className="justify-between items-start mb-4">
+          <View style={{ flex: 1 }}>
+            <Skeleton isDark={isDark} height={18} width="70%" />
+            <Skeleton isDark={isDark} height={14} width="40%" style={{ marginTop: 6 }} />
+          </View>
+          <Skeleton isDark={isDark} height={24} width={50} borderRadius={6} />
+        </HStack>
+        <Skeleton isDark={isDark} height={14} width="90%" style={{ marginBottom: 12 }} />
+        <HStack className="gap-2">
+          <Skeleton isDark={isDark} height={24} width={80} borderRadius={12} />
+          <Skeleton isDark={isDark} height={24} width={80} borderRadius={12} />
+          <Skeleton isDark={isDark} height={24} width={100} borderRadius={12} />
+        </HStack>
+      </View>
+    );
+  };
+
+
   return (
     <>
       <View
@@ -179,14 +262,78 @@ export default function StartNewRoundPage() {
                 </>
               ) : (
                 <>
-                  {courseList.map((course: any) => (
-                    <CourseCard
-                      key={course.courseId}
-                      course={course}
-                      isDark={isDark}
-                      //   onPress={() => routePage.push("/newRound/scoreCard")}
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                      borderRadius: 10,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <TextInput
+                      placeholder="Search golf courses..."
+                      placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
+                      value={search}
+                      onChangeText={setSearch}
+                      style={{
+                        color: isDark ? "#fff" : "#000",
+                      }}
                     />
-                  ))}
+                  </View>
+                  {search.length > 0 ? (
+                    <>
+                      {/* Search Results Header */}
+                      <HStack className="justify-between items-center mb-4">
+                        <VStack>
+                          <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+                            Search Results
+                          </ThemedText>
+                          <ThemedText style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#64748b" }}>
+                            Query: {search}
+                          </ThemedText>
+                        </VStack>
+                        <Box className="bg-[#f1f5f9] px-2 py-1 rounded-md">
+                          <ThemedText style={{ fontSize: 12, fontWeight: "600", color: "#475569" }}>
+                            {searchedCourseList.length} result(s)
+                          </ThemedText>
+                        </Box>
+                      </HStack>
+
+                      {searchLoading ? (
+                        <>
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <SearchCourseSkeleton key={i} isDark={isDark} />
+                          ))}
+                        </>
+                      ) : searchedCourseList.length > 0 ? (
+                        searchedCourseList.map((course: any) => (
+                          <ExternalCourseCard
+                            key={course.externalCourseId}
+                            course={course}
+                            isDark={isDark}
+                            handleCourseSave={handleCourseSave}
+                          />
+                        ))
+                      ) : (
+                        <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                          No golf courses found for "{search}"
+                        </ThemedText>
+                      )}
+                    </>
+                  ) : (
+                    courseList.map((course: any) => (
+                      <CourseCard
+                        key={course.courseId}
+                        course={course}
+                        isDark={isDark}
+                      />
+                    ))
+                  )}
                 </>
               )}
             </VStack>
@@ -194,6 +341,106 @@ export default function StartNewRoundPage() {
         </ScrollView>
       </View>
     </>
+  );
+}
+
+/* ---------- EXTERNAL COURSE CARD ---------- */
+function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
+  const textColor = isDark ? "#f8fafc" : "#0f172a";
+  const subTextColor = isDark ? "#94a3b8" : "#64748b";
+
+  return (
+    <Box
+      className="rounded-2xl p-4 mb-4"
+      style={{
+        borderWidth: 1,
+        backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+      }}
+    >
+      {/* Top Row: Name and ID */}
+      <HStack className="justify-between items-start mb-1">
+        <VStack className="flex-1 mr-2">
+          <ThemedText style={{ fontSize: 17, fontWeight: "700", color: textColor }}>
+            {course.courseName}
+          </ThemedText>
+          <ThemedText style={{ fontSize: 13, color: subTextColor }}>
+            {course.clubName}
+          </ThemedText>
+        </VStack>
+        <Box className="bg-[#f1f5f9] px-2 py-0.5 rounded-md border border-[#e2e8f0]">
+          <ThemedText style={{ fontSize: 10, fontWeight: "700", color: "#64748b" }}>
+            ID {course.externalCourseId}
+          </ThemedText>
+        </Box>
+      </HStack>
+
+      {/* Save Button Row */}
+      <HStack className="justify-end mb-3">
+        {course.alreadyImported ? (
+          <Box className="flex-row items-center gap-1 border border-[#8bc34a] px-4 py-1.5 rounded-lg bg-[#f0f9eb]">
+            <Ionicons name="checkmark-circle" size={16} color="#8bc34a" />
+            <ThemedText style={{ fontSize: 13, fontWeight: "700", color: "#8bc34a" }}>
+              Saved
+            </ThemedText>
+          </Box>
+        ) : (
+          <Pressable
+          onPress={() => handleCourseSave(course.sourceCourse)}
+            className="flex-row items-center gap-1 bg-[#8bc34a] px-5 py-2 rounded-lg"
+            android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+          >
+            <Ionicons name="download-outline" size={16} color="#fff" />
+            <ThemedText style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>
+              Save
+            </ThemedText>
+          </Pressable>
+        )}
+      </HStack>
+
+      {/* Address Row */}
+      <HStack className="items-start gap-1 mb-4 pr-4">
+        <Ionicons name="location" size={16} color="#ef4444" style={{ marginTop: 2 }} />
+        <ThemedText 
+          numberOfLines={2}
+          style={{ fontSize: 13, color: subTextColor, lineHeight: 18, flex: 1 }}
+        >
+          {course.address || "Address not available"}
+        </ThemedText>
+      </HStack>
+
+      {/* Bottom Badges */}
+      <HStack className="gap-2 flex-wrap">
+        <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
+          <ThemedText style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}>
+            Male Tees: {course.maleTeeCount}
+          </ThemedText>
+        </Box>
+        <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
+          <ThemedText style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}>
+            Female Tees: {course.femaleTeeCount}
+          </ThemedText>
+        </Box>
+        <Box 
+          className="px-2.5 py-1 rounded-full"
+          style={{ 
+            backgroundColor: course.alreadyImported ? "#ecfdf5" : "#f1f5f9",
+            borderWidth: 1,
+            borderColor: course.alreadyImported ? "#10b981" : "#94a3b8"
+          }}
+        >
+          <ThemedText style={{ 
+            fontSize: 11, 
+            fontWeight: "700", 
+            color: course.alreadyImported ? "#047857" : "#475569" 
+          }}>
+            {course.alreadyImported ? "Already in DB" : "Not saved locally"}
+          </ThemedText>
+        </Box>
+      </HStack>
+    </Box>
   );
 }
 
@@ -308,15 +555,17 @@ function CourseCard({ course, isDark }: any) {
           {/* {courseList.name} */}
         </ThemedText>
 
-        <HStack className="justify-between">
+        <HStack className="justify-between gap-4">
           {/* Location */}
-          <HStack className="items-center mt-2">
+          <HStack className="items-center mt-2" style={{ flex: 1 }}>
             <Ionicons name="location-outline" size={18} color="#ef4444" />
             <ThemedText
+              numberOfLines={2}
               style={{
                 marginLeft: 6,
                 fontSize: 14,
                 opacity: 0.7,
+                flex: 1,
               }}
             >
               {course.location}
@@ -325,7 +574,7 @@ function CourseCard({ course, isDark }: any) {
           </HStack>
 
           {/* Tee Boxes */}
-          <HStack className="items-center mt-2">
+          <HStack className="items-center mt-2" style={{ flexShrink: 0 }}>
             <Ionicons name="cube-outline" size={18} color="blue" />
             <ThemedText
               style={{
@@ -338,7 +587,6 @@ function CourseCard({ course, isDark }: any) {
             </ThemedText>
           </HStack>
         </HStack>
-
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
         <Pressable

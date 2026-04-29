@@ -46,7 +46,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   (state) => state.userScoreCard
 );
 
-  const [loadingLocal, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [scoreCard, setScoreCard] = useState<any>([]);
   // const [handicapData, setHandicap] = useState<any>([]);
   const [visible, setVisible] = useState(false);
@@ -647,8 +647,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         <ScrollView showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-2 pb-20">
             <VStack className="gap-4">
-              {loadingLocal ? (
-                <ThemedText>LoadingLocal...</ThemedText>
+              {loading ? (
+                <ThemedText>Loading...</ThemedText>
               ) : (
                 <>
                   <VStack

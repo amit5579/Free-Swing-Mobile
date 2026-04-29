@@ -36,7 +36,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
-    "expo": "~55.0.17",
+    "expo": "~55.0.18",
     "expo-asset": "~55.0.12",
     "expo-blur": "~55.0.14",
     "expo-checkbox": "~55.0.3",
