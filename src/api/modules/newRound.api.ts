@@ -38,3 +38,36 @@ export const getScoreCardDetails = async (teeBoxId: number, courseId: number, ho
         throw error;
     }
 };
+
+
+//  get course by search - CourseAdmin/external/search?query=delhi
+
+export const getCourseBySearch = async (courseName: string) => {
+    try {
+        const response = await client.get(`CourseAdmin/external/search?query=${courseName}`);
+        console.log("course by search response", response.data);
+
+        return response.data;
+    } catch (error) {
+        console.error("Fetching course by search Error:", error);
+        throw error;
+    }
+};
+
+//  save searched course - CourseAdmin/external/import
+
+export const saveExternalCourse = async (data: any) => {
+            console.log("dataaaa",data);
+
+    try {
+        
+        const response = await client.post(`CourseAdmin/external/import`,data);
+        console.log("save searched course response", response.data);
+
+        return response.data;
+    } catch (error) {
+        console.error("Saving searched course Error:", error);
+        throw error;
+    }
+};
+

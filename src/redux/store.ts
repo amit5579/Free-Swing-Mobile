@@ -1,11 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userScorecardReducer from "./slices/userScorecard.slice";
+import userTournamentReducer from "./slices/userTournament.slice";
 import authReducer from "./slices/auth.slice";
+
+
 export const store = configureStore({
   
   reducer: {
-    // we will add slices here later
     userScoreCard: userScorecardReducer,
+    userTournament: userTournamentReducer,
     auth: authReducer,
   },
   

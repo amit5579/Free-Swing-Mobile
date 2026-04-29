@@ -18,6 +18,9 @@ import { Pressable, Text, TextInput, useColorScheme, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { fetchMembers } from "@/redux/slices/userTournament.slice";
 
 export default function ManageTournament() {
   const colorScheme = useColorScheme();
@@ -26,14 +29,20 @@ export default function ManageTournament() {
 
   const { tournamentId, tournamentName } = useLocalSearchParams();
 
-  const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<any[]>([]);
+const dispatch = useAppDispatch();
+
+const { loading, membersData ,addedPlayersData, error } = useAppSelector(
+  (state) => state.userTournament
+);
+
+
+  const [loadingLocal, setLoadingLocal] = useState(true);
   const [addedPlayers, setAddedPlayers] = useState<any>([]);
   const [search, setSearch] = useState("");
 
   const handleAddPlayer = async (userId: number) => {
     try {
-      setLoading(true);
+      setLoadingLocal(true);
       await addPlayerToTournament(Number(tournamentId), userId);
       setAddedPlayers((prev: any[]) => [...prev, { userId, id: userId }]); // Optimistic update or at least tracking
       Toast.show({
@@ -47,13 +56,13 @@ export default function ManageTournament() {
         text1: "Failed to add player",
       });
     } finally {
-      setLoading(false);
+      setLoadingLocal(false);
     }
   };
 
   const handleRemovePlayer = async (userId: number) => {
     try {
-      setLoading(true);
+      setLoadingLocal(true);
       await removePlayerFromTournament(Number(tournamentId), userId);
       setAddedPlayers((prev: any[]) =>
         prev.filter((p: any) => p.userId !== userId && p.id !== userId),
@@ -69,41 +78,38 @@ export default function ManageTournament() {
         text1: "Failed to remove player",
       });
     } finally {
-      setLoading(false);
+      setLoadingLocal(false);
     }
   };
 
-  const fetchMembers = async () => {
+  const fetchAddedPlayers = async () => {
     try {
-      setLoading(true);
-      const membersData = await getMembersList();
+      setLoadingLocal(true);
       const addedPlayersData = await getAddedPlayers(Number(tournamentId));
-      //  console.log("addedPlayersData",addedPlayersData);
-
-      setMembers(membersData);
       setAddedPlayers(addedPlayersData);
-
-      // console.log("Fetching Tournament players list:", members);
     } catch (error) {
       console.error("Fetching tournament players Error:", error);
       throw error;
     } finally {
-      setLoading(false);
+      setLoadingLocal(false);
     }
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    dispatch(fetchMembers());
+    fetchAddedPlayers();
+  }, [dispatch, tournamentId]);
 
-  const filteredMembers = members.filter(
+  const isPageLoading = loading || loadingLocal;
+
+  const filteredMembers = membersData.filter(
     (user: any) =>
       user.username?.toLowerCase().includes(search.toLowerCase()) ||
       user.email?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const isSearching = search.length > 0;
-  const dataToShow = isSearching ? filteredMembers : members;
+  const dataToShow = isSearching ? filteredMembers : membersData;
 
   const RenderHeader = () => {
     return (
@@ -169,7 +175,7 @@ export default function ManageTournament() {
               </ThemedText>
 
               {/* MAIN TITLE */}
-              {loading ? (
+              {isPageLoading ? (
                 <Skeleton
                   isDark={isDark}
                   height={18}
@@ -256,7 +262,7 @@ export default function ManageTournament() {
         <ScrollView contentContainerStyle={{ padding: 12 }}>
           <ScrollView contentContainerStyle={{ padding: 12 }}>
             {/* 🔍 Search Input */}
-            {loading ? (
+            {isPageLoading ? (
               <SearchSkeleton isDark={isDark} />
             ) : (
               <>
@@ -300,7 +306,7 @@ export default function ManageTournament() {
               </>
             )}
 
-            {loading ? (
+            {isPageLoading ? (
               <>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <UserCardSkeleton key={i} isDark={isDark} />
