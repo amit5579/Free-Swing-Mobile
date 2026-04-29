@@ -458,7 +458,7 @@ const FeedCard = ({
               <Pressable
                 onPress={() => {
                   onActivity(card.id);
-                  handleViewScorecard(card.id);
+                //   handleViewScorecard(card.id);
                 }}
                 className="p-1 px-2.5 rounded-full flex-row items-center"
                 style={{

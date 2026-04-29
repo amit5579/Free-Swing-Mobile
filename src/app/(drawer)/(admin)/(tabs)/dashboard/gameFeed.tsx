@@ -694,7 +694,7 @@ export function GameFeedContent({
                 ),
               );
               
-              await verifyScoreApi(id);
+              // await verifyScoreApi(id);
             } catch (error) {
               console.error("verify score error:", error);
               // Revert optimistic update on error
@@ -752,7 +752,6 @@ export function GameFeedContent({
 
   return (
     <VStack space="md">
-      {/* Header Tabs */}
       {!hideHeader && (
         <HStack
           className="mb-4 p-1 rounded-full"
