@@ -64,8 +64,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
 
  
   useEffect(() => {
-    scoreCardRef.current = scorecardData;
-  }, [scorecardData]);
+    scoreCardRef.current = scoreCard;
+  }, [scoreCard]);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -146,7 +146,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       hole.score === null ||
       hole.score === "" ||
       hole.score === undefined ||
-      Number(hole.score) <= 0
+      Number(hole.score) < 0
     ) {
       return {
         ...hole,

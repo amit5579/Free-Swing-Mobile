@@ -505,6 +505,8 @@ type OverviewTabProps = {
   handleVerify?: (id: string, playerName: string) => void;
   searchQuery?: string;
   isSearchFocused?: boolean;
+  subTab: "feed" | "paradise" | "members";
+  onSubTabChange: (tab: "feed" | "paradise" | "members") => void;
 };
 
 export function OverviewTab({
@@ -513,6 +515,8 @@ export function OverviewTab({
   handleVerify,
   searchQuery = "",
   isSearchFocused = false,
+  subTab,
+  onSubTabChange,
 }: OverviewTabProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -522,7 +526,6 @@ export function OverviewTab({
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [likedUsers, setLikedUsers] = useState<LikedUser[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
-  const [subTab, setSubTab] = useState<"feed" | "paradise" | "members">("feed");
   const subTabScrollRef = useRef<ScrollView>(null);
   const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -531,7 +534,7 @@ export function OverviewTab({
   };
 
   const handleSubTabChange = (tab: "feed" | "paradise" | "members") => {
-    setSubTab(tab);
+    onSubTabChange(tab);
   };
 
   const handleShowActivity = async (id: string) => {
@@ -708,7 +711,7 @@ export function OverviewTab({
           </View>
         ) : subTab === "paradise" ? (
           <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
-            <GolferParadise />
+            <GolferParadise searchQuery={searchQuery} />
           </View>
         ) : (
           <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
@@ -728,7 +731,7 @@ export function OverviewTab({
                                 We're building a new way for you to connect with other golfers. The Members directory will be available soon!
                             </Text>
                         </Box> */}
-            <AllMembersScreen hideAdminControls={true} />
+            <AllMembersScreen hideAdminControls={true} searchQuery={searchQuery} />
           </View>
         )}
       </VStack>

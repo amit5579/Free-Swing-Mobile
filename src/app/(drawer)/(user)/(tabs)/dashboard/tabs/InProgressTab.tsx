@@ -28,7 +28,6 @@ export type InProgressGame = {
   date: string;
   holesPlayed: number;
   isDQ: boolean;
-  totalHoles: number;
 };
 
 type InProgressTabProps = {
@@ -40,8 +39,8 @@ type InProgressTabProps = {
 
 export function InProgressTab({
   playerId,
-  onDelete = () => {},
-  onResume = () => {},
+  onDelete = () => { },
+  onResume = () => { },
   searchQuery = "",
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
@@ -105,7 +104,6 @@ export function InProgressTab({
         date: item.date,
         holesPlayed: item.holesPlayed,
         isDQ: !!item.isDQ,
-        totalHoles: item.par < 50 ? 9 : 18,
       }));
 
       setGames(mapped);
@@ -346,7 +344,7 @@ export function InProgressTab({
                           fontWeight: "500",
                         }}
                       >
-                        {game.holesPlayed} / {game.totalHoles} Holes Played
+                        {game.holesPlayed} Holes Played
                       </Text>
                     </Badge>
                     {game.isDQ && (
