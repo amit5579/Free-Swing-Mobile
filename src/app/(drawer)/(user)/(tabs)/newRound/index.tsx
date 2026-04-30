@@ -558,7 +558,7 @@ function CourseCard({ course, isDark }: any) {
         <HStack className="justify-between gap-4">
           {/* Location */}
           <HStack className="items-center mt-2" style={{ flex: 1 }}>
-            <Ionicons name="location-outline" size={18} color="#ef4444" />
+            <Ionicons name="location" size={18} color="#ef4444" />
             <ThemedText
               numberOfLines={2}
               style={{
@@ -572,10 +572,10 @@ function CourseCard({ course, isDark }: any) {
               {/* course location */}
             </ThemedText>
           </HStack>
-
-          {/* Tee Boxes */}
+        </HStack>
+         {/* Tee Boxes */}
           <HStack className="items-center mt-2" style={{ flexShrink: 0 }}>
-            <Ionicons name="cube-outline" size={18} color="blue" />
+            <Ionicons name="cube" size={18} color="blue" />
             <ThemedText
               style={{
                 marginLeft: 6,
@@ -586,7 +586,6 @@ function CourseCard({ course, isDark }: any) {
               {course.teeBoxes.length} Tee Boxes
             </ThemedText>
           </HStack>
-        </HStack>
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
         <Pressable

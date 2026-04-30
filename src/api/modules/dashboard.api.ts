@@ -235,7 +235,7 @@ export type ScorecardHole = {
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
   try {
-    console.log("scorecardid", scorecardId);
+    // console.log("scorecardid", scorecardId);
     const response = await client.get(`scorecard/details/${scorecardId}`);
     return response.data as ScorecardHole[];
   } catch (error) {
@@ -288,7 +288,7 @@ export const updateHoleScoresApi = async (scorecardId: string | number, holes: a
     }));
 
     const response = await client.post(`/scorecard/save`, payload);
-    console.log("updateHoleScoresApi response:", response.status, response.data);
+    // console.log("updateHoleScoresApi response:", response.status, response.data);
     return response.data;
   } catch (error: any) {
     if (error.response) {
