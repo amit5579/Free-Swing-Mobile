@@ -391,59 +391,72 @@ export default function AllMembersScreen({
   }) => {
     if (hideAdminControls) {
       return (
-        <Box
-          className="border-b px-4 py-4"
-          style={{ borderColor: isDark ? "#222" : "#f3f4f6" }}
+        <View
+          style={{
+            shadowColor: "#8BC34A",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDark ? 0.4 : 0.15,
+            shadowRadius: 14,
+            backgroundColor: isDark
+              ? "rgba(26, 26, 26, 0.6)"
+              : "rgba(255, 255, 255, 0.6)",
+            borderLeftWidth: 6,
+            borderLeftColor: "#8BC34A",
+            borderTopWidth: 1,
+            borderRightWidth: 1,
+            borderBottomWidth: 1,
+            borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+            borderRadius: 22,
+            marginBottom: 16,
+            overflow: "hidden",
+          }}
         >
-          <HStack className="items-center">
-            <HStack style={{ flex: 1.5, alignItems: "center" }} space="sm">
-              <Skeleton
-                isDark={isDark}
-                width={28}
-                height={28}
-                borderRadius={14}
-              />
-              <Skeleton
-                isDark={isDark}
-                width={80}
-                height={14}
-                borderRadius={4}
-              />
+          <BlurView
+            intensity={isDark ? 40 : 80}
+            tint={isDark ? "dark" : "light"}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={{ padding: 16 }}>
+            {/* Header: avatar + name/role */}
+            <HStack className="items-center" space="md">
+              <Skeleton isDark={isDark} width={38} height={38} borderRadius={36} />
+              <VStack style={{ gap: 5 }}>
+                <Skeleton isDark={isDark} width={130} height={16} borderRadius={6} />
+                <Skeleton isDark={isDark} width={70} height={10} borderRadius={4} />
+              </VStack>
             </HStack>
-            <Box style={{ flex: 1 }}>
-              <Skeleton
-                isDark={isDark}
-                width={80}
-                height={12}
-                borderRadius={4}
-              />
-            </Box>
-            <Box style={{ flex: 0.7, alignItems: "center" }}>
-              <Skeleton
-                isDark={isDark}
-                width={30}
-                height={14}
-                borderRadius={4}
-              />
-            </Box>
-            <Box style={{ flex: 1 }}>
-              <Skeleton
-                isDark={isDark}
-                width={80}
-                height={12}
-                borderRadius={4}
-              />
-            </Box>
-            <Box style={{ flex: 0.8, alignItems: "flex-end" }}>
-              <Skeleton
-                isDark={isDark}
-                width={50}
-                height={28}
-                borderRadius={10}
-              />
-            </Box>
-          </HStack>
-        </Box>
+
+            {/* Divider */}
+            <View
+              style={{
+                height: 1,
+                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                marginVertical: 16,
+              }}
+            />
+
+            {/* Home Course / HC Index */}
+            <HStack className="justify-between items-center" style={{ marginBottom: 12 }}>
+              <VStack style={{ flex: 1, gap: 4 }}>
+                <Skeleton isDark={isDark} width={70} height={10} borderRadius={4} />
+                <Skeleton isDark={isDark} width={110} height={13} borderRadius={4} />
+              </VStack>
+              <VStack style={{ alignItems: "flex-end", gap: 4 }}>
+                <Skeleton isDark={isDark} width={50} height={10} borderRadius={4} />
+                <Skeleton isDark={isDark} width={35} height={13} borderRadius={4} />
+              </VStack>
+            </HStack>
+
+            {/* Added By / View Profile button */}
+            <HStack className="justify-between items-center">
+              <VStack style={{ flex: 1, gap: 4 }}>
+                <Skeleton isDark={isDark} width={55} height={10} borderRadius={4} />
+                <Skeleton isDark={isDark} width={100} height={13} borderRadius={4} />
+              </VStack>
+              <Skeleton isDark={isDark} width={96} height={38} borderRadius={12} />
+            </HStack>
+          </View>
+        </View>
       );
     }
     return (

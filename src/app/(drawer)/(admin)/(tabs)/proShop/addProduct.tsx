@@ -6,9 +6,12 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -84,12 +87,18 @@ export default function AddProduct() {
       if (isEdit) {
         await updateProduct(Number(params.id), formData);
         Alert.alert("Success", "Product updated successfully", [
-          { text: "OK", onPress: () => router.back() },
+          {
+            text: "OK",
+            onPress: () => router.replace("/(drawer)/(admin)/(tabs)/proShop"),
+          },
         ]);
       } else {
         await addProduct(formData);
         Alert.alert("Success", "Product added successfully", [
-          { text: "OK", onPress: () => router.back() },
+          {
+            text: "OK",
+            onPress: () => router.replace("/(drawer)/(admin)/(tabs)/proShop"),
+          },
         ]);
       }
     } catch (error: any) {
@@ -120,14 +129,22 @@ export default function AddProduct() {
     >
       <Watermark />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 150 }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
       >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 50 }}
+        >
         <VStack className="px-4">
           <HStack style={{ marginBottom: 10, alignItems: "center" }}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() =>
+                router.replace("/(drawer)/(admin)/(tabs)/proShop")
+              }
               style={{
                 marginRight: 12,
                 backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
@@ -343,7 +360,9 @@ export default function AddProduct() {
               <HStack className="justify-end mt-4">
                 <Button
                   variant="outline"
-                  onPress={() => router.back()}
+                  onPress={() =>
+                    router.replace("/(drawer)/(admin)/(tabs)/proShop")
+                  }
                   style={{
                     borderColor: isDark ? "#555" : "#ccc",
                     paddingHorizontal: 20,
@@ -373,7 +392,8 @@ export default function AddProduct() {
             </VStack>
           </Box>
         </VStack>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

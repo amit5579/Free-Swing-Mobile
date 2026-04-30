@@ -31,6 +31,7 @@ export default function ProShop() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [navigating, setNavigating] = useState(false);
   const [imgLoadingMap, setImgLoadingMap] = useState<{
     [key: number]: boolean;
   }>({});
@@ -40,6 +41,7 @@ export default function ProShop() {
 
   useFocusEffect(
     useCallback(() => {
+      setNavigating(false);
       fetchProducts();
     }, []),
   );
@@ -117,24 +119,31 @@ export default function ProShop() {
           </VStack>
 
           <TouchableOpacity
-            onPress={() =>
-              router.push("/(drawer)/(admin)/(tabs)/proShop/addProduct")
-            }
+            disabled={navigating}
+            onPress={() => {
+              setNavigating(true);
+              router.push("/(drawer)/(admin)/(tabs)/proShop/addProduct");
+            }}
             style={{
-              backgroundColor: "#8bc34a",
+              backgroundColor: navigating ? "#aaa" : "#8bc34a",
               paddingHorizontal: 16,
               paddingVertical: 10,
               borderRadius: 12,
               flexDirection: "row",
               alignItems: "center",
-              shadowColor: "#8bc34a",
+              shadowColor: navigating ? "#aaa" : "#8bc34a",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,
               elevation: 4,
+              opacity: navigating ? 0.6 : 1,
             }}
           >
-            <Ionicons name="add-circle-outline" size={18} color="#fff" />
+            {navigating ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="add-circle-outline" size={18} color="#fff" />
+            )}
             <ThemedText
               style={{
                 color: "white",

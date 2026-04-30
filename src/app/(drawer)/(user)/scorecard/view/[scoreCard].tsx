@@ -25,6 +25,8 @@ import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
 
+
+
 const ScoreCard: React.FC = () => {
   const {
     scoreCard,
@@ -166,24 +168,32 @@ const ScoreCard: React.FC = () => {
     ]);
   };
 
-  const sumScores = (arr: ScorecardHole[]) =>
-    arr.reduce((t, h) => t + (h.score || 0), 0);
-  const sumNet = (arr: ScorecardHole[]) =>
-    arr.reduce(
-      (t, h) => t + (h.score !== null && h.score > 0 ? h.netScore || 0 : 0),
+  const sumScores = (arr: ScorecardHole[]) => {
+    const total = arr.reduce((t, h) => t + (h.score || 0), 0);
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
+  };
+  const sumNet = (arr: ScorecardHole[]) => {
+    const total = arr.reduce(
+      (t, h) => t + (h.score !== null && h.score >= 0 ? h.netScore || 0 : 0),
       0,
     );
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
+  };
   const sumYardage = (arr: ScorecardHole[]) =>
     arr.reduce((t, h) => t + (h.yardage || 0), 0);
   const sumPar = (arr: ScorecardHole[]) =>
     arr.reduce((t, h) => t + (h.par || 0), 0);
   const sumPts = (arr: ScorecardHole[]) => {
     if (!isStableford) return 0;
-    return arr.reduce(
+    const total = arr.reduce(
       (t, h) =>
-        t + (h.score !== null && h.score > 0 ? h.stablefordPoints || 0 : 0),
+        t + (h.score !== null && h.score >= 0 ? h.stablefordPoints || 0 : 0),
       0,
     );
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
   };
 
   const front9 = holes.slice(0, 9);
@@ -628,7 +638,10 @@ const ScoreCard: React.FC = () => {
               >
                 {h.par}
               </Text>
-              <View className="flex-1 items-center justify-center relative">
+              <View
+                className="flex-1 items-center justify-center relative"
+                pointerEvents="none"
+              >
                 {renderScoreIndicator(
                   h.score ?? null,
                   h.par,
@@ -749,7 +762,10 @@ const ScoreCard: React.FC = () => {
                 >
                   {h.par}
                 </Text>
-                <View className="flex-1 items-center justify-center relative">
+                <View
+                  className="flex-1 items-center justify-center relative"
+                  pointerEvents="none"
+                >
                   {renderScoreIndicator(
                     h.score ?? null,
                     h.par,

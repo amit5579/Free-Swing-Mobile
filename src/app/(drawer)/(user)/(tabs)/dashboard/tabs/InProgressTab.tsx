@@ -28,6 +28,7 @@ export type InProgressGame = {
   date: string;
   holesPlayed: number;
   isDQ: boolean;
+  totalHoles: number;
 };
 
 type InProgressTabProps = {
@@ -104,6 +105,7 @@ export function InProgressTab({
         date: item.date,
         holesPlayed: item.holesPlayed,
         isDQ: !!item.isDQ,
+        totalHoles: item.par < 50 ? 9 : 18,
       }));
 
       setGames(mapped);
@@ -344,7 +346,7 @@ export function InProgressTab({
                           fontWeight: "500",
                         }}
                       >
-                        {game.holesPlayed} Holes Played
+                        {game.holesPlayed} / {game.totalHoles} Holes Played
                       </Text>
                     </Badge>
                     {game.isDQ && (

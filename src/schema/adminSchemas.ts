@@ -122,7 +122,16 @@ export const addMemberSchema = z.object({
   password: z.string().min(1, "Password is required"),
   membershipNo: z.string().min(1, "Membership No. is required"),
   mobileNumber: z.string().min(10, "Invalid Phone Number"),
-  dateOfBirth: z.string().optional().nullable(),
+  dateOfBirth: z.string().min(1, "Date of birth is required").refine((val) => {
+    const dob = new Date(val);
+    if (isNaN(dob.getTime())) return false;
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+    const fullYears = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+    return fullYears >= 18;
+  }, "Member must be at least 18 years old"),
   teeBoxId: z.number().min(1, "Select a tee box"),
   homeCourse: z.string().min(1, "Select a course"),
   homeCourseId: z.number().min(1, "Select a course"),
