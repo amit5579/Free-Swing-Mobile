@@ -134,15 +134,21 @@ export default function ResumeScorecard() {
           setHoles(sanitizedData);
           holesRef.current = sanitizedData;
 
-          if (Object.keys(textScoresRef.current).length === 0) {
-            const initialText: Record<number, string> = {};
-            data.forEach((h) => {
-              if (h.score != null && h.score >= 0) {
-                initialText[h.holeId] = h.score.toString();
+          // Merge API scores into textScoresRef if not already present
+          const currentText = textScoresRef.current || {};
+          const newText = { ...currentText };
+          let changed = false;
+          data.forEach((h) => {
+            if (h.score !== null && h.score !== undefined && h.score >= 0) {
+              if (newText[h.holeId] === undefined) {
+                newText[h.holeId] = h.score.toString();
+                changed = true;
               }
-            });
-            setTextScores(initialText);
-            textScoresRef.current = initialText;
+            }
+          });
+          if (changed || Object.keys(currentText).length === 0) {
+            setTextScores(newText);
+            textScoresRef.current = newText;
           }
 
           const showPts = data.some(
@@ -153,44 +159,52 @@ export default function ResumeScorecard() {
 
           // Detect selection based on in-progress game par heuristic
           let totalParSelection = 72;
+          let isTournamentGame = false;
           try {
             const inProgressData = await getInProgressGames(Number(storedUserId));
             const currentGame = inProgressData.find(g => g.scorecardId === Number(id));
             if (currentGame) {
               totalParSelection = currentGame.par;
+              isTournamentGame = !!currentGame.tournamentId;
             }
           } catch (e) {
             console.error("Error fetching in-progress par:", e);
           }
 
-          const frontH = sanitizedData.filter((h) => h.holeNumber <= 9);
-          const backH = sanitizedData.filter((h) => h.holeNumber >= 10);
+          if (
+            isTournamentGame ||
+            (sanitizedData.length > 0 && (!!sanitizedData[0].tournamentId || !!sanitizedData[0].isDoublePeoria))
+          ) {
+            setDisplayFront(true);
+            setDisplayBack(true);
+          } else {
+            const frontH = sanitizedData.filter((h) => h.holeNumber <= 9);
+            const backH = sanitizedData.filter((h) => h.holeNumber >= 10);
 
-          if (totalParSelection < 50) {
-            // It's a 9-hole round.
-            if (backH.length > 0 && frontH.length === 0) {
-              setDisplayFront(false);
-              setDisplayBack(true);
-            } else if (frontH.length > 0 && backH.length === 0) {
+            if (frontH.length > 0 && backH.length === 0) {
               setDisplayFront(true);
               setDisplayBack(false);
-            } else {
-              // Both present or both missing - check scores as fallback
+            } else if (backH.length > 0 && frontH.length === 0) {
+              setDisplayFront(false);
+              setDisplayBack(true);
+            } else if (totalParSelection < 50) {
               const hasBackScores = backH.some((h) => h.score !== null && h.score !== undefined);
               const hasFrontScores = frontH.some((h) => h.score !== null && h.score !== undefined);
 
               if (hasBackScores && !hasFrontScores) {
                 setDisplayFront(false);
                 setDisplayBack(true);
+              } else if (hasFrontScores && !hasBackScores) {
+                setDisplayFront(true);
+                setDisplayBack(false);
               } else {
                 setDisplayFront(true);
                 setDisplayBack(false);
               }
+            } else {
+              setDisplayFront(true);
+              setDisplayBack(true);
             }
-          } else {
-            // It's an 18-hole round.
-            setDisplayFront(true);
-            setDisplayBack(true);
           }
         }
       } catch (err) {
@@ -265,16 +279,17 @@ export default function ResumeScorecard() {
       formattedText = num.toString();
     }
 
+    textScoresRef.current[holeId] = formattedText;
     setTextScores((prev) => ({ ...prev, [holeId]: formattedText }));
     const score = formattedText === "" ? null : parseInt(formattedText, 10);
 
     const updatedHoles = holes.map((h) => {
       if (h.holeId === holeId) {
         const strokes = calculateStrokes(handicap, h.strokeIndex);
-        const validScore = score !== null && score > 0 ? score : 0;
-        const netScore = validScore > 0 ? validScore - strokes : 0;
+        const validScore = score;
+        const netScore = (validScore !== null && validScore >= 0) ? validScore - strokes : 0;
         const stablefordPoints =
-          validScore > 0 && netScore > 0
+          (validScore !== null && validScore >= 0) && netScore > 0
             ? Math.max(0, h.par - netScore + 2)
             : 0;
 
@@ -283,7 +298,7 @@ export default function ResumeScorecard() {
           si: h.strokeIndex,
           yard: h.yardage,
           par: h.par,
-          score: validScore > 0 ? validScore : "-",
+          score: (validScore !== null && validScore >= 0) ? validScore : "-",
           net: netScore > 0 ? netScore : "-",
         });
 
@@ -293,8 +308,9 @@ export default function ResumeScorecard() {
     });
 
     setHoles(updatedHoles);
+    holesRef.current = updatedHoles;
 
-    const newTextScores = { ...textScores, [holeId]: formattedText };
+    const newTextScores = { ...textScoresRef.current };
     AsyncStorage.setItem(
       storageKey,
       JSON.stringify({
@@ -329,7 +345,7 @@ export default function ResumeScorecard() {
         tournamentId: h.tournamentId,
         holeId: h.holeId,
         score:
-          h.score === undefined || h.score === null || h.score <= 0
+          h.score === undefined || h.score === null
             ? null
             : h.score,
         roundNumber: h.roundNumber || 1,
@@ -387,7 +403,11 @@ export default function ResumeScorecard() {
     const total = arr.reduce((t, h) => {
       const val = textScores[h.holeId];
       const s =
-        val !== undefined ? (val === "" ? 0 : parseInt(val)) : h.score || 0;
+        val !== undefined && val !== ""
+          ? parseInt(val)
+          : h.score !== null && h.score !== undefined
+            ? h.score
+            : 0;
       return t + s;
     }, 0);
     const hasAnyScore = arr.some(h => 
@@ -621,8 +641,9 @@ export default function ResumeScorecard() {
     isDark: boolean,
     rawValue: string,
   ) => {
-    if (rawValue === "" || rawValue === undefined || score === null)
-      return null;
+    if (score === null || score === undefined) return null;
+    // rawValue is used to check if the user has cleared the input
+    if (rawValue === "" && (score === null || score === undefined)) return null;
 
     if (score === 0) {
       return (
@@ -900,10 +921,11 @@ export default function ResumeScorecard() {
                     />
                   </View>
                   <Text
-                    className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    className="text-xs font-semibold w-10 text-center"
+                    style={{ color: isDark ? "#fff" : "#111" }}
                   >
-                    {((textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || (h.score !== null && h.score !== undefined && textScores[h.holeId] === undefined))
-                      ? (h.netScore ?? 0)
+                    {h.netScore !== null && h.netScore !== undefined && (textScores[h.holeId] || h.score !== null)
+                      ? h.netScore
                       : "-"}
                   </Text>
                   {isStableford && (
@@ -1035,10 +1057,11 @@ export default function ResumeScorecard() {
                     />
                   </View>
                   <Text
-                    className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    className="text-xs font-semibold w-10 text-center"
+                    style={{ color: isDark ? "#fff" : "#111" }}
                   >
-                    {((textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || (h.score !== null && h.score !== undefined && textScores[h.holeId] === undefined))
-                      ? (h.netScore ?? 0)
+                    {h.netScore !== null && h.netScore !== undefined && (textScores[h.holeId] || h.score !== null)
+                      ? h.netScore
                       : "-"}
                   </Text>
                   {isStableford && (
