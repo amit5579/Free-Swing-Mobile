@@ -33,6 +33,8 @@ import { HStack } from "@/components/hstack";
 import { ThemedText } from "@/components/themed-text";
 import { Box } from "@/components/box";
 
+
+
 const ScoreCard: React.FC = () => {
   const { scoreCard, handicap: paramHandicap } = useLocalSearchParams<{
     scoreCard: string;
@@ -116,7 +118,7 @@ const ScoreCard: React.FC = () => {
 
         const initialText: Record<number, string> = {};
         data.forEach((h) => {
-          if (h.score != null && h.score > 0) {
+          if (h.score != null && h.score >= 0) {
             initialText[h.holeId] = h.score.toString();
           }
         });
@@ -222,20 +224,30 @@ const ScoreCard: React.FC = () => {
     ]);
   };
 
-  const sumScores = (arr: ScorecardHole[]) =>
-    arr.reduce((t, h) => t + (h.score || 0), 0);
-  const sumNet = (arr: ScorecardHole[]) =>
-    arr.reduce((t, h) => t + (h.score && h.score > 0 ? h.netScore || 0 : 0), 0);
+
+
+  const sumScores = (arr: ScorecardHole[]) => {
+    const total = arr.reduce((t, h) => t + (h.score || 0), 0);
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
+  };
+  const sumNet = (arr: ScorecardHole[]) => {
+    const total = arr.reduce((t, h) => t + (h.score !== null && h.score >= 0 ? h.netScore || 0 : 0), 0);
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
+  };
   const sumYardage = (arr: ScorecardHole[]) =>
     arr.reduce((t, h) => t + (h.yardage || 0), 0);
   const sumPar = (arr: ScorecardHole[]) =>
     arr.reduce((t, h) => t + (h.par || 0), 0);
   const sumPts = (arr: ScorecardHole[]) => {
     if (!isStableford) return 0;
-    return arr.reduce(
-      (t, h) => t + (h.score && h.score > 0 ? h.stablefordPoints || 0 : 0),
+    const total = arr.reduce(
+      (t, h) => t + (h.score !== null && h.score >= 0 ? h.stablefordPoints || 0 : 0),
       0,
     );
+    const hasAnyScore = arr.some(h => h.score !== null && h.score !== undefined);
+    return hasAnyScore ? total : "-";
   };
 
   const front9 = holes.slice(0, 9);
@@ -717,7 +729,10 @@ const ScoreCard: React.FC = () => {
                   >
                     {h.par}
                   </Text>
-                  <View className="flex-1 items-center justify-center relative">
+                  <View
+                    className="flex-1 items-center justify-center relative"
+                    pointerEvents="none"
+                  >
                     {renderScoreIndicator(
                       h.score ?? null,
                       h.par,
@@ -741,8 +756,6 @@ const ScoreCard: React.FC = () => {
                         fontSize: 14,
                       }}
                       editable={false}
-                      keyboardType="numeric"
-                      onChangeText={(text) => handleScoreChange(h.holeId, text)}
                       value={textScores[h.holeId] || ""}
                       placeholder="-"
                       placeholderTextColor={isDark ? "#666" : "#999"}
@@ -753,7 +766,7 @@ const ScoreCard: React.FC = () => {
                   >
                     {textScores[h.holeId] !== "" &&
                     textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) > 0
+                    parseInt(textScores[h.holeId]) >= 0
                       ? h.netScore
                       : "-"}
                   </Text>
@@ -763,7 +776,7 @@ const ScoreCard: React.FC = () => {
                     >
                       {textScores[h.holeId] !== "" &&
                       textScores[h.holeId] !== undefined &&
-                      parseInt(textScores[h.holeId]) > 0
+                      parseInt(textScores[h.holeId]) >= 0
                         ? h.stablefordPoints || 0
                         : "-"}
                     </Text>
@@ -845,7 +858,10 @@ const ScoreCard: React.FC = () => {
                   >
                     {h.par}
                   </Text>
-                  <View className="flex-1 items-center justify-center relative">
+                  <View
+                    className="flex-1 items-center justify-center relative"
+                    pointerEvents="none"
+                  >
                     {renderScoreIndicator(
                       h.score ?? null,
                       h.par,
@@ -868,9 +884,7 @@ const ScoreCard: React.FC = () => {
                         fontWeight: "bold",
                         fontSize: 14,
                       }}
-                      editable={!saving}
-                      keyboardType="numeric"
-                      onChangeText={(text) => handleScoreChange(h.holeId, text)}
+                      editable={false}
                       value={textScores[h.holeId] || ""}
                       placeholder="-"
                       placeholderTextColor={isDark ? "#666" : "#999"}
@@ -881,7 +895,7 @@ const ScoreCard: React.FC = () => {
                   >
                     {textScores[h.holeId] !== "" &&
                     textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) > 0
+                    parseInt(textScores[h.holeId]) >= 0
                       ? h.netScore
                       : "-"}
                   </Text>
@@ -891,7 +905,7 @@ const ScoreCard: React.FC = () => {
                     >
                       {textScores[h.holeId] !== "" &&
                       textScores[h.holeId] !== undefined &&
-                      parseInt(textScores[h.holeId]) > 0
+                      parseInt(textScores[h.holeId]) >= 0
                         ? h.stablefordPoints || 0
                         : "-"}
                     </Text>
@@ -973,35 +987,7 @@ const ScoreCard: React.FC = () => {
           </View>
         </View>
 
-        {/* <View className="my-8 px-2">
-                    <TouchableOpacity
-                        onPress={handleFinishRound}
-                        disabled={saving}
-                        activeOpacity={0.8}
-                        style={{
-                            backgroundColor: "#8BC34A",
-                            paddingVertical: 16,
-                            borderRadius: 16,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            shadowColor: "#8BC34A",
-                            shadowOffset: { width: 0, height: 6 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 12,
-                            elevation: 5,
-                            flexDirection: "row"
-                        }}
-                    >
-                        {saving ? (
-                            <ActivityIndicator color="white" size="small" />
-                        ) : (
-                            <>
-                                <Ionicons name="checkmark-circle-outline" size={22} color="white" style={{ marginRight: 8 }} />
-                                <Text className="text-white font-black text-lg tracking-tight">FINISH ROUND</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                </View> */}
+
 
         {(() => {
           const scoreCounts: Record<string, number> = {
@@ -1439,5 +1425,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
 });
+
+
 
 export default ScoreCard;

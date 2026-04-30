@@ -131,7 +131,8 @@ export default function AddMemberScreen() {
     >
       <Watermark />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         style={{ flex: 1 }}
       >
         {/* Header */}
@@ -146,7 +147,7 @@ export default function AddMemberScreen() {
           }}
         >
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.replace("/(drawer)/(admin)/(tabs)/allMembers")}
             style={{
               backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#f1f5f9",
               borderRadius: 12,
@@ -176,6 +177,7 @@ export default function AddMemberScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         >
           {/* ── Row: Name + Email ── */}
@@ -633,7 +635,7 @@ export default function AddMemberScreen() {
           }}
         >
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.replace("/(drawer)/(admin)/(tabs)/allMembers")}
             style={{
               paddingHorizontal: 24,
               paddingVertical: 12,
@@ -703,7 +705,7 @@ function FormField({
     <VStack style={{ width: halfWidth ? "48%" : "100%", marginBottom: 12 }}>
       <HStack style={{ marginBottom: 6, gap: 4 }}>
         <ThemedText
-          style={{ fontSize: 13, fontWeight: "600", color: "#64748b" }}
+          style={{ fontSize: 13, fontWeight: "600", color: colors.subText }}
         >
           {label}
         </ThemedText>
