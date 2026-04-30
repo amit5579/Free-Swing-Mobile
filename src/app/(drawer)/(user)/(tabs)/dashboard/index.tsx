@@ -55,6 +55,7 @@ export default function DashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statsScrollIndex, setStatsScrollIndex] = useState(0);
+  const [overviewSubTab, setOverviewSubTab] = useState<"feed" | "paradise" | "members">("feed");
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -332,6 +333,8 @@ export default function DashboardScreen() {
                           x: tIndex * SCREEN_WIDTH,
                           animated: true,
                         });
+                        // Reset search query when changing main tabs
+                        setSearchQuery("");
                       }}
                       className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
                       style={{
@@ -363,48 +366,52 @@ export default function DashboardScreen() {
                 })}
               </HStack>
 
-              <Box
-                className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(255,255,255,0.9)",
-                  borderColor: isDark
-                    ? "rgba(139,195,74,0.3)"
-                    : "rgba(229,231,235,1)",
-                }}
-              >
-                <Ionicons name="search-outline" size={18} color="#8BC34A" />
-                <TextInput
-                  placeholder={
-                    activeTab === "overview"
-                      ? "Search game feed..."
-                      : activeTab === "progress"
-                        ? "Search in progress..."
-                        : "Search game history..."
-                  }
-                  placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
+              {!(activeTab === "overview" && overviewSubTab === "paradise") && (
+                <Box
+                  className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
                   style={{
-                    flex: 1,
-                    marginLeft: 8,
-                    color: isDark ? "#fff" : "#111",
-                    fontSize: 14,
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(255,255,255,0.9)",
+                    borderColor: isDark
+                      ? "rgba(139,195,74,0.3)"
+                      : "rgba(229,231,235,1)",
                   }}
-                />
-                {searchQuery !== "" && (
-                  <Pressable onPress={() => setSearchQuery("")}>
-                    <Ionicons
-                      name="close-circle"
-                      size={18}
-                      color={isDark ? "#6B7280" : "#9CA3AF"}
-                    />
-                  </Pressable>
-                )}
-              </Box>
+                >
+                  <Ionicons name="search-outline" size={18} color="#8BC34A" />
+                  <TextInput
+                    placeholder={
+                      activeTab === "overview"
+                        ? overviewSubTab === "members"
+                          ? "Search members..."
+                          : "Search game feed..."
+                        : activeTab === "progress"
+                          ? "Search in progress..."
+                          : "Search game history..."
+                    }
+                    placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    style={{
+                      flex: 1,
+                      marginLeft: 8,
+                      color: isDark ? "#fff" : "#111",
+                      fontSize: 14,
+                    }}
+                  />
+                  {searchQuery !== "" && (
+                    <Pressable onPress={() => setSearchQuery("")}>
+                      <Ionicons
+                        name="close-circle"
+                        size={18}
+                        color={isDark ? "#6B7280" : "#9CA3AF"}
+                      />
+                    </Pressable>
+                  )}
+                </Box>
+              )}
             </>
           )}
         </View>
@@ -825,6 +832,11 @@ export default function DashboardScreen() {
                       handleVerify={handleVerify}
                       searchQuery={searchQuery}
                       isSearchFocused={isSearchFocused}
+                      subTab={overviewSubTab}
+                      onSubTabChange={(tab) => {
+                        setOverviewSubTab(tab);
+                        setSearchQuery(""); // Reset search when changing subtabs
+                      }}
                     />
                   </Box>
                 </>

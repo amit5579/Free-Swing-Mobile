@@ -146,7 +146,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       hole.score === null ||
       hole.score === "" ||
       hole.score === undefined ||
-      Number(hole.score) <= 0
+      Number(hole.score) < 0
     ) {
       return {
         ...hole,
