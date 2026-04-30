@@ -71,7 +71,7 @@ export const createMiniTournament = async (courseId: number, description: string
 export const updateTournament = async (tournamentData: any, tournamentId: number) => {
     try {
         const response = await client.put(`Tournament/${tournamentId}`, tournamentData);
-        console.log("Updated Tournament:", response.data);
+        // console.log("Updated Tournament:", response.data);
         return response.data;
     } catch (error) {
         console.error("Update Tournament Error:", error);

@@ -96,14 +96,6 @@ export default function managePlayers() {
     fetchPlayers();
   }, []);
 
-  // const togglePlayer = (id: number) => {
-  //   setTournamentPlayers((prev: any) =>
-  //     prev.map((player: any) =>
-  //       player.id === id ? { ...player, added: !player.added } : player,
-  //     ),
-  //   );
-  // };
-
   const PlayerCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
       <Box
@@ -307,7 +299,6 @@ function PlayerCard({
               {player.handicap == 0 ? "-" : player.handicap}
             </ThemedText>
           </VStack>
-          {/*  */}
 
           {isInTournament ? (
             <Pressable

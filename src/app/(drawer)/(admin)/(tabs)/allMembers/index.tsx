@@ -1221,7 +1221,11 @@ export default function AllMembersScreen({
                               <Ionicons
                                 name="calendar-outline"
                                 size={14}
-                                color="#8bc34a"
+                                color={member?.hasPendingSubscriptionRequest
+                                  ? "#F59E0B"
+                                  : member.isBlocked
+                                    ? "#DC2626"
+                                    : "#8BC34A"}
                               />
                               <ThemedText
                                 style={{ fontSize: 11, opacity: 0.8 }}
@@ -1238,7 +1242,11 @@ export default function AllMembersScreen({
                                 <Ionicons
                                   name="ribbon-outline"
                                   size={14}
-                                  color="#8BC34A"
+                                  color={member?.hasPendingSubscriptionRequest
+                                    ? "#F59E0B"
+                                    : member.isBlocked
+                                      ? "#DC2626"
+                                      : "#8BC34A"}
                                 />
                                 <ThemedText
                                   style={{ fontSize: 11, opacity: 0.8 }}
@@ -1430,7 +1438,11 @@ export default function AllMembersScreen({
                                   <Ionicons
                                     name={item.icon as any}
                                     size={14}
-                                    color="#8BC34A"
+                                    color={member?.hasPendingSubscriptionRequest
+                                      ? "#F59E0B"
+                                      : member.isBlocked
+                                        ? "#DC2626"
+                                        : "#8BC34A"}
                                   />
                                   <ThemedText
                                     numberOfLines={1}

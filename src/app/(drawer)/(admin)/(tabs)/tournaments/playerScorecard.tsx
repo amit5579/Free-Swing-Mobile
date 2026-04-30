@@ -81,6 +81,7 @@ const PlayerScorecard = () => {
   // useEffect(() => {
   //   console.log(sumDoublePieora);
   // }, [scorecard]);
+
   const front9 = scorecard?.slice(0, 9) || [];
   const back9 = scorecard?.slice(9, 18) || [];
 
@@ -410,13 +411,14 @@ const PlayerScorecard = () => {
             {handicap?.handicap ?? "N/A"}
           </ThemedText>
         </ThemedText>
-
-        <ThemedText style={{ fontSize: 12 }}>
-          DP HC:{" "}
-          <ThemedText style={{ fontWeight: "600" }}>
-            {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
+        {sumDoublePieora > 0 && (
+          <ThemedText style={{ fontSize: 12 }}>
+            DP HC:{" "}
+            <ThemedText style={{ fontWeight: "600" }}>
+              {sumDoublePieora > 0 ? sumDoublePieora : "NIL"}
+            </ThemedText>
           </ThemedText>
-        </ThemedText>
+        )}
       </HStack>
     </Box>
   );

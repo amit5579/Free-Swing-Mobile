@@ -64,8 +64,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
 
  
   useEffect(() => {
-    scoreCardRef.current = scorecardData;
-  }, [scorecardData]);
+    scoreCardRef.current = scoreCard;
+  }, [scoreCard]);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -256,10 +256,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
         userId: Number(userId),
       }));
-      console.log(
-        "Triggering debounced save for new round tournamentId:",
-        tournamentId,
-      );
+      // console.log(
+      //   "Triggering debounced save for new round tournamentId:",
+      //   tournamentId,
+      // );
       console.log("Payload is ", payload);
 
       updateHoleScoresApi(
