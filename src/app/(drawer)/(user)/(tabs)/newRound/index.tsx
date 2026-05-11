@@ -244,6 +244,7 @@ export default function StartNewRoundPage() {
       <View
         style={{
           flex: 1,
+          backgroundColor: isDark ? "#020617" : "#ffffff",
         }}
       >
         {/* Header */}

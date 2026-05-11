@@ -680,6 +680,7 @@ const styles = StyleSheet.create({
   topSection: {
     padding: 16,
     marginTop: 10,
+    
   },
   headerCard: {
     padding: 20,
