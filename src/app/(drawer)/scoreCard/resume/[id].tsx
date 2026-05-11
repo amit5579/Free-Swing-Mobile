@@ -3,7 +3,7 @@ import {
   ScorecardHole,
 } from "@/api/modules/dashboard.api";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState, useLayoutEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -42,6 +42,8 @@ export default function ResumeScorecard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRefs = useRef<any[]>([]);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const fetchScorecard = async () => {
@@ -71,7 +73,6 @@ export default function ResumeScorecard() {
     const remainder = handicap % 18;
     return base + (strokeIndex <= remainder ? 1 : 0);
   };
-
   const handleScoreChange = (holeId: number, text: string) => {
     let formattedText = text.replace(/[^0-9]/g, "");
 
@@ -94,6 +95,28 @@ export default function ResumeScorecard() {
         return h;
       }),
     );
+
+    if (formattedText.length >= 2) {
+      const flatHoles = holes;
+      const currentIndex = flatHoles.findIndex((h) => h.holeId === holeId);
+      const nextIndex = currentIndex + 1;
+      if (nextIndex < flatHoles.length) {
+        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+        inputRefs.current[nextIndex]?.focus();
+      }
+    }
+
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    if (formattedText !== "") {
+      focusTimeoutRef.current = setTimeout(() => {
+        const flatHoles = holes;
+        const currentIndex = flatHoles.findIndex((h) => h.holeId === holeId);
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < flatHoles.length) {
+          inputRefs.current[nextIndex]?.focus();
+        }
+      }, 3000);
+    }
   };
 
   const handleSave = async () => {
@@ -498,6 +521,9 @@ export default function ResumeScorecard() {
                   textScores[h.holeId] || "",
                 )}
                 <TextInput
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
                   style={{
                     width: 50,
                     height: 40,
@@ -518,6 +544,9 @@ export default function ResumeScorecard() {
                   keyboardType="numeric"
                   value={textScores[h.holeId] || ""}
                   onChangeText={(val) => handleScoreChange(h.holeId, val)}
+                  onBlur={() => {
+                    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                  }}
                   placeholder="-"
                   placeholderTextColor={isDark ? "#666" : "#999"}
                 />

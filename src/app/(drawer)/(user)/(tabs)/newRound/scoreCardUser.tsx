@@ -62,6 +62,7 @@ export default function ScoreCardUserPage() {
   const [displayBack9, setDisplayBack9] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scoreCardRef = useRef<any>([]);
 
   useEffect(() => {
@@ -295,6 +296,9 @@ export default function ScoreCardUserPage() {
         }
 
         if (shouldGoBack) {
+          if (isCompleted) {
+            setScoreCardDetails([]); // Clear inputs for fresh start
+          }
           routePage.push("/(drawer)/(user)/(tabs)/dashboard");
         }
       } catch (error) {
@@ -407,14 +411,26 @@ export default function ScoreCardUserPage() {
       saveScoreCard(payload).catch((err) =>
         console.error("Auto-save error:", err),
       );
-    }, 500);
+    }, 300);
 
     // Auto-focus next input if 2 digits are entered
-    if (value.length >= 2) {
+    if (value.length >= 2 ) {
       const nextIndex = index + 1;
       if (nextIndex < scoreCardDetails.length) {
+        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
         inputRefs.current[nextIndex]?.focus();
       }
+    }
+
+    // Auto-focus next input after 5 seconds if a value is entered
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    if (value !== "") {
+      focusTimeoutRef.current = setTimeout(() => {
+        const nextIndex = index + 1;
+        if (nextIndex < scoreCardDetails.length) {
+          inputRefs.current[nextIndex]?.focus();
+        }
+      }, 3000);
     }
   };
 
@@ -866,6 +882,10 @@ export default function ScoreCardUserPage() {
                               onChangeText={(val) =>
                                 handleScoreChange(h.holeId, val, index)
                               }
+                              onBlur={() => {
+                                if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                // saveRound(false, false);
+                              }}
                               onSubmitEditing={() => {
                                 if (index < processedHoles.length - 1) {
                                   inputRefs.current[index + 1]?.focus();

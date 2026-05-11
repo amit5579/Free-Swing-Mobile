@@ -33,6 +33,8 @@ import { Skeleton } from "@/components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
+import { HStack } from "@/components/hstack";
+import { VStack } from "@/components/vstack";
 
 export default function ResumeScorecard() {
   const { id, handicap: handicapParam } = useLocalSearchParams<{
@@ -45,7 +47,7 @@ export default function ResumeScorecard() {
   const insets = useSafeAreaInsets();
   const handicap = parseInt(handicapParam || "0");
 
-  useLayoutEffect(() => { }, []);
+  useLayoutEffect(() => {}, []);
 
   const [holes, setHoles] = useState<ScorecardHole[]>([]);
   const [textScores, setTextScores] = useState<Record<number, string>>({});
@@ -60,7 +62,17 @@ export default function ResumeScorecard() {
   const holesRef = useRef<ScorecardHole[]>([]);
   const inputRefs = useRef<any[]>([]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = `scorecard_draft_${id}`;
+
+  const renderScoringType =
+    holes.length > 0
+      ? holes[0].stablefordPoints == null
+        ? holes[0].isExcluded
+          ? "Net Score Exclude Par 3"
+          : "Net Score Include Par 3"
+        : "Stableford"
+      : "";
 
   const saveToServer = async (holesToSave: ScorecardHole[]) => {
     const performSave = async () => {
@@ -71,10 +83,7 @@ export default function ResumeScorecard() {
           teeBoxId: h.teeBoxId || null,
           tournamentId: h.tournamentId || null,
           holeId: h.holeId,
-          score:
-            h.score === undefined || h.score === null
-              ? null
-              : h.score,
+          score: h.score === undefined || h.score === null ? null : h.score,
           roundNumber: h.roundNumber || 1,
           isCompleted: h.isCompleted || false,
           isExcluded: h.isExcluded || false,
@@ -109,6 +118,7 @@ export default function ResumeScorecard() {
         let data: ScorecardHole[] | null = null;
         try {
           data = await getScorecardDetails(id!);
+          // console.log("ddd", data);
         } catch (err) {
           console.error("Failed to load from API, checking local draft...");
           const draft = await AsyncStorage.getItem(storageKey);
@@ -127,7 +137,7 @@ export default function ResumeScorecard() {
         if (data) {
           const sanitizedData = data.map((h) => ({
             ...h,
-            score: (h.score !== null && h.score !== undefined) ? h.score : null,
+            score: h.score !== null && h.score !== undefined ? h.score : null,
             netScore: h.netScore,
             stablefordPoints: h.stablefordPoints,
           }));
@@ -161,8 +171,12 @@ export default function ResumeScorecard() {
           let totalParSelection = 72;
           let isTournamentGame = false;
           try {
-            const inProgressData = await getInProgressGames(Number(storedUserId));
-            const currentGame = inProgressData.find(g => g.scorecardId === Number(id));
+            const inProgressData = await getInProgressGames(
+              Number(storedUserId),
+            );
+            const currentGame = inProgressData.find(
+              (g) => g.scorecardId === Number(id),
+            );
             if (currentGame) {
               totalParSelection = currentGame.par;
               isTournamentGame = !!currentGame.tournamentId;
@@ -173,7 +187,9 @@ export default function ResumeScorecard() {
 
           if (
             isTournamentGame ||
-            (sanitizedData.length > 0 && (!!sanitizedData[0].tournamentId || !!sanitizedData[0].isDoublePeoria))
+            (sanitizedData.length > 0 &&
+              (!!sanitizedData[0].tournamentId ||
+                !!sanitizedData[0].isDoublePeoria))
           ) {
             setDisplayFront(true);
             setDisplayBack(true);
@@ -188,8 +204,12 @@ export default function ResumeScorecard() {
               setDisplayFront(false);
               setDisplayBack(true);
             } else if (totalParSelection < 50) {
-              const hasBackScores = backH.some((h) => h.score !== null && h.score !== undefined);
-              const hasFrontScores = frontH.some((h) => h.score !== null && h.score !== undefined);
+              const hasBackScores = backH.some(
+                (h) => h.score !== null && h.score !== undefined,
+              );
+              const hasFrontScores = frontH.some(
+                (h) => h.score !== null && h.score !== undefined,
+              );
 
               if (hasBackScores && !hasFrontScores) {
                 setDisplayFront(false);
@@ -235,10 +255,7 @@ export default function ResumeScorecard() {
       teeBoxId: h.teeBoxId,
       tournamentId: h.tournamentId,
       holeId: h.holeId,
-      score:
-        h.score === undefined || h.score === null
-          ? null
-          : h.score,
+      score: h.score === undefined || h.score === null ? null : h.score,
       roundNumber: h.roundNumber || 1,
       isCompleted: h.isCompleted || false,
       isExcluded: h.isExcluded || false,
@@ -287,9 +304,10 @@ export default function ResumeScorecard() {
       if (h.holeId === holeId) {
         const strokes = calculateStrokes(handicap, h.strokeIndex);
         const validScore = score;
-        const netScore = (validScore !== null && validScore >= 0) ? validScore - strokes : 0;
+        const netScore =
+          validScore !== null && validScore >= 0 ? validScore - strokes : 0;
         const stablefordPoints =
-          (validScore !== null && validScore >= 0) && netScore > 0
+          validScore !== null && validScore >= 0 && netScore > 0
             ? Math.max(0, h.par - netScore + 2)
             : 0;
 
@@ -298,7 +316,7 @@ export default function ResumeScorecard() {
           si: h.strokeIndex,
           yard: h.yardage,
           par: h.par,
-          score: (validScore !== null && validScore >= 0) ? validScore : "-",
+          score: validScore !== null && validScore >= 0 ? validScore : "-",
           net: netScore > 0 ? netScore : "-",
         });
 
@@ -330,8 +348,21 @@ export default function ResumeScorecard() {
       const currentIndex = flatHoles.findIndex((h) => h.holeId === holeId);
       const nextIndex = currentIndex + 1;
       if (nextIndex < flatHoles.length) {
+        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
         inputRefs.current[nextIndex]?.focus();
       }
+    }
+
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    if (formattedText !== "") {
+      focusTimeoutRef.current = setTimeout(() => {
+        const flatHoles = holesRef.current;
+        const currentIndex = flatHoles.findIndex((h) => h.holeId === holeId);
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < flatHoles.length) {
+          inputRefs.current[nextIndex]?.focus();
+        }
+      }, 3000);
     }
   };
 
@@ -344,10 +375,7 @@ export default function ResumeScorecard() {
         teeBoxId: h.teeBoxId,
         tournamentId: h.tournamentId,
         holeId: h.holeId,
-        score:
-          h.score === undefined || h.score === null
-            ? null
-            : h.score,
+        score: h.score === undefined || h.score === null ? null : h.score,
         roundNumber: h.roundNumber || 1,
         isCompleted: h.isCompleted || false,
         isExcluded: h.isExcluded || false,
@@ -374,10 +402,7 @@ export default function ResumeScorecard() {
               teeBoxId: h.teeBoxId,
               tournamentId: h.tournamentId,
               holeId: h.holeId,
-              score:
-                h.score === undefined || h.score === null
-                  ? null
-                  : h.score,
+              score: h.score === undefined || h.score === null ? null : h.score,
               roundNumber: h.roundNumber || 1,
               isCompleted: true,
               isExcluded: h.isExcluded || false,
@@ -410,9 +435,10 @@ export default function ResumeScorecard() {
             : 0;
       return t + s;
     }, 0);
-    const hasAnyScore = arr.some(h => 
-      (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || 
-      (h.score !== null && h.score !== undefined)
+    const hasAnyScore = arr.some(
+      (h) =>
+        (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ||
+        (h.score !== null && h.score !== undefined),
     );
     return hasAnyScore ? total : "-";
   };
@@ -422,9 +448,10 @@ export default function ResumeScorecard() {
       (t, h) => t + (h.score !== null && h.score >= 0 ? h.netScore || 0 : 0),
       0,
     );
-    const hasAnyScore = arr.some(h => 
-      (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || 
-      (h.score !== null && h.score !== undefined)
+    const hasAnyScore = arr.some(
+      (h) =>
+        (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ||
+        (h.score !== null && h.score !== undefined),
     );
     return hasAnyScore ? total : "-";
   };
@@ -442,9 +469,10 @@ export default function ResumeScorecard() {
         t + (h.score !== null && h.score >= 0 ? h.stablefordPoints || 0 : 0),
       0,
     );
-    const hasAnyScore = arr.some(h => 
-      (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || 
-      (h.score !== null && h.score !== undefined)
+    const hasAnyScore = arr.some(
+      (h) =>
+        (textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) ||
+        (h.score !== null && h.score !== undefined),
     );
     return hasAnyScore ? total : "-";
   };
@@ -738,72 +766,162 @@ export default function ResumeScorecard() {
     return null;
   };
 
-  return (
-    <ThemedView
-      style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F9FAFB" }}
+  const renderHeader = () => (
+    <View
+      style={{
+        backgroundColor: isDark ? "#020617" : "#ffffff",
+        paddingTop: Math.max(insets.top, 12),
+        borderBottomWidth: 1,
+        marginBottom:7,
+        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+      }}
     >
-      <Watermark />
-
-      {/* Top Fixed Area */}
-      <View
-        className="px-4 pb-2 z-10 w-full"
+      <VStack
         style={{
-          backgroundColor: isDark ? "#161618" : "#FFFFFF",
-          paddingTop: Math.max(insets.top, 16),
+          paddingHorizontal: 16,
+          paddingBottom: 14,
         }}
       >
-        <View className="flex-row items-center mb-4 mt-0">
-          <TouchableOpacity
+        {/* 🔝 TOP ROW */}
+        <HStack
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* 🔙 BACK */}
+          <Pressable
             onPress={handleGoBack}
-            className="bg-[#8BC34A] rounded-full p-2 w-10 h-10 items-center justify-center mr-3"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.08)" }}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
+
+          {/* 🧠 TITLE */}
+          <VStack
+            style={{
+              flex: 1,
+              alignItems: "center",
+              paddingHorizontal: 10,
             }}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-
-          <View className="flex-1">
             <Text
-              className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}
+              style={{
+                fontSize: 18,
+                fontWeight: "700",
+                color: isDark ? "#fff" : "#020617",
+              }}
             >
-              {isStableford ? "Scorecard (Stableford)" : "Scorecard"}
+              Scorecard
             </Text>
-            <View className="flex-row items-center">
-              <Ionicons
-                name="person-outline"
-                size={14}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
-              />
-              <Text
-                className={`text-sm ml-1 font-bold ${isDark ? "text-gray-400" : "text-gray-700"}`}
-              >
-                Handicap: {handicap}
-              </Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Instruction Banner */}
-        <View
-          className={`p-3 rounded-xl border flex-row items-center ${isDark ? "bg-[#1A2E05] border-[#2e5209]" : "bg-green-50 border-green-200"}`}
+            {/* <Text
+              style={{
+                marginTop: 2,
+                fontSize: 12,
+                color: isDark ? "#94a3b8" : "#64748b",
+              }}
+            >
+              {renderScoringType || "Round Details"}
+            </Text> */}
+          </VStack>
+
+          {/* ⚖️ SPACER */}
+          <View style={{ width: 40 }} />
+        </HStack>
+
+        {/* 📊 INFO ROW */}
+        <HStack
+          style={{
+            marginTop: 12,
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            borderRadius: 12,
+            backgroundColor: isDark ? "#111827" : "#f8fafc",
+          }}
         >
-          <Ionicons
-            name="pencil"
-            size={18}
-            color={isDark ? "#8BC34A" : "#4CAF50"}
-          />
+          {/* Handicap */}
+          <HStack style={{ alignItems: "center" }}>
+            <Ionicons
+              name="person-outline"
+              size={14}
+              color={isDark ? "#94a3b8" : "#64748b"}
+            />
+
+            <Text
+              style={{
+                marginLeft: 6,
+                fontSize: 13,
+                fontWeight: "600",
+                color: isDark ? "#e5e7eb" : "#374151",
+              }}
+            >
+              Handicap: {handicap}
+            </Text>
+          </HStack>
+
+          {/* Scoring */}
           <Text
-            className={`ml-2 flex-1 text-sm font-medium ${isDark ? "text-[#8BC34A]" : "text-green-800"}`}
+            style={{
+              fontSize: 12,
+              color: isDark ? "#94a3b8" : "#64748b",
+            }}
           >
-            Tap on any score box below to edit your round.
+            {renderScoringType}
           </Text>
-        </View>
-      </View>
+        </HStack>
+
+        {/* ✏️ HELPER BANNER */}
+        {/* <HStack
+          style={{
+            marginTop: 10,
+            padding: 12,
+            borderRadius: 12,
+            alignItems: "center",
+            backgroundColor: isDark
+              ? "rgba(139,195,74,0.08)"
+              : "rgba(139,195,74,0.08)",
+            borderWidth: 1,
+            borderColor: "rgba(139,195,74,0.18)",
+          }}
+        >
+          <Ionicons name="create-outline" size={16} color="#84cc16" />
+
+          <Text
+            style={{
+              marginLeft: 8,
+              flex: 1,
+              fontSize: 12,
+              color: isDark ? "#d1d5db" : "#374151",
+            }}
+          >
+            Tap any score box below to edit your round.
+          </Text>
+        </HStack> */}
+      </VStack>
+    </View>
+  );
+
+  return (
+    <ThemedView
+      style={{ flex: 1, backgroundColor: isDark ? "#020617" : "#F8FAFC" }}
+    >
+      <Watermark />
+      {renderHeader()}
 
       <ScrollView
         className="px-4 flex-1"
@@ -812,13 +930,13 @@ export default function ResumeScorecard() {
       >
         <View
           className="z-10 shadow-sm"
-          style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+          style={{ backgroundColor: isDark ? "#020617" : "#FFFFFF" }}
         >
           <View
-            className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+            className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
             style={{
               borderBottomWidth: 1,
-              borderBottomColor: isDark ? "#444" : "#ddd",
+              borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
             }}
           >
             {[
@@ -841,7 +959,7 @@ export default function ResumeScorecard() {
         </View>
 
         <View
-          className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden mb-4`}
+          className={`${isDark ? "bg-[#020617]" : "bg-white"} rounded-b-xl overflow-hidden mb-4`}
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -850,274 +968,315 @@ export default function ResumeScorecard() {
             elevation: 2,
           }}
         >
-          {displayFront && holes.filter(h => h.holeNumber <= 9).length > 0 && (
-            <>
-              {holes.filter(h => h.holeNumber <= 9).map((h, index) => (
+          {displayFront &&
+            holes.filter((h) => h.holeNumber <= 9).length > 0 && (
+              <>
+                {holes
+                  .filter((h) => h.holeNumber <= 9)
+                  .map((h, index) => (
+                    <View
+                      key={h.holeId}
+                      className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
+                    >
+                      <Text
+                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.holeNumber}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.strokeIndex}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.yardage}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.par}
+                      </Text>
+                      <View className="flex-1 items-center justify-center relative">
+                        {renderScoreIndicator(
+                          h.score ?? null,
+                          h.par,
+                          isDark,
+                          textScores[h.holeId] || "",
+                        )}
+                        <TextInput
+                          ref={(el) => {
+                            inputRefs.current[index] = el;
+                          }}
+                          style={{
+                            width: 50,
+                            height: 40,
+                            backgroundColor:
+                              textScores[h.holeId] !== "" &&
+                              textScores[h.holeId] !== undefined
+                                ? "transparent"
+                                : isDark
+                                  ? "rgba(255,255,255,0.08)"
+                                  : "rgba(0,0,0,0.04)",
+                            borderColor:
+                              textScores[h.holeId] !== "" &&
+                              textScores[h.holeId] !== undefined
+                                ? "transparent"
+                                : isDark
+                                  ? "rgba(255,255,255,0.2)"
+                                  : "rgba(0,0,0,0.1)",
+                            borderWidth: 1,
+                            color: isDark ? "#fff" : "#000",
+                            textAlign: "center",
+                            borderRadius: 8,
+                            paddingVertical: 0,
+                            zIndex: 10,
+                            fontWeight: "bold",
+                          }}
+                          keyboardType="numeric"
+                          value={
+                            textScores[h.holeId] !== undefined
+                              ? textScores[h.holeId]
+                              : h.score !== null && h.score !== undefined
+                                ? h.score.toString()
+                                : ""
+                          }
+                          onChangeText={(val) =>
+                            handleScoreChange(h.holeId, val)
+                          }
+                          onBlur={() => {
+                            if (focusTimeoutRef.current)
+                              clearTimeout(focusTimeoutRef.current);
+                          }}
+                          placeholder="-"
+                          placeholderTextColor={isDark ? "#666" : "#999"}
+                        />
+                      </View>
+                      <Text
+                        className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.netScore !== null &&
+                        h.netScore !== undefined &&
+                        (textScores[h.holeId] || h.score !== null)
+                          ? h.netScore
+                          : "-"}
+                      </Text>
+                      {isStableford && (
+                        <Text
+                          className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                        >
+                          {(textScores[h.holeId] !== "" &&
+                            textScores[h.holeId] !== undefined) ||
+                          (h.score !== null &&
+                            h.score !== undefined &&
+                            textScores[h.holeId] === undefined)
+                            ? (h.stablefordPoints ?? 0)
+                            : "-"}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
+
                 <View
-                  key={h.holeId}
-                  className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}
+                  className={`flex-row p-3 ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: isDark ? "#1e293b" : "#e5e7eb",
+                  }}
                 >
                   <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                   >
-                    {h.holeNumber}
+                    Front 9
+                  </Text>
+                  <Text className="flex-1" />
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumYardage(holes.filter((h) => h.holeNumber <= 9))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                   >
-                    {h.strokeIndex}
+                    {sumPar(holes.filter((h) => h.holeNumber <= 9))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                   >
-                    {h.yardage}
+                    {sumScores(holes.filter((h) => h.holeNumber <= 9))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                   >
-                    {h.par}
-                  </Text>
-                  <View className="flex-1 items-center justify-center relative">
-                    {renderScoreIndicator(
-                      h.score ?? null,
-                      h.par,
-                      isDark,
-                      textScores[h.holeId] || "",
-                    )}
-                    <TextInput
-                      ref={(el) => {
-                        inputRefs.current[index] = el;
-                      }}
-                      style={{
-                        width: 50,
-                        height: 40,
-                        backgroundColor:
-                          textScores[h.holeId] !== "" &&
-                            textScores[h.holeId] !== undefined
-                            ? "transparent"
-                            : isDark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(0,0,0,0.04)",
-                        borderColor:
-                          textScores[h.holeId] !== "" &&
-                            textScores[h.holeId] !== undefined
-                            ? "transparent"
-                            : isDark
-                              ? "rgba(255,255,255,0.2)"
-                              : "rgba(0,0,0,0.1)",
-                        borderWidth: 1,
-                        color: isDark ? "#fff" : "#000",
-                        textAlign: "center",
-                        borderRadius: 8,
-                        paddingVertical: 0,
-                        zIndex: 10,
-                        fontWeight: "bold",
-                      }}
-                      keyboardType="numeric"
-                      value={textScores[h.holeId] !== undefined ? textScores[h.holeId] : (h.score !== null && h.score !== undefined ? h.score.toString() : "")}
-                      onChangeText={(val) => handleScoreChange(h.holeId, val)}
-                      placeholder="-"
-                      placeholderTextColor={isDark ? "#666" : "#999"}
-                    />
-                  </View>
-                  <Text
-                    className="text-xs font-semibold w-10 text-center"
-                    style={{ color: isDark ? "#fff" : "#111" }}
-                  >
-                    {h.netScore !== null && h.netScore !== undefined && (textScores[h.holeId] || h.score !== null)
-                      ? h.netScore
-                      : "-"}
+                    {sumNet(holes.filter((h) => h.holeNumber <= 9))}
                   </Text>
                   {isStableford && (
                     <Text
-                      className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                     >
-                      {((textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || (h.score !== null && h.score !== undefined && textScores[h.holeId] === undefined))
-                        ? (h.stablefordPoints ?? 0)
-                        : "-"}
+                      {sumPts(holes.filter((h) => h.holeNumber <= 9))}
                     </Text>
                   )}
                 </View>
-              ))}
+              </>
+            )}
 
-              <View
-                className={`flex-row p-3 ${isDark ? "bg-[#262626]" : "bg-gray-100"}`}
-                style={{
-                  borderTopWidth: 1,
-                  borderTopColor: isDark ? "#444" : "#ddd",
-                }}
-              >
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  Front 9
-                </Text>
-                <Text className="flex-1" />
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumYardage(holes.filter(h => h.holeNumber <= 9))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumPar(holes.filter(h => h.holeNumber <= 9))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  {sumScores(holes.filter(h => h.holeNumber <= 9))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  {sumNet(holes.filter(h => h.holeNumber <= 9))}
-                </Text>
-                {isStableford && (
-                  <Text
-                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
-                  >
-                    {sumPts(holes.filter(h => h.holeNumber <= 9))}
-                  </Text>
-                )}
-              </View>
-            </>
-          )}
-
-          {displayBack && holes.filter(h => h.holeNumber >= 10).length > 0 && (
-            <>
-              {holes.filter(h => h.holeNumber >= 10).map((h, index) => (
+          {displayBack &&
+            holes.filter((h) => h.holeNumber >= 10).length > 0 && (
+              <>
+                {holes
+                  .filter((h) => h.holeNumber >= 10)
+                  .map((h, index) => (
+                    <View
+                      key={h.holeId}
+                      className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
+                    >
+                      <Text
+                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.holeNumber}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.strokeIndex}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.yardage}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.par}
+                      </Text>
+                      <View className="flex-1 items-center justify-center relative">
+                        {renderScoreIndicator(
+                          h.score ?? null,
+                          h.par,
+                          isDark,
+                          textScores[h.holeId] || "",
+                        )}
+                        <TextInput
+                          ref={(el) => {
+                            inputRefs.current[
+                              holes.filter((h) => h.holeNumber <= 9).length +
+                                index
+                            ] = el;
+                          }}
+                          style={{
+                            width: 50,
+                            height: 40,
+                            backgroundColor:
+                              textScores[h.holeId] !== "" &&
+                              textScores[h.holeId] !== undefined
+                                ? "transparent"
+                                : isDark
+                                  ? "rgba(255,255,255,0.08)"
+                                  : "rgba(0,0,0,0.04)",
+                            borderColor:
+                              textScores[h.holeId] !== "" &&
+                              textScores[h.holeId] !== undefined
+                                ? "transparent"
+                                : isDark
+                                  ? "rgba(255,255,255,0.2)"
+                                  : "rgba(0,0,0,0.1)",
+                            borderWidth: 1,
+                            color: isDark ? "#fff" : "#000",
+                            textAlign: "center",
+                            borderRadius: 8,
+                            paddingVertical: 0,
+                            zIndex: 10,
+                            fontWeight: "bold",
+                          }}
+                          keyboardType="numeric"
+                          value={
+                            textScores[h.holeId] !== undefined
+                              ? textScores[h.holeId]
+                              : h.score !== null && h.score !== undefined
+                                ? h.score.toString()
+                                : ""
+                          }
+                          onChangeText={(val) =>
+                            handleScoreChange(h.holeId, val)
+                          }
+                          onBlur={() => {
+                            if (focusTimeoutRef.current)
+                              clearTimeout(focusTimeoutRef.current);
+                          }}
+                          placeholder="-"
+                          placeholderTextColor={isDark ? "#666" : "#999"}
+                        />
+                      </View>
+                      <Text
+                        className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.netScore !== null &&
+                        h.netScore !== undefined &&
+                        (textScores[h.holeId] || h.score !== null)
+                          ? h.netScore
+                          : "-"}
+                      </Text>
+                      {isStableford && (
+                        <Text
+                          className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                        >
+                          {(textScores[h.holeId] !== "" &&
+                            textScores[h.holeId] !== undefined) ||
+                          (h.score !== null &&
+                            h.score !== undefined &&
+                            textScores[h.holeId] === undefined)
+                            ? (h.stablefordPoints ?? 0)
+                            : "-"}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
                 <View
-                  key={h.holeId}
-                  className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#333]" : "border-b border-gray-100") : ""}`}
+                  className={`flex-row p-3 ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: isDark ? "#1e293b" : "#e5e7eb",
+                  }}
                 >
                   <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                   >
-                    {h.holeNumber}
+                    Back 9
+                  </Text>
+                  <Text className="flex-1" />
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumYardage(holes.filter((h) => h.holeNumber >= 10))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                   >
-                    {h.strokeIndex}
+                    {sumPar(holes.filter((h) => h.holeNumber >= 10))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                   >
-                    {h.yardage}
+                    {sumScores(holes.filter((h) => h.holeNumber >= 10))}
                   </Text>
                   <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                   >
-                    {h.par}
-                  </Text>
-                  <View className="flex-1 items-center justify-center relative">
-                    {renderScoreIndicator(
-                      h.score ?? null,
-                      h.par,
-                      isDark,
-                      textScores[h.holeId] || "",
-                    )}
-                    <TextInput
-                      ref={(el) => {
-                        inputRefs.current[
-                          holes.filter((h) => h.holeNumber <= 9).length + index
-                        ] = el;
-                      }}
-                      style={{
-                        width: 50,
-                        height: 40,
-                        backgroundColor:
-                          textScores[h.holeId] !== "" &&
-                            textScores[h.holeId] !== undefined
-                            ? "transparent"
-                            : isDark
-                              ? "rgba(255,255,255,0.08)"
-                              : "rgba(0,0,0,0.04)",
-                        borderColor:
-                          textScores[h.holeId] !== "" &&
-                            textScores[h.holeId] !== undefined
-                            ? "transparent"
-                            : isDark
-                              ? "rgba(255,255,255,0.2)"
-                              : "rgba(0,0,0,0.1)",
-                        borderWidth: 1,
-                        color: isDark ? "#fff" : "#000",
-                        textAlign: "center",
-                        borderRadius: 8,
-                        paddingVertical: 0,
-                        zIndex: 10,
-                        fontWeight: "bold",
-                      }}
-                      keyboardType="numeric"
-                      value={textScores[h.holeId] !== undefined ? textScores[h.holeId] : (h.score !== null && h.score !== undefined ? h.score.toString() : "")}
-                      onChangeText={(val) => handleScoreChange(h.holeId, val)}
-                      placeholder="-"
-                      placeholderTextColor={isDark ? "#666" : "#999"}
-                    />
-                  </View>
-                  <Text
-                    className="text-xs font-semibold w-10 text-center"
-                    style={{ color: isDark ? "#fff" : "#111" }}
-                  >
-                    {h.netScore !== null && h.netScore !== undefined && (textScores[h.holeId] || h.score !== null)
-                      ? h.netScore
-                      : "-"}
+                    {sumNet(holes.filter((h) => h.holeNumber >= 10))}
                   </Text>
                   {isStableford && (
                     <Text
-                      className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                     >
-                      {((textScores[h.holeId] !== "" && textScores[h.holeId] !== undefined) || (h.score !== null && h.score !== undefined && textScores[h.holeId] === undefined))
-                        ? (h.stablefordPoints ?? 0)
-                        : "-"}
+                      {sumPts(holes.filter((h) => h.holeNumber >= 10))}
                     </Text>
                   )}
                 </View>
-              ))}
-              <View
-                className={`flex-row p-3 ${isDark ? "bg-[#262626]" : "bg-gray-100"}`}
-                style={{
-                  borderTopWidth: 1,
-                  borderTopColor: isDark ? "#444" : "#ddd",
-                }}
-              >
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  Back 9
-                </Text>
-                <Text className="flex-1" />
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumYardage(holes.filter(h => h.holeNumber >= 10))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumPar(holes.filter(h => h.holeNumber >= 10))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  {sumScores(holes.filter(h => h.holeNumber >= 10))}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  {sumNet(holes.filter(h => h.holeNumber >= 10))}
-                </Text>
-                {isStableford && (
-                  <Text
-                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
-                  >
-                    {sumPts(holes.filter(h => h.holeNumber >= 10))}
-                  </Text>
-                )}
-              </View>
-            </>
-          )}
+              </>
+            )}
         </View>
 
         <View className="mb-8">
@@ -1511,12 +1670,12 @@ export default function ResumeScorecard() {
               className="mb-20 p-4 rounded-2xl"
               style={{
                 backgroundColor: isDark
-                  ? "rgba(31,31,31,0.6)"
-                  : "rgba(255,255,255,0.6)",
+                  ? "#111827"
+                  : "#ffffff",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(51,51,51,0.6)"
-                  : "rgba(238,238,238,0.6)",
+                  ? "#1e293b"
+                  : "#e5e7eb",
               }}
             >
               <Text

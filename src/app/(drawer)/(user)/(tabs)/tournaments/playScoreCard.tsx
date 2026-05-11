@@ -30,6 +30,7 @@ import { Box } from "@/components/box";
 import { fetchScoreCardOpen, fetchHandicap } from "@/redux/slices/userScorecard.slice";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { RootState } from "@/redux/store";
 
 export default function PlayScoreCard() {
   const colorScheme = useColorScheme();
@@ -43,7 +44,7 @@ export default function PlayScoreCard() {
 const dispatch = useAppDispatch();
 
 const { loading, scorecardData, handicapData, error } = useAppSelector(
-  (state) => state.userScoreCard
+  (state: RootState) => state.userScoreCard
 );
 
   // const [loading, setLoading] = useState(false);
@@ -54,6 +55,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   const userIdRef = useRef<number | null>(null);
   const scoreCardRef = useRef<any>([]);
   const timeoutRef = useRef<any>(null);
+  const focusTimeoutRef = useRef<any>(null);
 
 
   useEffect(() => {
@@ -269,6 +271,17 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         payload,
       ).catch((err) => console.error("Debounced save error:", err));
     }, 300);
+
+    // Auto-focus next input after 5 seconds if a value is entered
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    if (value !== "") {
+      focusTimeoutRef.current = setTimeout(() => {
+        const nextIndex = index + 1;
+        if (nextIndex < updatedScoreCard.length) {
+          inputRefs.current[nextIndex]?.focus();
+        }
+      }, 3000);
+    }
   };
 
   const getScoreLegendCounts = (holes: any[]) => {
@@ -753,7 +766,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                               onChangeText={(val) =>
                                 handleScoreChange(h.holeId, val, index)
                               }
-                              onBlur={() => saveRound(false, false)}
+                              onBlur={() => {
+                                 if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                 saveRound(false, false);
+                               }}
                               onSubmitEditing={() => {
                                 if (index < 17) {
                                   inputRefs.current[index + 1]?.focus();

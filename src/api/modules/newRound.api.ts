@@ -29,7 +29,7 @@ export const getScoreCardDetails = async (teeBoxId: number, courseId: number, ho
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await client.get(`scorecard/${userId}/${teeBoxId}/${courseId}?holes=${holes}`);
+        const response = await client.get(`scorecard/${userId}/${teeBoxId}/${courseId}?holes=${holes}&forceNew=true`);
         // console.log("scorecard response", response.data);
 
         return response.data;
