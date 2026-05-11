@@ -674,8 +674,8 @@ const ScoreCard: React.FC = () => {
                 className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
               >
                 {textScores[h.holeId] !== "" &&
-                textScores[h.holeId] !== undefined &&
-                parseInt(textScores[h.holeId]) >= 0
+                  textScores[h.holeId] !== undefined &&
+                  parseInt(textScores[h.holeId]) >= 0
                   ? h.netScore
                   : "-"}
               </Text>
@@ -684,8 +684,8 @@ const ScoreCard: React.FC = () => {
                   className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                 >
                   {textScores[h.holeId] !== "" &&
-                  textScores[h.holeId] !== undefined &&
-                  parseInt(textScores[h.holeId]) >= 0
+                    textScores[h.holeId] !== undefined &&
+                    parseInt(textScores[h.holeId]) >= 0
                     ? h.stablefordPoints || 0
                     : "-"}
                 </Text>
@@ -798,8 +798,8 @@ const ScoreCard: React.FC = () => {
                   className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                 >
                   {textScores[h.holeId] !== "" &&
-                  textScores[h.holeId] !== undefined &&
-                  parseInt(textScores[h.holeId]) >= 0
+                    textScores[h.holeId] !== undefined &&
+                    parseInt(textScores[h.holeId]) >= 0
                     ? h.netScore
                     : "-"}
                 </Text>
@@ -808,8 +808,8 @@ const ScoreCard: React.FC = () => {
                     className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                   >
                     {textScores[h.holeId] !== "" &&
-                    textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) >= 0
+                      textScores[h.holeId] !== undefined &&
+                      parseInt(textScores[h.holeId]) >= 0
                       ? h.stablefordPoints || 0
                       : "-"}
                   </Text>

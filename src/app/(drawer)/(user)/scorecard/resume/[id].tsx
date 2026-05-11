@@ -47,7 +47,7 @@ export default function ResumeScorecard() {
   const insets = useSafeAreaInsets();
   const handicap = parseInt(handicapParam || "0");
 
-  useLayoutEffect(() => {}, []);
+  useLayoutEffect(() => { }, []);
 
   const [holes, setHoles] = useState<ScorecardHole[]>([]);
   const [textScores, setTextScores] = useState<Record<number, string>>({});
@@ -193,6 +193,9 @@ export default function ResumeScorecard() {
           ) {
             setDisplayFront(true);
             setDisplayBack(true);
+          } else if (sanitizedData.length > 9) {
+            setDisplayFront(true);
+            setDisplayBack(true);
           } else {
             const frontH = sanitizedData.filter((h) => h.holeNumber <= 9);
             const backH = sanitizedData.filter((h) => h.holeNumber >= 10);
@@ -203,7 +206,10 @@ export default function ResumeScorecard() {
             } else if (backH.length > 0 && frontH.length === 0) {
               setDisplayFront(false);
               setDisplayBack(true);
-            } else if (totalParSelection < 50) {
+            } else if (totalParSelection >= 50) {
+              setDisplayFront(true);
+              setDisplayBack(true);
+            } else {
               const hasBackScores = backH.some(
                 (h) => h.score !== null && h.score !== undefined,
               );
@@ -221,9 +227,6 @@ export default function ResumeScorecard() {
                 setDisplayFront(true);
                 setDisplayBack(false);
               }
-            } else {
-              setDisplayFront(true);
-              setDisplayBack(true);
             }
           }
         }
@@ -720,7 +723,20 @@ export default function ResumeScorecard() {
       );
     }
     if (diff === 0) {
-      return null;
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: "#999",
+              borderRadius: 4,
+            }}
+          />
+        </View>
+      );
     }
     if (diff === 1) {
       return (
@@ -772,7 +788,7 @@ export default function ResumeScorecard() {
         backgroundColor: isDark ? "#020617" : "#ffffff",
         paddingTop: Math.max(insets.top, 12),
         borderBottomWidth: 1,
-        marginBottom:7,
+        marginBottom: 7,
         borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
       }}
     >
@@ -1014,14 +1030,14 @@ export default function ResumeScorecard() {
                             height: 40,
                             backgroundColor:
                               textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
                             borderColor:
                               textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -1057,8 +1073,8 @@ export default function ResumeScorecard() {
                         className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
                         {h.netScore !== null &&
-                        h.netScore !== undefined &&
-                        (textScores[h.holeId] || h.score !== null)
+                          h.netScore !== undefined &&
+                          (textScores[h.holeId] || h.score !== null)
                           ? h.netScore
                           : "-"}
                       </Text>
@@ -1068,9 +1084,9 @@ export default function ResumeScorecard() {
                         >
                           {(textScores[h.holeId] !== "" &&
                             textScores[h.holeId] !== undefined) ||
-                          (h.score !== null &&
-                            h.score !== undefined &&
-                            textScores[h.holeId] === undefined)
+                            (h.score !== null &&
+                              h.score !== undefined &&
+                              textScores[h.holeId] === undefined)
                             ? (h.stablefordPoints ?? 0)
                             : "-"}
                         </Text>
@@ -1163,7 +1179,7 @@ export default function ResumeScorecard() {
                           ref={(el) => {
                             inputRefs.current[
                               holes.filter((h) => h.holeNumber <= 9).length +
-                                index
+                              index
                             ] = el;
                           }}
                           style={{
@@ -1171,14 +1187,14 @@ export default function ResumeScorecard() {
                             height: 40,
                             backgroundColor:
                               textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
                             borderColor:
                               textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -1214,8 +1230,8 @@ export default function ResumeScorecard() {
                         className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
                         {h.netScore !== null &&
-                        h.netScore !== undefined &&
-                        (textScores[h.holeId] || h.score !== null)
+                          h.netScore !== undefined &&
+                          (textScores[h.holeId] || h.score !== null)
                           ? h.netScore
                           : "-"}
                       </Text>
@@ -1225,9 +1241,9 @@ export default function ResumeScorecard() {
                         >
                           {(textScores[h.holeId] !== "" &&
                             textScores[h.holeId] !== undefined) ||
-                          (h.score !== null &&
-                            h.score !== undefined &&
-                            textScores[h.holeId] === undefined)
+                            (h.score !== null &&
+                              h.score !== undefined &&
+                              textScores[h.holeId] === undefined)
                             ? (h.stablefordPoints ?? 0)
                             : "-"}
                         </Text>
