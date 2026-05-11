@@ -8,3 +8,5 @@ expo-env.d.ts
 /node_modules
 /.history
 .env
+hs_err_pid17664.log
+*.log
