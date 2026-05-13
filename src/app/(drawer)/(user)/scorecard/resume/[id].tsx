@@ -7,7 +7,7 @@ import {
   getInProgressGames,
 } from "@/api/modules/dashboard.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useEffect,
   useState,
@@ -47,7 +47,7 @@ export default function ResumeScorecard() {
   const insets = useSafeAreaInsets();
   const handicap = parseInt(handicapParam || "0");
 
-  useLayoutEffect(() => { }, []);
+  useLayoutEffect(() => {}, []);
 
   const [holes, setHoles] = useState<ScorecardHole[]>([]);
   const [textScores, setTextScores] = useState<Record<number, string>>({});
@@ -65,13 +65,30 @@ export default function ResumeScorecard() {
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = `scorecard_draft_${id}`;
 
+  useEffect(() => {
+    // console.log("hhh", holes);
+  });
+
+  // const renderScoringType =
+  //   holes.length > 0
+  //     ? holes[0].stablefordPoints == null
+  //       ? holes[0].isExcluded
+  //         ? "Net Score Exclude Par 3"
+  //         : "Net Score Include Par 3"
+  //       : "Stableford"
+  //     : "";
+
   const renderScoringType =
     holes.length > 0
-      ? holes[0].stablefordPoints == null
-        ? holes[0].isExcluded
-          ? "Net Score Exclude Par 3"
-          : "Net Score Include Par 3"
-        : "Stableford"
+      ? holes[0].isDoublePeoria
+        ? isStableford
+          ? "Stableford"
+          : "Double Peoria Net"
+        : isStableford
+          ? "Stableford"
+          : holes[0].isExcluded
+            ? "Net Score Exclude Par 3"
+            : "Net Score Include Par 3"
       : "";
 
   const saveToServer = async (holesToSave: ScorecardHole[]) => {
@@ -80,10 +97,12 @@ export default function ResumeScorecard() {
         const payload = holesToSave.map((h) => ({
           userId: userId ? Number(userId) : h.userId || null,
           courseId: h.courseId || null,
+          courseHalf: h.courseHalf || null,
           teeBoxId: h.teeBoxId || null,
           tournamentId: h.tournamentId || null,
           holeId: h.holeId,
           score: h.score === undefined || h.score === null ? null : h.score,
+          stablefordPoints: h.stablefordPoints || 0,
           roundNumber: h.roundNumber || 1,
           isCompleted: h.isCompleted || false,
           isExcluded: h.isExcluded || false,
@@ -107,11 +126,9 @@ export default function ResumeScorecard() {
       setTimeout(() => saveToServer(holesToSave), 2000);
     }
   };
-
-  useEffect(() => {
-    const fetchScorecard = async () => {
-      try {
-        setLoading(true);
+  const fetchScorecard = useCallback(async () => {
+    try {
+      setLoading(true);
         const storedUserId = await AsyncStorage.getItem("userId");
         if (storedUserId) setUserId(Number(storedUserId));
 
@@ -121,11 +138,11 @@ export default function ResumeScorecard() {
           // console.log("ddd", data);
         } catch (err) {
           console.error("Failed to load from API, checking local draft...");
-          const draft = await AsyncStorage.getItem(storageKey);
+          const draft = await AsyncStorage.getItem(storageKey);          
           if (draft) {
             const { holes: draftHoles, textScores: draftScores } =
               JSON.parse(draft);
-            data = draftHoles;
+            data = draftHoles;            
             setTextScores(draftScores);
             textScoresRef.current = draftScores;
             console.log("Loaded from local draft");
@@ -142,6 +159,8 @@ export default function ResumeScorecard() {
             stablefordPoints: h.stablefordPoints,
           }));
           setHoles(sanitizedData);
+          // console.log("dd", sanitizedData);
+          
           holesRef.current = sanitizedData;
 
           // Merge API scores into textScoresRef if not already present
@@ -167,77 +186,46 @@ export default function ResumeScorecard() {
           );
           setIsStableford(showPts);
 
-          // Detect selection based on in-progress game par heuristic
-          let totalParSelection = 72;
-          let isTournamentGame = false;
-          try {
-            const inProgressData = await getInProgressGames(
-              Number(storedUserId),
-            );
-            const currentGame = inProgressData.find(
-              (g) => g.scorecardId === Number(id),
-            );
-            if (currentGame) {
-              totalParSelection = currentGame.par;
-              isTournamentGame = !!currentGame.tournamentId;
-            }
-          } catch (e) {
-            console.error("Error fetching in-progress par:", e);
-          }
+        // Determine which halves to display based on courseHalf from API or hole numbers fallback
+        // const apiCourseHalf = sanitizedData.length > 0 ? sanitizedData[0].courseHalf : null;
+        const apiCourseHalf = sanitizedData[0].courseHalf;
 
-          if (
-            isTournamentGame ||
-            (sanitizedData.length > 0 &&
-              (!!sanitizedData[0].tournamentId ||
-                !!sanitizedData[0].isDoublePeoria))
-          ) {
+        if (apiCourseHalf === "Front9") {
+          setDisplayFront(true);
+          setDisplayBack(false);
+        } else if (apiCourseHalf === "Back9") {
+          setDisplayFront(false);
+          setDisplayBack(true);
+        } else {
+          // Fallback: Check hole number distribution if api returns null
+          const hasFront = sanitizedData.some((h) => h.holeNumber <= 9);
+          const hasBack = sanitizedData.some((h) => h.holeNumber >= 10);
+
+          if (hasFront && !hasBack) {
             setDisplayFront(true);
-            setDisplayBack(true);
-          } else if (sanitizedData.length > 9) {
-            setDisplayFront(true);
+            setDisplayBack(false);
+          } else if (hasBack && !hasFront) {
+            setDisplayFront(false);
             setDisplayBack(true);
           } else {
-            const frontH = sanitizedData.filter((h) => h.holeNumber <= 9);
-            const backH = sanitizedData.filter((h) => h.holeNumber >= 10);
-
-            if (frontH.length > 0 && backH.length === 0) {
-              setDisplayFront(true);
-              setDisplayBack(false);
-            } else if (backH.length > 0 && frontH.length === 0) {
-              setDisplayFront(false);
-              setDisplayBack(true);
-            } else if (totalParSelection >= 50) {
-              setDisplayFront(true);
-              setDisplayBack(true);
-            } else {
-              const hasBackScores = backH.some(
-                (h) => h.score !== null && h.score !== undefined,
-              );
-              const hasFrontScores = frontH.some(
-                (h) => h.score !== null && h.score !== undefined,
-              );
-
-              if (hasBackScores && !hasFrontScores) {
-                setDisplayFront(false);
-                setDisplayBack(true);
-              } else if (hasFrontScores && !hasBackScores) {
-                setDisplayFront(true);
-                setDisplayBack(false);
-              } else {
-                setDisplayFront(true);
-                setDisplayBack(false);
-              }
-            }
+            // If both exist or it's empty, default to full 18/tournament view
+            setDisplayFront(true);
+            setDisplayBack(true);
           }
+        }
         }
       } catch (err) {
         setError("Failed to load scorecard.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchScorecard();
-  }, [id]);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, storageKey]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchScorecard();
+    }, [fetchScorecard]),
+  );
 
   useEffect(() => {
     textScoresRef.current = textScores;
@@ -255,10 +243,12 @@ export default function ResumeScorecard() {
     const payload = holesRef.current.map((h) => ({
       userId: userId ? Number(userId) : h.userId,
       courseId: h.courseId,
+      courseHalf: h.courseHalf || null,
       teeBoxId: h.teeBoxId,
       tournamentId: h.tournamentId,
       holeId: h.holeId,
       score: h.score === undefined || h.score === null ? null : h.score,
+      stablefordPoints: h.stablefordPoints || 0,
       roundNumber: h.roundNumber || 1,
       isCompleted: h.isCompleted || false,
       isExcluded: h.isExcluded || false,
@@ -375,10 +365,12 @@ export default function ResumeScorecard() {
       const payload = holes.map((h) => ({
         userId: userId ? Number(userId) : h.userId,
         courseId: h.courseId,
+        courseHalf: h.courseHalf || null,
         teeBoxId: h.teeBoxId,
         tournamentId: h.tournamentId,
         holeId: h.holeId,
         score: h.score === undefined || h.score === null ? null : h.score,
+        stablefordPoints: h.stablefordPoints || 0,
         roundNumber: h.roundNumber || 1,
         isCompleted: h.isCompleted || false,
         isExcluded: h.isExcluded || false,
@@ -402,10 +394,12 @@ export default function ResumeScorecard() {
             const payload = holes.map((h) => ({
               userId: userId ? Number(userId) : h.userId,
               courseId: h.courseId,
+              courseHalf: h.courseHalf,
               teeBoxId: h.teeBoxId,
               tournamentId: h.tournamentId,
               holeId: h.holeId,
               score: h.score === undefined || h.score === null ? null : h.score,
+              stablefordPoints: h.stablefordPoints || 0,
               roundNumber: h.roundNumber || 1,
               isCompleted: true,
               isExcluded: h.isExcluded || false,
@@ -530,7 +524,7 @@ export default function ResumeScorecard() {
           <View
             className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
           >
-            {["Hole", "SI", "Yards", "Par", "Scor", "Net"].map((_, i) => (
+            {["Hole", "Stroke\nIndex", "Yards", "Par", "Scor", "Net"].map((_, i) => (
               <View key={i} className="flex-1 items-center">
                 <Skeleton
                   isDark={isDark}
@@ -1030,14 +1024,14 @@ export default function ResumeScorecard() {
                             height: 40,
                             backgroundColor:
                               textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                              textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
                             borderColor:
                               textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                              textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -1073,8 +1067,8 @@ export default function ResumeScorecard() {
                         className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
                         {h.netScore !== null &&
-                          h.netScore !== undefined &&
-                          (textScores[h.holeId] || h.score !== null)
+                        h.netScore !== undefined &&
+                        (textScores[h.holeId] || h.score !== null)
                           ? h.netScore
                           : "-"}
                       </Text>
@@ -1084,9 +1078,9 @@ export default function ResumeScorecard() {
                         >
                           {(textScores[h.holeId] !== "" &&
                             textScores[h.holeId] !== undefined) ||
-                            (h.score !== null &&
-                              h.score !== undefined &&
-                              textScores[h.holeId] === undefined)
+                          (h.score !== null &&
+                            h.score !== undefined &&
+                            textScores[h.holeId] === undefined)
                             ? (h.stablefordPoints ?? 0)
                             : "-"}
                         </Text>
@@ -1179,7 +1173,7 @@ export default function ResumeScorecard() {
                           ref={(el) => {
                             inputRefs.current[
                               holes.filter((h) => h.holeNumber <= 9).length +
-                              index
+                                index
                             ] = el;
                           }}
                           style={{
@@ -1187,14 +1181,14 @@ export default function ResumeScorecard() {
                             height: 40,
                             backgroundColor:
                               textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                              textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
                             borderColor:
                               textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                              textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -1230,8 +1224,8 @@ export default function ResumeScorecard() {
                         className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
                         {h.netScore !== null &&
-                          h.netScore !== undefined &&
-                          (textScores[h.holeId] || h.score !== null)
+                        h.netScore !== undefined &&
+                        (textScores[h.holeId] || h.score !== null)
                           ? h.netScore
                           : "-"}
                       </Text>
@@ -1241,9 +1235,9 @@ export default function ResumeScorecard() {
                         >
                           {(textScores[h.holeId] !== "" &&
                             textScores[h.holeId] !== undefined) ||
-                            (h.score !== null &&
-                              h.score !== undefined &&
-                              textScores[h.holeId] === undefined)
+                          (h.score !== null &&
+                            h.score !== undefined &&
+                            textScores[h.holeId] === undefined)
                             ? (h.stablefordPoints ?? 0)
                             : "-"}
                         </Text>
@@ -1685,13 +1679,9 @@ export default function ResumeScorecard() {
             <View
               className="mb-20 p-4 rounded-2xl"
               style={{
-                backgroundColor: isDark
-                  ? "#111827"
-                  : "#ffffff",
+                backgroundColor: isDark ? "#111827" : "#ffffff",
                 borderWidth: 1,
-                borderColor: isDark
-                  ? "#1e293b"
-                  : "#e5e7eb",
+                borderColor: isDark ? "#1e293b" : "#e5e7eb",
               }}
             >
               <Text
