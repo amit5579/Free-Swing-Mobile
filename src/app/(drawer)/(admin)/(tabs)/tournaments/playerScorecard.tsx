@@ -30,6 +30,7 @@ const PlayerScorecard = () => {
   const [handicap, setHandicap] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
+
   const renderScoring =
     scorecard && scorecard.length > 0
       ? scorecard[0].stablefordPoints == null &&
@@ -45,7 +46,9 @@ const PlayerScorecard = () => {
     try {
       setLoading(true);
       const data = await getScorecardById(Number(scorecardId));
-      const rsc = await getSubScorecardHandicap(data[0].teeBoxId);
+      
+      const rsc = await getSubScorecardHandicap(data[0].userId, data[0].teeBoxId);
+      // const hcp = await getScorecardHandicap(Number(teeBoxId));
 
       setScorecard(data);
       setHandicap(rsc);
