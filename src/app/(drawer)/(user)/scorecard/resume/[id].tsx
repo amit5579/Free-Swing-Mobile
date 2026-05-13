@@ -65,30 +65,30 @@ export default function ResumeScorecard() {
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = `scorecard_draft_${id}`;
 
-  useEffect(() => {
-    // console.log("hhh", holes);
-  });
 
   // const renderScoringType =
   //   holes.length > 0
-  //     ? holes[0].stablefordPoints == null
-  //       ? holes[0].isExcluded
-  //         ? "Net Score Exclude Par 3"
-  //         : "Net Score Include Par 3"
-  //       : "Stableford"
+  //     ? holes[0].isDoublePeoria
+  //       ? isStableford
+  //         ? "Stableford"
+  //         : "Double Peoria Net"
+  //       : isStableford
+  //         ? "Stableford"
+  //         : holes[0].isExcluded
+  //           ? "Net Score Exclude Par 3"
+  //           : "Net Score Include Par 3"
   //     : "";
 
-  const renderScoringType =
+      const renderScoringType =
     holes.length > 0
-      ? holes[0].isDoublePeoria
-        ? isStableford
-          ? "Stableford"
-          : "Double Peoria Net"
-        : isStableford
-          ? "Stableford"
-          : holes[0].isExcluded
-            ? "Net Score Exclude Par 3"
-            : "Net Score Include Par 3"
+      ? holes.some(
+            (h: any) =>
+              h.stablefordPoints !== null && h.stablefordPoints !== undefined,
+          )
+        ? "Stableford"
+        : holes[0].isExcluded
+          ? "Net Score Exclude Par 3"
+          : "Net Score Include Par 3"
       : "";
 
   const saveToServer = async (holesToSave: ScorecardHole[]) => {
@@ -102,7 +102,7 @@ export default function ResumeScorecard() {
           tournamentId: h.tournamentId || null,
           holeId: h.holeId,
           score: h.score === undefined || h.score === null ? null : h.score,
-          stablefordPoints: h.stablefordPoints || 0,
+          stablefordPoints: h.stablefordPoints ?? null,
           roundNumber: h.roundNumber || 1,
           isCompleted: h.isCompleted || false,
           isExcluded: h.isExcluded || false,
@@ -248,7 +248,7 @@ export default function ResumeScorecard() {
       tournamentId: h.tournamentId,
       holeId: h.holeId,
       score: h.score === undefined || h.score === null ? null : h.score,
-      stablefordPoints: h.stablefordPoints || 0,
+      stablefordPoints: h.stablefordPoints ?? null,
       roundNumber: h.roundNumber || 1,
       isCompleted: h.isCompleted || false,
       isExcluded: h.isExcluded || false,
@@ -299,10 +299,11 @@ export default function ResumeScorecard() {
         const validScore = score;
         const netScore =
           validScore !== null && validScore >= 0 ? validScore - strokes : 0;
-        const stablefordPoints =
-          validScore !== null && validScore >= 0 && netScore > 0
+        const stablefordPoints = isStableford
+          ? validScore !== null && validScore >= 0 && netScore > 0
             ? Math.max(0, h.par - netScore + 2)
-            : 0;
+            : 0
+          : h.stablefordPoints;
 
         console.log("Hole Updated:", {
           hole: h.holeNumber,
@@ -370,7 +371,7 @@ export default function ResumeScorecard() {
         tournamentId: h.tournamentId,
         holeId: h.holeId,
         score: h.score === undefined || h.score === null ? null : h.score,
-        stablefordPoints: h.stablefordPoints || 0,
+        stablefordPoints: h.stablefordPoints ?? null,
         roundNumber: h.roundNumber || 1,
         isCompleted: h.isCompleted || false,
         isExcluded: h.isExcluded || false,
@@ -399,7 +400,7 @@ export default function ResumeScorecard() {
               tournamentId: h.tournamentId,
               holeId: h.holeId,
               score: h.score === undefined || h.score === null ? null : h.score,
-              stablefordPoints: h.stablefordPoints || 0,
+              stablefordPoints: h.stablefordPoints ?? null,
               roundNumber: h.roundNumber || 1,
               isCompleted: true,
               isExcluded: h.isExcluded || false,
@@ -463,7 +464,10 @@ export default function ResumeScorecard() {
     if (!isStableford) return 0;
     const total = arr.reduce(
       (t, h) =>
-        t + (h.score !== null && h.score >= 0 ? h.stablefordPoints || 0 : 0),
+        t +
+          (h.score !== null && h.score >= 0
+            ? (h.stablefordPoints ?? 0)
+            : 0),
       0,
     );
     const hasAnyScore = arr.some(
