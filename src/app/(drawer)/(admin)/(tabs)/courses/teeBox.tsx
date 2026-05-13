@@ -566,6 +566,7 @@ export default function teeBoxPage() {
                       data={color}
                       labelField="label"
                       valueField="value"
+                      mode="modal"
                       placeholder="Select color"
                       value={isEditMode ? value : selectedColor}
                       onChange={(item) => {

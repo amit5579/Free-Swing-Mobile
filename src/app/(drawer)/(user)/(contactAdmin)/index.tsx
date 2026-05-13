@@ -456,6 +456,7 @@ export default function ContactAdminPage() {
                       ]}
                       labelField="label"
                       valueField="value"
+                      mode="modal"
                       placeholder="Select category"
                       value={value}
                       onChange={(item) => {

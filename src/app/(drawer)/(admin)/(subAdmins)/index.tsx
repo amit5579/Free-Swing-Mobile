@@ -586,6 +586,7 @@ export default function subAdminsPage() {
                         data={courseList}
                         labelField="label"
                         valueField="value"
+                        mode="modal"
                         placeholder="Assign Courses"
                         value={value?.map((v: number) => String(v)) || []}
                         onChange={(selectedValues: string[]) => {

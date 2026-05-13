@@ -578,6 +578,7 @@ export default function adminCoursePage() {
                       ]}
                       labelField="label"
                       valueField="value"
+                      mode="modal"
                       placeholder="Premium Status"
                       value={value}
                       onChange={(item) => onChange(item.value)}

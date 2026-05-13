@@ -692,6 +692,7 @@ function CourseCard({ course, isDark }: any) {
                     }))}
                     labelField="label"
                     valueField="teeBoxId"
+                    mode="modal"
                     placeholder={"Choose Tee Box"}
                     value={value}
                     onChange={(item: any) => {

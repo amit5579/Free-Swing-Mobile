@@ -1466,6 +1466,8 @@ export default function TournamentsScreen() {
                     }
                     labelField="label"
                     valueField="value"
+                    mode="modal"
+                    maxHeight={200}
                     value={value}
                     onChange={(item) => {
                       onChange(item.value);
@@ -1497,6 +1499,8 @@ export default function TournamentsScreen() {
                         borderColor: isDark ? "#333" : "#ddd",
                       },
                     ]}
+                    mode="modal"
+                    maxHeight={200}
                     placeholderStyle={{ color: isDark ? "#777" : "#999" }}
                     selectedTextStyle={{ color: isDark ? "white" : "black" }}
                     containerStyle={{
@@ -1568,12 +1572,17 @@ export default function TournamentsScreen() {
                       { label: "Excluded(practice)", value: "excluded" },
                       { label: "Stableford", value: "stableford" },
                       { label: "DP Gross / Net", value: "double-peoria-net" },
-                      { label: "DP Stableford", value: "double-peoria-stableford" },
+                      {
+                        label: "DP Stableford",
+                        value: "double-peoria-stableford",
+                      },
                     ]}
                     labelField="label"
                     valueField="value"
+                    mode="modal"
                     value={value}
-                    onChange={(item) => {onChange(item.value)
+                    onChange={(item) => {
+                      onChange(item.value);
                     }}
                   />
                 )}
@@ -1606,6 +1615,7 @@ export default function TournamentsScreen() {
                     ]}
                     labelField="label"
                     valueField="value"
+                    mode="modal"
                     value={value}
                     onChange={(item) => onChange(item.value)}
                   />

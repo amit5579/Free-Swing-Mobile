@@ -564,6 +564,7 @@ export default function SubAdminTournamentsPage() {
                         data={courses}
                         labelField="label"
                         valueField="value"
+                        mode="modal"
                         placeholder="Select course"
                         value={value?.[0]}
                         onChange={(item) => onChange([item.value])}
@@ -609,6 +610,7 @@ export default function SubAdminTournamentsPage() {
                         }))}
                         labelField="label"
                         valueField="value"
+                        mode="modal"
                         placeholder="Select Tee Box"
                         value={value?.[0]}
                         onChange={(item) => onChange([Number(item.value)])}
@@ -656,6 +658,7 @@ export default function SubAdminTournamentsPage() {
                         ]}
                         labelField="label"
                         valueField="value"
+                        mode="modal"
                         placeholder="Select Scoring Type"
                         value={value?.[0]}
                         onChange={(item) => onChange([Number(item.value)])}

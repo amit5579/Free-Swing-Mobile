@@ -459,6 +459,7 @@ export default function SubAdminContactAdminPage() {
                       ]}
                       labelField="label"
                       valueField="value"
+                      mode="modal"
                       placeholder="Select category"
                       value={value}
                       onChange={(item) => {
