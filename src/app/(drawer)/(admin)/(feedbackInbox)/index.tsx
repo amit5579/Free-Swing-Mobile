@@ -623,6 +623,7 @@ const FeedbackCard = ({ isDark, item, setUpdateFeedback }: any) => {
             ]}
             labelField="label"
             valueField="value"
+            mode="modal"
             placeholder="Select course"
             value={status}
             onChange={(item) => {

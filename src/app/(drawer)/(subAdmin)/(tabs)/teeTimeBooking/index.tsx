@@ -790,6 +790,7 @@ export default function SubAdminTeeBookingPage() {
                   data={courses}
                   labelField="label"
                   valueField="value"
+                  mode="modal"
                   placeholder="Select Course"
                   value={selectedCourse}
                   onChange={(item) => {

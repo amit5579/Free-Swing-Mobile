@@ -435,6 +435,7 @@ export default function AddMemberScreen() {
                     }))}
                     labelField="label"
                     valueField="value"
+                    mode="modal"
                     placeholder="Select Course"
                     value={value}
                     onChange={(item) => {
@@ -485,6 +486,7 @@ export default function AddMemberScreen() {
                     }
                     labelField="label"
                     valueField="value"
+                    mode="modal"
                     placeholder="Select Tee"
                     value={value || null}
                     onChange={(item) => {
