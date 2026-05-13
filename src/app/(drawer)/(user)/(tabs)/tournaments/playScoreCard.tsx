@@ -61,12 +61,21 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   useEffect(() => {
     if (scorecardData) {
       setScoreCard(scorecardData);
+      // console.log("scorecard data", scorecardData);
     }
   }, [scorecardData]);
 
+  const renderScoringType =
+    scorecardData && scorecardData.length > 0
+      ? scorecardData[0].stablefordPoints == null
+        ? scorecardData[0].isExcluded
+          ? "Net Score Exclude Par 3"
+          : "Net Score Include Par 3"
+        : "Stableford"
+      : "";
  
   useEffect(() => {
-    scoreCardRef.current = scoreCard;
+    scoreCardRef.current = scoreCard;    
   }, [scoreCard]);
 
   useEffect(() => {
@@ -81,21 +90,21 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
 
   const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
-  const renderScoringType =
-    scoringType === "stableford" || scoringType === "Stableford"
-      ? "Stableford"
-      : scoringType === "double-peoria" ||
-          scoringType === "Double-Peoria" ||
-          scoringType === "double-peoria-stableford" ||
-          scoringType === "Double-Peoria-Stableford" ||
-          scoringType === "double-peoria-net" ||
-          scoringType === "Double-Peoria-Net"
-        ? "Net Score Include Par 3"
-        : scoringType === "excluded" || scoringType === "Excluded"
-          ? "Net Score Excluded Par 3"
-          : scoringType === "standard" || scoringType === "Standard"
-            ? "Standard"
-            : "Net Score Include Par 3";
+  // const renderScoringType =
+  //   scoringType === "stableford" || scoringType === "Stableford"
+  //     ? "Stableford"
+  //     : scoringType === "double-peoria" ||
+  //         scoringType === "Double-Peoria" ||
+  //         scoringType === "double-peoria-stableford" ||
+  //         scoringType === "Double-Peoria-Stableford" ||
+  //         scoringType === "double-peoria-net" ||
+  //         scoringType === "Double-Peoria-Net"
+  //       ? "Net Score Include Par 3"
+  //       : scoringType === "excluded" || scoringType === "Excluded"
+  //         ? "Net Score Excluded Par 3"
+  //         : scoringType === "standard" || scoringType === "Standard"
+  //           ? "Standard"
+  //           : "Net Score Include Par 3";
 
   // const fetchScoreCard = async () => {
   //   try {

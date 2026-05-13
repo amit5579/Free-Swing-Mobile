@@ -1564,31 +1564,20 @@ export default function TournamentsScreen() {
                     activeColor={isDark ? "#333" : "#f0f0f0"}
                     placeholder="Select Scoring Type"
                     data={[
-                      { label: "Standard (Gross/Net)", value: "1" },
-                      { label: "Excluded(practice)", value: "3" },
-                      { label: "Stableford", value: "2" },
-                      { label: "DP Gross / Net", value: "4" },
-                      { label: "DP Stableford", value: "5" },
+                      { label: "Standard (Gross/Net)", value: "standard" },
+                      { label: "Excluded(practice)", value: "excluded" },
+                      { label: "Stableford", value: "stableford" },
+                      { label: "DP Gross / Net", value: "double-peoria-net" },
+                      { label: "DP Stableford", value: "double-peoria-stableford" },
                     ]}
                     labelField="label"
                     valueField="value"
                     value={value}
-                    onChange={(item) => onChange(item.value)}
+                    onChange={(item) => {onChange(item.value)
+                    }}
                   />
                 )}
               />
-              {errors.scoringType && (
-                <Text style={{ color: "red" }}>
-                  *{errors.scoringType.message}
-                </Text>
-              )}
-              {/* MAX PLAYERS */}
-              {/* <Text
-                style={[styles.label, { color: isDark ? "white" : "black" }]}
-              >
-                Max Players
-              </Text> */}
-
               <Controller
                 control={control}
                 name="maxPlayers"

@@ -38,15 +38,8 @@ export const getScorecardHandicap = async (teeBoxId: number) => {
     throw error;
   }
 }
-export const getSubScorecardHandicap = async (teeBoxId: number) => {
+export const getSubScorecardHandicap = async (userId: number, teeBoxId: number) => {
   try {
-    const userId = await AsyncStorage.getItem("userId");
-    console.log("userId", userId);
-    console.log("teeBoxId", teeBoxId);
-
-    if (!userId) {
-      throw new Error("User ID not found");
-    }
     const response = await client.get(`scorecard/handicap/${userId}/${teeBoxId}`);
     return response.data;
   } catch (error) {

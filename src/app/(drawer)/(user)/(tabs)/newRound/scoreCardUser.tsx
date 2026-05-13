@@ -41,10 +41,10 @@ type ScorePayload = {
 export default function ScoreCardUserPage() {
   const { excluded, stableford, holes, handicap, courseId, teeBoxId } =
     useLocalSearchParams();
-  // useEffect(() => {
-  // console.log("holes", holes);
+  useEffect(() => {
+  console.log("holes", holes);
 
-  // }, [holes]);
+  }, [holes]);
 
   const routePage = useRouter();
   const navigation = useNavigation();
@@ -271,14 +271,17 @@ export default function ScoreCardUserPage() {
           .map(calculateHole)
           .map((h: any) => ({
             courseId: courseId ? Number(courseId) : h.courseId,
+            courseHalf:
+              holes === "front9" ? "Front9" : holes === "back9" ? "Back9" : null,
             holeId: h.holeId,
             isCompleted: isCompleted,
-            isExcluded: excluded === "true" && h.par === 3,
+            isExcluded: excluded === "true",
             roundNumber: h.roundNumber || 1,
             score:
               h.score === undefined || h.score === null || h.score === ""
                 ? null
                 : Number(h.score),
+            stablefordPoints: h.stablefordPoints,
             teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
             tournamentId: null,
             userId: Number(userId),
@@ -395,14 +398,17 @@ export default function ScoreCardUserPage() {
     timeoutRef.current = setTimeout(() => {
       const payload = updatedDetails.map(calculateHole).map((h: any) => ({
         courseId: courseId ? Number(courseId) : h.courseId,
+        courseHalf:
+          holes === "front9" ? "Front9" : holes === "back9" ? "Back9" : null,
         holeId: h.holeId,
         isCompleted: false,
-        isExcluded: excluded === "true" && h.par === 3,
+        isExcluded: excluded === "true",
         roundNumber: h.roundNumber || 1,
         score:
           h.score === undefined || h.score === null || h.score === ""
             ? null
             : Number(h.score),
+        stablefordPoints: h.stablefordPoints,
         teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
         tournamentId: null,
         userId: Number(userId),

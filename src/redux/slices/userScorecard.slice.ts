@@ -1,19 +1,22 @@
 import { getScorecardHandicap, getScoreCardOpen } from "@/api/modules/scoreCard.api";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-// 🔥 THUNKS (connect Redux → API)
+//  THUNKS (connect Redux → API)
 export const fetchScoreCardOpen = createAsyncThunk(
   "scorecard/fetchOpen",
   async (tournamentId: number, thunkAPI) => {
     try {
       const rawScoreCardData = await getScoreCardOpen(tournamentId);
-      const scorecardData = rawScoreCardData.map((h: any) => ({
-        ...h,
-        score: null,
-        netScore: null,
-        stablefordPoints: null,
-      }));
-      return scorecardData;
+      // console.log("rawScoreCardData", rawScoreCardData);
+      // const scorecardData = rawScoreCardData.map((h: any) => ({
+      //   ...h
+      //   ,
+      //   score: null,
+      //   netScore: null,
+      //   stablefordPoints: null,
+      // }));
+      // return scorecardData;
+      return rawScoreCardData;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.message);
     }
