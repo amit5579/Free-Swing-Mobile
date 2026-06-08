@@ -44,8 +44,8 @@ export const getScoreCardDetails = async (teeBoxId: number, courseId: number, ho
 
 export const getCourseBySearch = async (courseName: string) => {
     try {
-        const response = await client.get(`CourseAdmin/external/search?query=${courseName}`);
-        console.log("course by search response", response.data);
+        const response = await client.get(`course/external/search?query=${courseName}`);
+        // console.log("course by search response", response.data);
 
         return response.data;
     } catch (error) {

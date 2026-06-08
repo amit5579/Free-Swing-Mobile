@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, TextInput } from "react-native";
+import { Alert, StyleSheet, TextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { Box } from "@/components/box";
@@ -13,6 +13,7 @@ import Watermark from "@/components/watermark";
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
 import { Modal, Pressable, useColorScheme, View, Text } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getCourse } from "@/api/modules/admin/courses.api";
 import { Divider } from "@/components/divider";
@@ -29,13 +30,17 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
 import Toast from "react-native-toast-message";
+import { getAllPlayers } from "@/api/modules/admin/tournaments.api";
+import { getProfile } from "@/api/modules/profile.api";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [search, setSearch] = useState("");
+  const [profile, setProfile] = useState<any>(null);
   const [courseList, setCourseList] = useState<any>([]);
+  const [playerList, setPlayerList] = useState<any>([]);
   const [searchedCourseList, setSearchedCourseList] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -43,10 +48,12 @@ export default function StartNewRoundPage() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
+      const uu = await getProfile();
       const ccs = await getCourse();
-      // console.log("tee detailllllsss", ccs);
-
+      const gp = await getAllPlayers();
+      setProfile(uu);
       setCourseList(ccs);
+      setPlayerList(gp);
     } catch (error) {
       throw console.log("Error fetching courses", error);
     } finally {
@@ -332,6 +339,8 @@ export default function StartNewRoundPage() {
                         key={course.courseId}
                         course={course}
                         isDark={isDark}
+                        playerList={playerList}
+                        profile={profile}
                       />
                     ))
                   )}
@@ -446,7 +455,7 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
 }
 
 /* ---------- COURSE CARD ---------- */
-function CourseCard({ course, isDark }: any) {
+function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
   const routePage = useRouter();
 
   /* ---------- CONSTANTS ---------- */
@@ -454,6 +463,11 @@ function CourseCard({ course, isDark }: any) {
     net_including: { excluded: false, stableford: false },
     net_excluding: { excluded: true, stableford: false },
     stableford: { excluded: false, stableford: true },
+    gross_score: { excluded: false, stableford: false, gross: true },
+    split_six: { excluded: false, stableford: false, split_six: true },
+    high_low: { excluded: false, stableford: false, high_low: true },
+    nassau_best: { excluded: false, stableford: false, nassau_best: true },
+    nassau_combined: { excluded: false, stableford: false, nassau_combined: true },
   };
 
   const holesOptions = {
@@ -466,6 +480,11 @@ function CourseCard({ course, isDark }: any) {
   const [teeBoxList, setTeeBoxList] = useState<any[]>([]);
   const [handicapDetails, setHandicapDetails] = useState<any>([]);
   const [handicapView, setHandicapView] = useState(false);
+
+  const [numberOfPlayers, setNumberOfPlayers] = useState<string>("solo");
+  const [player2, setPlayer2] = useState<any>(null);
+  const [player3, setPlayer3] = useState<any>(null);
+  const [player4, setPlayer4] = useState<any>(null);
 
   const {
     control,
@@ -486,6 +505,131 @@ function CourseCard({ course, isDark }: any) {
   const selectedTeeBoxId = watch("teeBoxId");
   const scoreType = watch("scoreType");
   const holesToPlay = watch("holesToPlay");
+
+  // Auto-set numberOfPlayers and handle dropdown logic based on scoring mode
+  useEffect(() => {
+    if (scoreType === "net_including" || scoreType === "net_excluding" || scoreType === "stableford") {
+      setNumberOfPlayers("solo");
+    } else if (scoreType === "split_six") {
+      setNumberOfPlayers("3");
+    } else if (scoreType === "high_low") {
+      setNumberOfPlayers("4");
+    } else if (scoreType === "nassau_best" || scoreType === "nassau_combined") {
+      setValue("holesToPlay", "18");
+      if (numberOfPlayers !== "2" && numberOfPlayers !== "4") {
+        Alert.alert(
+          "Invalid Player Count",
+          "You can select 2 or 4 players for this scoring mode.",
+          [
+            { text: "OK", onPress: () => setNumberOfPlayers("2") }
+          ]
+        );
+      }
+    }
+  }, [scoreType]);
+
+  // Clean up selected players when numberOfPlayers decreases
+  useEffect(() => {
+    if (numberOfPlayers === "solo") {
+      setPlayer2(null);
+      setPlayer3(null);
+      setPlayer4(null);
+    } else if (numberOfPlayers === "2") {
+      setPlayer3(null);
+      setPlayer4(null);
+    } else if (numberOfPlayers === "3") {
+      setPlayer4(null);
+    }
+  }, [numberOfPlayers]);
+
+  const getPlayerOptions = (currentPlayerId: any, otherPlayerIds: any[]) => {
+    return playerList
+      .filter((p: any) => {
+        if (profile && p.id === profile.id) return false;
+        if (otherPlayerIds.includes(p.id) && p.id !== currentPlayerId) return false;
+        return true;
+      })
+      .map((p: any) => ({
+        label: p.username,
+        value: p.id,
+      }));
+  };
+
+  const savePendingRoundContext = async () => {
+    const playerCount = numberOfPlayers === "solo" ? 1 : Number(numberOfPlayers);
+    const sideGameMode = scoreType === "high_low" ? "high-low" : (scoreType === "split_six" ? "split-six" : "none");
+
+    if (playerCount <= 1 && sideGameMode === "none") {
+      return undefined;
+    }
+
+    const roundPlayers: any[] = [];
+
+    // Player 1 (You)
+    if (profile) {
+      roundPlayers.push({
+        playerId: profile.id,
+        userId: profile.id,
+        name: (profile.username || "You").trim(),
+      });
+    }
+
+    // Player 2
+    if (player2) {
+      const p2Obj = playerList.find((p: any) => p.id === player2);
+      if (p2Obj) {
+        roundPlayers.push({
+          playerId: p2Obj.id,
+          userId: p2Obj.id,
+          name: (p2Obj.username || "").trim(),
+        });
+      }
+    }
+
+    // Player 3
+    if (player3) {
+      const p3Obj = playerList.find((p: any) => p.id === player3);
+      if (p3Obj) {
+        roundPlayers.push({
+          playerId: p3Obj.id,
+          userId: p3Obj.id,
+          name: (p3Obj.username || "").trim(),
+        });
+      }
+    }
+
+    // Player 4
+    if (player4) {
+      const p4Obj = playerList.find((p: any) => p.id === player4);
+      if (p4Obj) {
+        roundPlayers.push({
+          playerId: p4Obj.id,
+          userId: p4Obj.id,
+          name: (p4Obj.username || "").trim(),
+        });
+      }
+    }
+
+    const context = {
+      players: roundPlayers.slice(0, playerCount).map((player, index) => ({
+        playerId: `p${index + 1}`,
+        userId: player.userId,
+        name: player.name,
+        isPrimary: index === 0,
+        team: sideGameMode === "high-low" ? (index < 2 ? 1 : 2) : undefined,
+      })),
+      matchScoringMode: sideGameMode,
+      createdAt: new Date().toISOString(),
+    };
+
+    const contextId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    try {
+      await AsyncStorage.setItem(`pending_round_context_v1_${contextId}`, JSON.stringify(context));
+    } catch (e) {
+      console.error("Error saving pending round context", e);
+    }
+    return contextId;
+  };
   const textColor = isDark ? "#fff" : "#000";
   const subTextColor = isDark ? "#aaa" : "#555";
   const cardBg = isDark ? "#1e1e1e" : "#f9f9f9";
@@ -594,6 +738,10 @@ function CourseCard({ course, isDark }: any) {
             setModalVisible(true);
             setTeeBoxList(course.teeBoxes);
             reset(); // reset form to defaults
+            setNumberOfPlayers("solo");
+            setPlayer2(null);
+            setPlayer3(null);
+            setPlayer4(null);
           }}
           className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
           style={({ pressed }) => ({
@@ -646,6 +794,10 @@ function CourseCard({ course, isDark }: any) {
                   reset();
                   setHandicapView(false);
                   setModalVisible(false);
+                  setNumberOfPlayers("solo");
+                  setPlayer2(null);
+                  setPlayer3(null);
+                  setPlayer4(null);
                 }}
               >
                 <Ionicons
@@ -656,7 +808,7 @@ function CourseCard({ course, isDark }: any) {
               </Pressable>
             </HStack>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <ThemedText>
+              <ThemedText style={{fontSize: 13}}>
                 You are now starting a round for {course.name}
               </ThemedText>
               <Controller
@@ -664,6 +816,7 @@ function CourseCard({ course, isDark }: any) {
                 name="teeBoxId"
                 render={({ field: { onChange, value } }) => (
                   <Dropdown
+                    backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
                     style={[
                       styles.dropdown,
                       {
@@ -729,7 +882,7 @@ function CourseCard({ course, isDark }: any) {
                   name="scoreType"
                   render={({ field: { onChange, value } }) => (
                     <RadioGroup value={value} onChange={onChange}>
-                      <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                      <ThemedText style={{ color: textColor, marginBottom: 3 }}>
                         Scoring Mode
                       </ThemedText>
 
@@ -746,6 +899,26 @@ function CourseCard({ course, isDark }: any) {
                           label: "Stableford Scoring",
                           value: "stableford",
                         },
+                        {
+                          label: "Gross Scorecard",
+                          value: "gross_score",
+                        },
+                        {
+                          label: "Split Six",
+                          value: "split_six",
+                        },
+                        {
+                          label: "High Low",
+                          value: "high_low",
+                        },
+                        {
+                          label:"Nassau (Best Score)",
+                        value:"nassau_best",
+                        },
+                        {
+                          label:"Nassau (Combined Score)",
+                        value:"nassau_combined",
+                        }
                       ].map((item) => (
                         <Radio
                           key={item.value}
@@ -790,6 +963,335 @@ function CourseCard({ course, isDark }: any) {
                 )}
               </View>
 
+              {/* Number of Players & Player Slots Selection */}
+              <View style={{ paddingHorizontal: 20, marginBottom: 15 }}>
+                <ThemedText style={{ color: textColor, marginBottom: 6, fontWeight: "600" }}>
+                  Number of Players
+                </ThemedText>
+                <Dropdown
+                  backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                  disable={
+                    scoreType === "net_including" ||
+                    scoreType === "net_excluding" ||
+                    scoreType === "stableford" ||
+                    scoreType === "split_six" ||
+                    scoreType === "high_low"
+                  }
+                  style={[
+                    styles.dropdown,
+                    {
+                      backgroundColor: (
+                        scoreType === "net_including" ||
+                        scoreType === "net_excluding" ||
+                        scoreType === "stableford" ||
+                        scoreType === "split_six" ||
+                        scoreType === "high_low"
+                      )
+                        ? (isDark ? "#222" : "#f1f5f9")
+                        : cardBg,
+                      borderColor: borderColor,
+                      borderWidth: 1,
+                      marginTop: 0,
+                      opacity: (
+                        scoreType === "net_including" ||
+                        scoreType === "net_excluding" ||
+                        scoreType === "stableford" ||
+                        scoreType === "split_six" ||
+                        scoreType === "high_low"
+                      ) ? 0.7 : 1,
+                    },
+                  ]}
+                  placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                  selectedTextStyle={{ color: textColor, fontSize: 14 }}
+                  itemTextStyle={{ color: textColor, fontSize: 14 }}
+                  containerStyle={{
+                    backgroundColor: isDark ? "#333" : "#eee",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    borderWidth: 1,
+                    borderColor: borderColor,
+                  }}
+                  itemContainerStyle={{
+                    backgroundColor: isDark ? "#333" : "#eee",
+                  }}
+                  activeColor={isDark ? "#333" : "#eee"}
+                  data={[
+                    { label: "Solo", value: "solo" },
+                    { label: "2 Players", value: "2" },
+                    { label: "3 Players", value: "3" },
+                    { label: "4 Players", value: "4" },
+                  ]}
+                  labelField="label"
+                  valueField="value"
+                  mode="modal"
+                  placeholder="Select number of players"
+                  value={numberOfPlayers}
+                  onChange={(item: any) => {
+                    if ((scoreType === "nassau_best" || scoreType === "nassau_combined") && (item.value === "solo" || item.value === "3")) {
+                      Alert.alert(
+                        "Invalid Player Count",
+                        "You can select 2 or 4 players for this scoring mode.",
+                        [
+                          { text: "OK", onPress: () => setNumberOfPlayers("2") }
+                        ]
+                      );
+                    } else {
+                      setNumberOfPlayers(item.value);
+                    }
+                  }}
+                />
+              </View>
+
+              {/* Players selection dropdowns */}
+              <View style={{ paddingHorizontal: 20, marginBottom: 15 }}>
+                {numberOfPlayers === "solo" ? (
+                  /* Solo: Player 1 (You) takes full width */
+                  <View style={{ width: "100%" }}>
+                    <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
+                      <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                        Player 1
+                      </ThemedText>
+                      {scoreType === "high_low" && (
+                        <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                        </View>
+                      )}
+                    </HStack>
+                    <Dropdown
+                      disable
+                      renderRightIcon={() => null}
+                      backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                      style={[
+                        styles.dropdown,
+                        {
+                          backgroundColor: isDark ? "#222" : "#f1f5f9",
+                          borderColor: borderColor,
+                          borderWidth: 1,
+                          marginTop: 0,
+                          height: 44,
+                          opacity: 0.7,
+                        },
+                      ]}
+                      placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                      selectedTextStyle={{ color: isDark ? "#aaa" : "#555", fontSize: 14 }}
+                      data={[{ label: profile?.username || "You", value: "you" }]}
+                      labelField="label"
+                      valueField="value"
+                      value="you"
+                      onChange={() => {}}
+                    />
+                  </View>
+                ) : (
+                  /* Multiplayer: Player 1 & 2 in Row 1 */
+                  <View>
+                    <HStack style={{ gap: 12, marginBottom: 12 }}>
+                      {/* Player 1 (You) */}
+                      <View style={{ flex: 1 }}>
+                        <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                            Player 1
+                          </ThemedText>
+                          {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
+                            <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                            </View>
+                          )}
+                        </HStack>
+                        <Dropdown
+                          disable
+                          renderRightIcon={() => null}
+                          backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                          style={[
+                            styles.dropdown,
+                            {
+                              backgroundColor: isDark ? "#222" : "#f1f5f9",
+                              borderColor: borderColor,
+                              borderWidth: 1,
+                              marginTop: 0,
+                              height: 44,
+                              opacity: 0.7,
+                            },
+                          ]}
+                          placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                          selectedTextStyle={{ color: isDark ? "#aaa" : "#555", fontSize: 14 }}
+                          data={[{ label: profile?.username || "You", value: "you" }]}
+                          labelField="label"
+                          valueField="value"
+                          value="you"
+                          onChange={() => {}}
+                        />
+                      </View>
+
+                      {/* Player 2 */}
+                      <View style={{ flex: 1 }}>
+                        <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                            Player 2
+                          </ThemedText>
+                          {(scoreType === "high_low" || ((scoreType === "nassau_best" || scoreType === "nassau_combined") && numberOfPlayers === "4")) && (
+                            <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                            </View>
+                          )}
+                          {((scoreType === "nassau_best" || scoreType === "nassau_combined") && numberOfPlayers === "2") && (
+                            <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
+                            </View>
+                          )}
+                        </HStack>
+                        <Dropdown
+                          backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                          style={[
+                            styles.dropdown,
+                            {
+                              backgroundColor: cardBg,
+                              borderColor: borderColor,
+                              borderWidth: 1,
+                              marginTop: 0,
+                              height: 44,
+                            },
+                          ]}
+                          placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                          selectedTextStyle={{ color: textColor, fontSize: 14 }}
+                          itemTextStyle={{ color: textColor, fontSize: 14 }}
+                          containerStyle={{
+                            backgroundColor: isDark ? "#333" : "#eee",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: borderColor,
+                          }}
+                          itemContainerStyle={{
+                            backgroundColor: isDark ? "#333" : "#eee",
+                          }}
+                          activeColor={isDark ? "#333" : "#eee"}
+                          data={getPlayerOptions(player2, [player3, player4])}
+                          labelField="label"
+                          valueField="value"
+                          mode="modal"
+                          placeholder="Select Player"
+                          value={player2}
+                          onChange={(item: any) => {
+                            setPlayer2(item.value);
+                          }}
+                        />
+                      </View>
+                    </HStack>
+
+                    {/* Row 2: Player 3 and Player 4 */}
+                    {(numberOfPlayers === "3" || numberOfPlayers === "4") && (
+                      <HStack style={{ gap: 12, marginBottom: 12 }}>
+                        {/* Player 3 */}
+                        <View style={{ flex: 1 }}>
+                          <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                              Player 3
+                            </ThemedText>
+                            {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
+                              <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
+                              </View>
+                            )}
+                          </HStack>
+                          <Dropdown
+                            backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                            style={[
+                              styles.dropdown,
+                              {
+                                backgroundColor: cardBg,
+                                borderColor: borderColor,
+                                borderWidth: 1,
+                                marginTop: 0,
+                                height: 44,
+                              },
+                            ]}
+                            placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                            selectedTextStyle={{ color: textColor, fontSize: 14 }}
+                            itemTextStyle={{ color: textColor, fontSize: 14 }}
+                            containerStyle={{
+                              backgroundColor: isDark ? "#333" : "#eee",
+                              borderRadius: 8,
+                              overflow: "hidden",
+                              borderWidth: 1,
+                              borderColor: borderColor,
+                            }}
+                            itemContainerStyle={{
+                              backgroundColor: isDark ? "#333" : "#eee",
+                            }}
+                            activeColor={isDark ? "#333" : "#eee"}
+                            data={getPlayerOptions(player3, [player2, player4])}
+                            labelField="label"
+                            valueField="value"
+                            mode="modal"
+                            placeholder="Select Player"
+                            value={player3}
+                            onChange={(item: any) => {
+                              setPlayer3(item.value);
+                            }}
+                          />
+                        </View>
+
+                        {/* Player 4 */}
+                        <View style={{ flex: 1 }}>
+                          {numberOfPlayers === "4" ? (
+                            <>
+                              <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                                  Player 4
+                                </ThemedText>
+                                {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
+                                  <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                    <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
+                                  </View>
+                                )}
+                              </HStack>
+                              <Dropdown
+                                backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                                style={[
+                                  styles.dropdown,
+                                  {
+                                    backgroundColor: cardBg,
+                                    borderColor: borderColor,
+                                    borderWidth: 1,
+                                    marginTop: 0,
+                                    height: 44,
+                                  },
+                                ]}
+                                placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                                selectedTextStyle={{ color: textColor, fontSize: 14 }}
+                                itemTextStyle={{ color: textColor, fontSize: 14 }}
+                                containerStyle={{
+                                  backgroundColor: isDark ? "#333" : "#eee",
+                                  borderRadius: 8,
+                                  overflow: "hidden",
+                                  borderWidth: 1,
+                                  borderColor: borderColor,
+                                }}
+                                itemContainerStyle={{
+                                  backgroundColor: isDark ? "#333" : "#eee",
+                                }}
+                                activeColor={isDark ? "#333" : "#eee"}
+                                data={getPlayerOptions(player4, [player2, player3])}
+                                labelField="label"
+                                valueField="value"
+                                mode="modal"
+                                placeholder="Select Player"
+                                value={player4}
+                                onChange={(item: any) => {
+                                  setPlayer4(item.value);
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <View style={{ flex: 1 }} />
+                          )}
+                        </View>
+                      </HStack>
+                    )}
+                  </View>
+                )}
+              </View>
+
               {/* Holes to play */}
               <View style={styles.container}>
                 <Controller
@@ -797,7 +1299,7 @@ function CourseCard({ course, isDark }: any) {
                   name="holesToPlay"
                   render={({ field: { onChange, value } }) => (
                     <RadioGroup value={value} onChange={onChange}>
-                      <ThemedText style={{ color: textColor, marginBottom: 8 }}>
+                      <ThemedText style={{ color: textColor, marginBottom: 3 }}>
                         Holes to Play
                       </ThemedText>
 
@@ -814,36 +1316,40 @@ function CourseCard({ course, isDark }: any) {
                           label: "Back Nine (10-18)",
                           value: "back9",
                         },
-                      ].map((item) => (
-                        <Radio
-                          key={item.value}
-                          value={item.value}
-                          style={{ flexDirection: "row", marginBottom: 10 }}
-                        >
-                          <RadioIndicator
-                            style={{
-                              borderColor: textColor,
-                              borderWidth: 2,
-                              marginRight: 10,
-                            }}
+                      ].map((item) => {
+                        const isDisabled = (scoreType === "nassau_best" || scoreType === "nassau_combined") && (item.value === "front9" || item.value === "back9");
+                        return (
+                          <Radio
+                            key={item.value}
+                            value={item.value}
+                            isDisabled={isDisabled}
+                            style={{ flexDirection: "row", marginBottom: 10, opacity: isDisabled ? 0.4 : 1 }}
                           >
-                            {value === item.value && (
-                              <View
-                                style={{
-                                  width: 10,
-                                  height: 10,
-                                  borderRadius: 5,
-                                  backgroundColor: textColor,
-                                }}
-                              />
-                            )}
-                          </RadioIndicator>
+                            <RadioIndicator
+                              style={{
+                                borderColor: textColor,
+                                borderWidth: 2,
+                                marginRight: 10,
+                              }}
+                            >
+                              {value === item.value && (
+                                <View
+                                  style={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: 5,
+                                    backgroundColor: textColor,
+                                  }}
+                                />
+                              )}
+                            </RadioIndicator>
 
-                          <RadioLabel style={{ color: textColor }}>
-                            {item.label}
-                          </RadioLabel>
-                        </Radio>
-                      ))}
+                            <RadioLabel style={{ color: textColor }}>
+                              {item.label}
+                            </RadioLabel>
+                          </Radio>
+                        );
+                      })}
                     </RadioGroup>
                   )}
                 />
@@ -855,7 +1361,7 @@ function CourseCard({ course, isDark }: any) {
               </View>
             </ScrollView>
 
-            {/* BUTTONS */}
+             {/* BUTTONS */}
             <HStack style={styles.buttonRow}>
               <Pressable
                 style={[
@@ -863,24 +1369,57 @@ function CourseCard({ course, isDark }: any) {
                   { borderColor: isDark ? "#444" : "#ccc" },
                 ]}
                 onPress={() => {
-                  // reset();
                   setHandicapView(false);
                   setModalVisible(false);
+                  setNumberOfPlayers("solo");
+                  setPlayer2(null);
+                  setPlayer3(null);
+                  setPlayer4(null);
                 }}
               >
                 <Text style={{ color: isDark ? "#ccc" : "#333" }}>Cancel</Text>
               </Pressable>
 
               <Pressable
-                onPress={handleSubmit((data) => {
+                onPress={handleSubmit(async (data) => {
+                  // Validate players selection
+                  if (numberOfPlayers === "2" && !player2) {
+                    Toast.show({ type: "error", text1: "Please select Player 2" });
+                    return;
+                  }
+                  if (numberOfPlayers === "3" && (!player2 || !player3)) {
+                    Toast.show({ type: "error", text1: "Please select all players" });
+                    return;
+                  }
+                  if (numberOfPlayers === "4" && (!player2 || !player3 || !player4)) {
+                    Toast.show({ type: "error", text1: "Please select all players" });
+                    return;
+                  }
+
                   const selectedScore = scoringOptions[data.scoreType];
                   const selectedHoles = holesOptions[data.holesToPlay];
 
+                  // Save player configuration to AsyncStorage
+                  try {
+                    await AsyncStorage.setItem("numberOfPlayers", numberOfPlayers);
+                    await AsyncStorage.setItem("player2Id", player2 ? String(player2) : "");
+                    await AsyncStorage.setItem("player3Id", player3 ? String(player3) : "");
+                    await AsyncStorage.setItem("player4Id", player4 ? String(player4) : "");
+                  } catch (e) {
+                    console.error("Error saving player selections", e);
+                  }
+
+                  const roundContextId = await savePendingRoundContext();
+
                   setHandicapView(false);
                   setModalVisible(false);
-                  routePage.push(
-                    `/newRound/scoreCardUser?excluded=${selectedScore.excluded}&stableford=${selectedScore.stableford}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}`,
-                  );
+
+                  let url = `/newRound/scoreCardUser?selectedScore=${JSON.stringify(selectedScore)}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}&numberOfPlayers=${numberOfPlayers}&player2Id=${player2 || ""}&player3Id=${player3 || ""}&player4Id=${player4 || ""}&forceNew=true`;
+                  if (roundContextId) {
+                    url += `&roundContextId=${roundContextId}`;
+                  }
+
+                  routePage.push(url as any);
                 })}
                 style={styles.createBtn}
               >
@@ -970,7 +1509,8 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: {
-    width: "90%",
+    width: "95%",
+    maxHeight: "85%",
     backgroundColor: "white",
     borderRadius: 14,
     padding: 20,

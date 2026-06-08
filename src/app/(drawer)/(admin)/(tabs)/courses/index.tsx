@@ -156,7 +156,7 @@ export default function adminCoursePage() {
       );
     } catch (error) {
       console.error("Error saving courses", error);
-      Toast.show({ type: "error", text1: "Failed to add course" });
+      Toast.show({ type: "error", text1: "Failed to Save course" });
     } finally {
       setSearchLoading(false);
     }

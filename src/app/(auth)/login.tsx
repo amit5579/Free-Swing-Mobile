@@ -266,7 +266,7 @@ export default function LoginScreen() {
                 marginBottom: 24,
               }}
             >
-              <Text style={{ color: "#374151" }}>Remember Me</Text>
+              {/* <Text style={{ color: "#374151" }}>Remember Me</Text> */}
               <TouchableOpacity onPress={() => setShowResetModal(true)}>
                 <Text style={{ color: "#2e7d32", fontWeight: "600" }}>
                   Forgot Password?

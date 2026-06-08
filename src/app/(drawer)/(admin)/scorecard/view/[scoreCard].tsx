@@ -30,8 +30,11 @@ import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import { useRouter } from "expo-router";
 import { HStack } from "@/components/hstack";
+import { VStack } from "@/components/vstack";
 import { ThemedText } from "@/components/themed-text";
 import { Box } from "@/components/box";
+import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
+
 
 
 
@@ -98,6 +101,13 @@ const ScoreCard: React.FC = () => {
   const [isStableford, setIsStableford] = useState(false);
   const [displayFront9, setDisplayFront9] = useState(true);
   const [displayBack9, setDisplayBack9] = useState(true);
+
+  // Multiplayer layout state variables
+  const [partners, setPartners] = useState<any[]>([]);
+  const [companionHandicaps, setCompanionHandicaps] = useState<Record<number, number>>({});
+  const [isHighLow, setIsHighLow] = useState(false);
+  const [isSplit6, setIsSplit6] = useState(false);
+
   const renderScoring =
     holes && holes.length > 0
       ? holes[0].stablefordPoints == null && holes[0].isExcluded == false
@@ -106,6 +116,7 @@ const ScoreCard: React.FC = () => {
           ? "Net Score Exclude Par 3"
           : "Stableford"
       : "";
+
   useEffect(() => {
     const fetchScorecard = async () => {
       try {
@@ -113,7 +124,9 @@ const ScoreCard: React.FC = () => {
         const data = await getScorecardDetails(scoreCard!);
         setHoles(data);
 
-        const showPts = data.some((h) => h.tournamentId !== null);
+        const showPts = data.some(
+          (h) => h.tournamentId !== null || (h.stablefordPoints !== null && h.stablefordPoints !== undefined)
+        );
         setIsStableford(showPts);
 
         const initialText: Record<number, string> = {};
@@ -123,6 +136,50 @@ const ScoreCard: React.FC = () => {
           }
         });
         setTextScores(initialText);
+
+        // Parse partners
+        let parsedPartners: any[] = [];
+        if (data && data.length > 0) {
+          const firstHole = data[0];
+          if ((firstHole as any).playingPartnersJson) {
+            try {
+              parsedPartners = typeof (firstHole as any).playingPartnersJson === 'string'
+                ? JSON.parse((firstHole as any).playingPartnersJson)
+                : (firstHole as any).playingPartnersJson;
+              setPartners(parsedPartners || []);
+            } catch (e) {
+              console.error("Error parsing playingPartnersJson:", e);
+            }
+          }
+          
+          const mode = ((firstHole as any).scoringType || (firstHole as any).scoring_type || "").toLowerCase();
+          const pLength = parsedPartners.length;
+          const isHL = mode.includes("high_low") || mode.includes("high-low") || pLength === 4;
+          const isS6 = mode.includes("split_six") || mode.includes("split-six") || pLength === 3;
+          
+          setIsHighLow(isHL);
+          setIsSplit6(isS6);
+          
+          const teeBoxId = (firstHole as any).teeBoxId;
+          if (parsedPartners.length > 0 && teeBoxId) {
+            const fetchCompanionHandicaps = async () => {
+              const handicapsMap: Record<number, number> = {};
+              for (const p of parsedPartners) {
+                if (!p.isPrimary && p.userId) {
+                  try {
+                    const hData = await getSubScorecardHandicap(p.userId, Number(teeBoxId));
+                    const hc = typeof hData === 'object' && hData !== null ? (hData.handicap ?? 0) : (Number(hData) || 0);
+                    handicapsMap[p.userId] = hc;
+                  } catch (e) {
+                    console.error("Error fetching companion handicap for userId", p.userId, e);
+                  }
+                }
+              }
+              setCompanionHandicaps(handicapsMap);
+            };
+            fetchCompanionHandicaps();
+          }
+        }
       } catch (err) {
         setError("Failed to load scorecard.");
       } finally {
@@ -136,8 +193,10 @@ const ScoreCard: React.FC = () => {
     if (holes.length > 0) {
       const f9 = holes.slice(0, 9);
       const b9 = holes.slice(9, 18);
-      setDisplayFront9(sumScores(f9) > 0);
-      setDisplayBack9(sumScores(b9) > 0);
+      const f9Sum = sumScores(f9);
+      const b9Sum = sumScores(b9);
+      setDisplayFront9(f9Sum !== "-" && f9Sum > 0);
+      setDisplayBack9(b9Sum !== "-" && b9Sum > 0);
     }
   }, [holes]);
 
@@ -145,6 +204,310 @@ const ScoreCard: React.FC = () => {
     const base = Math.floor(handicap / 18);
     const remainder = handicap % 18;
     return base + (strokeIndex <= remainder ? 1 : 0);
+  };
+
+  const getPlayerHoleInfo = (hole: any, partner: any) => {
+    const isPrimary = partner.isPrimary;
+    const playerId = partner.playerId; // "p1", "p2", etc.
+    const userId = partner.userId;
+
+    let companionScores: Record<string, number | null> = {};
+    if (hole.companionScoresJson) {
+      try {
+        companionScores = typeof hole.companionScoresJson === 'string' 
+          ? JSON.parse(hole.companionScoresJson) 
+          : hole.companionScoresJson;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let companionSandys: Record<string, boolean> = {};
+    if (hole.companionSandysJson) {
+      try {
+        companionSandys = typeof hole.companionSandysJson === 'string' 
+          ? JSON.parse(hole.companionSandysJson) 
+          : hole.companionSandysJson;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let rawScore = null;
+    if (isPrimary) {
+      rawScore = hole.score !== null && hole.score !== "" && hole.score !== undefined ? Number(hole.score) : null;
+      if (rawScore === null && companionScores[playerId] !== undefined && companionScores[playerId] !== null) {
+        rawScore = Number(companionScores[playerId]);
+      }
+    } else {
+      rawScore = companionScores[playerId] !== undefined && companionScores[playerId] !== null ? Number(companionScores[playerId]) : null;
+    }
+
+    const sandy = companionSandys[playerId] === true;
+
+    if (rawScore === null) {
+      return {
+        score: null,
+        netScore: null,
+        stablefordPoints: null,
+        sandy,
+      };
+    }
+
+    const playerHandicap = isPrimary ? Number(displayHandicap || 0) : (companionHandicaps[userId] || 0);
+    let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
+    if (hole.isExcluded && hole.par === 3) {
+      strokesReceived = 0;
+    }
+    const netScore = rawScore - strokesReceived;
+
+    let stablefordPoints = null;
+    if (isStableford) {
+      const pts = hole.par - netScore + 2;
+      stablefordPoints = pts > 0 ? pts : 0;
+    }
+
+    return {
+      score: rawScore,
+      netScore,
+      stablefordPoints,
+      sandy,
+    };
+  };
+
+  const getPlayerTotals = (holesList: any[], partner: any) => {
+    let gross = 0;
+    let net = 0;
+    let stableford = 0;
+    let hasAnyScore = false;
+
+    holesList.forEach((h) => {
+      const info = getPlayerHoleInfo(h, partner);
+      if (info.score !== null) {
+        gross += info.score;
+        net += info.netScore ?? 0;
+        stableford += info.stablefordPoints ?? 0;
+        hasAnyScore = true;
+      }
+    });
+
+    return {
+      gross: hasAnyScore ? gross : "-",
+      net: hasAnyScore ? net : "-",
+      stableford: hasAnyScore ? stableford : "-",
+    };
+  };
+
+  const getBaseMultiplier = (score: number | null, par: number) => {
+    if (score === null || score <= 0) return 1;
+    if (score === 1) return 25;
+    const diff = score - par;
+    if (diff <= -2) return 5;
+    if (diff === -1) return 2;
+    return 1;
+  };
+
+  const calculateHighLowPoints = (s1: number | null, s2: number | null, s3: number | null, s4: number | null) => {
+    if (s1 === null || s2 === null || s3 === null || s4 === null) {
+      return { teamAPoints: 0, teamBPoints: 0 };
+    }
+
+    const p1 = { team: 'A', score: s1 };
+    const p2 = { team: 'A', score: s2 };
+    const p3 = { team: 'B', score: s3 };
+    const p4 = { team: 'B', score: s4 };
+
+    const allPlayers = [p1, p2, p3, p4];
+
+    // 1. Low Score (2 points)
+    const minScore = Math.min(s1, s2, s3, s4);
+    const lowPlayers = allPlayers.filter(p => p.score === minScore);
+    const lowTeams = new Set(lowPlayers.map(p => p.team));
+
+    let teamALowPts = 0;
+    let teamBLowPts = 0;
+    if (lowTeams.size === 1) {
+      if (lowTeams.has('A')) teamALowPts = 2;
+      else teamBLowPts = 2;
+    }
+
+    // 2. High Score (1 point)
+    const remainingPlayers = allPlayers.filter(p => p.score > minScore);
+    let teamAHighPts = 0;
+    let teamBHighPts = 0;
+
+    if (remainingPlayers.length > 0) {
+      const nextMinScore = Math.min(...remainingPlayers.map(p => p.score));
+      const nextPlayers = remainingPlayers.filter(p => p.score === nextMinScore);
+      const nextTeams = new Set(nextPlayers.map(p => p.team));
+      if (nextTeams.size === 1) {
+        if (nextTeams.has('A')) teamAHighPts = 1;
+        else teamBHighPts = 1;
+      }
+    }
+
+    return {
+      teamAPoints: teamALowPts + teamAHighPts,
+      teamBPoints: teamBLowPts + teamBHighPts,
+    };
+  };
+
+  const getHighLowHoleStats = (h: any) => {
+    if (partners.length < 4) {
+      return {
+        teamALow: null, teamBLow: null,
+        teamAHigh: null, teamBHigh: null,
+        teamAMatchPts: 0, teamBMatchPts: 0,
+        teamAMult: 1, teamBMult: 1,
+        teamAPts: 0, teamBPts: 0,
+      };
+    }
+    const info1 = getPlayerHoleInfo(h, partners[0]);
+    const info2 = getPlayerHoleInfo(h, partners[1]);
+    const info3 = getPlayerHoleInfo(h, partners[2]);
+    const info4 = getPlayerHoleInfo(h, partners[3]);
+
+    const s1 = info1.score !== null ? info1.netScore : null;
+    const s2 = info2.score !== null ? info2.netScore : null;
+    const s3 = info3.score !== null ? info3.netScore : null;
+    const s4 = info4.score !== null ? info4.netScore : null;
+
+    if (s1 === null || s2 === null || s3 === null || s4 === null) {
+      return {
+        teamALow: null, teamBLow: null,
+        teamAHigh: null, teamBHigh: null,
+        teamAMatchPts: 0, teamBMatchPts: 0,
+        teamAMult: 1, teamBMult: 1,
+        teamAPts: 0, teamBPts: 0,
+      };
+    }
+
+    const teamALow = Math.min(s1, s2);
+    const teamBLow = Math.min(s3, s4);
+    const teamAHigh = Math.max(s1, s2);
+    const teamBHigh = Math.max(s3, s4);
+
+    const { teamAPoints, teamBPoints } = calculateHighLowPoints(s1, s2, s3, s4);
+
+    const baseMultA = Math.max(getBaseMultiplier(info1.score, h.par), getBaseMultiplier(info2.score, h.par));
+    const baseMultB = Math.max(getBaseMultiplier(info3.score, h.par), getBaseMultiplier(info4.score, h.par));
+
+    const teamASandys = (info1.sandy ? 1 : 0) + (info2.sandy ? 1 : 0);
+    const teamBSandys = (info3.sandy ? 1 : 0) + (info4.sandy ? 1 : 0);
+
+    const teamAMult = baseMultA + teamASandys;
+    const teamBMult = baseMultB + teamBSandys;
+
+    return {
+      teamALow, teamBLow,
+      teamAHigh, teamBHigh,
+      teamAMatchPts: teamAPoints, teamBMatchPts: teamBPoints,
+      teamAMult, teamBMult,
+      teamAPts: teamAPoints * teamAMult,
+      teamBPts: teamBPoints * teamBMult,
+    };
+  };
+
+  const getHighLowSummary = (holesList: any[]) => {
+    let teamAMatchPtsTotal = 0;
+    let teamBMatchPtsTotal = 0;
+    let teamASandysTotal = 0;
+    let teamBSandysTotal = 0;
+    let teamAPtsTotal = 0;
+    let teamBPtsTotal = 0;
+
+    holesList.forEach((h) => {
+      const stats = getHighLowHoleStats(h);
+      teamAMatchPtsTotal += stats.teamAMatchPts;
+      teamBMatchPtsTotal += stats.teamBMatchPts;
+
+      const info1 = getPlayerHoleInfo(h, partners[0]);
+      const info2 = getPlayerHoleInfo(h, partners[1]);
+      const info3 = getPlayerHoleInfo(h, partners[2]);
+      const info4 = getPlayerHoleInfo(h, partners[3]);
+
+      teamASandysTotal += (info1.sandy ? 1 : 0) + (info2.sandy ? 1 : 0);
+      teamBSandysTotal += (info3.sandy ? 1 : 0) + (info4.sandy ? 1 : 0);
+
+      teamAPtsTotal += stats.teamAPts;
+      teamBPtsTotal += stats.teamBPts;
+    });
+
+    let teamANormalized = 0;
+    let teamBNormalized = 0;
+    if (teamAPtsTotal > teamBPtsTotal) {
+      teamANormalized = teamAPtsTotal - teamBPtsTotal;
+    } else if (teamBPtsTotal > teamAPtsTotal) {
+      teamBNormalized = teamBPtsTotal - teamAPtsTotal;
+    }
+
+    return {
+      teamAMatchPts: teamAMatchPtsTotal,
+      teamBMatchPts: teamBMatchPtsTotal,
+      teamASandys: teamASandysTotal,
+      teamBSandys: teamBSandysTotal,
+      teamAPts: teamAPtsTotal,
+      teamBPts: teamBPtsTotal,
+      teamANormalized,
+      teamBNormalized,
+    };
+  };
+
+  const calculateSplitSixPoints = (s1: number | null, s2: number | null, s3: number | null) => {
+    if (s1 === null || s2 === null || s3 === null) return [0, 0, 0];
+
+    const players = [
+      { id: 'p1', score: s1 },
+      { id: 'p2', score: s2 },
+      { id: 'p3', score: s3 },
+    ];
+
+    players.sort((a, b) => a.score - b.score);
+
+    const points: Record<string, number> = { p1: 0, p2: 0, p3: 0 };
+
+    if (players[0].score === players[1].score && players[1].score === players[2].score) {
+      points[players[0].id] = 2;
+      points[players[1].id] = 2;
+      points[players[2].id] = 2;
+    } else if (players[0].score === players[1].score) {
+      points[players[0].id] = 3;
+      points[players[1].id] = 3;
+      points[players[2].id] = 0;
+    } else if (players[1].score === players[2].score) {
+      points[players[0].id] = 4;
+      points[players[1].id] = 1;
+      points[players[2].id] = 1;
+    } else {
+      points[players[0].id] = 4;
+      points[players[1].id] = 2;
+      points[players[2].id] = 0;
+    }
+
+    return [points.p1, points.p2, points.p3];
+  };
+
+  const getSplitSixSummary = (holesList: any[]) => {
+    let p1Total = 0;
+    let p2Total = 0;
+    let p3Total = 0;
+
+    holesList.forEach((h) => {
+      const info1 = getPlayerHoleInfo(h, partners[0]);
+      const info2 = getPlayerHoleInfo(h, partners[1]);
+      const info3 = getPlayerHoleInfo(h, partners[2]);
+
+      const s1 = info1.score !== null ? info1.netScore : null;
+      const s2 = info2.score !== null ? info2.netScore : null;
+      const s3 = info3.score !== null ? info3.netScore : null;
+
+      const [pts1, pts2, pts3] = calculateSplitSixPoints(s1, s2, s3);
+      p1Total += pts1;
+      p2Total += pts2;
+      p3Total += pts3;
+    });
+
+    return { p1Total, p2Total, p3Total };
   };
 
   const handleScoreChange = (holeId: number, text: string) => {
@@ -656,336 +1019,640 @@ const ScoreCard: React.FC = () => {
       <ScrollView
         className="px-4 flex-1"
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}
       >
         {/* 0th child → sticky table header */}
-        <View
-          className="z-10 shadow-sm"
-          style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
-        >
+        {partners.length < 2 ? (
           <View
-            className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+            className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
             style={{
-              borderBottomWidth: 1,
-              borderBottomColor: isDark ? "#444" : "#ddd",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
             }}
           >
-            {[
-              "Hole",
-              "Stroke\nIndex",
-              "Yards",
-              "Par",
-              "Score",
-              "Net",
-              ...(isStableford ? ["Pts"] : []),
-            ].map((h) => (
-              <Text
-                key={h}
-                className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}
-                style={{ textAlignVertical: "center" }}
+            <View
+              className="z-10 shadow-sm"
+              style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+            >
+              <View
+                className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: isDark ? "#444" : "#ddd",
+                }}
               >
-                {h}
-              </Text>
-            ))}
-          </View>
-        </View>
+                {[
+                  "Hole",
+                  "Stroke\nIndex",
+                  "Yards",
+                  "Par",
+                  "Score",
+                  "Net",
+                  ...(isStableford ? ["Pts"] : []),
+                ].map((h) => (
+                  <Text
+                    key={h}
+                    className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}
+                    style={{ textAlignVertical: "center" }}
+                  >
+                    {h}
+                  </Text>
+                ))}
+              </View>
+            </View>
 
-        {/* Table rows — inline subtotals */}
-        <View
-          className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl mb-3 overflow-hidden`}
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          {/* ── Front 9 holes ── */}
-          {displayFront9 && (
-            <>
-              {front9.map((h, index) => (
-                <View
-                  key={index}
-                  className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
-                >
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.holeNumber}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.strokeIndex}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.yardage}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.par}
-                  </Text>
+            {displayFront9 && (
+              <>
+                {front9.map((h, index) => (
                   <View
-                    className="flex-1 items-center justify-center relative"
-                    pointerEvents="none"
+                    key={index}
+                    className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                   >
-                    {renderScoreIndicator(
-                      h.score ?? null,
-                      h.par,
-                      isDark,
-                      textScores[h.holeId] || "",
-                    )}
-                    <TextInput
-                      style={{
-                        width: 50,
-                        height: 36,
-                        backgroundColor: isDark
-                          ? "rgba(255,255,255,0.05)"
-                          : "rgba(139,195,74,0.05)",
-                        color: isDark ? "#fff" : "#000",
-                        textAlign: "center",
-                        borderRadius: 8,
-                        paddingVertical: 0,
-                        paddingHorizontal: 0,
-                        zIndex: 10,
-                        fontWeight: "bold",
-                        fontSize: 14,
-                      }}
-                      editable={false}
-                      value={textScores[h.holeId] || ""}
-                      placeholder="-"
-                      placeholderTextColor={isDark ? "#666" : "#999"}
-                    />
-                  </View>
-                  <Text
-                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                  >
-                    {textScores[h.holeId] !== "" &&
-                    textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) >= 0
-                      ? h.netScore
-                      : "-"}
-                  </Text>
-                  {isStableford && (
                     <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
+                      {h.holeNumber}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.strokeIndex}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.yardage}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
+                      {h.par}
+                    </Text>
+                    <View
+                      className="flex-1 items-center justify-center relative"
+                      pointerEvents="none"
+                    >
+                      {renderScoreIndicator(
+                        h.score ?? null,
+                        h.par,
+                        isDark,
+                        textScores[h.holeId] || "",
+                      )}
+                      <TextInput
+                        style={{
+                          width: 50,
+                          height: 36,
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(139,195,74,0.05)",
+                          color: isDark ? "#fff" : "#000",
+                          textAlign: "center",
+                          borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 0,
+                          zIndex: 10,
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        }}
+                        editable={false}
+                        value={textScores[h.holeId] || ""}
+                        placeholder="-"
+                        placeholderTextColor={isDark ? "#666" : "#999"}
+                      />
+                    </View>
+                    <Text
+                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                     >
                       {textScores[h.holeId] !== "" &&
                       textScores[h.holeId] !== undefined &&
                       parseInt(textScores[h.holeId]) >= 0
-                        ? h.stablefordPoints || 0
+                        ? h.netScore
                         : "-"}
                     </Text>
-                  )}
-                </View>
-              ))}
-
-              {/* ── Front 9 Subtotal ── */}
-              <View
-                className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(139,195,74,0.12)"
-                    : "rgba(139,195,74,0.08)",
-                }}
-              >
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  Front 9
-                </Text>
-                <Text className="flex-1" />
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumYardage(front9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumPar(front9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  {sumScores(front9) === 0 ? "-" : sumScores(front9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  {sumNet(front9) === 0 ? "-" : sumNet(front9)}
-                </Text>
-                {isStableford && (
-                  <Text
-                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
-                  >
-                    {sumPts(front9)}
-                  </Text>
-                )}
-              </View>
-            </>
-          )}
-
-          {/* ── Back 9 holes ── */}
-          {displayBack9 && back9.length > 0 && (
-            <>
-              {back9.map((h, index) => (
-                <View
-                  key={index}
-                  className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
-                >
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.holeNumber}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.strokeIndex}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.yardage}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.par}
-                  </Text>
-                  <View
-                    className="flex-1 items-center justify-center relative"
-                    pointerEvents="none"
-                  >
-                    {renderScoreIndicator(
-                      h.score ?? null,
-                      h.par,
-                      isDark,
-                      textScores[h.holeId] || "",
+                    {isStableford && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      >
+                        {textScores[h.holeId] !== "" &&
+                        textScores[h.holeId] !== undefined &&
+                        parseInt(textScores[h.holeId]) >= 0
+                          ? h.stablefordPoints || 0
+                          : "-"}
+                      </Text>
                     )}
-                    <TextInput
-                      style={{
-                        width: 50,
-                        height: 36,
-                        backgroundColor: isDark
-                          ? "rgba(255,255,255,0.05)"
-                          : "rgba(139,195,74,0.05)",
-                        color: isDark ? "#fff" : "#000",
-                        textAlign: "center",
-                        borderRadius: 8,
-                        paddingVertical: 0,
-                        paddingHorizontal: 0,
-                        zIndex: 10,
-                        fontWeight: "bold",
-                        fontSize: 14,
-                      }}
-                      editable={false}
-                      value={textScores[h.holeId] || ""}
-                      placeholder="-"
-                      placeholderTextColor={isDark ? "#666" : "#999"}
-                    />
                   </View>
+                ))}
+
+                <View
+                  className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(139,195,74,0.12)"
+                      : "rgba(139,195,74,0.08)",
+                  }}
+                >
                   <Text
-                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                   >
-                    {textScores[h.holeId] !== "" &&
-                    textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) >= 0
-                      ? h.netScore
-                      : "-"}
+                    Front 9
+                  </Text>
+                  <Text className="flex-1" />
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumYardage(front9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumPar(front9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
+                  >
+                    {sumScores(front9) === 0 ? "-" : sumScores(front9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                  >
+                    {sumNet(front9) === 0 ? "-" : sumNet(front9)}
                   </Text>
                   {isStableford && (
                     <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                     >
-                      {textScores[h.holeId] !== "" &&
-                      textScores[h.holeId] !== undefined &&
-                      parseInt(textScores[h.holeId]) >= 0
-                        ? h.stablefordPoints || 0
-                        : "-"}
+                      {sumPts(front9)}
                     </Text>
                   )}
                 </View>
-              ))}
-
-              {/* ── Back 9 Subtotal ── */}
-              <View
-                className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(139,195,74,0.12)"
-                    : "rgba(139,195,74,0.08)",
-                }}
-              >
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  Back 9
-                </Text>
-                <Text className="flex-1" />
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumYardage(back9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumPar(back9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
-                >
-                  {sumScores(back9) === 0 ? "-" : sumScores(back9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                >
-                  {sumNet(back9) === 0 ? "-" : sumNet(back9)}
-                </Text>
-                {isStableford && (
-                  <Text
-                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
-                  >
-                    {sumPts(back9)}
-                  </Text>
-                )}
-              </View>
-            </>
-          )}
-
-          {/* ── Grand Total ── */}
-          <View className="flex-row p-3" style={{ backgroundColor: "#8BC34A" }}>
-            <Text className="flex-1 text-center font-black text-xs text-white">
-              Grand Total
-            </Text>
-            <Text className="flex-1" />
-            <Text className="flex-1 text-center font-bold text-xs text-white">
-              {sumYardage(displayedHoles)}
-            </Text>
-            <Text className="flex-1 text-center font-bold text-xs text-white">
-              {sumPar(displayedHoles)}
-            </Text>
-            <Text className="flex-1 text-center font-black text-xs text-white">
-              {sumScores(displayedHoles) === 0
-                ? "0"
-                : sumScores(displayedHoles)}
-            </Text>
-            <Text className="flex-1 text-center font-black text-xs text-white">
-              {sumNet(displayedHoles) === 0 ? "0" : sumNet(displayedHoles)}
-            </Text>
-            {isStableford && (
-              <Text className="flex-1 text-center font-black text-xs text-white">
-                {sumPts(displayedHoles)}
-              </Text>
+              </>
             )}
+
+            {displayBack9 && back9.length > 0 && (
+              <>
+                {back9.map((h, index) => (
+                  <View
+                    key={index}
+                    className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
+                  >
+                    <Text
+                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
+                      {h.holeNumber}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.strokeIndex}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.yardage}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
+                      {h.par}
+                    </Text>
+                    <View
+                      className="flex-1 items-center justify-center relative"
+                      pointerEvents="none"
+                    >
+                      {renderScoreIndicator(
+                        h.score ?? null,
+                        h.par,
+                        isDark,
+                        textScores[h.holeId] || "",
+                      )}
+                      <TextInput
+                        style={{
+                          width: 50,
+                          height: 36,
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(139,195,74,0.05)",
+                          color: isDark ? "#fff" : "#000",
+                          textAlign: "center",
+                          borderRadius: 8,
+                          paddingVertical: 0,
+                          paddingHorizontal: 0,
+                          zIndex: 10,
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        }}
+                        editable={false}
+                        value={textScores[h.holeId] || ""}
+                        placeholder="-"
+                        placeholderTextColor={isDark ? "#666" : "#999"}
+                      />
+                    </View>
+                    <Text
+                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    >
+                      {textScores[h.holeId] !== "" &&
+                      textScores[h.holeId] !== undefined &&
+                      parseInt(textScores[h.holeId]) >= 0
+                        ? h.netScore
+                        : "-"}
+                    </Text>
+                    {isStableford && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                      >
+                        {textScores[h.holeId] !== "" &&
+                        textScores[h.holeId] !== undefined &&
+                        parseInt(textScores[h.holeId]) >= 0
+                          ? h.stablefordPoints || 0
+                          : "-"}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+
+                <View
+                  className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(139,195,74,0.12)"
+                      : "rgba(139,195,74,0.08)",
+                  }}
+                >
+                  <Text
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                  >
+                    Back 9
+                  </Text>
+                  <Text className="flex-1" />
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumYardage(back9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumPar(back9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
+                  >
+                    {sumScores(back9) === 0 ? "-" : sumScores(back9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                  >
+                    {sumNet(back9) === 0 ? "-" : sumNet(back9)}
+                  </Text>
+                  {isStableford && (
+                    <Text
+                      className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
+                    >
+                      {sumPts(back9)}
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
+
+            <View className="flex-row p-3" style={{ backgroundColor: "#8BC34A" }}>
+              <Text className="flex-1 text-center font-black text-xs text-white">
+                Grand Total
+              </Text>
+              <Text className="flex-1" />
+              <Text className="flex-1 text-center font-bold text-xs text-white">
+                {sumYardage(displayedHoles)}
+              </Text>
+              <Text className="flex-1 text-center font-bold text-xs text-white">
+                {sumPar(displayedHoles)}
+              </Text>
+              <Text className="flex-1 text-center font-black text-xs text-white">
+                {sumScores(displayedHoles) === 0
+                  ? "0"
+                  : sumScores(displayedHoles)}
+              </Text>
+              <Text className="flex-1 text-center font-black text-xs text-white">
+                {sumNet(displayedHoles) === 0 ? "0" : sumNet(displayedHoles)}
+              </Text>
+              {isStableford && (
+                <Text className="flex-1 text-center font-black text-xs text-white">
+                  {sumPts(displayedHoles)}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
+        ) : (
+          (() => {
+            const totalWidth = 50 + 55 + 60 + 50 + partners.length * 95;
+            return (
+              <ScrollView horizontal={true} showsHorizontalScrollIndicator={true}>
+                <VStack style={{ width: totalWidth, borderRadius: 14, overflow: 'hidden' }}>
+                  {/* Headers */}
+                  <HStack style={{ paddingVertical: 12, backgroundColor: isDark ? "rgba(38,38,38,0.8)" : "rgba(243,244,246,0.8)", borderBottomWidth: 1, borderColor: isDark ? "#444" : "#ddd" }}>
+                    <ThemedText style={{ width: 50, textAlign: 'center', fontWeight: '700', fontSize: 12 }}>Hole</ThemedText>
+                    <ThemedText style={{ width: 55, textAlign: 'center', fontWeight: '700', fontSize: 12 }}>SI</ThemedText>
+                    <ThemedText style={{ width: 60, textAlign: 'center', fontWeight: '700', fontSize: 12 }}>Yards</ThemedText>
+                    <ThemedText style={{ width: 50, textAlign: 'center', fontWeight: '700', fontSize: 12 }}>Par</ThemedText>
+                    {partners.map((p, idx) => {
+                      let badgeText = "";
+                      let badgeColor = "";
+                      if (isHighLow) {
+                        badgeText = idx < 2 ? "Team A" : "Team B";
+                        badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                      }
+                      return (
+                        <VStack key={p.playerId} style={{ width: 95, alignItems: 'center' }}>
+                          <ThemedText numberOfLines={1} style={{ textAlign: 'center', fontWeight: '700', fontSize: 12 }}>
+                            {p.isPrimary ? "You" : p.name}
+                          </ThemedText>
+                          {badgeText !== "" && (
+                            <View style={{ backgroundColor: badgeColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1, marginTop: 2 }}>
+                              <Text style={{ color: '#fff', fontSize: 8, fontWeight: '700' }}>{badgeText}</Text>
+                            </View>
+                          )}
+                        </VStack>
+                      );
+                    })}
+                  </HStack>
+
+                  {/* Rows */}
+                  {holes.map((h: any, index: number) => {
+                    let s6Pts: number[] = [];
+                    if (isSplit6 && partners.length >= 3) {
+                      const s1 = getPlayerHoleInfo(h, partners[0]).netScore;
+                      const s2 = getPlayerHoleInfo(h, partners[1]).netScore;
+                      const s3 = getPlayerHoleInfo(h, partners[2]).netScore;
+                      s6Pts = calculateSplitSixPoints(s1, s2, s3);
+                    }
+                    
+                    let hlStats: any = null;
+                    if (isHighLow && partners.length >= 4) {
+                      hlStats = getHighLowHoleStats(h);
+                    }
+
+                    return (
+                      <View key={h.holeId}>
+                        <HStack style={{ paddingVertical: 8, alignItems: 'center', borderBottomWidth: 0.5, borderColor: isDark ? '#1e293b' : '#e2e8f0', backgroundColor: isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)' }}>
+                          <ThemedText style={{ width: 50, textAlign: 'center' }}>{h.holeNumber}</ThemedText>
+                          <ThemedText style={{ width: 55, textAlign: 'center' }}>{h.strokeIndex}</ThemedText>
+                          <ThemedText style={{ width: 60, textAlign: 'center', color: '#888' }}>{h.yardage}</ThemedText>
+                          <ThemedText style={{ width: 50, textAlign: 'center' }}>{h.par}</ThemedText>
+                          
+                          {partners.map((p, pIndex) => {
+                            const info = getPlayerHoleInfo(h, p);
+                            return (
+                              <View key={p.playerId} style={{ width: 95, alignItems: 'center', justifyContent: 'center' }}>
+                                <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
+                                  {renderScoreIndicator(info.score, h.par, isDark, info.score !== null ? String(info.score) : "")}
+                                  <Text
+                                    style={{
+                                      color: isDark ? "#fff" : "#000",
+                                      fontWeight: "700",
+                                      fontSize: 13,
+                                      textAlign: "center",
+                                      zIndex: 10,
+                                    }}
+                                  >
+                                    {info.score !== null ? info.score : "-"}
+                                  </Text>
+                                </View>
+
+                                <HStack style={{ alignItems: 'center', gap: 4, marginTop: 4 }}>
+                                  {info.sandy && (
+                                    <View
+                                      style={{
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: 9,
+                                        backgroundColor: "#2e7d32",
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}
+                                    >
+                                      <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#fff' }}>
+                                        S
+                                      </Text>
+                                    </View>
+                                  )}
+                                  
+                                  {isSplit6 && s6Pts.length > 0 && info.score !== null && (
+                                    <Text style={{ fontSize: 9, color: '#84cc16', fontWeight: 'bold' }}>
+                                      P:{s6Pts[pIndex]}
+                                    </Text>
+                                  )}
+
+                                  {isHighLow && hlStats && info.score !== null && (
+                                    <Text style={{ fontSize: 9, color: pIndex < 2 ? '#38bdf8' : '#f43f5e', fontWeight: 'bold' }}>
+                                      N:{info.netScore}
+                                    </Text>
+                                  )}
+
+                                  {!isSplit6 && !isHighLow && info.score !== null && (
+                                    <>
+                                      {isStableford ? (
+                                        <Text style={{ fontSize: 9, color: '#f59e0b', fontWeight: 'bold' }}>
+                                          P:{info.stablefordPoints ?? 0}
+                                        </Text>
+                                      ) : (
+                                        <Text style={{ fontSize: 9, color: '#84cc16', fontWeight: 'bold' }}>
+                                          N:{info.netScore}
+                                        </Text>
+                                      )}
+                                    </>
+                                  )}
+                                </HStack>
+                              </View>
+                            );
+                          })}
+                        </HStack>
+
+                        {/* FRONT 9 TOTALS ROW */}
+                        {h.holeNumber === 9 && (
+                          <HStack style={{ backgroundColor: isDark ? "rgba(38,38,38,0.8)" : "rgba(243,244,246,0.8)", paddingVertical: 10, borderTopWidth: 1, borderColor: isDark ? "#444" : "#ddd" }}>
+                            <ThemedText style={{ width: 50, fontWeight: '700', textAlign: 'center' }}>F9</ThemedText>
+                            <ThemedText style={{ width: 55, textAlign: 'center' }} />
+                            <ThemedText style={{ width: 60, textAlign: 'center' }}>{sumYardage(front9)}</ThemedText>
+                            <ThemedText style={{ width: 50, textAlign: 'center' }}>{sumPar(front9)}</ThemedText>
+                            {partners.map((p) => {
+                              const t = getPlayerTotals(front9, p);
+                              return (
+                                <VStack key={p.playerId} style={{ width: 95, alignItems: 'center' }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#fff' : '#000' }}>
+                                    G:{t.gross}
+                                  </Text>
+                                  {isStableford ? (
+                                    <Text style={{ fontSize: 9, color: '#f59e0b' }}>Pts:{t.stableford}</Text>
+                                  ) : (
+                                    <Text style={{ fontSize: 9, color: '#84cc16' }}>Net:{t.net}</Text>
+                                  )}
+                                </VStack>
+                              );
+                            })}
+                          </HStack>
+                        )}
+
+                        {/* BACK 9 TOTALS ROW */}
+                        {h.holeNumber === 18 && (
+                          <HStack style={{ backgroundColor: isDark ? "rgba(38,38,38,0.8)" : "rgba(243,244,246,0.8)", paddingVertical: 10, borderTopWidth: 1, borderColor: isDark ? "#444" : "#ddd" }}>
+                            <ThemedText style={{ width: 50, fontWeight: '700', textAlign: 'center' }}>B9</ThemedText>
+                            <ThemedText style={{ width: 55, textAlign: 'center' }} />
+                            <ThemedText style={{ width: 60, textAlign: 'center' }}>{sumYardage(back9)}</ThemedText>
+                            <ThemedText style={{ width: 50, textAlign: 'center' }}>{sumPar(back9)}</ThemedText>
+                            {partners.map((p) => {
+                              const t = getPlayerTotals(back9, p);
+                              return (
+                                <VStack key={p.playerId} style={{ width: 95, alignItems: 'center' }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#fff' : '#000' }}>
+                                    G:{t.gross}
+                                  </Text>
+                                  {isStableford ? (
+                                    <Text style={{ fontSize: 9, color: '#f59e0b' }}>Pts:{t.stableford}</Text>
+                                  ) : (
+                                    <Text style={{ fontSize: 9, color: '#84cc16' }}>Net:{t.net}</Text>
+                                  )}
+                                </VStack>
+                              );
+                            })}
+                          </HStack>
+                        )}
+                      </View>
+                    );
+                  })}
+
+                  {/* GRAND TOTAL */}
+                  <HStack
+                    style={{
+                      marginTop: 10,
+                      paddingVertical: 14,
+                      backgroundColor: "#8BC34A",
+                      borderRadius: 12,
+                    }}
+                  >
+                    <ThemedText style={{ width: 50, textAlign: 'center', color: '#fff', fontWeight: '700' }}>Total</ThemedText>
+                    <ThemedText style={{ width: 55, textAlign: 'center' }} />
+                    <ThemedText style={{ width: 60, textAlign: 'center', color: '#fff' }}>{sumYardage(holes)}</ThemedText>
+                    <ThemedText style={{ width: 50, textAlign: 'center', color: '#fff' }}>{sumPar(holes)}</ThemedText>
+                    {partners.map((p) => {
+                      const t = getPlayerTotals(holes, p);
+                      return (
+                        <VStack key={p.playerId} style={{ width: 95, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#fff' }}>
+                            G:{t.gross}
+                          </Text>
+                          {isStableford ? (
+                            <Text style={{ fontSize: 9, color: '#fff', fontWeight: '600' }}>Pts:{t.stableford}</Text>
+                          ) : (
+                            <Text style={{ fontSize: 9, color: '#fff', fontWeight: '600' }}>Net:{t.net}</Text>
+                          )}
+                        </VStack>
+                      );
+                    })}
+                  </HStack>
+                </VStack>
+              </ScrollView>
+            );
+          })()
+        )}
+
+        {/* 🔹 SUMMARY TABLES FOR SIDE GAMES */}
+        {partners.length >= 2 && (
+          <VStack style={{ marginTop: 20, padding: 16, backgroundColor: isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)", borderRadius: 14, borderWidth: 1, borderColor: isDark ? "#334155" : "#e2e8f0", gap: 12, marginBottom: 10 }}>
+            {isSplit6 && partners.length >= 3 && (
+              <>
+                <ThemedText style={{ fontSize: 15, fontWeight: "700", marginBottom: 4 }}>
+                  Split Six (9-Points) Summary
+                </ThemedText>
+                {(() => {
+                  const summary = getSplitSixSummary(holes);
+                  return (
+                    <VStack style={{ gap: 8 }}>
+                      <HStack style={{ justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 0.5, borderColor: isDark ? '#444' : '#ddd' }}>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13 }}>Player</ThemedText>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13 }}>Total Points</ThemedText>
+                      </HStack>
+                      {partners.slice(0, 3).map((p, idx) => {
+                        const totalPts = idx === 0 ? summary.p1Total : (idx === 1 ? summary.p2Total : summary.p3Total);
+                        return (
+                          <HStack key={p.playerId} style={{ justifyContent: 'space-between', paddingVertical: 4 }}>
+                            <ThemedText style={{ fontSize: 13 }}>{p.isPrimary ? "You" : p.name}</ThemedText>
+                            <ThemedText style={{ fontSize: 13, fontWeight: '700', color: '#84cc16' }}>{totalPts} pts</ThemedText>
+                          </HStack>
+                        );
+                      })}
+                    </VStack>
+                  );
+                })()}
+              </>
+            )}
+
+            {isHighLow && partners.length >= 4 && (
+              <>
+                <ThemedText style={{ fontSize: 15, fontWeight: "700", marginBottom: 4 }}>
+                  High-Low Side Game Summary
+                </ThemedText>
+                {(() => {
+                  const summary = getHighLowSummary(holes);
+                  return (
+                    <VStack style={{ gap: 10 }}>
+                      {/* Table Header */}
+                      <HStack style={{ justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 0.5, borderColor: isDark ? '#444' : '#ddd' }}>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13, flex: 2 }}>Team</ThemedText>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13, flex: 1, textAlign: 'center' }}>Match Pts</ThemedText>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13, flex: 1, textAlign: 'center' }}>Sandys</ThemedText>
+                        <ThemedText style={{ fontWeight: '600', fontSize: 13, flex: 1.2, textAlign: 'right' }}>Total Points</ThemedText>
+                      </HStack>
+
+                      {/* Team A */}
+                      <HStack style={{ justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 }}>
+                        <VStack style={{ flex: 2 }}>
+                          <ThemedText style={{ fontSize: 13, fontWeight: '600' }}>Team A</ThemedText>
+                          <ThemedText style={{ fontSize: 10, color: '#888' }}>{partners[0].name} & {partners[1].name}</ThemedText>
+                        </VStack>
+                        <ThemedText style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>{summary.teamAMatchPts}</ThemedText>
+                        <ThemedText style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>{summary.teamASandys}</ThemedText>
+                        <ThemedText style={{ fontSize: 13, flex: 1.2, textAlign: 'right', fontWeight: '700', color: '#0284c7' }}>{summary.teamAPts} pts</ThemedText>
+                      </HStack>
+
+                      {/* Team B */}
+                      <HStack style={{ justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 }}>
+                        <VStack style={{ flex: 2 }}>
+                          <ThemedText style={{ fontSize: 13, fontWeight: '600' }}>Team B</ThemedText>
+                          <ThemedText style={{ fontSize: 10, color: '#888' }}>{partners[2].name} & {partners[3].name}</ThemedText>
+                        </VStack>
+                        <ThemedText style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>{summary.teamBMatchPts}</ThemedText>
+                        <ThemedText style={{ fontSize: 13, flex: 1, textAlign: 'center' }}>{summary.teamBSandys}</ThemedText>
+                        <ThemedText style={{ fontSize: 13, flex: 1.2, textAlign: 'right', fontWeight: '700', color: '#e11d48' }}>{summary.teamBPts} pts</ThemedText>
+                      </HStack>
+
+                      {/* Divider */}
+                      <View style={{ height: 0.5, backgroundColor: isDark ? '#444' : '#ddd', marginVertical: 4 }} />
+
+                      {/* Normalized Standings */}
+                      <VStack style={{ gap: 4 }}>
+                        <ThemedText style={{ fontSize: 12, fontWeight: '700' }}>Standings (Normalized):</ThemedText>
+                        {summary.teamANormalized > 0 ? (
+                          <ThemedText style={{ fontSize: 13, color: '#0284c7', fontWeight: '600' }}>
+                            Team A wins by {summary.teamANormalized} points!
+                          </ThemedText>
+                        ) : summary.teamBNormalized > 0 ? (
+                          <ThemedText style={{ fontSize: 13, color: '#e11d48', fontWeight: '600' }}>
+                            Team B wins by {summary.teamBNormalized} points!
+                          </ThemedText>
+                        ) : (
+                          <ThemedText style={{ fontSize: 13, color: '#888', fontWeight: '600' }}>
+                            The match is a tie!
+                          </ThemedText>
+                        )}
+                      </VStack>
+                    </VStack>
+                  );
+                })()}
+              </>
+            )}
+          </VStack>
+        )}
 
 
 
@@ -1003,28 +1670,32 @@ const ScoreCard: React.FC = () => {
           };
 
           holes.forEach((h) => {
-            const s = h.score;
-            if (
-              s == null ||
-              s < 0 ||
-              textScores[h.holeId] === "" ||
-              textScores[h.holeId] === undefined
-            )
-              return;
+            const playersToCount = partners.length >= 2 ? partners : [{ isPrimary: true, playerId: 'p1' }];
+            playersToCount.forEach((p) => {
+              let s: number | null = null;
+              if (partners.length >= 2) {
+                const info = getPlayerHoleInfo(h, p);
+                s = info.score;
+              } else {
+                s = h.score;
+              }
 
-            if (s === 1) scoreCounts.holeInOne++;
-            else if (s === 0) scoreCounts.albatross++;
-            else {
-              const diff = s - h.par;
-              if (diff === -3) scoreCounts.albatross++;
-              else if (diff === -2) scoreCounts.eagle++;
-              else if (diff === -1) scoreCounts.birdie++;
-              else if (diff === 0) scoreCounts.par++;
-              else if (diff === 1) scoreCounts.bogey++;
-              else if (diff === 2) scoreCounts.doubleBogey++;
-              else if (diff === 3) scoreCounts.tripleBogey++;
-              else if (diff >= 4) scoreCounts.quadBogey++;
-            }
+              if (s == null || s < 0) return;
+
+              if (s === 1) scoreCounts.holeInOne++;
+              else if (s === 0) scoreCounts.albatross++;
+              else {
+                const diff = s - h.par;
+                if (diff === -3) scoreCounts.albatross++;
+                else if (diff === -2) scoreCounts.eagle++;
+                else if (diff === -1) scoreCounts.birdie++;
+                else if (diff === 0) scoreCounts.par++;
+                else if (diff === 1) scoreCounts.bogey++;
+                else if (diff === 2) scoreCounts.doubleBogey++;
+                else if (diff === 3) scoreCounts.tripleBogey++;
+                else if (diff >= 4) scoreCounts.quadBogey++;
+              }
+            });
           });
 
           const InnerCount = ({
