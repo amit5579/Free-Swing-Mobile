@@ -231,6 +231,13 @@ export type ScorecardHole = {
   scoringType?: string;
   isTournament?: boolean;
   userId?: number;
+  handicap?: number;
+  companionScoresJson?: string | null;
+  companionSandysJson?: string | null;
+  playingPartnersJson?: string | null;
+  playingGroupRoundKey?: string | null;
+  PlayingGroupRoundKey?: string | null;
+  matchScoringType?: string | null;
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
