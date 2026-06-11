@@ -25,6 +25,7 @@ import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import {
   calculateSplitSixPoints,
+  computeHighLowSummary,
   computeHighLowHolePoints,
 } from "@/utils/scoringEngine";
 import { useRouter } from "expo-router";
@@ -73,6 +74,48 @@ const ScoreCard: React.FC = () => {
   const [isNassauBest, setIsNassauBest] = useState(false);
   const [isNassauCombined, setIsNassauCombined] = useState(false);
   const isNassau = isNassauBest || isNassauCombined;
+  
+  const getScoringLabel = () => {
+    if (holes.length === 0) return "";
+    const isExcluded = holes.some((h: any) => h.isExcluded);
+    const mode = (
+      (holes[0] as any).scoringType ||
+      (holes[0] as any).scoring_type ||
+      ""
+    ).toLowerCase();
+    const isGross = mode.includes("gross");
+
+    if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
+    if (!isExcluded && isStableford) return "Stableford";
+    if (
+      !isExcluded &&
+      !isStableford &&
+      !isSplit6 &&
+      !isHighLow &&
+      !isGross &&
+      !isNassau
+    )
+      return "Net Score • Include Par 3";
+    if (isExcluded && isStableford) return "Stableford • Exclude Par 3";
+    if (
+      isGross &&
+      !isExcluded &&
+      !isStableford &&
+      !isSplit6 &&
+      !isHighLow &&
+      !isNassau
+    )
+      return "Gross Score";
+    if (!isExcluded && !isStableford && isSplit6 && !isHighLow)
+      return "Split Six";
+    if (!isExcluded && !isStableford && !isSplit6 && isHighLow)
+      return "High-Low";
+    if (isNassauBest) return "Nassau • Best Score";
+    if (isNassauCombined) return "Nassau • Combined Score";
+    return "";
+  };
+
+ 
 
   useEffect(() => {
     const fetchScorecard = async () => {
@@ -114,6 +157,8 @@ const ScoreCard: React.FC = () => {
           const mode = (
             (firstHole as any).scoringType ||
             (firstHole as any).scoring_type ||
+            (firstHole as any).matchScoringType ||
+            (firstHole as any).match_scoring_type ||
             ""
           ).toLowerCase();
           const pLength = parsedPartners.length;
@@ -167,7 +212,7 @@ const ScoreCard: React.FC = () => {
             };
             fetchCompanionHandicaps();
           }
-        }
+        }        
       } catch (err) {
         setError("Failed to load scorecard.");
       } finally {
@@ -267,6 +312,18 @@ const ScoreCard: React.FC = () => {
     };
   };
 
+  const getBadgeMultiplier = (score: number | null, par: number, sandy: boolean) => {
+    if (score === null || score <= 0) return sandy ? 1 : 0;
+    let base = 0;
+    if (score === 1) base = 25;
+    else {
+      const diff = score - par;
+      if (diff <= -2) base = 5;
+      else if (diff === -1) base = 2;
+    }
+    return base + (sandy ? 1 : 0);
+  };
+
   const getPlayerTotals = (holesList: any[], partner: any) => {
     let gross = 0;
     let net = 0;
@@ -297,137 +354,6 @@ const ScoreCard: React.FC = () => {
     if (diff <= -2) return 5;
     if (diff === -1) return 2;
     return 1;
-  };
-
-  const calculateHighLowPoints = (
-    s1: number | null,
-    s2: number | null,
-    s3: number | null,
-    s4: number | null,
-  ) => {
-    const { teamA, teamB } = computeHighLowHolePoints([s1, s2], [s3, s4]);
-    return { teamAPoints: teamA, teamBPoints: teamB };
-  };
-
-  const getHighLowHoleStats = (h: any) => {
-    if (partners.length < 4) {
-      return {
-        teamALow: null,
-        teamBLow: null,
-        teamAHigh: null,
-        teamBHigh: null,
-        teamAMatchPts: 0,
-        teamBMatchPts: 0,
-        teamAMult: 1,
-        teamBMult: 1,
-        teamAPts: 0,
-        teamBPts: 0,
-      };
-    }
-    const info1 = getPlayerHoleInfo(h, partners[0]);
-    const info2 = getPlayerHoleInfo(h, partners[1]);
-    const info3 = getPlayerHoleInfo(h, partners[2]);
-    const info4 = getPlayerHoleInfo(h, partners[3]);
-
-    const s1 = info1.score !== null ? info1.netScore : null;
-    const s2 = info2.score !== null ? info2.netScore : null;
-    const s3 = info3.score !== null ? info3.netScore : null;
-    const s4 = info4.score !== null ? info4.netScore : null;
-
-    if (s1 === null || s2 === null || s3 === null || s4 === null) {
-      return {
-        teamALow: null,
-        teamBLow: null,
-        teamAHigh: null,
-        teamBHigh: null,
-        teamAMatchPts: 0,
-        teamBMatchPts: 0,
-        teamAMult: 1,
-        teamBMult: 1,
-        teamAPts: 0,
-        teamBPts: 0,
-      };
-    }
-
-    const teamALow = Math.min(s1, s2);
-    const teamBLow = Math.min(s3, s4);
-    const teamAHigh = Math.max(s1, s2);
-    const teamBHigh = Math.max(s3, s4);
-
-    const { teamAPoints, teamBPoints } = calculateHighLowPoints(s1, s2, s3, s4);
-
-    const baseMultA = Math.max(
-      getBaseMultiplier(info1.score, h.par),
-      getBaseMultiplier(info2.score, h.par),
-    );
-    const baseMultB = Math.max(
-      getBaseMultiplier(info3.score, h.par),
-      getBaseMultiplier(info4.score, h.par),
-    );
-
-    const teamASandys = (info1.sandy ? 1 : 0) + (info2.sandy ? 1 : 0);
-    const teamBSandys = (info3.sandy ? 1 : 0) + (info4.sandy ? 1 : 0);
-
-    const teamAMult = baseMultA + teamASandys;
-    const teamBMult = baseMultB + teamBSandys;
-
-    return {
-      teamALow,
-      teamBLow,
-      teamAHigh,
-      teamBHigh,
-      teamAMatchPts: teamAPoints,
-      teamBMatchPts: teamBPoints,
-      teamAMult,
-      teamBMult,
-      teamAPts: teamAPoints * teamAMult,
-      teamBPts: teamBPoints * teamBMult,
-    };
-  };
-
-  const getHighLowSummary = (holesList: any[]) => {
-    let teamAMatchPtsTotal = 0;
-    let teamBMatchPtsTotal = 0;
-    let teamASandysTotal = 0;
-    let teamBSandysTotal = 0;
-    let teamAPtsTotal = 0;
-    let teamBPtsTotal = 0;
-
-    holesList.forEach((h) => {
-      const stats = getHighLowHoleStats(h);
-      teamAMatchPtsTotal += stats.teamAMatchPts;
-      teamBMatchPtsTotal += stats.teamBMatchPts;
-
-      const info1 = getPlayerHoleInfo(h, partners[0]);
-      const info2 = getPlayerHoleInfo(h, partners[1]);
-      const info3 = getPlayerHoleInfo(h, partners[2]);
-      const info4 = getPlayerHoleInfo(h, partners[3]);
-
-      teamASandysTotal += (info1.sandy ? 1 : 0) + (info2.sandy ? 1 : 0);
-      teamBSandysTotal += (info3.sandy ? 1 : 0) + (info4.sandy ? 1 : 0);
-
-      teamAPtsTotal += stats.teamAPts;
-      teamBPtsTotal += stats.teamBPts;
-    });
-
-    let teamANormalized = 0;
-    let teamBNormalized = 0;
-    if (teamAPtsTotal > teamBPtsTotal) {
-      teamANormalized = teamAPtsTotal - teamBPtsTotal;
-    } else if (teamBPtsTotal > teamAPtsTotal) {
-      teamBNormalized = teamBPtsTotal - teamAPtsTotal;
-    }
-
-    return {
-      teamAMatchPts: teamAMatchPtsTotal,
-      teamBMatchPts: teamBMatchPtsTotal,
-      teamASandys: teamASandysTotal,
-      teamBSandys: teamBSandysTotal,
-      teamAPts: teamAPtsTotal,
-      teamBPts: teamBPtsTotal,
-      teamANormalized,
-      teamBNormalized,
-    };
   };
 
   const handleScoreChange = (holeId: number, text: string) => {
@@ -834,88 +760,98 @@ const ScoreCard: React.FC = () => {
       </ThemedView>
     );
   }
+
+  const renderHeader = () => {
+    return (
+      <View
+        className="px-4 pb-4"
+        style={{
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          paddingTop: Math.max(insets.top, 16),
+        }}
+      >
+        {/* Top Row */}
+        <View className="flex-row items-center">
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-11 h-11 rounded-full items-center justify-center mr-3"
+            style={{
+              backgroundColor: "#8BC34A",
+            }}
+          >
+            <Ionicons name="arrow-back" size={22} color="#FFF" />
+          </TouchableOpacity>
+
+          {/* Title Section */}
+          <View className="flex-1">
+            <Text
+              numberOfLines={1}
+              className={`text-xl font-bold ${
+                isDark ? "text-white" : "text-black"
+              }`}
+            >
+              {courseName || "Scorecard"}
+            </Text>
+
+            <View className="flex-row items-center mt-1 flex-wrap">
+              {getScoringLabel() !== "" && (
+                <Text
+                  className={`text-xs mr-3 ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {getScoringLabel()}
+                </Text>
+              )}
+
+              {username && (
+                <View className="flex-row items-center">
+                  <Ionicons
+                    name="person-outline"
+                    size={12}
+                    color={isDark ? "#9CA3AF" : "#6B7280"}
+                  />
+                  <Text
+                    className={`text-xs ml-1 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {username}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Handicap Badge */}
+          <View
+            className="px-3 py-2 rounded-full"
+            style={{
+              backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
+            }}
+          >
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: "#8BC34A" }}
+            >
+              HCP {displayHandicap}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <ThemedView
       style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F9FAFB" }}
     >
       <Watermark />
 
-      <View
-        className="px-4 pb-2 z-10 w-full"
-        style={{
-          backgroundColor: isDark ? "#161618" : "#FFFFFF",
-          paddingTop: Math.max(insets.top, 16),
-        }}
-      >
-        <View className="flex-row items-center mb-4 mt-0">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="bg-[#8BC34A] rounded-full p-2 w-10 h-10 items-center justify-center mr-3"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <View className="flex-row items-center justify-between">
-              <Text
-                className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}
-              >
-                {courseName ? courseName : "Scorecard"}
-                {isStableford && (
-                  <Text
-                    style={{ fontWeight: "400", fontSize: 13, opacity: 0.8 }}
-                  >
-                    {" "}
-                    (Stableford)
-                  </Text>
-                )}
-              </Text>
-              <View
-                className="flex-row items-center px-2 py-1 rounded-lg"
-                style={{
-                  backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
-                  borderWidth: 1,
-                  borderColor: "#8BC34A",
-                }}
-              >
-                <Ionicons name="person-outline" size={12} color="#8BC34A" />
-                <Text
-                  className="text-xs font-bold ml-1"
-                  style={{ color: "#8BC34A" }}
-                >
-                  Handicap: {displayHandicap}
-                </Text>
-              </View>
-            </View>
-            {username && (
-              <View className="flex-row items-center mt-1">
-                <Ionicons
-                  name="person-outline"
-                  size={12}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
-                />
-                <Text
-                  className={`text-xs ml-1 font-bold ${isDark ? "text-gray-400" : "text-gray-700"}`}
-                >
-                  {username}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
+      {renderHeader()}
 
-      <ScrollView
-        className="px-4 flex-1"
-        showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}
-      >
+      <ScrollView className="px-4 flex-1" showsVerticalScrollIndicator={false}>
         {partners.length < 2 ? (
           <View
             className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
@@ -1242,7 +1178,8 @@ const ScoreCard: React.FC = () => {
               60 +
               50 +
               partners.length * 95 +
-              (isSplit6 && partners.length >= 3 ? 3 * 95 : 0);
+              (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
+              (isHighLow && partners.length >= 4 ? 2 * 95 : 0);
             return (
               <ScrollView
                 horizontal={true}
@@ -1352,8 +1289,10 @@ const ScoreCard: React.FC = () => {
                         </VStack>
                       );
                     })}
-                    {isSplit6 &&
-                      partners.length >= 3 &&
+                    {isSplit6 
+                    &&
+                      partners.length >= 4 
+                      &&
                       partners.slice(0, 3).map((p) => (
                         <VStack
                           key={`pts-hdr-${p.playerId}`}
@@ -1375,6 +1314,96 @@ const ScoreCard: React.FC = () => {
                           </ThemedText>
                         </VStack>
                       ))}
+                      {partners.map((p, idx) => {
+                      let badgeText = "";
+                      let badgeColor = "";
+                      if (isHighLow) {
+                        badgeText = idx < 2 ? "Team A" : "Team B";
+                        badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                      }
+                      return (
+                        <VStack
+                          key={p.playerId}
+                          style={{ width: 95, alignItems: "center" }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 12,
+                            }}
+                          >
+                            {p.isPrimary ? "You" : p.name}
+                          </ThemedText>
+                          {badgeText !== "" && (
+                            <View
+                              style={{
+                                backgroundColor: badgeColor,
+                                borderRadius: 4,
+                                paddingHorizontal: 6,
+                                paddingVertical: 1,
+                                marginTop: 2,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: "#fff",
+                                  fontSize: 8,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {badgeText}
+                              </Text>
+                            </View>
+                          )}
+                        </VStack>
+                      );
+                    })}
+                    {isHighLow
+                     && partners.length >= 4 
+                     && (
+                      <>
+                        <VStack
+                          style={{
+                            width: 95,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 12,
+                              color: "#0284c7",
+                            }}
+                          >
+                            Team A Pts
+                          </ThemedText>
+                        </VStack>
+                        <VStack
+                          style={{
+                            width: 95,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 12,
+                              color: "#e11d48",
+                            }}
+                          >
+                            Team B Pts
+                          </ThemedText>
+                        </VStack>
+                      </>
+                    )}
                   </HStack>
 
                   {/* Rows */}
@@ -1385,11 +1414,6 @@ const ScoreCard: React.FC = () => {
                       const s2 = getPlayerHoleInfo(h, partners[1]).score;
                       const s3 = getPlayerHoleInfo(h, partners[2]).score;
                       s6Pts = calculateSplitSixPoints(s1, s2, s3);
-                    }
-
-                    let hlStats: any = null;
-                    if (isHighLow && partners.length >= 4) {
-                      hlStats = getHighLowHoleStats(h);
                     }
 
                     return (
@@ -1501,7 +1525,7 @@ const ScoreCard: React.FC = () => {
                                     </View>
                                   )}
 
-                                  {isSplit6 &&
+                                  {/* {isSplit6 &&
                                     s6Pts.length > 0 &&
                                     info.score !== null && (
                                       <Text
@@ -1513,50 +1537,75 @@ const ScoreCard: React.FC = () => {
                                       >
                                         P:{s6Pts[pIndex]}
                                       </Text>
-                                    )}
+                                    )} */}
 
-                                  {isHighLow &&
-                                    hlStats &&
-                                    info.score !== null && (
-                                      <Text
-                                        style={{
-                                          fontSize: 9,
-                                          color:
-                                            pIndex < 2 ? "#38bdf8" : "#f43f5e",
-                                          fontWeight: "bold",
-                                        }}
-                                      >
-                                        N:{info.netScore}
-                                      </Text>
-                                    )}
-
-                                  {!isSplit6 &&
-                                    !isHighLow &&
-                                    info.score !== null && (
-                                      <>
-                                        {isStableford ? (
-                                          <Text
-                                            style={{
-                                              fontSize: 9,
-                                              color: "#f59e0b",
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            P:{info.stablefordPoints ?? 0}
-                                          </Text>
-                                        ) : (
-                                          <Text
-                                            style={{
-                                              fontSize: 9,
-                                              color: "#84cc16",
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            N:{info.netScore}
-                                          </Text>
-                                        )}
-                                      </>
-                                    )}
+                                    {isHighLow &&
+                                      partners.length >= 4 &&
+                                      info.score !== null &&
+                                      (() => {
+                                        const badgeVal = getBadgeMultiplier(
+                                          info.score,
+                                          h.par,
+                                          info.sandy
+                                        );
+                                        if (badgeVal > 0) {
+                                          return (
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                color: "#f59e0b",
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              {badgeVal}x
+                                            </Text>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+                                      
+                                    {/* {isHighLow &&
+                                      partners.length >= 4 &&
+                                      info.score !== null && (
+                                        <Text
+                                          style={{
+                                            fontSize: 9,
+                                            color:
+                                              pIndex < 2 ? "#38bdf8" : "#f43f5e",
+                                            fontWeight: "bold",
+                                          }}
+                                        >
+                                          N:{info.netScore}
+                                        </Text>
+                                      )}
+  
+                                    {!isSplit6 &&
+                                      !isHighLow &&
+                                      info.score !== null && (
+                                        <>
+                                          {isStableford ? (
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                color: "#f59e0b",
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              P:{info.stablefordPoints ?? 0}
+                                            </Text>
+                                          ) : (
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                color: "#84cc16",
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              N:{info.netScore}
+                                            </Text>
+                                          )}
+                                        </>
+                                      )} */}
                                 </HStack>
                               </View>
                             );
@@ -1613,6 +1662,67 @@ const ScoreCard: React.FC = () => {
                                 </View>
                               ));
                             })()}
+
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                const i1 = getPlayerHoleInfo(h, partners[0]);
+                                const i2 = getPlayerHoleInfo(h, partners[1]);
+                                const i3 = getPlayerHoleInfo(h, partners[2]);
+                                const i4 = getPlayerHoleInfo(h, partners[3]);
+                                const hasScore =
+                                  i1.score !== null &&
+                                  i2.score !== null &&
+                                  i3.score !== null &&
+                                  i4.score !== null;
+                                const pts = hasScore
+                                  ? computeHighLowHolePoints(
+                                      [i1.score, i2.score],
+                                      [i3.score, i4.score],
+                                    )
+                                  : { teamA: "-", teamB: "-" };
+
+                                return (
+                                  <>
+                                    <View
+                                      key={`hl-a-${h.holeId}`}
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: "#0284c7",
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {pts.teamA}
+                                      </ThemedText>
+                                    </View>
+                                    <View
+                                      key={`hl-b-${h.holeId}`}
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: "#e11d48",
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {pts.teamB}
+                                      </ThemedText>
+                                    </View>
+                                  </>
+                                );
+                              })()}
                         </HStack>
 
                         {/* FRONT 9 TOTALS ROW */}
@@ -1658,14 +1768,14 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <Text
                                     style={{
-                                      fontSize: 10,
+                                      fontSize: 13,
                                       fontWeight: "700",
                                       color: isDark ? "#fff" : "#000",
                                     }}
                                   >
-                                    G:{t.gross}
+                                    {t.gross}
                                   </Text>
-                                  {isStableford ? (
+                                  {/* {isStableford ? (
                                     <Text
                                       style={{ fontSize: 9, color: "#f59e0b" }}
                                     >
@@ -1677,7 +1787,7 @@ const ScoreCard: React.FC = () => {
                                     >
                                       Net:{t.net}
                                     </Text>
-                                  )}
+                                  )} */}
                                 </VStack>
                               );
                             })}
@@ -1748,6 +1858,48 @@ const ScoreCard: React.FC = () => {
                                   </VStack>
                                 ));
                               })()}
+
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                let f9PtsA = 0;
+                                let f9PtsB = 0;
+                                let hasAnyF9 = false;
+                                front9.forEach((fh) => {
+                                  const i1 = getPlayerHoleInfo(fh, partners[0]);
+                                  const i2 = getPlayerHoleInfo(fh, partners[1]);
+                                  const i3 = getPlayerHoleInfo(fh, partners[2]);
+                                  const i4 = getPlayerHoleInfo(fh, partners[3]);
+                                  if (
+                                    i1.score !== null &&
+                                    i2.score !== null &&
+                                    i3.score !== null &&
+                                    i4.score !== null
+                                  ) {
+                                    const pts = computeHighLowHolePoints(
+                                      [i1.score, i2.score],
+                                      [i3.score, i4.score],
+                                    );
+                                    f9PtsA += pts.teamA;
+                                    f9PtsB += pts.teamB;
+                                    hasAnyF9 = true;
+                                  }
+                                });
+                                return (
+                                  <>
+                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                        {hasAnyF9 ? f9PtsA : "-"}
+                                      </Text>
+                                    </VStack>
+                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                        {hasAnyF9 ? f9PtsB : "-"}
+                                      </Text>
+                                    </VStack>
+                                  </>
+                                );
+                              })()}
                           </HStack>
                         )}
 
@@ -1794,14 +1946,14 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <Text
                                     style={{
-                                      fontSize: 10,
+                                      fontSize: 13,
                                       fontWeight: "700",
                                       color: isDark ? "#fff" : "#000",
                                     }}
                                   >
-                                    G:{t.gross}
+                                    {t.gross}
                                   </Text>
-                                  {isStableford ? (
+                                  {/* {isStableford ? (
                                     <Text
                                       style={{ fontSize: 9, color: "#f59e0b" }}
                                     >
@@ -1813,7 +1965,7 @@ const ScoreCard: React.FC = () => {
                                     >
                                       Net:{t.net}
                                     </Text>
-                                  )}
+                                  )} */}
                                 </VStack>
                               );
                             })}
@@ -1884,6 +2036,48 @@ const ScoreCard: React.FC = () => {
                                   </VStack>
                                 ));
                               })()}
+
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                let b9PtsA = 0;
+                                let b9PtsB = 0;
+                                let hasAnyB9 = false;
+                                back9.forEach((fh) => {
+                                  const i1 = getPlayerHoleInfo(fh, partners[0]);
+                                  const i2 = getPlayerHoleInfo(fh, partners[1]);
+                                  const i3 = getPlayerHoleInfo(fh, partners[2]);
+                                  const i4 = getPlayerHoleInfo(fh, partners[3]);
+                                  if (
+                                    i1.score !== null &&
+                                    i2.score !== null &&
+                                    i3.score !== null &&
+                                    i4.score !== null
+                                  ) {
+                                    const pts = computeHighLowHolePoints(
+                                      [i1.score, i2.score],
+                                      [i3.score, i4.score],
+                                    );
+                                    b9PtsA += pts.teamA;
+                                    b9PtsB += pts.teamB;
+                                    hasAnyB9 = true;
+                                  }
+                                });
+                                return (
+                                  <>
+                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                        {hasAnyB9 ? b9PtsA : "-"}
+                                      </Text>
+                                    </VStack>
+                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                        {hasAnyB9 ? b9PtsB : "-"}
+                                      </Text>
+                                    </VStack>
+                                  </>
+                                );
+                              })()}
                           </HStack>
                         )}
                       </View>
@@ -1929,14 +2123,14 @@ const ScoreCard: React.FC = () => {
                         >
                           <Text
                             style={{
-                              fontSize: 10,
-                              fontWeight: "800",
+                              width: 50,
+                              textAlign: "center",
                               color: "#fff",
                             }}
                           >
-                            G:{t.gross}
+                            {t.gross}
                           </Text>
-                          {isStableford ? (
+                          {/* {isStableford ? (
                             <Text
                               style={{
                                 fontSize: 9,
@@ -1956,7 +2150,7 @@ const ScoreCard: React.FC = () => {
                             >
                               Net:{t.net}
                             </Text>
-                          )}
+                          )} */}
                         </VStack>
                       );
                     })}
@@ -2000,6 +2194,48 @@ const ScoreCard: React.FC = () => {
                             </Text>
                           </VStack>
                         ));
+                      })()}
+
+                    {isHighLow &&
+                      partners.length >= 4 &&
+                      (() => {
+                        let totalPtsA = 0;
+                        let totalPtsB = 0;
+                        let hasAnyTotal = false;
+                        holes.forEach((fh) => {
+                          const i1 = getPlayerHoleInfo(fh, partners[0]);
+                          const i2 = getPlayerHoleInfo(fh, partners[1]);
+                          const i3 = getPlayerHoleInfo(fh, partners[2]);
+                          const i4 = getPlayerHoleInfo(fh, partners[3]);
+                          if (
+                            i1.score !== null &&
+                            i2.score !== null &&
+                            i3.score !== null &&
+                            i4.score !== null
+                          ) {
+                            const pts = computeHighLowHolePoints(
+                              [i1.score, i2.score],
+                              [i3.score, i4.score],
+                            );
+                            totalPtsA += pts.teamA;
+                            totalPtsB += pts.teamB;
+                            hasAnyTotal = true;
+                          }
+                        });
+                        return (
+                          <>
+                            <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                              <Text style={{ fontSize: 10, fontWeight: "800", color: "#fff" }}>
+                                {hasAnyTotal ? totalPtsA : "-"}
+                              </Text>
+                            </VStack>
+                            <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
+                              <Text style={{ fontSize: 10, fontWeight: "800", color: "#fff" }}>
+                                {hasAnyTotal ? totalPtsB : "-"}
+                              </Text>
+                            </VStack>
+                          </>
+                        );
                       })()}
                   </HStack>
                 </VStack>
@@ -2112,188 +2348,216 @@ const ScoreCard: React.FC = () => {
             {isHighLow && partners.length >= 4 && (
               <>
                 <ThemedText
-                  style={{ fontSize: 15, fontWeight: "700", marginBottom: 4 }}
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "700",
+                    marginBottom: 8,
+                  }}
                 >
-                  High-Low Side Game Summary
+                  High-Low Summary
                 </ThemedText>
                 {(() => {
-                  const summary = getHighLowSummary(holes);
+                  const allData = holes.map((h: any) => {
+                    const i1 = getPlayerHoleInfo(h, partners[0]);
+                    const i2 = getPlayerHoleInfo(h, partners[1]);
+                    const i3 = getPlayerHoleInfo(h, partners[2]);
+                    const i4 = getPlayerHoleInfo(h, partners[3]);
+                    return {
+                      holeNumber: h.holeNumber,
+                      par: h.par,
+                      teamAScores: [i1.score, i2.score] as [
+                        number | null,
+                        number | null,
+                      ],
+                      teamBScores: [i3.score, i4.score] as [
+                        number | null,
+                        number | null,
+                      ],
+                      teamARawScores: [i1.score, i2.score] as [
+                        number | null,
+                        number | null,
+                      ],
+                      teamBRawScores: [i3.score, i4.score] as [
+                        number | null,
+                        number | null,
+                      ],
+                      teamASandys: [i1.sandy, i2.sandy] as [boolean, boolean],
+                      teamBSandys: [i3.sandy, i4.sandy] as [boolean, boolean],
+                    };
+                  });
+                  const s = computeHighLowSummary(allData);
+                  const teamAName = `${partners[0].isPrimary ? "You" : partners[0].name} & ${partners[1].name}`;
+                  const teamBName = `${partners[2].name} & ${partners[3].name}`;
+                  const margin = Math.abs(
+                    s.finalScore.teamA - s.finalScore.teamB,
+                  );
+                  const hasBack = holes.some((h: any) => h.holeNumber > 9);
+                  const Row = ({
+                    label,
+                    a,
+                    b,
+                    bold = false,
+                  }: {
+                    label: string;
+                    a: number | string;
+                    b: number | string;
+                    bold?: boolean;
+                  }) => (
+                    <HStack
+                      style={{
+                        justifyContent: "space-between",
+                        paddingVertical: 5,
+                        borderBottomWidth: 0.5,
+                        borderColor: isDark ? "#333" : "#e5e5e5",
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 12,
+                          fontWeight: bold ? "700" : "500",
+                          flex: 1,
+                        }}
+                      >
+                        {label}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontSize: 12,
+                          fontWeight: bold ? "700" : "500",
+                          width: 70,
+                          textAlign: "center",
+                          color: bold ? "#84cc16" : "#38bdf8",
+                        }}
+                      >
+                        {a}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontSize: 12,
+                          fontWeight: bold ? "700" : "500",
+                          width: 70,
+                          textAlign: "center",
+                          color: bold ? "#84cc16" : "#f43f5e",
+                        }}
+                      >
+                        {b}
+                      </ThemedText>
+                    </HStack>
+                  );
+
                   return (
-                    <VStack style={{ gap: 10 }}>
-                      {/* Table Header */}
+                    <VStack>
                       <HStack
                         style={{
                           justifyContent: "space-between",
                           paddingVertical: 6,
-                          borderBottomWidth: 0.5,
+                          borderBottomWidth: 1,
                           borderColor: isDark ? "#444" : "#ddd",
                         }}
                       >
                         <ThemedText
-                          style={{ fontWeight: "600", fontSize: 13, flex: 2 }}
-                        >
-                          Team
-                        </ThemedText>
-                        <ThemedText
                           style={{
-                            fontWeight: "600",
-                            fontSize: 13,
-                            flex: 1,
-                            textAlign: "center",
-                          }}
-                        >
-                          Match Pts
-                        </ThemedText>
-                        <ThemedText
-                          style={{
-                            fontWeight: "600",
-                            fontSize: 13,
-                            flex: 1,
-                            textAlign: "center",
-                          }}
-                        >
-                          Sandys
-                        </ThemedText>
-                        <ThemedText
-                          style={{
-                            fontWeight: "600",
-                            fontSize: 13,
-                            flex: 1.2,
-                            textAlign: "right",
-                          }}
-                        >
-                          Total Points
-                        </ThemedText>
-                      </HStack>
-
-                      {/* Team A */}
-                      <HStack
-                        style={{
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          paddingVertical: 4,
-                        }}
-                      >
-                        <VStack style={{ flex: 2 }}>
-                          <ThemedText
-                            style={{ fontSize: 13, fontWeight: "600" }}
-                          >
-                            Team A
-                          </ThemedText>
-                          <ThemedText style={{ fontSize: 10, color: "#888" }}>
-                            {partners[0].name} & {partners[1].name}
-                          </ThemedText>
-                        </VStack>
-                        <ThemedText
-                          style={{ fontSize: 13, flex: 1, textAlign: "center" }}
-                        >
-                          {summary.teamAMatchPts}
-                        </ThemedText>
-                        <ThemedText
-                          style={{ fontSize: 13, flex: 1, textAlign: "center" }}
-                        >
-                          {summary.teamASandys}
-                        </ThemedText>
-                        <ThemedText
-                          style={{
-                            fontSize: 13,
-                            flex: 1.2,
-                            textAlign: "right",
                             fontWeight: "700",
-                            color: "#0284c7",
+                            fontSize: 12,
+                            flex: 1,
                           }}
                         >
-                          {summary.teamAPts} pts
-                        </ThemedText>
-                      </HStack>
-
-                      {/* Team B */}
-                      <HStack
-                        style={{
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          paddingVertical: 4,
-                        }}
-                      >
-                        <VStack style={{ flex: 2 }}>
-                          <ThemedText
-                            style={{ fontSize: 13, fontWeight: "600" }}
-                          >
-                            Team B
-                          </ThemedText>
-                          <ThemedText style={{ fontSize: 10, color: "#888" }}>
-                            {partners[2].name} & {partners[3].name}
-                          </ThemedText>
-                        </VStack>
-                        <ThemedText
-                          style={{ fontSize: 13, flex: 1, textAlign: "center" }}
-                        >
-                          {summary.teamBMatchPts}
-                        </ThemedText>
-                        <ThemedText
-                          style={{ fontSize: 13, flex: 1, textAlign: "center" }}
-                        >
-                          {summary.teamBSandys}
+                          Row
                         </ThemedText>
                         <ThemedText
                           style={{
-                            fontSize: 13,
-                            flex: 1.2,
-                            textAlign: "right",
                             fontWeight: "700",
-                            color: "#e11d48",
+                            fontSize: 11,
+                            width: 70,
+                            textAlign: "center",
+                            color: "#38bdf8",
                           }}
                         >
-                          {summary.teamBPts} pts
+                          Team A
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            fontWeight: "700",
+                            fontSize: 11,
+                            width: 70,
+                            textAlign: "center",
+                            color: "#f43f5e",
+                          }}
+                        >
+                          Team B
                         </ThemedText>
                       </HStack>
-
-                      {/* Divider */}
+                      <Row
+                        label="Front 9"
+                        a={s.front9MatchPts.teamA}
+                        b={s.front9MatchPts.teamB}
+                      />
+                      {hasBack && (
+                        <Row
+                          label="Back 9"
+                          a={s.back9MatchPts.teamA}
+                          b={s.back9MatchPts.teamB}
+                        />
+                      )}
+                      <Row
+                        label="Overall Match Pts"
+                        a={s.overallMatchPts.teamA}
+                        b={s.overallMatchPts.teamB}
+                        bold
+                      />
+                      <Row
+                        label="Patiala X"
+                        a={`${s.patialaX.teamA}x`}
+                        b={`${s.patialaX.teamB}x`}
+                      />
+                      <Row
+                        label="Final X Points"
+                        a={`${s.finalXPoints.teamA}x`}
+                        b={`${s.finalXPoints.teamB}x`}
+                      />
+                      <Row
+                        label="Final Score"
+                        a={s.finalScore.teamA}
+                        b={s.finalScore.teamB}
+                        bold
+                      />
                       <View
                         style={{
-                          height: 0.5,
-                          backgroundColor: isDark ? "#444" : "#ddd",
-                          marginVertical: 4,
+                          borderTopWidth: 0.5,
+                          borderColor: isDark ? "#444" : "#ddd",
+                          paddingTop: 10,
+                          alignItems: "center",
+                          marginTop: 6,
                         }}
-                      />
-
-                      {/* Normalized Standings */}
-                      <VStack style={{ gap: 4 }}>
-                        <ThemedText style={{ fontSize: 12, fontWeight: "700" }}>
-                          Standings (Normalized):
+                      >
+                        <ThemedText
+                          style={{
+                            fontSize: 11,
+                            color: isDark ? "#94a3b8" : "#64748b",
+                            marginBottom: 4,
+                          }}
+                        >
+                          Team A: {teamAName} • Team B: {teamBName}
                         </ThemedText>
-                        {summary.teamANormalized > 0 ? (
-                          <ThemedText
-                            style={{
-                              fontSize: 13,
-                              color: "#0284c7",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Team A wins by {summary.teamANormalized} points!
-                          </ThemedText>
-                        ) : summary.teamBNormalized > 0 ? (
-                          <ThemedText
-                            style={{
-                              fontSize: 13,
-                              color: "#e11d48",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Team B wins by {summary.teamBNormalized} points!
-                          </ThemedText>
-                        ) : (
-                          <ThemedText
-                            style={{
-                              fontSize: 13,
-                              color: "#888",
-                              fontWeight: "600",
-                            }}
-                          >
-                            The match is a tie!
-                          </ThemedText>
-                        )}
-                      </VStack>
+                        <ThemedText
+                          style={{
+                            fontWeight: "bold",
+                            color:
+                              s.finalScore.teamA > s.finalScore.teamB
+                                ? "#38bdf8"
+                                : s.finalScore.teamB > s.finalScore.teamA
+                                  ? "#f43f5e"
+                                  : "#84cc16",
+                            fontSize: 13,
+                          }}
+                        >
+                          {s.finalScore.teamA > s.finalScore.teamB
+                            ? `Team A Wins by ${margin}`
+                            : s.finalScore.teamB > s.finalScore.teamA
+                              ? `Team B Wins by ${margin}`
+                              : "Tie"}
+                        </ThemedText>
+                      </View>
                     </VStack>
                   );
                 })()}

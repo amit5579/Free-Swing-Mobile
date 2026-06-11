@@ -252,6 +252,8 @@ export function computeTotalPatialaX(
 // ─────────────────────────────────────────────
 
 export type HighLowFullSummary = {
+  front9MatchPts: { teamA: number; teamB: number };
+  back9MatchPts: { teamA: number; teamB: number };
   overallMatchPts: { teamA: number; teamB: number };
   patialaX: { teamA: number; teamB: number };
   finalXPoints: { teamA: number; teamB: number };
@@ -289,18 +291,18 @@ export function computeHighLowHolePoints(
     ...validA.map(score => ({ team: 'A', score })),
     ...validB.map(score => ({ team: 'B', score }))
   ];
-console.log("INPUT", teamAScores, teamBScores);
-console.log("ALL BEFORE", JSON.stringify(all));
+// console.log("INPUT", teamAScores, teamBScores);
+// console.log("ALL BEFORE", JSON.stringify(all));
   // Step 2: Determine the 2-point winner
   const lowest = Math.min(...all.map(b => b.score));
   const lowestBalls = all.filter(b => b.score === lowest);
   const aHasLowest = lowestBalls.some(b => b.team === 'A');
   const bHasLowest = lowestBalls.some(b => b.team === 'B');
 
-  console.log("LOWEST", lowest);
-console.log("LOWEST BALLS", lowestBalls);
-  console.log("aHasLowest",aHasLowest);
-  console.log("bHasLowest",bHasLowest);
+//   console.log("LOWEST", lowest);
+// console.log("LOWEST BALLS", lowestBalls);
+//   console.log("aHasLowest",aHasLowest);
+//   console.log("bHasLowest",bHasLowest);
   
 
   if (aHasLowest && !bHasLowest) {
@@ -341,7 +343,7 @@ console.log("LOWEST BALLS", lowestBalls);
     const idxB = all.findIndex(b => b.team === 'B' && b.score === lowest);
     all.splice(idxB, 1);
   }
-console.log("ALL AFTER STEP 2", JSON.stringify(all));
+// console.log("ALL AFTER STEP 2", JSON.stringify(all));
   // Step 3: Determine the 1-point winner from remaining balls
   if (all.length > 0) {
     const nextLowest = Math.min(...all.map(b => b.score));
@@ -354,14 +356,14 @@ console.log("ALL AFTER STEP 2", JSON.stringify(all));
     } else if (bHasNext && !aHasNext) {
       teamBPoints += 1;
     }
-    console.log("NEXT LOWEST", nextLowest);
-console.log("NEXT BALLS", nextBalls);
+//     console.log("NEXT LOWEST", nextLowest);
+// console.log("NEXT BALLS", nextBalls);
     // Tied between teams → nobody gets the point
   }
-console.log("RESULT", {
-  teamA: teamAPoints,
-  teamB: teamBPoints
-});
+// console.log("RESULT", {
+//   teamA: teamAPoints,
+//   teamB: teamBPoints
+// });
   return { teamA: teamAPoints, teamB: teamBPoints };
 }
 
@@ -383,33 +385,45 @@ export function computeHighLowSummary(
   // Overall Match Pts
   let teamAMatchTotal = 0;
   let teamBMatchTotal = 0;
+  let front9TeamA = 0;
+  let front9TeamB = 0;
+  let back9TeamA = 0;
+  let back9TeamB = 0;
 
- allHolesData.forEach((h) => {
-  console.log("================================");
-  console.log("HOLE", h.holeNumber);
+  allHolesData.forEach((h) => {
+    // console.log("================================");
+    // console.log("HOLE", h.holeNumber);
 
-  console.log("TEAM A NET", h.teamAScores);
-  console.log("TEAM B NET", h.teamBScores);
+    // console.log("TEAM A NET", h.teamAScores);
+    // console.log("TEAM B NET", h.teamBScores);
 
-  console.log("TEAM A RAW", h.teamARawScores);
-  console.log("TEAM B RAW", h.teamBRawScores);
+    // console.log("TEAM A RAW", h.teamARawScores);
+    // console.log("TEAM B RAW", h.teamBRawScores);
 
-  const pts = computeHighLowHolePoints(
-    h.teamAScores,
-    h.teamBScores
-  );
+    const pts = computeHighLowHolePoints(
+      h.teamAScores,
+      h.teamBScores
+    );
 
-  console.log("HIGH LOW POINTS", pts);
+    // console.log("HIGH LOW POINTS", pts);
 
-  teamAMatchTotal += pts.teamA;
-  teamBMatchTotal += pts.teamB;
-});
+    teamAMatchTotal += pts.teamA;
+    teamBMatchTotal += pts.teamB;
 
-console.log("================================");
-console.log("FINAL MATCH TOTALS", {
-  teamA: teamAMatchTotal,
-  teamB: teamBMatchTotal,
-});
+    if (h.holeNumber <= 9) {
+      front9TeamA += pts.teamA;
+      front9TeamB += pts.teamB;
+    } else {
+      back9TeamA += pts.teamA;
+      back9TeamB += pts.teamB;
+    }
+  });
+
+// console.log("================================");
+// console.log("FINAL MATCH TOTALS", {
+//   teamA: teamAMatchTotal,
+//   teamB: teamBMatchTotal,
+// });
 
   // Patiala X
   const patialaA = computeTotalPatialaX(
@@ -449,6 +463,8 @@ console.log("FINAL MATCH TOTALS", {
   const minMatchPts = Math.min(teamAMatchTotal, teamBMatchTotal);
 
   return {
+    front9MatchPts: { teamA: front9TeamA, teamB: front9TeamB },
+    back9MatchPts: { teamA: back9TeamA, teamB: back9TeamB },
     overallMatchPts: { teamA: teamAMatchTotal, teamB: teamBMatchTotal },
     patialaX: { teamA: patialaA, teamB: patialaB },
     finalXPoints: { teamA: rawTeamAX - minTeamX, teamB: rawTeamBX - minTeamX },

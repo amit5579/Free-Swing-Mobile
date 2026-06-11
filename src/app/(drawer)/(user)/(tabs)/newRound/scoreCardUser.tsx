@@ -4,6 +4,7 @@ import {
   computeNassauState,
   computeHighLowHolePoints,
   calculateSplitSixPoints,
+  computeHighLowSummary,
 } from "@/utils/scoringEngine";
 import { getScoreCardDetails } from "@/api/modules/newRound.api";
 import {
@@ -2189,14 +2190,14 @@ export default function ScoreCardUserPage() {
                                           >
                                             <Text
                                               style={{
-                                                fontSize: 10,
-                                                fontWeight: "700",
+                                                fontSize: 13,
+                                                fontWeight: "800",
                                                 color: isDark ? "#fff" : "#000",
                                               }}
                                             >
-                                              G:{t.gross}
+                                              {t.gross}
                                             </Text>
-                                            {isStableford ? (
+                                            {/* {isStableford ? (
                                               <Text
                                                 style={{
                                                   fontSize: 9,
@@ -2212,9 +2213,9 @@ export default function ScoreCardUserPage() {
                                                   color: "#84cc16",
                                                 }}
                                               >
-                                                Net:{t.net}
+                                                {t.net}
                                               </Text>
-                                            )}
+                                            )} */}
                                           </VStack>
                                         );
                                       })}
@@ -2408,14 +2409,14 @@ export default function ScoreCardUserPage() {
                                           >
                                             <Text
                                               style={{
-                                                fontSize: 10,
+                                                fontSize: 13,
                                                 fontWeight: "700",
                                                 color: isDark ? "#fff" : "#000",
                                               }}
                                             >
-                                              G:{t.gross}
+                                              {t.gross}
                                             </Text>
-                                            {isStableford ? (
+                                            {/* {isStableford ? (
                                               <Text
                                                 style={{
                                                   fontSize: 9,
@@ -2431,9 +2432,9 @@ export default function ScoreCardUserPage() {
                                                   color: "#84cc16",
                                                 }}
                                               >
-                                                Net:{t.net}
+                                                {t.net}
                                               </Text>
-                                            )}
+                                            )} */}
                                           </VStack>
                                         );
                                       })}
@@ -2620,14 +2621,14 @@ export default function ScoreCardUserPage() {
                                   >
                                     <Text
                                       style={{
-                                        fontSize: 10,
+                                        fontSize: 13,
                                         fontWeight: "800",
                                         color: "#fff",
                                       }}
                                     >
-                                      G:{t.gross}
+                                      {t.gross}
                                     </Text>
-                                    {isStableford ? (
+                                    {/* {isStableford ? (
                                       <Text
                                         style={{
                                           fontSize: 9,
@@ -2647,7 +2648,7 @@ export default function ScoreCardUserPage() {
                                       >
                                         Net:{t.net}
                                       </Text>
-                                    )}
+                                    )} */}
                                   </VStack>
                                 );
                               })}
@@ -3000,11 +3001,80 @@ export default function ScoreCardUserPage() {
                         {isHighLow &&
                           partners.length >= 4 &&
                           (() => {
-                            const totals = getHighLowTotals(processedHoles);
+                            const allData = processedHoles.map((h: any) => {
+                              const i1 = getPlayerHoleInfo(h, partners[0]);
+                              const i2 = getPlayerHoleInfo(h, partners[1]);
+                              const i3 = getPlayerHoleInfo(h, partners[2]);
+                              const i4 = getPlayerHoleInfo(h, partners[3]);
+                              return {
+                                holeNumber: h.holeNumber,
+                                par: h.par,
+                                teamAScores: [i1.score, i2.score] as [number | null, number | null],
+                                teamBScores: [i3.score, i4.score] as [number | null, number | null],
+                                teamARawScores: [i1.score, i2.score] as [number | null, number | null],
+                                teamBRawScores: [i3.score, i4.score] as [number | null, number | null],
+                                teamASandys: [i1.sandy, i2.sandy] as [boolean, boolean],
+                                teamBSandys: [i3.sandy, i4.sandy] as [boolean, boolean],
+                              };
+                            });
+                            const s = computeHighLowSummary(allData);
                             const teamAName = `${partners[0].isPrimary ? "You" : partners[0].name} & ${partners[1].name}`;
                             const teamBName = `${partners[2].name} & ${partners[3].name}`;
                             const margin = Math.abs(
-                              totals.teamAMatchPts - totals.teamBMatchPts,
+                              s.finalScore.teamA - s.finalScore.teamB,
+                            );
+                            const hasBack = processedHoles.some((h: any) => h.holeNumber > 9);
+                            const Row = ({
+                              label,
+                              a,
+                              b,
+                              bold = false,
+                            }: {
+                              label: string;
+                              a: number | string;
+                              b: number | string;
+                              bold?: boolean;
+                            }) => (
+                              <HStack
+                                style={{
+                                  justifyContent: "space-between",
+                                  paddingVertical: 5,
+                                  borderBottomWidth: 0.5,
+                                  borderColor: isDark ? "#333" : "#e5e5e5",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: bold ? "700" : "500",
+                                    flex: 1,
+                                  }}
+                                >
+                                  {label}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: bold ? "700" : "500",
+                                    width: 70,
+                                    textAlign: "center",
+                                    color: bold ? "#84cc16" : "#38bdf8",
+                                  }}
+                                >
+                                  {a}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: bold ? "700" : "500",
+                                    width: 70,
+                                    textAlign: "center",
+                                    color: bold ? "#84cc16" : "#f43f5e",
+                                  }}
+                                >
+                                  {b}
+                                </ThemedText>
+                              </HStack>
                             );
 
                             return (
@@ -3058,46 +3128,12 @@ export default function ScoreCardUserPage() {
                                     Team B
                                   </ThemedText>
                                 </HStack>
-                                <HStack
-                                  style={{
-                                    justifyContent: "space-between",
-                                    paddingVertical: 5,
-                                    borderBottomWidth: 0.5,
-                                    borderColor: isDark ? "#333" : "#e5e5e5",
-                                  }}
-                                >
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      flex: 1,
-                                    }}
-                                  >
-                                    Overall Match Pts
-                                  </ThemedText>
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      width: 70,
-                                      textAlign: "center",
-                                      color: "#38bdf8",
-                                    }}
-                                  >
-                                    {totals.teamAMatchPts}
-                                  </ThemedText>
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      width: 70,
-                                      textAlign: "center",
-                                      color: "#f43f5e",
-                                    }}
-                                  >
-                                    {totals.teamBMatchPts}
-                                  </ThemedText>
-                                </HStack>
+                                <Row label="Front 9" a={s.front9MatchPts.teamA} b={s.front9MatchPts.teamB} />
+                                {hasBack && <Row label="Back 9" a={s.back9MatchPts.teamA} b={s.back9MatchPts.teamB} />}
+                                <Row label="Overall Match Pts" a={s.overallMatchPts.teamA} b={s.overallMatchPts.teamB} bold />
+                                <Row label="Patiala X" a={`${s.patialaX.teamA}x`} b={`${s.patialaX.teamB}x`} />
+                                <Row label="Final X Points" a={`${s.finalXPoints.teamA}x`} b={`${s.finalXPoints.teamB}x`} />
+                                <Row label="Final Score" a={s.finalScore.teamA} b={s.finalScore.teamB} bold />
                                 <View
                                   style={{
                                     borderTopWidth: 0.5,
@@ -3119,15 +3155,20 @@ export default function ScoreCardUserPage() {
                                   <ThemedText
                                     style={{
                                       fontWeight: "bold",
-                                      color: "#84cc16",
+                                      color:
+                                        s.finalScore.teamA > s.finalScore.teamB
+                                          ? "#38bdf8"
+                                          : s.finalScore.teamB > s.finalScore.teamA
+                                            ? "#f43f5e"
+                                            : "#84cc16",
                                       fontSize: 13,
                                     }}
                                   >
-                                    {totals.teamAMatchPts > totals.teamBMatchPts
-                                      ? `Team A leads by ${margin}`
-                                      : totals.teamBMatchPts > totals.teamAMatchPts
-                                        ? `Team B leads by ${margin}`
-                                        : "The match is tied"}
+                                    {s.finalScore.teamA > s.finalScore.teamB
+                                      ? `Team A Wins by ${margin}`
+                                      : s.finalScore.teamB > s.finalScore.teamA
+                                        ? `Team B Wins by ${margin}`
+                                        : "Tie"}
                                   </ThemedText>
                                 </View>
                               </>

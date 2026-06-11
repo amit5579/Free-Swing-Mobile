@@ -74,6 +74,10 @@ export default function AdminProfile() {
   // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -435,22 +439,38 @@ export default function AdminProfile() {
                   name="currentPassword"
                   render={({ field: { onChange, value } }) => (
                     <View>
-                      <TextInput
-                        placeholder="Current Password"
-                        value={value}
-                        onChangeText={onChange}
-                        secureTextEntry
-                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                      <View
                         style={{
+                          flexDirection: "row",
+                          alignItems: "center",
                           borderWidth: 1,
                           borderColor: errors.currentPassword
                             ? "red"
                             : "#e5e5e5",
                           borderRadius: 10,
-                          padding: 12,
-                          color: isDark ? "#fff" : "#000",
+                          paddingHorizontal: 12,
                         }}
-                      />
+                      >
+                        <TextInput
+                          placeholder="Current Password"
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!showCurrentPassword}
+                          placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                          style={{
+                            flex: 1,
+                            paddingVertical: 12,
+                            color: isDark ? "#fff" : "#000",
+                          }}
+                        />
+                        <Pressable onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                          <Ionicons
+                            name={showCurrentPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color={isDark ? "#888" : "#9ca3af"}
+                          />
+                        </Pressable>
+                      </View>
 
                       {errors.currentPassword && (
                         <Text
@@ -468,20 +488,36 @@ export default function AdminProfile() {
                   name="newPassword"
                   render={({ field: { onChange, value } }) => (
                     <View>
-                      <TextInput
-                        placeholder="New Password"
-                        value={value}
-                        onChangeText={onChange}
-                        secureTextEntry
-                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                      <View
                         style={{
+                          flexDirection: "row",
+                          alignItems: "center",
                           borderWidth: 1,
                           borderColor: errors.newPassword ? "red" : "#e5e5e5",
                           borderRadius: 10,
-                          padding: 12,
-                          color: isDark ? "#fff" : "#000",
+                          paddingHorizontal: 12,
                         }}
-                      />
+                      >
+                        <TextInput
+                          placeholder="New Password"
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!showNewPassword}
+                          placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                          style={{
+                            flex: 1,
+                            paddingVertical: 12,
+                            color: isDark ? "#fff" : "#000",
+                          }}
+                        />
+                        <Pressable onPress={() => setShowNewPassword(!showNewPassword)}>
+                          <Ionicons
+                            name={showNewPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color={isDark ? "#888" : "#9ca3af"}
+                          />
+                        </Pressable>
+                      </View>
 
                       {errors.newPassword && (
                         <Text
@@ -499,22 +535,38 @@ export default function AdminProfile() {
                   name="confirmPassword"
                   render={({ field: { onChange, value } }) => (
                     <View>
-                      <TextInput
-                        placeholder="Confirm Password"
-                        value={value}
-                        onChangeText={onChange}
-                        secureTextEntry
-                        placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                      <View
                         style={{
+                          flexDirection: "row",
+                          alignItems: "center",
                           borderWidth: 1,
                           borderColor: errors.confirmPassword
                             ? "red"
                             : "#e5e5e5",
                           borderRadius: 10,
-                          padding: 12,
-                          color: isDark ? "#fff" : "#000",
+                          paddingHorizontal: 12,
                         }}
-                      />
+                      >
+                        <TextInput
+                          placeholder="Confirm Password"
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!showConfirmPassword}
+                          placeholderTextColor={isDark ? "#888" : "#9ca3af"}
+                          style={{
+                            flex: 1,
+                            paddingVertical: 12,
+                            color: isDark ? "#fff" : "#000",
+                          }}
+                        />
+                        <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                          <Ionicons
+                            name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color={isDark ? "#888" : "#9ca3af"}
+                          />
+                        </Pressable>
+                      </View>
 
                       {errors.confirmPassword && (
                         <Text
