@@ -1933,6 +1933,63 @@ export default function ResumeScorecard() {
           </>
         ) : (
           (() => {
+            const mode = isNassauBest ? "best" : "combined";
+            const teamAPartners =
+              partners.length >= 4 ? [partners[0], partners[1]] : [partners[0]];
+            const teamBPartners =
+              partners.length >= 4 ? [partners[2], partners[3]] : [partners[1]];
+
+            let ns: any = null;
+            if (isNassau && partners.length >= 2) {
+              const allData = holes.map((h: any) => {
+                const teamAInfos = teamAPartners.map((p: any) =>
+                  getPlayerHoleInfo(h, p),
+                );
+                const teamBInfos = teamBPartners.map((p: any) =>
+                  getPlayerHoleInfo(h, p),
+                );
+                return {
+                  holeNumber: h.holeNumber,
+                  par: h.par,
+                  teamANetScores: teamAInfos.map((i: any) =>
+                    i.score !== null ? i.netScore : null,
+                  ),
+                  teamBNetScores: teamBInfos.map((i: any) =>
+                    i.score !== null ? i.netScore : null,
+                  ),
+                  teamARawScores: teamAInfos.map((i: any) => i.score),
+                  teamBRawScores: teamBInfos.map((i: any) => i.score),
+                  teamASandys: teamAInfos.map((i: any) => i.sandy),
+                  teamBSandys: teamBInfos.map((i: any) => i.sandy),
+                };
+              });
+              console.log("NASSAU DEBUG - allData length:", allData.length);
+              if (allData.length > 0) {
+                console.log(
+                  "NASSAU DEBUG - first hole data:",
+                  JSON.stringify(allData[0]),
+                );
+              }
+              ns = computeNassauState(mode as "best" | "combined", allData);
+              console.log(
+                "NASSAU DEBUG - ns result:",
+                ns ? "Calculated" : "Null",
+                ns ? Object.keys(ns.holeResults).length : 0,
+              );
+              if (ns && ns.holeResults[1]) {
+                console.log(
+                  "NASSAU DEBUG - HOLE 1 RESULT:",
+                  JSON.stringify(ns.holeResults[1]),
+                );
+              }
+              if (ns && ns.holeResults[10]) {
+                console.log(
+                  "NASSAU DEBUG - HOLE 10 RESULT:",
+                  JSON.stringify(ns.holeResults[10]),
+                );
+              }
+            }
+
             const totalWidth =
               50 +
               55 +
@@ -1940,7 +1997,8 @@ export default function ResumeScorecard() {
               50 +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
-              (isHighLow && partners.length >= 4 ? 2 * 80 : 0);
+              (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
+              (isNassau && partners.length >= 2 ? 100 : 0);
 
             const renderMultiplayerHeaders = () => (
               <HStack
@@ -2102,6 +2160,25 @@ export default function ResumeScorecard() {
                     </VStack>
                   </>
                 )}
+                {isNassau && partners.length >= 2 && (
+                  <VStack
+                    style={{
+                      width: 100,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        textAlign: "center",
+                        fontWeight: "700",
+                        fontSize: 11,
+                      }}
+                    >
+                      Nassau Pts
+                    </ThemedText>
+                  </VStack>
+                )}
               </HStack>
             );
 
@@ -2200,6 +2277,22 @@ export default function ResumeScorecard() {
                                     : "";
                               }
 
+                              let bgColor = "transparent";
+                              if (
+                                isNassau &&
+                                ns &&
+                                ns.holeResults[h.holeNumber]
+                              ) {
+                                const winner =
+                                  ns.holeResults[h.holeNumber].winner;
+                                const isTeamA =
+                                  pIndex < (partners.length >= 4 ? 2 : 1);
+                                if (winner === "teamA" && isTeamA)
+                                  bgColor = "rgba(25, 135, 84, 0.15)";
+                                if (winner === "teamB" && !isTeamA)
+                                  bgColor = "rgba(13, 110, 253, 0.15)";
+                              }
+
                               return (
                                 <View
                                   key={p.playerId}
@@ -2207,6 +2300,7 @@ export default function ResumeScorecard() {
                                     width: 95,
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    backgroundColor: bgColor,
                                   }}
                                 >
                                   <View
@@ -2426,6 +2520,64 @@ export default function ResumeScorecard() {
                                   </>
                                 );
                               })()}
+                            {isNassau && partners.length >= 2 && (
+                              <VStack
+                                style={{
+                                  width: 100,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {(() => {
+                                  const hRes = ns?.holeResults[h.holeNumber];
+                                  if (!hRes)
+                                    return <View style={{ width: 100 }} />;
+
+                                  const renderHouse = (
+                                    val: number,
+                                    idx: number,
+                                    arr: number[],
+                                  ) => {
+                                    let color = isDark ? "#fff" : "#000";
+                                    if (val > 0) color = "#22c55e";
+                                    if (val < 0) color = "#3b82f6";
+                                    return (
+                                      <Text
+                                        key={idx}
+                                        style={{
+                                          color,
+                                          fontWeight: "bold",
+                                          fontSize: 11,
+                                        }}
+                                      >
+                                        {Math.abs(val)}
+                                        {idx < arr.length - 1 ? " " : ""}
+                                      </Text>
+                                    );
+                                  };
+
+                                  return (
+                                    <View
+                                      style={{
+                                        width: 100,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexDirection: "row",
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      {(hRes.housesDisplay || []).map(
+                                        (
+                                          val: number,
+                                          i: number,
+                                          arr: number[],
+                                        ) => renderHouse(val, i, arr),
+                                      )}
+                                    </View>
+                                  );
+                                })()}
+                              </VStack>
+                            )}
                           </HStack>
                         </View>
                       );
@@ -2473,9 +2625,9 @@ export default function ResumeScorecard() {
                                 color: isDark ? "#fff" : "#000",
                               }}
                             >
-                              G:{t.gross}
+                              {t.gross}
                             </Text>
-                            {isStableford ? (
+                            {/* {isStableford ? (
                               <Text style={{ fontSize: 9, color: "#f59e0b" }}>
                                 Pts:{t.stableford}
                               </Text>
@@ -2483,7 +2635,7 @@ export default function ResumeScorecard() {
                               <Text style={{ fontSize: 9, color: "#84cc16" }}>
                                 Net:{t.net}
                               </Text>
-                            )}
+                            )} */}
                           </VStack>
                         );
                       })}
@@ -2603,6 +2755,27 @@ export default function ResumeScorecard() {
                             </>
                           );
                         })()}
+                      {isNassau && partners.length >= 2 && ns && (
+                        <VStack style={{ width: 100, alignItems: "center" }}>
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: "700",
+                              color: isDark ? "#fff" : "#000",
+                            }}
+                          >
+                            {(() => {
+                              const f9Houses = ns.front9Houses || [];
+                              const halfs = f9Houses.reduce((acc: {a: number, b: number}, h: number) => {
+                                if (h > 0) acc.a++;
+                                else if (h < 0) acc.b++;
+                                return acc;
+                              }, {a: 0, b: 0});
+                              return `${halfs.a}-${halfs.b}`;
+                            })()}
+                          </Text>
+                        </VStack>
+                      )}
                     </HStack>
                   )}
 
@@ -2616,7 +2789,6 @@ export default function ResumeScorecard() {
                         s6Pts = calculateSplitSixPoints(s1, s2, s3);
                       }
 
-                      // For Back 9, flat index offsets by Front 9 holes * partners.length
                       const front9Offset = front9Holes.length * partners.length;
 
                       return (
@@ -2687,6 +2859,22 @@ export default function ResumeScorecard() {
                                     : "";
                               }
 
+                              let bgColor = "transparent";
+                              if (
+                                isNassau &&
+                                ns &&
+                                ns.holeResults[h.holeNumber]
+                              ) {
+                                const winner =
+                                  ns.holeResults[h.holeNumber].winner;
+                                const isTeamA =
+                                  pIndex < (partners.length >= 4 ? 2 : 1);
+                                if (winner === "teamA" && isTeamA)
+                                  bgColor = "rgba(25, 135, 84, 0.15)";
+                                if (winner === "teamB" && !isTeamA)
+                                  bgColor = "rgba(13, 110, 253, 0.15)";
+                              }
+
                               return (
                                 <View
                                   key={p.playerId}
@@ -2694,6 +2882,7 @@ export default function ResumeScorecard() {
                                     width: 95,
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    backgroundColor: bgColor,
                                   }}
                                 >
                                   <View
@@ -2781,40 +2970,92 @@ export default function ResumeScorecard() {
                                         S
                                       </Text>
                                     </TouchableOpacity>
-
-                                    {info.score !== null &&
-                                      getScoringLabel() !==
-                                        "Net Score • Include Par 3" &&
-                                      getScoringLabel() !==
-                                        "Net Score • Exclude Par 3" &&
-                                      getScoringLabel() !== "Stableford" &&
-                                      getScoringLabel() !==
-                                        "Stableford • Exclude Par 3" &&
-                                      (() => {
-                                        const badgeVal = getBadgeMultiplier(
-                                          info.score,
-                                          h.par,
-                                          info.sandy,
-                                        );
-                                        if (badgeVal > 0) {
-                                          return (
-                                            <Text
-                                              style={{
-                                                fontSize: 9,
-                                                color: "#f59e0b",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              {badgeVal}x
-                                            </Text>
-                                          );
-                                        }
-                                        return null;
-                                      })()}
                                   </HStack>
                                 </View>
                               );
                             })}
+                            {isNassau && partners.length >= 2 && (
+                              <VStack
+                                style={{
+                                  width: 100,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {(() => {
+                                  const hRes = ns?.holeResults[h.holeNumber];
+                                  if (!hRes)
+                                    return <View style={{ width: 100 }} />;
+
+                                  const renderHouse = (
+                                    val: number,
+                                    idx: number,
+                                    arr: number[],
+                                  ) => {
+                                    let color = isDark ? "#fff" : "#000";
+                                    if (val > 0) color = "#22c55e"; // green
+                                    if (val < 0) color = "#3b82f6"; // blue
+                                    return (
+                                      <Text
+                                        key={idx}
+                                        style={{
+                                          color,
+                                          fontWeight: "bold",
+                                          fontSize: 11,
+                                        }}
+                                      >
+                                        {Math.abs(val)}
+                                        {idx < arr.length - 1 ? " " : ""}
+                                      </Text>
+                                    );
+                                  };
+
+                                  return (
+                                    <View
+                                      style={{
+                                        width: 100,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexDirection: "row",
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      {(h.holeNumber <= 9
+                                        ? hRes.housesDisplay
+                                        : hRes.overallHousesDisplay || []
+                                      ).map(
+                                        (
+                                          val: number,
+                                          i: number,
+                                          arr: number[],
+                                        ) => renderHouse(val, i, arr),
+                                      )}
+                                      {h.holeNumber >= 10 &&
+                                        hRes.housesDisplay.length > 0 && (
+                                          <Text
+                                            style={{
+                                              color: isDark
+                                                ? "#94a3b8"
+                                                : "#64748b",
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {" & "}
+                                          </Text>
+                                        )}
+                                      {h.holeNumber >= 10 &&
+                                        hRes.housesDisplay.map(
+                                          (
+                                            val: number,
+                                            i: number,
+                                            arr: number[],
+                                          ) => renderHouse(val, i, arr),
+                                        )}
+                                    </View>
+                                  );
+                                })()}
+                              </VStack>
+                            )}
                             {isSplit6 &&
                               partners.length >= 3 &&
                               (() => {
@@ -2960,17 +3201,8 @@ export default function ResumeScorecard() {
                                 color: isDark ? "#fff" : "#000",
                               }}
                             >
-                              G:{t.gross}
+                              {t.gross}
                             </Text>
-                            {isStableford ? (
-                              <Text style={{ fontSize: 9, color: "#f59e0b" }}>
-                                Pts:{t.stableford}
-                              </Text>
-                            ) : (
-                              <Text style={{ fontSize: 9, color: "#84cc16" }}>
-                                Net:{t.net}
-                              </Text>
-                            )}
                           </VStack>
                         );
                       })}
@@ -3090,6 +3322,27 @@ export default function ResumeScorecard() {
                             </>
                           );
                         })()}
+                      {isNassau && partners.length >= 2 && ns && (
+                        <VStack style={{ width: 100, alignItems: "center" }}>
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: "700",
+                              color: isDark ? "#fff" : "#000",
+                            }}
+                          >
+                            {(() => {
+                              const b9Houses = ns.back9Houses || [];
+                              const halfs = b9Houses.reduce((acc: {a: number, b: number}, h: number) => {
+                                if (h > 0) acc.a++;
+                                else if (h < 0) acc.b++;
+                                return acc;
+                              }, {a: 0, b: 0});
+                              return `${halfs.a}-${halfs.b}`;
+                            })()}
+                          </Text>
+                        </VStack>
+                      )}
                     </HStack>
                   )}
 
@@ -3137,9 +3390,9 @@ export default function ResumeScorecard() {
                               color: "#fff",
                             }}
                           >
-                            G:{t.gross}
+                            {t.gross}
                           </Text>
-                          {isStableford ? (
+                          {/* {isStableford ? (
                             <Text
                               style={{
                                 fontSize: 9,
@@ -3159,7 +3412,7 @@ export default function ResumeScorecard() {
                             >
                               Net:{t.net}
                             </Text>
-                          )}
+                          )} */}
                         </VStack>
                       );
                     })}
@@ -3257,6 +3510,27 @@ export default function ResumeScorecard() {
                           </>
                         );
                       })()}
+                    {isNassau && partners.length >= 2 && ns && (
+                      <VStack style={{ width: 100, alignItems: "center" }}>
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            fontWeight: "800",
+                            color: "#fff",
+                          }}
+                        >
+                          {(() => {
+                            const overallHouses = ns.overallHouses || [];
+                            const halfs = overallHouses.reduce((acc: {a: number, b: number}, h: number) => {
+                              if (h > 0) acc.a++;
+                              else if (h < 0) acc.b++;
+                              return acc;
+                            }, {a: 0, b: 0});
+                            return `${halfs.a}-${halfs.b}`;
+                          })()}
+                        </Text>
+                      </VStack>
+                    )}
                   </HStack>
                 </VStack>
               </ScrollView>
@@ -3412,10 +3686,22 @@ export default function ResumeScorecard() {
                   return {
                     holeNumber: h.holeNumber,
                     par: h.par,
-                    teamAScores: [i1.score, i2.score] as [number | null, number | null],
-                    teamBScores: [i3.score, i4.score] as [number | null, number | null],
-                    teamARawScores: [i1.score, i2.score] as [number | null, number | null],
-                    teamBRawScores: [i3.score, i4.score] as [number | null, number | null],
+                    teamAScores: [i1.score, i2.score] as [
+                      number | null,
+                      number | null,
+                    ],
+                    teamBScores: [i3.score, i4.score] as [
+                      number | null,
+                      number | null,
+                    ],
+                    teamARawScores: [i1.score, i2.score] as [
+                      number | null,
+                      number | null,
+                    ],
+                    teamBRawScores: [i3.score, i4.score] as [
+                      number | null,
+                      number | null,
+                    ],
                     teamASandys: [i1.sandy, i2.sandy] as [boolean, boolean],
                     teamBSandys: [i3.sandy, i4.sandy] as [boolean, boolean],
                   };
@@ -3527,12 +3813,40 @@ export default function ResumeScorecard() {
                         Team B
                       </ThemedText>
                     </HStack>
-                    <Row label="Front 9" a={s.front9MatchPts.teamA} b={s.front9MatchPts.teamB} />
-                    {hasBack && <Row label="Back 9" a={s.back9MatchPts.teamA} b={s.back9MatchPts.teamB} />}
-                    <Row label="Overall Match Pts" a={s.overallMatchPts.teamA} b={s.overallMatchPts.teamB} bold />
-                    <Row label="Patiala X" a={`${s.patialaX.teamA}x`} b={`${s.patialaX.teamB}x`} />
-                    <Row label="Final X Points" a={`${s.finalXPoints.teamA}x`} b={`${s.finalXPoints.teamB}x`} />
-                    <Row label="Final Score" a={s.finalScore.teamA} b={s.finalScore.teamB} bold />
+                    <Row
+                      label="Front 9"
+                      a={s.front9MatchPts.teamA}
+                      b={s.front9MatchPts.teamB}
+                    />
+                    {hasBack && (
+                      <Row
+                        label="Back 9"
+                        a={s.back9MatchPts.teamA}
+                        b={s.back9MatchPts.teamB}
+                      />
+                    )}
+                    <Row
+                      label="Overall Match Pts"
+                      a={s.overallMatchPts.teamA}
+                      b={s.overallMatchPts.teamB}
+                      bold
+                    />
+                    <Row
+                      label="Patiala X"
+                      a={`${s.patialaX.teamA}x`}
+                      b={`${s.patialaX.teamB}x`}
+                    />
+                    <Row
+                      label="Final X Points"
+                      a={`${s.finalXPoints.teamA}x`}
+                      b={`${s.finalXPoints.teamB}x`}
+                    />
+                    <Row
+                      label="Final Score"
+                      a={s.finalScore.teamA}
+                      b={s.finalScore.teamB}
+                      bold
+                    />
                     <View
                       style={{
                         borderTopWidth: 0.5,
@@ -3609,10 +3923,7 @@ export default function ResumeScorecard() {
                     teamBSandys: teamBInfos.map((i: any) => i.sandy),
                   };
                 });
-                const ns = computeNassauState(
-                  mode as "best" | "combined",
-                  allData,
-                );
+                // compute ns inside an IIFE to scope it correctly
                 const teamAName =
                   partners.length >= 4
                     ? `${partners[0].isPrimary ? "You" : partners[0].name} & ${partners[1].name}`
@@ -3678,255 +3989,131 @@ export default function ResumeScorecard() {
                   </HStack>
                 );
                 return (
-                  <>
-                    <ThemedText
-                      style={{
-                        fontSize: 15,
-                        fontWeight: "700",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Nassau {isNassauBest ? "Best Score" : "Combined"} Summary
-                    </ThemedText>
-                    <HStack
-                      style={{
-                        justifyContent: "space-between",
-                        paddingVertical: 6,
-                        borderBottomWidth: 1,
-                        borderColor: isDark ? "#444" : "#ddd",
-                      }}
-                    >
-                      <ThemedText
-                        style={{ fontWeight: "700", fontSize: 12, flex: 1 }}
-                      >
-                        Row
-                      </ThemedText>
-                      <ThemedText
-                        style={{
-                          fontWeight: "700",
-                          fontSize: 11,
-                          width: 70,
-                          textAlign: "center",
-                          color: "#38bdf8",
-                        }}
-                      >
-                        Team A
-                      </ThemedText>
-                      <ThemedText
-                        style={{
-                          fontWeight: "700",
-                          fontSize: 11,
-                          width: 70,
-                          textAlign: "center",
-                          color: "#f43f5e",
-                        }}
-                      >
-                        Team B
-                      </ThemedText>
-                    </HStack>
-                    <Row
-                      label="Front 9 Halfs"
-                      a={ns.front9Halfs.team1}
-                      b={ns.front9Halfs.team2}
-                    />
-                    <Row
-                      label="Back 9 Halfs"
-                      a={ns.back9Halfs.team1}
-                      b={ns.back9Halfs.team2}
-                    />
-                    <Row
-                      label="Overall Matches"
-                      a={ns.overallMatches.team1}
-                      b={ns.overallMatches.team2}
-                    />
-                    <Row
-                      label="Patiala X"
-                      a={`${ns.patialaX.teamA}x`}
-                      b={`${ns.patialaX.teamB}x`}
-                    />
-                    <Row
-                      label="Final X Points"
-                      a={`${ns.finalXPoints.teamA}x`}
-                      b={`${ns.finalXPoints.teamB}x`}
-                    />
-                    <View
-                      style={{
-                        borderTopWidth: 0.5,
-                        borderColor: isDark ? "#444" : "#ddd",
-                        paddingTop: 10,
-                        alignItems: "center",
-                        marginTop: 6,
-                      }}
-                    >
-                      <ThemedText
-                        style={{
-                          fontSize: 11,
-                          color: isDark ? "#94a3b8" : "#64748b",
-                          marginBottom: 4,
-                        }}
-                      >
-                        Team A: {teamAName} • Team B: {teamBName}
-                      </ThemedText>
-                      <ThemedText
-                        style={{
-                          fontWeight: "bold",
-                          color:
-                            ns.finalResult > 0
-                              ? "#38bdf8"
-                              : ns.finalResult < 0
-                                ? "#f43f5e"
-                                : "#84cc16",
-                          fontSize: 14,
-                        }}
-                      >
-                        {ns.finalResult > 0
-                          ? `Team A Wins by ${ns.finalResult}`
-                          : ns.finalResult < 0
-                            ? `Team B Wins by ${Math.abs(ns.finalResult)}`
-                            : "Tie"}
-                      </ThemedText>
-                    </View>
-
-                    {/* Nassau Hole-by-Hole Table */}
-                    <ThemedText
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        marginTop: 18,
-                        marginBottom: 8,
-                      }}
-                    >
-                      Hole-by-Hole
-                    </ThemedText>
-                    <HStack
-                      style={{
-                        paddingVertical: 6,
-                        borderBottomWidth: 1,
-                        borderColor: isDark ? "#444" : "#ddd",
-                      }}
-                    >
-                      <ThemedText
-                        style={{
-                          width: 40,
-                          fontWeight: "700",
-                          fontSize: 11,
-                          textAlign: "center",
-                        }}
-                      >
-                        Hole
-                      </ThemedText>
-                      <ThemedText
-                        style={{
-                          width: 70,
-                          fontWeight: "700",
-                          fontSize: 11,
-                          textAlign: "center",
-                        }}
-                      >
-                        Winner
-                      </ThemedText>
-                      <ThemedText
-                        style={{
-                          flex: 1,
-                          fontWeight: "700",
-                          fontSize: 11,
-                          textAlign: "center",
-                        }}
-                      >
-                        Houses
-                      </ThemedText>
-                    </HStack>
-                    {holes.map((h: any) => {
-                      const hr = ns.holeResults[h.holeNumber];
-                      if (!hr) return null;
-                      const winColor =
-                        hr.winner === "teamA"
-                          ? "#22c55e"
-                          : hr.winner === "teamB"
-                            ? "#3b82f6"
-                            : isDark
-                              ? "#666"
-                              : "#999";
-                      const winLabel =
-                        hr.winner === "teamA"
-                          ? "Team A"
-                          : hr.winner === "teamB"
-                            ? "Team B"
-                            : "Tie";
+                  <View>
+                    {(() => {
+                      const ns = computeNassauState(
+                        mode as "best" | "combined",
+                        allData,
+                      );
                       return (
-                        <HStack
-                          key={h.holeNumber}
-                          style={{
-                            paddingVertical: 6,
-                            borderBottomWidth: 0.5,
-                            borderColor: isDark ? "#222" : "#eee",
-                            alignItems: "center",
-                          }}
-                        >
+                        <>
                           <ThemedText
                             style={{
-                              width: 40,
-                              textAlign: "center",
-                              fontSize: 12,
+                              fontSize: 15,
+                              fontWeight: "700",
+                              marginBottom: 8,
                             }}
                           >
-                            {h.holeNumber}
+                            Nassau {isNassauBest ? "Best Score" : "Combined"}{" "}
+                            Summary
                           </ThemedText>
-                          <Text
-                            style={{
-                              width: 70,
-                              textAlign: "center",
-                              fontSize: 11,
-                              fontWeight: "600",
-                              color: winColor,
-                            }}
-                          >
-                            {winLabel}
-                          </Text>
                           <HStack
                             style={{
-                              flex: 1,
-                              justifyContent: "center",
-                              gap: 4,
-                              flexWrap: "wrap",
+                              justifyContent: "space-between",
+                              paddingVertical: 6,
+                              borderBottomWidth: 1,
+                              borderColor: isDark ? "#444" : "#ddd",
                             }}
                           >
-                            {hr.houses.map((hv: number, hi: number) => {
-                              const bgColor =
-                                hv > 0
-                                  ? "#22c55e"
-                                  : hv < 0
-                                    ? "#3b82f6"
-                                    : "#06b6d4";
-                              return (
-                                <View
-                                  key={hi}
-                                  style={{
-                                    backgroundColor: bgColor,
-                                    borderRadius: 4,
-                                    paddingHorizontal: 6,
-                                    paddingVertical: 2,
-                                    minWidth: 22,
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Text
-                                    style={{
-                                      color: "#fff",
-                                      fontSize: 10,
-                                      fontWeight: "700",
-                                    }}
-                                  >
-                                    {Math.abs(hv)}
-                                  </Text>
-                                </View>
-                              );
-                            })}
+                            <ThemedText
+                              style={{
+                                fontWeight: "700",
+                                fontSize: 12,
+                                flex: 1,
+                              }}
+                            >
+                              Row
+                            </ThemedText>
+                            <ThemedText
+                              style={{
+                                fontWeight: "700",
+                                fontSize: 11,
+                                width: 70,
+                                textAlign: "center",
+                                color: "#38bdf8",
+                              }}
+                            >
+                              Team A
+                            </ThemedText>
+                            <ThemedText
+                              style={{
+                                fontWeight: "700",
+                                fontSize: 11,
+                                width: 70,
+                                textAlign: "center",
+                                color: "#f43f5e",
+                              }}
+                            >
+                              Team B
+                            </ThemedText>
                           </HStack>
-                        </HStack>
+                          <Row
+                            label="Front 9 Halfs"
+                            a={ns.front9Halfs.team1}
+                            b={ns.front9Halfs.team2}
+                          />
+                          <Row
+                            label="Back 9 Halfs"
+                            a={ns.back9Halfs.team1}
+                            b={ns.back9Halfs.team2}
+                          />
+                          <Row
+                            label="Overall Matches"
+                            a={ns.overallMatches.team1}
+                            b={ns.overallMatches.team2}
+                          />
+                          <Row
+                            label="Patiala X"
+                            a={`${ns.patialaX.teamA}x`}
+                            b={`${ns.patialaX.teamB}x`}
+                          />
+                          <Row
+                            label="Final X Points"
+                            a={`${ns.finalXPoints.teamA}x`}
+                            b={`${ns.finalXPoints.teamB}x`}
+                          />
+                          <View
+                            style={{
+                              borderTopWidth: 0.5,
+                              borderColor: isDark ? "#444" : "#ddd",
+                              paddingTop: 10,
+                              alignItems: "center",
+                              marginTop: 6,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                fontSize: 11,
+                                color: isDark ? "#94a3b8" : "#64748b",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Team A: {teamAName} • Team B: {teamBName}
+                            </ThemedText>
+                            <ThemedText
+                              style={{
+                                fontWeight: "bold",
+                                color:
+                                  ns.finalResult > 0
+                                    ? "#38bdf8"
+                                    : ns.finalResult < 0
+                                      ? "#f43f5e"
+                                      : "#84cc16",
+                                fontSize: 14,
+                              }}
+                            >
+                              {ns.finalResult > 0
+                                ? `Team A Wins by ${ns.finalResult}`
+                                : ns.finalResult < 0
+                                  ? `Team B Wins by ${Math.abs(ns.finalResult)}`
+                                  : "Tie"}
+                            </ThemedText>
+                          </View>
+
+                        </>
                       );
-                    })}
-                  </>
+                    })()}
+                  </View>
                 );
               })()}
           </VStack>

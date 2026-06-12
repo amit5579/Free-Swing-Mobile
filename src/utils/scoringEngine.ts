@@ -21,7 +21,10 @@ export type PlayerHoleData = {
 export type HoleResult = {
   holeNumber: number;
   winner: 'teamA' | 'teamB' | 'tie';
-  houses: number[];
+  teamAScore: number;
+  teamBScore: number;
+  housesDisplay: number[];
+  overallHousesDisplay: number[];
 };
 
 export type NassauState = {
@@ -515,29 +518,41 @@ export function determineNassauHoleWinner(
  * Returns the final houses array and per-hole house snapshots.
  * 
  * Rules:
- * 1. Start with [0]
- * 2. Team A wins → all houses +1
- * 3. Team B wins → all houses -1
+ * 1. Start with [0, 0, 0] and outerActive = false
+ * 2. PHASE 1: middle changes by ±2. When |middle| >= 2, outerActive = true.
+ * 3. PHASE 2: all change by ±1.
  * 4. Tie → no change
  * 5. After updating, if last house reaches ±2 → spawn new house at 0
  */
 export function simulateHouses(
   holeWinners: ('teamA' | 'teamB' | 'tie')[],
 ): { finalHouses: number[]; holeSnapshots: number[][] } {
-  let houses = [0];
+  let houses = [0, 0, 0];
+  let outerActive = false;
   const holeSnapshots: number[][] = [];
 
   holeWinners.forEach((winner) => {
-    if (winner === 'teamA') {
-      houses = houses.map((h) => h + 1);
-    } else if (winner === 'teamB') {
-      houses = houses.map((h) => h - 1);
-    }
-    // tie → no change
+    if (winner !== 'tie') {
+      if (!outerActive) {
+        if (winner === 'teamA') {
+          houses[1] += 2;
+        } else {
+          houses[1] -= 2;
+        }
+        if (Math.abs(houses[1]) >= 2) {
+          outerActive = true;
+        }
+      } else {
+        if (winner === 'teamA') {
+          houses = houses.map((h) => h + 1);
+        } else {
+          houses = houses.map((h) => h - 1);
+        }
+      }
 
-    // Check if last house hit ±2 → spawn new house
-    if (houses.length > 0 && Math.abs(houses[houses.length - 1]) >= 2) {
-      houses.push(0);
+      if (Math.abs(houses[houses.length - 1]) >= 2) {
+        houses.push(0);
+      }
     }
 
     holeSnapshots.push([...houses]);
@@ -612,10 +627,27 @@ export function computeNassauState(
   // Build per-hole results with house snapshots from the overall simulation
   const holeResults: Record<number, HoleResult> = {};
   sorted.forEach((h, i) => {
+    let housesDisplay: number[] = [];
+    if (h.holeNumber <= 9) {
+      const idx = front9Indices.indexOf(i);
+      if (idx !== -1) housesDisplay = front9Sim.holeSnapshots[idx] || [];
+    } else {
+      const idx = back9Indices.indexOf(i);
+      if (idx !== -1) housesDisplay = back9Sim.holeSnapshots[idx] || [];
+    }
+
+    const aValid = h.teamANetScores.filter((s) => s !== null) as number[];
+    const bValid = h.teamBNetScores.filter((s) => s !== null) as number[];
+    const teamAScore = mode === 'best' ? Math.min(...(aValid.length ? aValid : [Infinity])) : aValid.reduce((a, b) => a + b, 0);
+    const teamBScore = mode === 'best' ? Math.min(...(bValid.length ? bValid : [Infinity])) : bValid.reduce((a, b) => a + b, 0);
+
     holeResults[h.holeNumber] = {
       holeNumber: h.holeNumber,
       winner: allWinners[i],
-      houses: overallSim.holeSnapshots[i] || [],
+      teamAScore,
+      teamBScore,
+      housesDisplay,
+      overallHousesDisplay: overallSim.holeSnapshots[i] || [],
     };
   });
 
