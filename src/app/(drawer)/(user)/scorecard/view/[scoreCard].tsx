@@ -27,6 +27,7 @@ import {
   calculateSplitSixPoints,
   computeHighLowSummary,
   computeHighLowHolePoints,
+  computeNassauState,
 } from "@/utils/scoringEngine";
 import { useRouter } from "expo-router";
 import { HStack } from "@/components/hstack";
@@ -1172,6 +1173,29 @@ const ScoreCard: React.FC = () => {
           </View>
         ) : (
           (() => {
+            const mode = isNassauBest ? "best" : "combined";
+            const teamAPartners = partners.length >= 4 ? [partners[0], partners[1]] : [partners[0]];
+            const teamBPartners = partners.length >= 4 ? [partners[2], partners[3]] : [partners[1]];
+
+            let ns: any = null;
+            if (isNassau && partners.length >= 2) {
+              const allData = holes.map((h: any) => {
+                const teamAInfos = teamAPartners.map((p: any) => getPlayerHoleInfo(h, p));
+                const teamBInfos = teamBPartners.map((p: any) => getPlayerHoleInfo(h, p));
+                return {
+                  holeNumber: h.holeNumber,
+                  par: h.par,
+                  teamANetScores: teamAInfos.map((i: any) => i.score !== null ? i.netScore : null),
+                  teamBNetScores: teamBInfos.map((i: any) => i.score !== null ? i.netScore : null),
+                  teamARawScores: teamAInfos.map((i: any) => i.score),
+                  teamBRawScores: teamBInfos.map((i: any) => i.score),
+                  teamASandys: teamAInfos.map((i: any) => i.sandy),
+                  teamBSandys: teamBInfos.map((i: any) => i.sandy),
+                };
+              });
+              ns = computeNassauState(mode as "best" | "combined", allData);
+            }
+
             const totalWidth =
               50 +
               55 +
@@ -1179,7 +1203,8 @@ const ScoreCard: React.FC = () => {
               50 +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
-              (isHighLow && partners.length >= 4 ? 2 * 95 : 0);
+              (isHighLow && partners.length >= 4 ? 2 * 95 : 0) +
+              (isNassau && partners.length >= 2 ? 100 : 0);
             return (
               <ScrollView
                 horizontal={true}
@@ -1314,95 +1339,67 @@ const ScoreCard: React.FC = () => {
                           </ThemedText>
                         </VStack>
                       ))}
-                      {partners.map((p, idx) => {
-                      let badgeText = "";
-                      let badgeColor = "";
-                      if (isHighLow) {
-                        badgeText = idx < 2 ? "Team A" : "Team B";
-                        badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
-                      }
-                      return (
-                        <VStack
-                          key={p.playerId}
-                          style={{ width: 95, alignItems: "center" }}
-                        >
-                          <ThemedText
-                            numberOfLines={1}
+                    {isHighLow &&
+                      partners.length >= 4 && (
+                        <>
+                          <VStack
                             style={{
-                              textAlign: "center",
-                              fontWeight: "700",
-                              fontSize: 12,
+                              width: 95,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            {p.isPrimary ? "You" : p.name}
-                          </ThemedText>
-                          {badgeText !== "" && (
-                            <View
+                            <ThemedText
+                              numberOfLines={1}
                               style={{
-                                backgroundColor: badgeColor,
-                                borderRadius: 4,
-                                paddingHorizontal: 6,
-                                paddingVertical: 1,
-                                marginTop: 2,
+                                textAlign: "center",
+                                fontWeight: "700",
+                                fontSize: 12,
+                                color: "#0284c7",
                               }}
                             >
-                              <Text
-                                style={{
-                                  color: "#fff",
-                                  fontSize: 8,
-                                  fontWeight: "700",
-                                }}
-                              >
-                                {badgeText}
-                              </Text>
-                            </View>
-                          )}
-                        </VStack>
-                      );
-                    })}
-                    {isHighLow
-                     && partners.length >= 4 
-                     && (
-                      <>
-                        <VStack
-                          style={{
-                            width: 95,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <ThemedText
-                            numberOfLines={1}
+                              Team A Pts
+                            </ThemedText>
+                          </VStack>
+                          <VStack
                             style={{
-                              textAlign: "center",
-                              fontWeight: "700",
-                              fontSize: 12,
-                              color: "#0284c7",
+                              width: 95,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            Team A Pts
-                          </ThemedText>
-                        </VStack>
-                        <VStack
+                            <ThemedText
+                              numberOfLines={1}
+                              style={{
+                                textAlign: "center",
+                                fontWeight: "700",
+                                fontSize: 12,
+                                color: "#e11d48",
+                              }}
+                            >
+                              Team B Pts
+                            </ThemedText>
+                          </VStack>
+                        </>
+                      )}
+                    {isNassau && partners.length >= 2 && (
+                      <VStack
+                        style={{
+                          width: 100,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <ThemedText
                           style={{
-                            width: 95,
-                            alignItems: "center",
-                            justifyContent: "center",
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontSize: 12,
                           }}
                         >
-                          <ThemedText
-                            numberOfLines={1}
-                            style={{
-                              textAlign: "center",
-                              fontWeight: "700",
-                              fontSize: 12,
-                              color: "#e11d48",
-                            }}
-                          >
-                            Team B Pts
-                          </ThemedText>
-                        </VStack>
-                      </>
+                          Nassau Pts
+                        </ThemedText>
+                      </VStack>
                     )}
                   </HStack>
 
@@ -1456,6 +1453,15 @@ const ScoreCard: React.FC = () => {
 
                           {partners.map((p, pIndex) => {
                             const info = getPlayerHoleInfo(h, p);
+
+                            let bgColor = "transparent";
+                            if (isNassau && ns && ns.holeResults[h.holeNumber]) {
+                              const winner = ns.holeResults[h.holeNumber].winner;
+                              const isTeamA = pIndex < (partners.length >= 4 ? 2 : 1);
+                              if (winner === 'teamA' && isTeamA) bgColor = "rgba(25, 135, 84, 0.15)";
+                              if (winner === 'teamB' && !isTeamA) bgColor = "rgba(13, 110, 253, 0.15)";
+                            }
+
                             return (
                               <View
                                 key={p.playerId}
@@ -1463,6 +1469,7 @@ const ScoreCard: React.FC = () => {
                                   width: 95,
                                   alignItems: "center",
                                   justifyContent: "center",
+                                  backgroundColor: bgColor,
                                 }}
                               >
                                 <View
@@ -1720,7 +1727,49 @@ const ScoreCard: React.FC = () => {
                                         {pts.teamB}
                                       </ThemedText>
                                     </View>
-                                  </>
+                                    </>
+                                  );
+                                })()}
+                            {isNassau &&
+                              partners.length >= 2 &&
+                              (() => {
+                                const hRes = ns?.holeResults[h.holeNumber];
+                                if (!hRes) return <View style={{ width: 100 }} />;
+
+                                const renderHouse = (val: number, idx: number, arr: number[]) => {
+                                  let color = isDark ? "#fff" : "#000";
+                                  if (val > 0) color = "#22c55e"; // green
+                                  if (val < 0) color = "#3b82f6"; // blue
+                                  return (
+                                    <Text key={idx} style={{ color, fontWeight: "bold", fontSize: 11 }}>
+                                      {Math.abs(val)}{idx < arr.length - 1 ? " " : ""}
+                                    </Text>
+                                  );
+                                };
+
+                                return (
+                                  <View
+                                    style={{
+                                      width: 100,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexDirection: "row",
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    {hRes.overallHousesDisplay.map((val: number, i: number, arr: number[]) =>
+                                      renderHouse(val, i, arr)
+                                    )}
+                                    {h.holeNumber >= 10 && hRes.housesDisplay.length > 0 && (
+                                      <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }}>
+                                        {" & "}
+                                      </Text>
+                                    )}
+                                    {h.holeNumber >= 10 &&
+                                      hRes.housesDisplay.map((val: number, i: number, arr: number[]) =>
+                                        renderHouse(val, i, arr)
+                                      )}
+                                  </View>
                                 );
                               })()}
                         </HStack>
@@ -1900,6 +1949,9 @@ const ScoreCard: React.FC = () => {
                                   </>
                                 );
                               })()}
+                              {isNassau && partners.length >= 2 && (
+                                <VStack style={{ width: 100 }} />
+                              )}
                           </HStack>
                         )}
 
@@ -2078,6 +2130,9 @@ const ScoreCard: React.FC = () => {
                                   </>
                                 );
                               })()}
+                              {isNassau && partners.length >= 2 && (
+                                <VStack style={{ width: 100 }} />
+                              )}
                           </HStack>
                         )}
                       </View>
@@ -2237,6 +2292,9 @@ const ScoreCard: React.FC = () => {
                           </>
                         );
                       })()}
+                      {isNassau && partners.length >= 2 && (
+                        <VStack style={{ width: 100 }} />
+                      )}
                   </HStack>
                 </VStack>
               </ScrollView>
@@ -2563,6 +2621,407 @@ const ScoreCard: React.FC = () => {
                 })()}
               </>
             )}
+
+            {isNassau &&
+              partners.length >= 2 &&
+              (() => {
+                const mode = isNassauBest ? "best" : "combined";
+                const teamAPartners =
+                  partners.length >= 4
+                    ? [partners[0], partners[1]]
+                    : [partners[0]];
+                const teamBPartners =
+                  partners.length >= 4
+                    ? [partners[2], partners[3]]
+                    : [partners[1]];
+                const allData = holes.map((h: any) => {
+                  const teamAInfos = teamAPartners.map((p: any) =>
+                    getPlayerHoleInfo(h, p),
+                  );
+                  const teamBInfos = teamBPartners.map((p: any) =>
+                    getPlayerHoleInfo(h, p),
+                  );
+                  return {
+                    holeNumber: h.holeNumber,
+                    par: h.par,
+                    teamANetScores: teamAInfos.map((i: any) =>
+                      i.score !== null ? i.netScore : null,
+                    ),
+                    teamBNetScores: teamBInfos.map((i: any) =>
+                      i.score !== null ? i.netScore : null,
+                    ),
+                    teamARawScores: teamAInfos.map((i: any) => i.score),
+                    teamBRawScores: teamBInfos.map((i: any) => i.score),
+                    teamASandys: teamAInfos.map((i: any) => i.sandy),
+                    teamBSandys: teamBInfos.map((i: any) => i.sandy),
+                  };
+                });
+                const ns = computeNassauState(
+                  mode as "best" | "combined",
+                  allData,
+                );
+                const teamAName =
+                  partners.length >= 4
+                    ? `${partners[0].isPrimary ? "You" : partners[0].name} & ${partners[1].name}`
+                    : partners[0].isPrimary
+                      ? "You"
+                      : partners[0].name;
+                const teamBName =
+                  partners.length >= 4
+                    ? `${partners[2].name} & ${partners[3].name}`
+                    : partners[1].isPrimary
+                      ? "You"
+                      : partners[1].name;
+                const Row = ({
+                  label,
+                  a,
+                  b,
+                  bold = false,
+                }: {
+                  label: string;
+                  a: number | string;
+                  b: number | string;
+                  bold?: boolean;
+                }) => (
+                  <HStack
+                    style={{
+                      justifyContent: "space-between",
+                      paddingVertical: 5,
+                      borderBottomWidth: 0.5,
+                      borderColor: isDark ? "#333" : "#e5e5e5",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: 12,
+                        fontWeight: bold ? "700" : "500",
+                        flex: 1,
+                      }}
+                    >
+                      {label}
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 12,
+                        fontWeight: bold ? "700" : "500",
+                        width: 70,
+                        textAlign: "center",
+                        color: "#38bdf8",
+                      }}
+                    >
+                      {a}
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 12,
+                        fontWeight: bold ? "700" : "500",
+                        width: 70,
+                        textAlign: "center",
+                        color: "#f43f5e",
+                      }}
+                    >
+                      {b}
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        fontSize: 12,
+                        fontWeight: bold ? "700" : "500",
+                        width: 40,
+                        textAlign: "center",
+                        color: "#a855f7",
+                      }}
+                    >
+                      {typeof a === 'number' && typeof b === 'number' ? (a - b > 0 ? `A+${a-b}` : b - a > 0 ? `B+${b-a}` : '0') : '-'}
+                    </ThemedText>
+                  </HStack>
+                );
+
+                return (
+                  <>
+                    <ThemedText
+                      style={{
+                        fontSize: 15,
+                        fontWeight: "700",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Nassau{" "}
+                      {isNassauBest ? "Best Score" : "Combined"}{" "}
+                      Summary
+                    </ThemedText>
+                    <HStack
+                      style={{
+                        justifyContent: "space-between",
+                        paddingVertical: 6,
+                        borderBottomWidth: 1,
+                        borderColor: isDark ? "#444" : "#ddd",
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontWeight: "700",
+                          fontSize: 12,
+                          flex: 1,
+                        }}
+                      >
+                        Row
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontWeight: "700",
+                          fontSize: 11,
+                          width: 70,
+                          textAlign: "center",
+                          color: "#38bdf8",
+                        }}
+                      >
+                        Team A
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontWeight: "700",
+                          fontSize: 11,
+                          width: 70,
+                          textAlign: "center",
+                          color: "#f43f5e",
+                        }}
+                      >
+                        Team B
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontWeight: "700",
+                          fontSize: 11,
+                          width: 40,
+                          textAlign: "center",
+                          color: "#a855f7",
+                        }}
+                      >
+                        Pts
+                      </ThemedText>
+                    </HStack>
+                    <Row
+                      label="Front 9 Halfs"
+                      a={ns.front9Halfs.team1}
+                      b={ns.front9Halfs.team2}
+                    />
+                    <Row
+                      label="Back 9 Halfs"
+                      a={ns.back9Halfs.team1}
+                      b={ns.back9Halfs.team2}
+                    />
+                    <Row
+                      label="Overall Matches"
+                      a={ns.overallMatches.team1}
+                      b={ns.overallMatches.team2}
+                    />
+                    <Row
+                      label="Patiala X"
+                      a={`${ns.patialaX.teamA}x`}
+                      b={`${ns.patialaX.teamB}x`}
+                    />
+                    <Row
+                      label="Final X Points"
+                      a={`${ns.finalXPoints.teamA}x`}
+                      b={`${ns.finalXPoints.teamB}x`}
+                    />
+                    <View
+                      style={{
+                        borderTopWidth: 0.5,
+                        borderColor: isDark ? "#444" : "#ddd",
+                        paddingTop: 10,
+                        alignItems: "center",
+                        marginTop: 6,
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "700",
+                          color: isDark ? "#e2e8f0" : "#334155",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Final Result (Net)
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontSize: 11,
+                          color: isDark ? "#94a3b8" : "#64748b",
+                          marginBottom: 4,
+                        }}
+                      >
+                        Team A: {teamAName} • Team B: {teamBName}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontWeight: "bold",
+                          color:
+                            ns.finalResult > 0
+                              ? "#38bdf8"
+                              : ns.finalResult < 0
+                                ? "#f43f5e"
+                                : "#84cc16",
+                          fontSize: 14,
+                        }}
+                      >
+                        {ns.finalResult > 0
+                          ? `Team A Wins by ${ns.finalResult}`
+                          : ns.finalResult < 0
+                            ? `Team B Wins by ${Math.abs(ns.finalResult)}`
+                            : "Tie"}
+                      </ThemedText>
+                    </View>
+
+                    {/* Nassau Hole-by-Hole Table */}
+                    <ThemedText
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        marginTop: 18,
+                        marginBottom: 8,
+                      }}
+                    >
+                      Hole-by-Hole
+                    </ThemedText>
+                    <HStack
+                      style={{
+                        paddingVertical: 6,
+                        borderBottomWidth: 1,
+                        borderColor: isDark ? "#444" : "#ddd",
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          width: 40,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                        }}
+                      >
+                        Hole
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#38bdf8",
+                        }}
+                      >
+                        Team A
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#f43f5e",
+                        }}
+                      >
+                        Team B
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          width: 60,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#84cc16",
+                        }}
+                      >
+                        Winner
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          width: 50,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#a855f7",
+                        }}
+                      >
+                        Houses
+                      </ThemedText>
+                    </HStack>
+                    {holes.map((h: any) => {
+                      const r = ns.holeResults[h.holeNumber];
+                      if (!r) return null;
+                      return (
+                        <HStack
+                          key={`ns-sum-${h.holeNumber}`}
+                          style={{
+                            paddingVertical: 4,
+                            borderBottomWidth: 0.5,
+                            borderColor: isDark ? "#333" : "#e5e5e5",
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              width: 40,
+                              textAlign: "center",
+                              fontSize: 11,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {h.holeNumber}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontSize: 11,
+                            }}
+                          >
+                            {r.teamAScore !== Infinity ? r.teamAScore : "-"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontSize: 11,
+                            }}
+                          >
+                            {r.teamBScore !== Infinity ? r.teamBScore : "-"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              width: 60,
+                              textAlign: "center",
+                              fontSize: 11,
+                              color:
+                                r.winner === "teamA"
+                                  ? "#38bdf8"
+                                  : r.winner === "teamB"
+                                    ? "#f43f5e"
+                                    : "#64748b",
+                              fontWeight: "700",
+                            }}
+                          >
+                            {r.winner === "teamA"
+                              ? "A"
+                              : r.winner === "teamB"
+                                ? "B"
+                                : "Tie"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              width: 50,
+                              textAlign: "center",
+                              fontSize: 11,
+                              color: "#a855f7",
+                            }}
+                          >
+                            {r.housesDisplay.length > 0 ? r.housesDisplay.map((v: number) => Math.abs(v)).join(" ") : "-"}
+                          </ThemedText>
+                        </HStack>
+                      );
+                    })}
+                  </>
+                );
+              })()}
           </VStack>
         )}
 
