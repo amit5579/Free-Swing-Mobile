@@ -228,8 +228,8 @@ export default function ScoreCardUserPage() {
 
     // REAL strokes calculation
     let strokesReceived = calculateStrokes(
-      Number(handicap), // from params
-      hole.handicap, // stroke index
+      parseInt(String(handicap)) || 0, // from params
+      hole.strokeIndex, // stroke index
     );
 
     // Excluded logic
@@ -243,7 +243,7 @@ export default function ScoreCardUserPage() {
     let stablefordPoints = null;
 
     if (isStableford && hole.score !== null) {
-      const pts = hole.par - netScore + 2;
+      const pts = hole.par - score + 2;
       stablefordPoints = pts > 0 ? pts : 0;
     }
 
@@ -317,9 +317,9 @@ export default function ScoreCardUserPage() {
     }
 
     const playerHandicap = isPrimary
-      ? Number(handicap || 0)
+      ? parseInt(String(handicap)) || 0
       : companionHandicaps[userId] || 0;
-    let strokesReceived = calculateStrokes(playerHandicap, hole.handicap);
+    let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
@@ -439,21 +439,22 @@ export default function ScoreCardUserPage() {
     (h: any) => h.holeNumber >= 10,
   );
   const legendCounts = getScoreLegendCounts(processedAllHoles);
-
-  const getTotals = (holes: any[]) => ({
+  
+  const getTotals = (holes: any[], mode: string) => ({
     strokeIndex: "",
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
-    // net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
-    stableford: holes.reduce(
-      (sum, h) => sum + (Number(h.stablefordPoints) || 0),
-      0,
-    ),
+    net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
+
+    stableford:
+      mode === "stableford"
+        ? holes.reduce((sum, h) => sum + (Number(h.stablefordPoints) || 0), 0)
+        : 0,
   });
 
-  const frontTotals = getTotals(processedFront9);
-  const backTotals = getTotals(processedBack9);
+  const frontTotals = getTotals(processedFront9, getScoringLabel());
+  const backTotals = getTotals(processedBack9, getScoringLabel());
 
   const processedHoles = processedAllHoles.filter((h: any) => {
     if (holes === "18") return true;
@@ -462,7 +463,7 @@ export default function ScoreCardUserPage() {
     return true;
   });
 
-  const grandTotals = getTotals(processedHoles);
+  const grandTotals = getTotals(processedHoles, getScoringLabel());
 
   const saveRound = useCallback(
     async (isCompleted: boolean, shouldGoBack: boolean = false) => {
@@ -1416,7 +1417,7 @@ export default function ScoreCardUserPage() {
                                 color: "#8BC34A",
                               }}
                             >
-                              {h.netScore}
+                              {h.score}
                             </ThemedText>
 
                             {isStableford && (
@@ -1477,7 +1478,7 @@ export default function ScoreCardUserPage() {
                                 {Number(frontTotals.score)}
                               </ThemedText>
 
-                              {/* <ThemedText
+                              <ThemedText
                                 style={{
                                   flex: 1,
                                   textAlign: "center",
@@ -1485,7 +1486,7 @@ export default function ScoreCardUserPage() {
                                 }}
                               >
                                 {frontTotals.net}
-                              </ThemedText> */}
+                              </ThemedText>
 
                               {isStableford && (
                                 <ThemedText
@@ -1546,7 +1547,7 @@ export default function ScoreCardUserPage() {
                                 {backTotals.score}
                               </ThemedText>
 
-                              {/* <ThemedText
+                              <ThemedText
                                 style={{
                                   flex: 1,
                                   textAlign: "center",
@@ -1554,7 +1555,7 @@ export default function ScoreCardUserPage() {
                                 }}
                               >
                                 {backTotals.net}
-                              </ThemedText> */}
+                              </ThemedText>
 
                               {isStableford && (
                                 <ThemedText
@@ -1572,26 +1573,43 @@ export default function ScoreCardUserPage() {
                     /* MULTIPLAYER SCORECARD GRID */
                     (() => {
                       const mode = isNassauBest ? "best" : "combined";
-                      const teamAPartners = partners.length >= 4 ? [partners[0], partners[1]] : [partners[0]];
-                      const teamBPartners = partners.length >= 4 ? [partners[2], partners[3]] : [partners[1]];
-                      
+                      const teamAPartners =
+                        partners.length >= 4
+                          ? [partners[0], partners[1]]
+                          : [partners[0]];
+                      const teamBPartners =
+                        partners.length >= 4
+                          ? [partners[2], partners[3]]
+                          : [partners[1]];
+
                       let ns: any = null;
                       if (isNassau && partners.length >= 2) {
                         const allData = processedHoles.map((h: any) => {
-                          const teamAInfos = teamAPartners.map((p: any) => getPlayerHoleInfo(h, p));
-                          const teamBInfos = teamBPartners.map((p: any) => getPlayerHoleInfo(h, p));
+                          const teamAInfos = teamAPartners.map((p: any) =>
+                            getPlayerHoleInfo(h, p),
+                          );
+                          const teamBInfos = teamBPartners.map((p: any) =>
+                            getPlayerHoleInfo(h, p),
+                          );
                           return {
                             holeNumber: h.holeNumber,
                             par: h.par,
-                            teamANetScores: teamAInfos.map((i: any) => i.score !== null ? i.netScore : null),
-                            teamBNetScores: teamBInfos.map((i: any) => i.score !== null ? i.netScore : null),
+                            teamANetScores: teamAInfos.map((i: any) =>
+                              i.score !== null ? i.netScore : null,
+                            ),
+                            teamBNetScores: teamBInfos.map((i: any) =>
+                              i.score !== null ? i.netScore : null,
+                            ),
                             teamARawScores: teamAInfos.map((i: any) => i.score),
                             teamBRawScores: teamBInfos.map((i: any) => i.score),
                             teamASandys: teamAInfos.map((i: any) => i.sandy),
                             teamBSandys: teamBInfos.map((i: any) => i.sandy),
                           };
                         });
-                        ns = computeNassauState(mode as "best" | "combined", allData);
+                        ns = computeNassauState(
+                          mode as "best" | "combined",
+                          allData,
+                        );
                       }
 
                       const colWidths = {
@@ -1871,11 +1889,20 @@ export default function ScoreCardUserPage() {
                                       const info = getPlayerHoleInfo(h, p);
 
                                       let bgColor = "transparent";
-                                      if (isNassau && ns && ns.holeResults[h.holeNumber]) {
-                                        const winner = ns.holeResults[h.holeNumber].winner;
-                                        const isTeamA = pIndex < (partners.length >= 4 ? 2 : 1);
-                                        if (winner === 'teamA' && isTeamA) bgColor = "rgba(25, 135, 84, 0.15)";
-                                        if (winner === 'teamB' && !isTeamA) bgColor = "rgba(13, 110, 253, 0.15)";
+                                      if (
+                                        isNassau &&
+                                        ns &&
+                                        ns.holeResults[h.holeNumber]
+                                      ) {
+                                        const winner =
+                                          ns.holeResults[h.holeNumber].winner;
+                                        const isTeamA =
+                                          pIndex <
+                                          (partners.length >= 4 ? 2 : 1);
+                                        if (winner === "teamA" && isTeamA)
+                                          bgColor = "rgba(25, 135, 84, 0.15)";
+                                        if (winner === "teamB" && !isTeamA)
+                                          bgColor = "rgba(13, 110, 253, 0.15)";
                                       }
 
                                       return (
@@ -2186,16 +2213,32 @@ export default function ScoreCardUserPage() {
                                     {isNassau &&
                                       partners.length >= 2 &&
                                       (() => {
-                                        const hRes = ns?.holeResults[h.holeNumber];
-                                        if (!hRes) return <View style={{ width: 100 }} />;
+                                        const hRes =
+                                          ns?.holeResults[h.holeNumber];
+                                        if (!hRes)
+                                          return (
+                                            <View style={{ width: 100 }} />
+                                          );
 
-                                        const renderHouse = (val: number, idx: number, arr: number[]) => {
+                                        const renderHouse = (
+                                          val: number,
+                                          idx: number,
+                                          arr: number[],
+                                        ) => {
                                           let color = isDark ? "#fff" : "#000";
                                           if (val > 0) color = "#22c55e"; // green
                                           if (val < 0) color = "#3b82f6"; // blue
                                           return (
-                                            <Text key={idx} style={{ color, fontWeight: "bold", fontSize: 11 }}>
-                                              {Math.abs(val)}{idx < arr.length - 1 ? " " : ""}
+                                            <Text
+                                              key={idx}
+                                              style={{
+                                                color,
+                                                fontWeight: "bold",
+                                                fontSize: 11,
+                                              }}
+                                            >
+                                              {Math.abs(val)}
+                                              {idx < arr.length - 1 ? " " : ""}
                                             </Text>
                                           );
                                         };
@@ -2210,17 +2253,33 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            {hRes.overallHousesDisplay.map((val: number, i: number, arr: number[]) =>
-                                              renderHouse(val, i, arr)
-                                            )}
-                                            {h.holeNumber >= 10 && hRes.housesDisplay.length > 0 && (
-                                              <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }}>
-                                                {" & "}
-                                              </Text>
+                                            {hRes.overallHousesDisplay.map(
+                                              (
+                                                val: number,
+                                                i: number,
+                                                arr: number[],
+                                              ) => renderHouse(val, i, arr),
                                             )}
                                             {h.holeNumber >= 10 &&
-                                              hRes.housesDisplay.map((val: number, i: number, arr: number[]) =>
-                                                renderHouse(val, i, arr)
+                                              hRes.housesDisplay.length > 0 && (
+                                                <Text
+                                                  style={{
+                                                    color: isDark
+                                                      ? "#94a3b8"
+                                                      : "#64748b",
+                                                    fontSize: 11,
+                                                  }}
+                                                >
+                                                  {" & "}
+                                                </Text>
+                                              )}
+                                            {h.holeNumber >= 10 &&
+                                              hRes.housesDisplay.map(
+                                                (
+                                                  val: number,
+                                                  i: number,
+                                                  arr: number[],
+                                                ) => renderHouse(val, i, arr),
                                               )}
                                           </View>
                                         );
@@ -2924,6 +2983,16 @@ export default function ScoreCardUserPage() {
                       >
                         {grandTotals.score}
                       </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          color: "#fff",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {grandTotals.net}
+                      </ThemedText>
 
                       {isStableford && (
                         <ThemedText
@@ -3104,12 +3173,30 @@ export default function ScoreCardUserPage() {
                               return {
                                 holeNumber: h.holeNumber,
                                 par: h.par,
-                                teamAScores: [i1.score, i2.score] as [number | null, number | null],
-                                teamBScores: [i3.score, i4.score] as [number | null, number | null],
-                                teamARawScores: [i1.score, i2.score] as [number | null, number | null],
-                                teamBRawScores: [i3.score, i4.score] as [number | null, number | null],
-                                teamASandys: [i1.sandy, i2.sandy] as [boolean, boolean],
-                                teamBSandys: [i3.sandy, i4.sandy] as [boolean, boolean],
+                                teamAScores: [i1.score, i2.score] as [
+                                  number | null,
+                                  number | null,
+                                ],
+                                teamBScores: [i3.score, i4.score] as [
+                                  number | null,
+                                  number | null,
+                                ],
+                                teamARawScores: [i1.score, i2.score] as [
+                                  number | null,
+                                  number | null,
+                                ],
+                                teamBRawScores: [i3.score, i4.score] as [
+                                  number | null,
+                                  number | null,
+                                ],
+                                teamASandys: [i1.sandy, i2.sandy] as [
+                                  boolean,
+                                  boolean,
+                                ],
+                                teamBSandys: [i3.sandy, i4.sandy] as [
+                                  boolean,
+                                  boolean,
+                                ],
                               };
                             });
                             const s = computeHighLowSummary(allData);
@@ -3118,7 +3205,9 @@ export default function ScoreCardUserPage() {
                             const margin = Math.abs(
                               s.finalScore.teamA - s.finalScore.teamB,
                             );
-                            const hasBack = processedHoles.some((h: any) => h.holeNumber > 9);
+                            const hasBack = processedHoles.some(
+                              (h: any) => h.holeNumber > 9,
+                            );
                             const Row = ({
                               label,
                               a,
@@ -3223,12 +3312,40 @@ export default function ScoreCardUserPage() {
                                     Team B
                                   </ThemedText>
                                 </HStack>
-                                <Row label="Front 9" a={s.front9MatchPts.teamA} b={s.front9MatchPts.teamB} />
-                                {hasBack && <Row label="Back 9" a={s.back9MatchPts.teamA} b={s.back9MatchPts.teamB} />}
-                                <Row label="Overall Match Pts" a={s.overallMatchPts.teamA} b={s.overallMatchPts.teamB} bold />
-                                <Row label="Patiala X" a={`${s.patialaX.teamA}x`} b={`${s.patialaX.teamB}x`} />
-                                <Row label="Final X Points" a={`${s.finalXPoints.teamA}x`} b={`${s.finalXPoints.teamB}x`} />
-                                <Row label="Final Score" a={s.finalScore.teamA} b={s.finalScore.teamB} bold />
+                                <Row
+                                  label="Front 9"
+                                  a={s.front9MatchPts.teamA}
+                                  b={s.front9MatchPts.teamB}
+                                />
+                                {hasBack && (
+                                  <Row
+                                    label="Back 9"
+                                    a={s.back9MatchPts.teamA}
+                                    b={s.back9MatchPts.teamB}
+                                  />
+                                )}
+                                <Row
+                                  label="Overall Match Pts"
+                                  a={s.overallMatchPts.teamA}
+                                  b={s.overallMatchPts.teamB}
+                                  bold
+                                />
+                                <Row
+                                  label="Patiala X"
+                                  a={`${s.patialaX.teamA}x`}
+                                  b={`${s.patialaX.teamB}x`}
+                                />
+                                <Row
+                                  label="Final X Points"
+                                  a={`${s.finalXPoints.teamA}x`}
+                                  b={`${s.finalXPoints.teamB}x`}
+                                />
+                                <Row
+                                  label="Final Score"
+                                  a={s.finalScore.teamA}
+                                  b={s.finalScore.teamB}
+                                  bold
+                                />
                                 <View
                                   style={{
                                     borderTopWidth: 0.5,
@@ -3253,7 +3370,8 @@ export default function ScoreCardUserPage() {
                                       color:
                                         s.finalScore.teamA > s.finalScore.teamB
                                           ? "#38bdf8"
-                                          : s.finalScore.teamB > s.finalScore.teamA
+                                          : s.finalScore.teamB >
+                                              s.finalScore.teamA
                                             ? "#f43f5e"
                                             : "#84cc16",
                                       fontSize: 13,
@@ -3388,7 +3506,14 @@ export default function ScoreCardUserPage() {
                                     color: "#a855f7",
                                   }}
                                 >
-                                  {typeof a === 'number' && typeof b === 'number' ? (a - b > 0 ? `A+${a-b}` : b - a > 0 ? `B+${b-a}` : '0') : '-'}
+                                  {typeof a === "number" &&
+                                  typeof b === "number"
+                                    ? a - b > 0
+                                      ? `A+${a - b}`
+                                      : b - a > 0
+                                        ? `B+${b - a}`
+                                        : "0"
+                                    : "-"}
                                 </ThemedText>
                               </HStack>
                             );
@@ -3530,7 +3655,7 @@ export default function ScoreCardUserPage() {
                                 </View>
 
                                 {/* Nassau Hole-by-Hole Table */}
-                                <ThemedText
+                                {/* <ThemedText
                                   style={{
                                     fontSize: 14,
                                     fontWeight: "700",
@@ -3670,7 +3795,7 @@ export default function ScoreCardUserPage() {
                                       </HStack>
                                     </HStack>
                                   );
-                                })}
+                                })} */}
                               </>
                             );
                           })()}
