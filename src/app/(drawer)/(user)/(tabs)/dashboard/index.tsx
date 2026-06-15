@@ -98,9 +98,10 @@ export default function DashboardScreen() {
   );
 
   const renderHomeCourse = () => {
+    // resolvedHomeCourse
     const completedRoundsCount = profile?.totalRounds || 0;
-    if (profile?.homeCourse) {
-      return profile?.homeCourse;
+    if (profile?.resolvedHomeCourse) {
+      return profile?.resolvedHomeCourse;
     }
     if (completedRoundsCount >= 10) {
       return "No home course could be derived";
@@ -791,7 +792,7 @@ export default function DashboardScreen() {
                               marginBottom: 2,
                             }}
                           >
-                            HOME COURSE HANDICAP
+                            HOME COURSE
                           </Text>
 
                           <Text

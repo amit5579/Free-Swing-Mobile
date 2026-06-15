@@ -848,7 +848,7 @@ export default function ResumeScorecard() {
           const net = finalVal !== null ? finalVal - strokes : 0;
           const pts = h.par - net + 2;
           newHole.stablefordPoints =
-            finalVal !== null && net > 0 ? (pts > 0 ? pts : 0) : 0;
+            finalVal !== null && finalVal > 0 ? (pts > 0 ? pts : 0) : null;
         }
 
         return newHole;
@@ -956,9 +956,9 @@ export default function ResumeScorecard() {
         const netScore =
           validScore !== null && validScore >= 0 ? validScore - strokes : 0;
         const stablefordPoints = isStableford
-          ? validScore !== null && validScore >= 0 && netScore > 0
+          ? validScore !== null && validScore > 0
             ? Math.max(0, h.par - netScore + 2)
-            : 0
+            : null
           : h.stablefordPoints;
 
         console.log("Hole Updated:", {
@@ -1640,11 +1640,16 @@ export default function ResumeScorecard() {
                           <Text
                             className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
                           >
-                            {h.netScore !== null &&
+                            {/* {h.netScore !== null &&
                             h.netScore !== undefined &&
                             (textScores[h.holeId] || h.score !== null)
                               ? h.netScore
-                              : "-"}
+                              : "-"} */}
+                            {textScores[h.holeId] !== undefined
+                              ? textScores[h.holeId]
+                              : h.score !== null && h.score !== undefined
+                                ? h.score.toString()
+                                : "-"}
                           </Text>
                           {isStableford && (
                             <Text
@@ -2766,11 +2771,14 @@ export default function ResumeScorecard() {
                           >
                             {(() => {
                               const f9Houses = ns.front9Houses || [];
-                              const halfs = f9Houses.reduce((acc: {a: number, b: number}, h: number) => {
-                                if (h > 0) acc.a++;
-                                else if (h < 0) acc.b++;
-                                return acc;
-                              }, {a: 0, b: 0});
+                              const halfs = f9Houses.reduce(
+                                (acc: { a: number; b: number }, h: number) => {
+                                  if (h > 0) acc.a++;
+                                  else if (h < 0) acc.b++;
+                                  return acc;
+                                },
+                                { a: 0, b: 0 },
+                              );
                               return `${halfs.a}-${halfs.b}`;
                             })()}
                           </Text>
@@ -3333,11 +3341,14 @@ export default function ResumeScorecard() {
                           >
                             {(() => {
                               const b9Houses = ns.back9Houses || [];
-                              const halfs = b9Houses.reduce((acc: {a: number, b: number}, h: number) => {
-                                if (h > 0) acc.a++;
-                                else if (h < 0) acc.b++;
-                                return acc;
-                              }, {a: 0, b: 0});
+                              const halfs = b9Houses.reduce(
+                                (acc: { a: number; b: number }, h: number) => {
+                                  if (h > 0) acc.a++;
+                                  else if (h < 0) acc.b++;
+                                  return acc;
+                                },
+                                { a: 0, b: 0 },
+                              );
                               return `${halfs.a}-${halfs.b}`;
                             })()}
                           </Text>
@@ -3521,11 +3532,14 @@ export default function ResumeScorecard() {
                         >
                           {(() => {
                             const overallHouses = ns.overallHouses || [];
-                            const halfs = overallHouses.reduce((acc: {a: number, b: number}, h: number) => {
-                              if (h > 0) acc.a++;
-                              else if (h < 0) acc.b++;
-                              return acc;
-                            }, {a: 0, b: 0});
+                            const halfs = overallHouses.reduce(
+                              (acc: { a: number; b: number }, h: number) => {
+                                if (h > 0) acc.a++;
+                                else if (h < 0) acc.b++;
+                                return acc;
+                              },
+                              { a: 0, b: 0 },
+                            );
                             return `${halfs.a}-${halfs.b}`;
                           })()}
                         </Text>
@@ -4109,7 +4123,6 @@ export default function ResumeScorecard() {
                                   : "Tie"}
                             </ThemedText>
                           </View>
-
                         </>
                       );
                     })()}

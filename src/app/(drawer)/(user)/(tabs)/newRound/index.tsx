@@ -1384,15 +1384,15 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                 onPress={handleSubmit(async (data) => {
                   // Validate players selection
                   if (numberOfPlayers === "2" && !player2) {
-                    Toast.show({ type: "error", text1: "Please select Player 2" });
+                    Alert.alert("Please select Player 2");
                     return;
                   }
                   if (numberOfPlayers === "3" && (!player2 || !player3)) {
-                    Toast.show({ type: "error", text1: "Please select all players" });
+                    Alert.alert("Please select all players");
                     return;
                   }
                   if (numberOfPlayers === "4" && (!player2 || !player3 || !player4)) {
-                    Toast.show({ type: "error", text1: "Please select all players" });
+                    Alert.alert("Please select all players");
                     return;
                   }
 
