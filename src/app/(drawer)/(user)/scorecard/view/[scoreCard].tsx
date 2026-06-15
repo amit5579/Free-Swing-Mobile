@@ -75,7 +75,7 @@ const ScoreCard: React.FC = () => {
   const [isNassauBest, setIsNassauBest] = useState(false);
   const [isNassauCombined, setIsNassauCombined] = useState(false);
   const isNassau = isNassauBest || isNassauCombined;
-  
+
   const getScoringLabel = () => {
     if (holes.length === 0) return "";
     const isExcluded = holes.some((h: any) => h.isExcluded);
@@ -115,8 +115,6 @@ const ScoreCard: React.FC = () => {
     if (isNassauCombined) return "Nassau • Combined Score";
     return "";
   };
-
- 
 
   useEffect(() => {
     const fetchScorecard = async () => {
@@ -213,7 +211,7 @@ const ScoreCard: React.FC = () => {
             };
             fetchCompanionHandicaps();
           }
-        }        
+        }
       } catch (err) {
         setError("Failed to load scorecard.");
       } finally {
@@ -313,7 +311,11 @@ const ScoreCard: React.FC = () => {
     };
   };
 
-  const getBadgeMultiplier = (score: number | null, par: number, sandy: boolean) => {
+  const getBadgeMultiplier = (
+    score: number | null,
+    par: number,
+    sandy: boolean,
+  ) => {
     if (score === null || score <= 0) return sandy ? 1 : 0;
     let base = 0;
     if (score === 1) base = 25;
@@ -330,7 +332,6 @@ const ScoreCard: React.FC = () => {
     let net = 0;
     let stableford = 0;
     let hasAnyScore = false;
-
     holesList.forEach((h) => {
       const info = getPlayerHoleInfo(h, partner);
       if (info.score !== null) {
@@ -527,7 +528,20 @@ const ScoreCard: React.FC = () => {
       );
     }
     if (diff === 0) {
-      return null;
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: "#999",
+              borderRadius: 4,
+            }}
+          />
+        </View>
+      );
     }
     if (diff === 1) {
       return (
@@ -955,11 +969,19 @@ const ScoreCard: React.FC = () => {
                 <Text
                   className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                 >
-                  {textScores[h.holeId] !== "" &&
-                  textScores[h.holeId] !== undefined &&
-                  parseInt(textScores[h.holeId]) >= 0
-                    ? h.netScore
-                    : "-"}
+                  {(() => {
+                    const val = textScores[h.holeId];
+                    if (val !== "" && val !== undefined && parseInt(val) >= 0) {
+                      const rawScore = parseInt(val);
+                      let strokes = calculateStrokes(
+                        displayHandicap,
+                        h.strokeIndex,
+                      );
+                      if (h.isExcluded && h.par === 3) strokes = 0;
+                      return rawScore - strokes;
+                    }
+                    return "-";
+                  })()}
                 </Text>
                 {isStableford && (
                   <Text
@@ -1079,11 +1101,23 @@ const ScoreCard: React.FC = () => {
                   <Text
                     className={`flex-1 text-center font-bold ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                   >
-                    {textScores[h.holeId] !== "" &&
-                    textScores[h.holeId] !== undefined &&
-                    parseInt(textScores[h.holeId]) >= 0
-                      ? h.netScore
-                      : "-"}
+                    {(() => {
+                      const val = textScores[h.holeId];
+                      if (
+                        val !== "" &&
+                        val !== undefined &&
+                        parseInt(val) >= 0
+                      ) {
+                        const rawScore = parseInt(val);
+                        let strokes = calculateStrokes(
+                          displayHandicap,
+                          h.strokeIndex,
+                        );
+                        if (h.isExcluded && h.par === 3) strokes = 0;
+                        return rawScore - strokes;
+                      }
+                      return "-";
+                    })()}
                   </Text>
                   {isStableford && (
                     <Text
@@ -1174,19 +1208,29 @@ const ScoreCard: React.FC = () => {
         ) : (
           (() => {
             const mode = isNassauBest ? "best" : "combined";
-            const teamAPartners = partners.length >= 4 ? [partners[0], partners[1]] : [partners[0]];
-            const teamBPartners = partners.length >= 4 ? [partners[2], partners[3]] : [partners[1]];
+            const teamAPartners =
+              partners.length >= 4 ? [partners[0], partners[1]] : [partners[0]];
+            const teamBPartners =
+              partners.length >= 4 ? [partners[2], partners[3]] : [partners[1]];
 
             let ns: any = null;
             if (isNassau && partners.length >= 2) {
               const allData = holes.map((h: any) => {
-                const teamAInfos = teamAPartners.map((p: any) => getPlayerHoleInfo(h, p));
-                const teamBInfos = teamBPartners.map((p: any) => getPlayerHoleInfo(h, p));
+                const teamAInfos = teamAPartners.map((p: any) =>
+                  getPlayerHoleInfo(h, p),
+                );
+                const teamBInfos = teamBPartners.map((p: any) =>
+                  getPlayerHoleInfo(h, p),
+                );
                 return {
                   holeNumber: h.holeNumber,
                   par: h.par,
-                  teamANetScores: teamAInfos.map((i: any) => i.score !== null ? i.netScore : null),
-                  teamBNetScores: teamBInfos.map((i: any) => i.score !== null ? i.netScore : null),
+                  teamANetScores: teamAInfos.map((i: any) =>
+                    i.score !== null ? i.netScore : null,
+                  ),
+                  teamBNetScores: teamBInfos.map((i: any) =>
+                    i.score !== null ? i.netScore : null,
+                  ),
                   teamARawScores: teamAInfos.map((i: any) => i.score),
                   teamBRawScores: teamBInfos.map((i: any) => i.score),
                   teamASandys: teamAInfos.map((i: any) => i.sandy),
@@ -1314,10 +1358,8 @@ const ScoreCard: React.FC = () => {
                         </VStack>
                       );
                     })}
-                    {isSplit6 
-                    &&
-                      partners.length >= 4 
-                      &&
+                    {isSplit6 &&
+                      partners.length >= 4 &&
                       partners.slice(0, 3).map((p) => (
                         <VStack
                           key={`pts-hdr-${p.playerId}`}
@@ -1339,49 +1381,48 @@ const ScoreCard: React.FC = () => {
                           </ThemedText>
                         </VStack>
                       ))}
-                    {isHighLow &&
-                      partners.length >= 4 && (
-                        <>
-                          <VStack
+                    {isHighLow && partners.length >= 4 && (
+                      <>
+                        <VStack
+                          style={{
+                            width: 95,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
                             style={{
-                              width: 95,
-                              alignItems: "center",
-                              justifyContent: "center",
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 12,
+                              color: "#0284c7",
                             }}
                           >
-                            <ThemedText
-                              numberOfLines={1}
-                              style={{
-                                textAlign: "center",
-                                fontWeight: "700",
-                                fontSize: 12,
-                                color: "#0284c7",
-                              }}
-                            >
-                              Team A Pts
-                            </ThemedText>
-                          </VStack>
-                          <VStack
+                            Team A Pts
+                          </ThemedText>
+                        </VStack>
+                        <VStack
+                          style={{
+                            width: 95,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
                             style={{
-                              width: 95,
-                              alignItems: "center",
-                              justifyContent: "center",
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 12,
+                              color: "#e11d48",
                             }}
                           >
-                            <ThemedText
-                              numberOfLines={1}
-                              style={{
-                                textAlign: "center",
-                                fontWeight: "700",
-                                fontSize: 12,
-                                color: "#e11d48",
-                              }}
-                            >
-                              Team B Pts
-                            </ThemedText>
-                          </VStack>
-                        </>
-                      )}
+                            Team B Pts
+                          </ThemedText>
+                        </VStack>
+                      </>
+                    )}
                     {isNassau && partners.length >= 2 && (
                       <VStack
                         style={{
@@ -1455,11 +1496,19 @@ const ScoreCard: React.FC = () => {
                             const info = getPlayerHoleInfo(h, p);
 
                             let bgColor = "transparent";
-                            if (isNassau && ns && ns.holeResults[h.holeNumber]) {
-                              const winner = ns.holeResults[h.holeNumber].winner;
-                              const isTeamA = pIndex < (partners.length >= 4 ? 2 : 1);
-                              if (winner === 'teamA' && isTeamA) bgColor = "rgba(25, 135, 84, 0.15)";
-                              if (winner === 'teamB' && !isTeamA) bgColor = "rgba(13, 110, 253, 0.15)";
+                            if (
+                              isNassau &&
+                              ns &&
+                              ns.holeResults[h.holeNumber]
+                            ) {
+                              const winner =
+                                ns.holeResults[h.holeNumber].winner;
+                              const isTeamA =
+                                pIndex < (partners.length >= 4 ? 2 : 1);
+                              if (winner === "teamA" && isTeamA)
+                                bgColor = "rgba(25, 135, 84, 0.15)";
+                              if (winner === "teamB" && !isTeamA)
+                                bgColor = "rgba(13, 110, 253, 0.15)";
                             }
 
                             return (
@@ -1546,32 +1595,32 @@ const ScoreCard: React.FC = () => {
                                       </Text>
                                     )} */}
 
-                                    {isHighLow &&
-                                      partners.length >= 4 &&
-                                      info.score !== null &&
-                                      (() => {
-                                        const badgeVal = getBadgeMultiplier(
-                                          info.score,
-                                          h.par,
-                                          info.sandy
+                                  {isHighLow &&
+                                    partners.length >= 4 &&
+                                    info.score !== null &&
+                                    (() => {
+                                      const badgeVal = getBadgeMultiplier(
+                                        info.score,
+                                        h.par,
+                                        info.sandy,
+                                      );
+                                      if (badgeVal > 0) {
+                                        return (
+                                          <Text
+                                            style={{
+                                              fontSize: 9,
+                                              color: "#f59e0b",
+                                              fontWeight: "bold",
+                                            }}
+                                          >
+                                            {badgeVal}x
+                                          </Text>
                                         );
-                                        if (badgeVal > 0) {
-                                          return (
-                                            <Text
-                                              style={{
-                                                fontSize: 9,
-                                                color: "#f59e0b",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              {badgeVal}x
-                                            </Text>
-                                          );
-                                        }
-                                        return null;
-                                      })()}
-                                      
-                                    {/* {isHighLow &&
+                                      }
+                                      return null;
+                                    })()}
+
+                                  {/* {isHighLow &&
                                       partners.length >= 4 &&
                                       info.score !== null && (
                                         <Text
@@ -1670,108 +1719,128 @@ const ScoreCard: React.FC = () => {
                               ));
                             })()}
 
-                            {isHighLow &&
-                              partners.length >= 4 &&
-                              (() => {
-                                const i1 = getPlayerHoleInfo(h, partners[0]);
-                                const i2 = getPlayerHoleInfo(h, partners[1]);
-                                const i3 = getPlayerHoleInfo(h, partners[2]);
-                                const i4 = getPlayerHoleInfo(h, partners[3]);
-                                const hasScore =
-                                  i1.score !== null &&
-                                  i2.score !== null &&
-                                  i3.score !== null &&
-                                  i4.score !== null;
-                                const pts = hasScore
-                                  ? computeHighLowHolePoints(
-                                      [i1.score, i2.score],
-                                      [i3.score, i4.score],
-                                    )
-                                  : { teamA: "-", teamB: "-" };
+                          {isHighLow &&
+                            partners.length >= 4 &&
+                            (() => {
+                              const i1 = getPlayerHoleInfo(h, partners[0]);
+                              const i2 = getPlayerHoleInfo(h, partners[1]);
+                              const i3 = getPlayerHoleInfo(h, partners[2]);
+                              const i4 = getPlayerHoleInfo(h, partners[3]);
+                              const hasScore =
+                                i1.score !== null &&
+                                i2.score !== null &&
+                                i3.score !== null &&
+                                i4.score !== null;
+                              const pts = hasScore
+                                ? computeHighLowHolePoints(
+                                    [i1.score, i2.score],
+                                    [i3.score, i4.score],
+                                  )
+                                : { teamA: "-", teamB: "-" };
 
-                                return (
-                                  <>
-                                    <View
-                                      key={`hl-a-${h.holeId}`}
-                                      style={{
-                                        width: 95,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "bold",
-                                          color: "#0284c7",
-                                          fontSize: 13,
-                                        }}
-                                      >
-                                        {pts.teamA}
-                                      </ThemedText>
-                                    </View>
-                                    <View
-                                      key={`hl-b-${h.holeId}`}
-                                      style={{
-                                        width: 95,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "bold",
-                                          color: "#e11d48",
-                                          fontSize: 13,
-                                        }}
-                                      >
-                                        {pts.teamB}
-                                      </ThemedText>
-                                    </View>
-                                    </>
-                                  );
-                                })()}
-                            {isNassau &&
-                              partners.length >= 2 &&
-                              (() => {
-                                const hRes = ns?.holeResults[h.holeNumber];
-                                if (!hRes) return <View style={{ width: 100 }} />;
-
-                                const renderHouse = (val: number, idx: number, arr: number[]) => {
-                                  let color = isDark ? "#fff" : "#000";
-                                  if (val > 0) color = "#22c55e"; // green
-                                  if (val < 0) color = "#3b82f6"; // blue
-                                  return (
-                                    <Text key={idx} style={{ color, fontWeight: "bold", fontSize: 11 }}>
-                                      {Math.abs(val)}{idx < arr.length - 1 ? " " : ""}
-                                    </Text>
-                                  );
-                                };
-
-                                return (
+                              return (
+                                <>
                                   <View
+                                    key={`hl-a-${h.holeId}`}
                                     style={{
-                                      width: 100,
+                                      width: 95,
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      flexDirection: "row",
-                                      flexWrap: "wrap",
                                     }}
                                   >
-                                    {hRes.overallHousesDisplay.map((val: number, i: number, arr: number[]) =>
-                                      renderHouse(val, i, arr)
-                                    )}
-                                    {h.holeNumber >= 10 && hRes.housesDisplay.length > 0 && (
-                                      <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }}>
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "bold",
+                                        color: "#0284c7",
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      {pts.teamA}
+                                    </ThemedText>
+                                  </View>
+                                  <View
+                                    key={`hl-b-${h.holeId}`}
+                                    style={{
+                                      width: 95,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "bold",
+                                        color: "#e11d48",
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      {pts.teamB}
+                                    </ThemedText>
+                                  </View>
+                                </>
+                              );
+                            })()}
+                          {isNassau &&
+                            partners.length >= 2 &&
+                            (() => {
+                              const hRes = ns?.holeResults[h.holeNumber];
+                              if (!hRes) return <View style={{ width: 100 }} />;
+
+                              const renderHouse = (
+                                val: number,
+                                idx: number,
+                                arr: number[],
+                              ) => {
+                                let color = isDark ? "#fff" : "#000";
+                                if (val > 0) color = "#22c55e"; // green
+                                if (val < 0) color = "#3b82f6"; // blue
+                                return (
+                                  <Text
+                                    key={idx}
+                                    style={{
+                                      color,
+                                      fontWeight: "bold",
+                                      fontSize: 11,
+                                    }}
+                                  >
+                                    {Math.abs(val)}
+                                    {idx < arr.length - 1 ? " " : ""}
+                                  </Text>
+                                );
+                              };
+
+                              return (
+                                <View
+                                  style={{
+                                    width: 100,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  {hRes.overallHousesDisplay.map(
+                                    (val: number, i: number, arr: number[]) =>
+                                      renderHouse(val, i, arr),
+                                  )}
+                                  {h.holeNumber >= 10 &&
+                                    hRes.housesDisplay.length > 0 && (
+                                      <Text
+                                        style={{
+                                          color: isDark ? "#94a3b8" : "#64748b",
+                                          fontSize: 11,
+                                        }}
+                                      >
                                         {" & "}
                                       </Text>
                                     )}
-                                    {h.holeNumber >= 10 &&
-                                      hRes.housesDisplay.map((val: number, i: number, arr: number[]) =>
-                                        renderHouse(val, i, arr)
-                                      )}
-                                  </View>
-                                );
-                              })()}
+                                  {h.holeNumber >= 10 &&
+                                    hRes.housesDisplay.map(
+                                      (val: number, i: number, arr: number[]) =>
+                                        renderHouse(val, i, arr),
+                                    )}
+                                </View>
+                              );
+                            })()}
                         </HStack>
 
                         {/* FRONT 9 TOTALS ROW */}
@@ -1936,22 +2005,46 @@ const ScoreCard: React.FC = () => {
                                 });
                                 return (
                                   <>
-                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                    <VStack
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
                                         {hasAnyF9 ? f9PtsA : "-"}
                                       </Text>
                                     </VStack>
-                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                    <VStack
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
                                         {hasAnyF9 ? f9PtsB : "-"}
                                       </Text>
                                     </VStack>
                                   </>
                                 );
                               })()}
-                              {isNassau && partners.length >= 2 && (
-                                <VStack style={{ width: 100 }} />
-                              )}
+                            {isNassau && partners.length >= 2 && (
+                              <VStack style={{ width: 100 }} />
+                            )}
                           </HStack>
                         )}
 
@@ -2117,22 +2210,46 @@ const ScoreCard: React.FC = () => {
                                 });
                                 return (
                                   <>
-                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                    <VStack
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
                                         {hasAnyB9 ? b9PtsA : "-"}
                                       </Text>
                                     </VStack>
-                                    <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                                      <Text style={{ fontSize: 10, fontWeight: "700", color: isDark ? "#fff" : "#000" }}>
+                                    <VStack
+                                      style={{
+                                        width: 95,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
                                         {hasAnyB9 ? b9PtsB : "-"}
                                       </Text>
                                     </VStack>
                                   </>
                                 );
                               })()}
-                              {isNassau && partners.length >= 2 && (
-                                <VStack style={{ width: 100 }} />
-                              )}
+                            {isNassau && partners.length >= 2 && (
+                              <VStack style={{ width: 100 }} />
+                            )}
                           </HStack>
                         )}
                       </View>
@@ -2279,22 +2396,46 @@ const ScoreCard: React.FC = () => {
                         });
                         return (
                           <>
-                            <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                              <Text style={{ fontSize: 10, fontWeight: "800", color: "#fff" }}>
+                            <VStack
+                              style={{
+                                width: 95,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: "800",
+                                  color: "#fff",
+                                }}
+                              >
                                 {hasAnyTotal ? totalPtsA : "-"}
                               </Text>
                             </VStack>
-                            <VStack style={{ width: 95, alignItems: "center", justifyContent: "center" }}>
-                              <Text style={{ fontSize: 10, fontWeight: "800", color: "#fff" }}>
+                            <VStack
+                              style={{
+                                width: 95,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: "800",
+                                  color: "#fff",
+                                }}
+                              >
                                 {hasAnyTotal ? totalPtsB : "-"}
                               </Text>
                             </VStack>
                           </>
                         );
                       })()}
-                      {isNassau && partners.length >= 2 && (
-                        <VStack style={{ width: 100 }} />
-                      )}
+                    {isNassau && partners.length >= 2 && (
+                      <VStack style={{ width: 100 }} />
+                    )}
                   </HStack>
                 </VStack>
               </ScrollView>
@@ -2731,7 +2872,13 @@ const ScoreCard: React.FC = () => {
                         color: "#a855f7",
                       }}
                     >
-                      {typeof a === 'number' && typeof b === 'number' ? (a - b > 0 ? `A+${a-b}` : b - a > 0 ? `B+${b-a}` : '0') : '-'}
+                      {typeof a === "number" && typeof b === "number"
+                        ? a - b > 0
+                          ? `A+${a - b}`
+                          : b - a > 0
+                            ? `B+${b - a}`
+                            : "0"
+                        : "-"}
                     </ThemedText>
                   </HStack>
                 );
@@ -2745,9 +2892,7 @@ const ScoreCard: React.FC = () => {
                         marginBottom: 8,
                       }}
                     >
-                      Nassau{" "}
-                      {isNassauBest ? "Best Score" : "Combined"}{" "}
-                      Summary
+                      Nassau {isNassauBest ? "Best Score" : "Combined"} Summary
                     </ThemedText>
                     <HStack
                       style={{
@@ -3014,7 +3159,11 @@ const ScoreCard: React.FC = () => {
                               color: "#a855f7",
                             }}
                           >
-                            {r.housesDisplay.length > 0 ? r.housesDisplay.map((v: number) => Math.abs(v)).join(" ") : "-"}
+                            {r.housesDisplay.length > 0
+                              ? r.housesDisplay
+                                  .map((v: number) => Math.abs(v))
+                                  .join(" ")
+                              : "-"}
                           </ThemedText>
                         </HStack>
                       );
