@@ -361,6 +361,7 @@ export default function AllMembersScreen({
       });
 
       setMembers(sortedMembers);
+      console.log("members", sortedMembers);
       const courseData = await getCourse();
       setCourses(courseData);
       if (data.length > 0) {

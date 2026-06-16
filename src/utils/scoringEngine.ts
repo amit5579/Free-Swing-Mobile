@@ -294,19 +294,19 @@ export function computeHighLowHolePoints(
     ...validA.map(score => ({ team: 'A', score })),
     ...validB.map(score => ({ team: 'B', score }))
   ];
-// console.log("INPUT", teamAScores, teamBScores);
-// console.log("ALL BEFORE", JSON.stringify(all));
+  // console.log("INPUT", teamAScores, teamBScores);
+  // console.log("ALL BEFORE", JSON.stringify(all));
   // Step 2: Determine the 2-point winner
   const lowest = Math.min(...all.map(b => b.score));
   const lowestBalls = all.filter(b => b.score === lowest);
   const aHasLowest = lowestBalls.some(b => b.team === 'A');
   const bHasLowest = lowestBalls.some(b => b.team === 'B');
 
-//   console.log("LOWEST", lowest);
-// console.log("LOWEST BALLS", lowestBalls);
-//   console.log("aHasLowest",aHasLowest);
-//   console.log("bHasLowest",bHasLowest);
-  
+  //   console.log("LOWEST", lowest);
+  // console.log("LOWEST BALLS", lowestBalls);
+  //   console.log("aHasLowest",aHasLowest);
+  //   console.log("bHasLowest",bHasLowest);
+
 
   if (aHasLowest && !bHasLowest) {
     // Case A: All minimum-score balls belong to Team A → +2 to A, remove ONE
@@ -318,26 +318,26 @@ export function computeHighLowHolePoints(
     teamBPoints += 2;
     const idx = all.findIndex(b => b.team === 'B' && b.score === lowest);
     all.splice(idx, 1);
-  } 
-  else if(aHasLowest && bHasLowest){
+  }
+  else if (aHasLowest && bHasLowest) {
 
-  const idxA = all.findIndex(
-    b => b.team === 'A' && b.score === lowest
-  );
+    const idxA = all.findIndex(
+      b => b.team === 'A' && b.score === lowest
+    );
 
-  if(idxA !== -1){
-    all.splice(idxA,1);
+    if (idxA !== -1) {
+      all.splice(idxA, 1);
+    }
+
+    const idxB = all.findIndex(
+      b => b.team === 'B' && b.score === lowest
+    );
+
+    if (idxB !== -1) {
+      all.splice(idxB, 1);
+    }
   }
 
-  const idxB = all.findIndex(
-    b => b.team === 'B' && b.score === lowest
-  );
-
-  if(idxB !== -1){
-    all.splice(idxB,1);
-  }
-}
-  
   else {
     // Case B: Minimum-score balls belong to both teams → no 2-point bonus
     // Remove ONE minimum-score ball from Team A and ONE from Team B
@@ -346,7 +346,7 @@ export function computeHighLowHolePoints(
     const idxB = all.findIndex(b => b.team === 'B' && b.score === lowest);
     all.splice(idxB, 1);
   }
-// console.log("ALL AFTER STEP 2", JSON.stringify(all));
+  // console.log("ALL AFTER STEP 2", JSON.stringify(all));
   // Step 3: Determine the 1-point winner from remaining balls
   if (all.length > 0) {
     const nextLowest = Math.min(...all.map(b => b.score));
@@ -359,14 +359,14 @@ export function computeHighLowHolePoints(
     } else if (bHasNext && !aHasNext) {
       teamBPoints += 1;
     }
-//     console.log("NEXT LOWEST", nextLowest);
-// console.log("NEXT BALLS", nextBalls);
+    //     console.log("NEXT LOWEST", nextLowest);
+    // console.log("NEXT BALLS", nextBalls);
     // Tied between teams → nobody gets the point
   }
-// console.log("RESULT", {
-//   teamA: teamAPoints,
-//   teamB: teamBPoints
-// });
+  // console.log("RESULT", {
+  //   teamA: teamAPoints,
+  //   teamB: teamBPoints
+  // });
   return { teamA: teamAPoints, teamB: teamBPoints };
 }
 
@@ -422,11 +422,11 @@ export function computeHighLowSummary(
     }
   });
 
-// console.log("================================");
-// console.log("FINAL MATCH TOTALS", {
-//   teamA: teamAMatchTotal,
-//   teamB: teamBMatchTotal,
-// });
+  // console.log("================================");
+  // console.log("FINAL MATCH TOTALS", {
+  //   teamA: teamAMatchTotal,
+  //   teamB: teamBMatchTotal,
+  // });
 
   // Patiala X
   const patialaA = computeTotalPatialaX(
@@ -508,9 +508,11 @@ export function determineNassauHoleWinner(
     bVal = validB.reduce((sum, v) => sum + v, 0);
   }
 
-  if (aVal < bVal) return 'teamA';
-  if (bVal < aVal) return 'teamB';
-  return 'tie';
+  let calculatedWinner: 'teamA' | 'teamB' | 'tie' = 'tie';
+  if (aVal < bVal) calculatedWinner = 'teamA';
+  else if (bVal < aVal) calculatedWinner = 'teamB';
+
+  return calculatedWinner;
 }
 
 /**
@@ -601,7 +603,7 @@ export function computeNassauState(
 
   // Determine winners for all holes
   const allWinners = sorted.map((h) =>
-    determineNassauHoleWinner(mode, h.teamANetScores, h.teamBNetScores),
+    determineNassauHoleWinner(mode, h.teamARawScores, h.teamBRawScores)
   );
 
   // Front 9 houses (holes 1-9)
@@ -636,8 +638,8 @@ export function computeNassauState(
       if (idx !== -1) housesDisplay = back9Sim.holeSnapshots[idx] || [];
     }
 
-    const aValid = h.teamANetScores.filter((s) => s !== null) as number[];
-    const bValid = h.teamBNetScores.filter((s) => s !== null) as number[];
+    const aValid = h.teamARawScores.filter((s) => s !== null) as number[];
+    const bValid = h.teamBRawScores.filter((s) => s !== null) as number[];
     const teamAScore = mode === 'best' ? Math.min(...(aValid.length ? aValid : [Infinity])) : aValid.reduce((a, b) => a + b, 0);
     const teamBScore = mode === 'best' ? Math.min(...(bValid.length ? bValid : [Infinity])) : bValid.reduce((a, b) => a + b, 0);
 

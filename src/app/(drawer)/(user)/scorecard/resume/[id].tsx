@@ -1080,6 +1080,7 @@ export default function ResumeScorecard() {
               roundNumber: h.roundNumber || 1,
               isCompleted: true,
               isExcluded: h.isExcluded || false,
+              matchScoringType: h.matchScoringType || "",
               companionScoresJson: h.companionScoresJson || null,
               companionSandysJson: h.companionSandysJson || null,
               ...(playingGroupRoundKey
@@ -1095,11 +1096,16 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
+            console.log("pppp", payload);
+            
             await updateHoleScoresApi(id!, payload);
             await AsyncStorage.removeItem(storageKey);
 
-            Alert.alert("Success", "Round finished successfully", [
-              { text: "OK", onPress: () => router.back() },
+            Alert.alert("Success", "Round finished successfully"
+              , [
+              { text: "OK"
+                , onPress: () => router.back() 
+              },
             ]);
           } catch (err) {
             console.error(err);
@@ -2761,27 +2767,35 @@ export default function ResumeScorecard() {
                           );
                         })()}
                       {isNassau && partners.length >= 2 && ns && (
-                        <VStack style={{ width: 100, alignItems: "center" }}>
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              fontWeight: "700",
-                              color: isDark ? "#fff" : "#000",
-                            }}
-                          >
-                            {(() => {
-                              const f9Houses = ns.front9Houses || [];
-                              const halfs = f9Houses.reduce(
-                                (acc: { a: number; b: number }, h: number) => {
-                                  if (h > 0) acc.a++;
-                                  else if (h < 0) acc.b++;
-                                  return acc;
-                                },
-                                { a: 0, b: 0 },
+                        <VStack
+                          style={{
+                            width: 100,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {ns.front9Houses?.map(
+                            (val: number, i: number, arr: number[]) => {
+                              let color = isDark ? "#fff" : "#000";
+                              if (val > 0) color = "#22c55e";
+                              if (val < 0) color = "#3b82f6";
+                              return (
+                                <Text
+                                  key={i}
+                                  style={{
+                                    color,
+                                    fontWeight: "bold",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  {Math.abs(val)}
+                                  {i < arr.length - 1 ? " " : ""}
+                                </Text>
                               );
-                              return `${halfs.a}-${halfs.b}`;
-                            })()}
-                          </Text>
+                            }
+                          )}
                         </VStack>
                       )}
                     </HStack>
@@ -3331,27 +3345,35 @@ export default function ResumeScorecard() {
                           );
                         })()}
                       {isNassau && partners.length >= 2 && ns && (
-                        <VStack style={{ width: 100, alignItems: "center" }}>
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              fontWeight: "700",
-                              color: isDark ? "#fff" : "#000",
-                            }}
-                          >
-                            {(() => {
-                              const b9Houses = ns.back9Houses || [];
-                              const halfs = b9Houses.reduce(
-                                (acc: { a: number; b: number }, h: number) => {
-                                  if (h > 0) acc.a++;
-                                  else if (h < 0) acc.b++;
-                                  return acc;
-                                },
-                                { a: 0, b: 0 },
+                        <VStack
+                          style={{
+                            width: 100,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {ns.back9Houses?.map(
+                            (val: number, i: number, arr: number[]) => {
+                              let color = isDark ? "#fff" : "#000";
+                              if (val > 0) color = "#22c55e";
+                              if (val < 0) color = "#3b82f6";
+                              return (
+                                <Text
+                                  key={i}
+                                  style={{
+                                    color,
+                                    fontWeight: "bold",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  {Math.abs(val)}
+                                  {i < arr.length - 1 ? " " : ""}
+                                </Text>
                               );
-                              return `${halfs.a}-${halfs.b}`;
-                            })()}
-                          </Text>
+                            }
+                          )}
                         </VStack>
                       )}
                     </HStack>
@@ -3522,27 +3544,35 @@ export default function ResumeScorecard() {
                         );
                       })()}
                     {isNassau && partners.length >= 2 && ns && (
-                      <VStack style={{ width: 100, alignItems: "center" }}>
-                        <Text
-                          style={{
-                            fontSize: 10,
-                            fontWeight: "800",
-                            color: "#fff",
-                          }}
-                        >
-                          {(() => {
-                            const overallHouses = ns.overallHouses || [];
-                            const halfs = overallHouses.reduce(
-                              (acc: { a: number; b: number }, h: number) => {
-                                if (h > 0) acc.a++;
-                                else if (h < 0) acc.b++;
-                                return acc;
-                              },
-                              { a: 0, b: 0 },
+                      <VStack
+                        style={{
+                          width: 100,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {ns.overallHouses?.map(
+                          (val: number, i: number, arr: number[]) => {
+                            let color = "#fff";
+                            if (val > 0) color = "#22c55e";
+                            if (val < 0) color = "#3b82f6";
+                            return (
+                              <Text
+                                key={i}
+                                style={{
+                                  color,
+                                  fontWeight: "800",
+                                  fontSize: 11,
+                                }}
+                              >
+                                {Math.abs(val)}
+                                {i < arr.length - 1 ? " " : ""}
+                              </Text>
                             );
-                            return `${halfs.a}-${halfs.b}`;
-                          })()}
-                        </Text>
+                          }
+                        )}
                       </VStack>
                     )}
                   </HStack>
