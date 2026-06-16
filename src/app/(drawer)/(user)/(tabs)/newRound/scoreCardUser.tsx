@@ -3607,7 +3607,7 @@ export default function ScoreCardUserPage() {
                                 >
                                   {b}
                                 </ThemedText>
-                                <ThemedText
+                                {/* <ThemedText
                                   style={{
                                     fontSize: 12,
                                     fontWeight: bold ? "700" : "500",
@@ -3624,7 +3624,7 @@ export default function ScoreCardUserPage() {
                                         ? `B+${b - a}`
                                         : "0"
                                     : "-"}
-                                </ThemedText>
+                                </ThemedText> */}
                               </HStack>
                             );
                             return (
@@ -3679,7 +3679,7 @@ export default function ScoreCardUserPage() {
                                   >
                                     Team B
                                   </ThemedText>
-                                  <ThemedText
+                                  {/* <ThemedText
                                     style={{
                                       fontWeight: "700",
                                       fontSize: 11,
@@ -3689,7 +3689,7 @@ export default function ScoreCardUserPage() {
                                     }}
                                   >
                                     Pts
-                                  </ThemedText>
+                                  </ThemedText> */}
                                 </HStack>
                                 <Row
                                   label="Front 9 Halfs"
