@@ -367,7 +367,7 @@ export default function DashboardScreen() {
                 })}
               </HStack>
 
-              {!(activeTab === "overview" && overviewSubTab === "paradise") && (
+              {!(activeTab === "overview" && (overviewSubTab === "paradise" || overviewSubTab === "members")) && (
                 <Box
                   className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
                   style={{

@@ -439,7 +439,7 @@ export default function ScoreCardUserPage() {
     (h: any) => h.holeNumber >= 10,
   );
   const legendCounts = getScoreLegendCounts(processedAllHoles);
-  
+
   const getTotals = (holes: any[], mode: string) => ({
     strokeIndex: "",
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
@@ -2502,6 +2502,48 @@ export default function ScoreCardUserPage() {
                                             </>
                                           );
                                         })()}
+                                      {isNassau &&
+                                        partners.length >= 2 &&
+                                        ns && (
+                                          <VStack
+                                            style={{
+                                              width: 100,
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              flexDirection: "row",
+                                              flexWrap: "wrap",
+                                            }}
+                                          >
+                                            {ns.front9Houses?.map(
+                                              (
+                                                val: number,
+                                                i: number,
+                                                arr: number[],
+                                              ) => {
+                                                let color = isDark
+                                                  ? "#fff"
+                                                  : "#000";
+                                                if (val > 0) color = "#22c55e";
+                                                if (val < 0) color = "#3b82f6";
+                                                return (
+                                                  <Text
+                                                    key={i}
+                                                    style={{
+                                                      color,
+                                                      fontWeight: "bold",
+                                                      fontSize: 11,
+                                                    }}
+                                                  >
+                                                    {Math.abs(val)}
+                                                    {i < arr.length - 1
+                                                      ? " "
+                                                      : ""}
+                                                  </Text>
+                                                );
+                                              },
+                                            )}
+                                          </VStack>
+                                        )}
                                     </HStack>
                                   )}
 
@@ -2721,6 +2763,48 @@ export default function ScoreCardUserPage() {
                                             </>
                                           );
                                         })()}
+                                      {isNassau &&
+                                        partners.length >= 2 &&
+                                        ns && (
+                                          <VStack
+                                            style={{
+                                              width: 100,
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              flexDirection: "row",
+                                              flexWrap: "wrap",
+                                            }}
+                                          >
+                                            {ns.back9Houses?.map(
+                                              (
+                                                val: number,
+                                                i: number,
+                                                arr: number[],
+                                              ) => {
+                                                let color = isDark
+                                                  ? "#fff"
+                                                  : "#000";
+                                                if (val > 0) color = "#22c55e";
+                                                if (val < 0) color = "#3b82f6";
+                                                return (
+                                                  <Text
+                                                    key={i}
+                                                    style={{
+                                                      color,
+                                                      fontWeight: "bold",
+                                                      fontSize: 11,
+                                                    }}
+                                                  >
+                                                    {Math.abs(val)}
+                                                    {i < arr.length - 1
+                                                      ? " "
+                                                      : ""}
+                                                  </Text>
+                                                );
+                                              },
+                                            )}
+                                          </VStack>
+                                        )}
                                     </HStack>
                                   )}
                                 </View>
@@ -2928,6 +3012,38 @@ export default function ScoreCardUserPage() {
                                     </>
                                   );
                                 })()}
+                              {isNassau && partners.length >= 2 && ns && (
+                                <VStack
+                                  style={{
+                                    width: 100,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  {ns.overallHouses?.map(
+                                    (val: number, i: number, arr: number[]) => {
+                                      let color = "#fff";
+                                      if (val > 0) color = "#22c55e";
+                                      if (val < 0) color = "#3b82f6";
+                                      return (
+                                        <Text
+                                          key={i}
+                                          style={{
+                                            color,
+                                            fontWeight: "800",
+                                            fontSize: 11,
+                                          }}
+                                        >
+                                          {Math.abs(val)}
+                                          {i < arr.length - 1 ? " " : ""}
+                                        </Text>
+                                      );
+                                    },
+                                  )}
+                                </VStack>
+                              )}
                             </HStack>
                           </VStack>
                         </ScrollView>
@@ -3137,12 +3253,8 @@ export default function ScoreCardUserPage() {
                                   ))}
                                 </HStack>
                                 <SumRow label="1–6" vals={s.segment1_6} />
-                                {hasBack && (
-                                  <SumRow label="7–12" vals={s.segment7_12} />
-                                )}
-                                {hasBack && (
-                                  <SumRow label="13–18" vals={s.segment13_18} />
-                                )}
+                                <SumRow label="7–12" vals={s.segment7_12} />
+                                <SumRow label="13–18" vals={s.segment13_18} />
                                 <SumRow
                                   label="Overall Match Pts"
                                   vals={s.overallMatchPts}
@@ -3312,18 +3424,16 @@ export default function ScoreCardUserPage() {
                                     Team B
                                   </ThemedText>
                                 </HStack>
-                                <Row
+                                {/* <Row
                                   label="Front 9"
                                   a={s.front9MatchPts.teamA}
                                   b={s.front9MatchPts.teamB}
                                 />
-                                {hasBack && (
-                                  <Row
-                                    label="Back 9"
-                                    a={s.back9MatchPts.teamA}
-                                    b={s.back9MatchPts.teamB}
-                                  />
-                                )}
+                                <Row
+                                  label="Back 9"
+                                  a={s.back9MatchPts.teamA}
+                                  b={s.back9MatchPts.teamB}
+                                /> */}
                                 <Row
                                   label="Overall Match Pts"
                                   a={s.overallMatchPts.teamA}

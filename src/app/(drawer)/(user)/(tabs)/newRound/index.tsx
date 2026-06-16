@@ -270,7 +270,7 @@ export default function StartNewRoundPage() {
                 </>
               ) : (
                 <>
-                  <View
+                  {/* <View
                     style={{
                       borderWidth: 1,
                       borderColor: isDark ? "#1e293b" : "#e2e8f0",
@@ -292,7 +292,7 @@ export default function StartNewRoundPage() {
                         color: isDark ? "#fff" : "#000",
                       }}
                     />
-                  </View>
+                  </View> */}
                   {search.length > 0 ? (
                     <>
                       {/* Search Results Header */}
