@@ -2981,6 +2981,9 @@ const ScoreCard: React.FC = () => {
                     <ThemedText
                       style={{
                         fontSize: 12,
+                        fontWeight: bold ? "700" : "500",
+                        width: 70,
+                        textAlign: "center",
                         color: "#f43f5e",
                       }}
                     >
