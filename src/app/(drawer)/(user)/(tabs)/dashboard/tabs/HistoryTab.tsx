@@ -17,6 +17,7 @@ import { getScoreHistory, ScoreHistoryItem } from "@/api/modules/dashboard.api";
 import { router, useFocusEffect } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import { ScrollView } from "react-native";
+import { ThemedText } from "@/components/themed-text";
 
 export type GameHistory = {
   id: string;
@@ -238,11 +239,14 @@ export function HistoryTab({
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
       >
         {filteredHistory.length === 0 ? (
-          <Box className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4">
+          <Box
+            className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4"
+            style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB" }}
+          >
             <Ionicons name="time-outline" size={40} color="#9ca3af" />
-            <Text className="text-typography-400 font-semibold text-sm mt-3">
+            <ThemedText className="text-typography-400 font-semibold text-sm mt-3">
               {searchQuery ? "No matching history found" : "No history yet"}
-            </Text>
+            </ThemedText>
           </Box>
         ) : (
           // history.map((item) => (
