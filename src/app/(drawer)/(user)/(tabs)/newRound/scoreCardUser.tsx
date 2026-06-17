@@ -448,7 +448,7 @@ export default function ScoreCardUserPage() {
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
-    net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
+    net: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
 
     stableford:
       mode === "stableford"
@@ -461,8 +461,8 @@ export default function ScoreCardUserPage() {
 
   const processedHoles = processedAllHoles.filter((h: any) => {
     if (holes === "18") return true;
-    if (holes === "front9") return h.holeNumber <= 9;
-    if (holes === "back9") return h.holeNumber >= 10;
+    if (holes === "front9" || holes === "Front9" || holes === "Front 9") return h.holeNumber <= 9;
+    if (holes === "back9" || holes === "Back9" || holes === "Back 9") return h.holeNumber >= 10;
     return true;
   });
 
@@ -484,9 +484,9 @@ export default function ScoreCardUserPage() {
           .map((h: any) => ({
             courseId: courseId ? Number(courseId) : h.courseId,
             courseHalf:
-              holes === "front9"
+              (holes === "front9" || holes === "Front9" || holes === "Front 9")
                 ? "Front9"
-                : holes === "back9"
+                : (holes === "back9" || holes === "Back9" || holes === "Back 9")
                   ? "Back9"
                   : null,
             holeId: h.holeId,
@@ -604,7 +604,7 @@ export default function ScoreCardUserPage() {
       const payload = updatedDetails.map(calculateHole).map((h: any) => ({
         courseId: courseId ? Number(courseId) : h.courseId,
         courseHalf:
-          holes === "front9" ? "Front9" : holes === "back9" ? "Back9" : null,
+          (holes === "front9" || holes === "Front9" || holes === "Front 9") ? "Front9" : (holes === "back9" || holes === "Back9" || holes === "Back 9") ? "Back9" : null,
         holeId: h.holeId,
         isCompleted: false,
         isExcluded: isExcluded,
