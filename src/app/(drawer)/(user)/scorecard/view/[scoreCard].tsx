@@ -28,6 +28,8 @@ import {
   computeHighLowSummary,
   computeHighLowHolePoints,
   computeNassauState,
+  formatNassauHouses,
+  formatNassauHousesSpaced,
   computeSplitSixSummary,
 } from "@/utils/scoringEngine";
 import { useRouter } from "expo-router";
@@ -65,6 +67,7 @@ const ScoreCard: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isStableford, setIsStableford] = useState(false);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
 
   // Multiplayer layout state variables
   const [partners, setPartners] = useState<any[]>([]);
@@ -854,6 +857,19 @@ const ScoreCard: React.FC = () => {
               HCP {displayHandicap}
             </Text>
           </View>
+
+          {/* Toggle Button */}
+          <Pressable
+            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+            style={{ width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#1e293b" : "#f1f5f9", marginLeft: 12 }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
         </View>
       </View>
     );
@@ -892,19 +908,21 @@ const ScoreCard: React.FC = () => {
               >
                 {[
                   "Hole",
-                  "Stroke\nIndex",
-                  "Yards",
-                  "Par",
+                  isDetailsVisible && "Stroke\nIndex",
+                  isDetailsVisible && "Yards",
+                  isDetailsVisible && "Par",
                   "Score",
                   "Net",
                   ...(isStableford ? ["Pts"] : []),
-                ].map((h) => (
+                ]
+                  .filter(Boolean)
+                  .map((h) => (
                   <Text
-                    key={h}
+                    key={h as string}
                     className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                     style={{ textAlignVertical: "center" }}
                   >
-                    {h}
+                    {h as string}
                   </Text>
                 ))}
               </View>
@@ -920,21 +938,25 @@ const ScoreCard: React.FC = () => {
                 >
                   {h.holeNumber}
                 </Text>
-                <Text
-                  className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {h.strokeIndex}
-                </Text>
-                <Text
-                  className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {h.yardage}
-                </Text>
-                <Text
-                  className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                >
-                  {h.par}
-                </Text>
+                {isDetailsVisible && (
+                  <>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.strokeIndex}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {h.yardage}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
+                      {h.par}
+                    </Text>
+                  </>
+                )}
                 <View
                   className="flex-1 items-center justify-center relative"
                   pointerEvents="none"
@@ -1011,17 +1033,21 @@ const ScoreCard: React.FC = () => {
               >
                 Front 9
               </Text>
-              <Text className="flex-1" />
-              <Text
-                className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-              >
-                {sumYardage(front9)}
-              </Text>
-              <Text
-                className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-              >
-                {sumPar(front9)}
-              </Text>
+              {isDetailsVisible && (
+                <>
+                  <Text className="flex-1" />
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumYardage(front9)}
+                  </Text>
+                  <Text
+                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    {sumPar(front9)}
+                  </Text>
+                </>
+              )}
               <Text
                 className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
               >
@@ -1052,21 +1078,25 @@ const ScoreCard: React.FC = () => {
                   >
                     {h.holeNumber}
                   </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.strokeIndex}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {h.yardage}
-                  </Text>
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.par}
-                  </Text>
+                  {isDetailsVisible && (
+                    <>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.strokeIndex}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {h.yardage}
+                      </Text>
+                      <Text
+                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                      >
+                        {h.par}
+                      </Text>
+                    </>
+                  )}
                   <View
                     className="flex-1 items-center justify-center relative"
                     pointerEvents="none"
@@ -1148,17 +1178,21 @@ const ScoreCard: React.FC = () => {
                 >
                   Back 9
                 </Text>
-                <Text className="flex-1" />
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumYardage(back9)}
-                </Text>
-                <Text
-                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                >
-                  {sumPar(back9)}
-                </Text>
+                {isDetailsVisible && (
+                  <>
+                    <Text className="flex-1" />
+                    <Text
+                      className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {sumYardage(back9)}
+                    </Text>
+                    <Text
+                      className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {sumPar(back9)}
+                    </Text>
+                  </>
+                )}
                 <Text
                   className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
                 >
@@ -1186,13 +1220,17 @@ const ScoreCard: React.FC = () => {
               <Text className="flex-1 text-center font-black text-l text-white">
                 Grand Total
               </Text>
-              <Text className="flex-1" />
-              <Text className="flex-1 text-center font-bold text-l text-white">
-                {sumYardage(holes)}
-              </Text>
-              <Text className="flex-1 text-center font-bold text-l text-white">
-                {sumPar(holes)}
-              </Text>
+              {isDetailsVisible && (
+                <>
+                  <Text className="flex-1" />
+                  <Text className="flex-1 text-center font-bold text-l text-white">
+                    {sumYardage(holes)}
+                  </Text>
+                  <Text className="flex-1 text-center font-bold text-l text-white">
+                    {sumPar(holes)}
+                  </Text>
+                </>
+              )}
               <Text className="flex-1 text-center font-black text-l text-white">
                 {sumScores(holes)}
               </Text>
@@ -1243,9 +1281,7 @@ const ScoreCard: React.FC = () => {
 
             const totalWidth =
               50 +
-              55 +
-              60 +
-              50 +
+              (isDetailsVisible ? 55 + 60 + 50 : 0) +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
               (isHighLow && partners.length >= 4 ? 2 * 95 : 0) +
@@ -1283,36 +1319,40 @@ const ScoreCard: React.FC = () => {
                     >
                       Hole
                     </ThemedText>
-                    <ThemedText
-                      style={{
-                        width: 55,
-                        textAlign: "center",
-                        fontWeight: "700",
-                        fontSize: 12,
-                      }}
-                    >
-                      SI
-                    </ThemedText>
-                    <ThemedText
-                      style={{
-                        width: 60,
-                        textAlign: "center",
-                        fontWeight: "700",
-                        fontSize: 12,
-                      }}
-                    >
-                      Yards
-                    </ThemedText>
-                    <ThemedText
-                      style={{
-                        width: 50,
-                        textAlign: "center",
-                        fontWeight: "700",
-                        fontSize: 12,
-                      }}
-                    >
-                      Par
-                    </ThemedText>
+                    {isDetailsVisible && (
+                      <>
+                        <ThemedText
+                          style={{
+                            width: 55,
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontSize: 12,
+                          }}
+                        >
+                          SI
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            width: 60,
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontSize: 12,
+                          }}
+                        >
+                          Yards
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            width: 50,
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontSize: 12,
+                          }}
+                        >
+                          Par
+                        </ThemedText>
+                      </>
+                    )}
                     {partners.map((p, idx) => {
                       let badgeText = "";
                       let badgeColor = "";
@@ -1473,25 +1513,29 @@ const ScoreCard: React.FC = () => {
                           >
                             {h.holeNumber}
                           </ThemedText>
-                          <ThemedText
-                            style={{ width: 55, textAlign: "center" }}
-                          >
-                            {h.strokeIndex}
-                          </ThemedText>
-                          <ThemedText
-                            style={{
-                              width: 60,
-                              textAlign: "center",
-                              color: "#888",
-                            }}
-                          >
-                            {h.yardage}
-                          </ThemedText>
-                          <ThemedText
-                            style={{ width: 50, textAlign: "center" }}
-                          >
-                            {h.par}
-                          </ThemedText>
+                          {isDetailsVisible && (
+                            <>
+                              <ThemedText
+                                style={{ width: 55, textAlign: "center" }}
+                              >
+                                {h.strokeIndex}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  width: 60,
+                                  textAlign: "center",
+                                  color: "#888",
+                                }}
+                              >
+                                {h.yardage}
+                              </ThemedText>
+                              <ThemedText
+                                style={{ width: 50, textAlign: "center" }}
+                              >
+                                {h.par}
+                              </ThemedText>
+                            </>
+                          )}
 
                           {partners.map((p, pIndex) => {
                             const info = getPlayerHoleInfo(h, p);
@@ -1865,19 +1909,17 @@ const ScoreCard: React.FC = () => {
                             >
                               F9
                             </ThemedText>
-                            <ThemedText
-                              style={{ width: 55, textAlign: "center" }}
-                            />
-                            <ThemedText
-                              style={{ width: 60, textAlign: "center" }}
-                            >
-                              {sumYardage(front9)}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
-                            >
-                              {sumPar(front9)}
-                            </ThemedText>
+                            {isDetailsVisible && (
+                              <>
+                                <ThemedText style={{ width: 55, textAlign: "center" }} />
+                                <ThemedText style={{ width: 60, textAlign: "center" }}>
+                                  {sumYardage(front9)}
+                                </ThemedText>
+                                <ThemedText style={{ width: 50, textAlign: "center" }}>
+                                  {sumPar(front9)}
+                                </ThemedText>
+                              </>
+                            )}
                             {partners.map((p) => {
                               const t = getPlayerTotals(front9, p);
                               return (
@@ -2053,26 +2095,15 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                {ns.front9Houses?.map(
-                                  (val: number, i: number, arr: number[]) => {
-                                    let color = isDark ? "#fff" : "#000";
-                                    if (val > 0) color = "#22c55e";
-                                    if (val < 0) color = "#3b82f6";
-                                    return (
-                                      <Text
-                                        key={i}
-                                        style={{
-                                          color,
-                                          fontWeight: "bold",
-                                          fontSize: 11,
-                                        }}
-                                      >
-                                        {Math.abs(val)}
-                                        {i < arr.length - 1 ? " " : ""}
-                                      </Text>
-                                    );
-                                  },
-                                )}
+                                <Text
+                                  style={{
+                                    color: isDark ? "#fff" : "#000",
+                                    fontWeight: "bold",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  {formatNassauHouses(ns.front9Houses)}
+                                </Text>
                               </VStack>
                             )}
                           </HStack>
@@ -2099,19 +2130,17 @@ const ScoreCard: React.FC = () => {
                             >
                               B9
                             </ThemedText>
-                            <ThemedText
-                              style={{ width: 55, textAlign: "center" }}
-                            />
-                            <ThemedText
-                              style={{ width: 60, textAlign: "center" }}
-                            >
-                              {sumYardage(back9)}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
-                            >
-                              {sumPar(back9)}
-                            </ThemedText>
+                            {isDetailsVisible && (
+                              <>
+                                <ThemedText style={{ width: 55, textAlign: "center" }} />
+                                <ThemedText style={{ width: 60, textAlign: "center" }}>
+                                  {sumYardage(back9)}
+                                </ThemedText>
+                                <ThemedText style={{ width: 50, textAlign: "center" }}>
+                                  {sumPar(back9)}
+                                </ThemedText>
+                              </>
+                            )}
                             {partners.map((p) => {
                               const t = getPlayerTotals(back9, p);
                               return (
@@ -2287,26 +2316,15 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                {ns.back9Houses?.map(
-                                  (val: number, i: number, arr: number[]) => {
-                                    let color = isDark ? "#fff" : "#000";
-                                    if (val > 0) color = "#22c55e";
-                                    if (val < 0) color = "#3b82f6";
-                                    return (
-                                      <Text
-                                        key={i}
-                                        style={{
-                                          color,
-                                          fontWeight: "bold",
-                                          fontSize: 11,
-                                        }}
-                                      >
-                                        {Math.abs(val)}
-                                        {i < arr.length - 1 ? " " : ""}
-                                      </Text>
-                                    );
-                                  },
-                                )}
+                                <Text
+                                  style={{
+                                    color: isDark ? "#fff" : "#000",
+                                    fontWeight: "bold",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  {formatNassauHouses(ns.back9Houses)}
+                                </Text>
                               </VStack>
                             )}
                           </HStack>
@@ -2334,17 +2352,17 @@ const ScoreCard: React.FC = () => {
                     >
                       Total
                     </ThemedText>
-                    <ThemedText style={{ width: 55, textAlign: "center" }} />
-                    <ThemedText
-                      style={{ width: 60, textAlign: "center", color: "#fff" }}
-                    >
-                      {sumYardage(holes)}
-                    </ThemedText>
-                    <ThemedText
-                      style={{ width: 50, textAlign: "center", color: "#fff" }}
-                    >
-                      {sumPar(holes)}
-                    </ThemedText>
+                    {isDetailsVisible && (
+                      <>
+                        <ThemedText style={{ width: 55, textAlign: "center" }} />
+                        <ThemedText style={{ width: 60, textAlign: "center", color: "#fff" }}>
+                          {sumYardage(holes)}
+                        </ThemedText>
+                        <ThemedText style={{ width: 50, textAlign: "center", color: "#fff" }}>
+                          {sumPar(holes)}
+                        </ThemedText>
+                      </>
+                    )}
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (
@@ -2502,26 +2520,15 @@ const ScoreCard: React.FC = () => {
                           flexWrap: "wrap",
                         }}
                       >
-                        {ns.overallHouses?.map(
-                          (val: number, i: number, arr: number[]) => {
-                            let color = "#fff";
-                            if (val > 0) color = "#22c55e";
-                            if (val < 0) color = "#3b82f6";
-                            return (
-                              <Text
-                                key={i}
-                                style={{
-                                  color,
-                                  fontWeight: "800",
-                                  fontSize: 11,
-                                }}
-                              >
-                                {Math.abs(val)}
-                                {i < arr.length - 1 ? " " : ""}
-                              </Text>
-                            );
-                          },
-                        )}
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontWeight: "800",
+                            fontSize: 11,
+                          }}
+                        >
+                          {formatNassauHouses(ns.overallHouses)}
+                        </Text>
                       </VStack>
                     )}
                   </HStack>
@@ -3070,23 +3077,81 @@ const ScoreCard: React.FC = () => {
                     />
                     <View
                       style={{
-                        borderTopWidth: 0.5,
-                        borderColor: isDark ? "#444" : "#ddd",
                         paddingTop: 10,
                         alignItems: "center",
                         marginTop: 6,
                       }}
                     >
+                      <HStack
+                      style={{
+                        alignItems: "center",
+                        // borderBottomWidth: 0.5,
+                        // borderColor: isDark ? "#333" : "#e5e5e5",
+                        paddingVertical: 8,
+                      }}
+                    >
                       <ThemedText
                         style={{
+                          color: isDark ? "#e2e8f0" : "#334155",
+                          flex: 1,
                           fontSize: 12,
                           fontWeight: "700",
-                          color: isDark ? "#e2e8f0" : "#334155",
-                          marginBottom: 6,
+                          textAlign: "center",
                         }}
                       >
-                        Final Result (Net)
+                        Final Result
                       </ThemedText>
+                      <HStack
+                        style={{
+                          alignItems: "center",
+                          flex: 2,
+                          flexWrap: "wrap",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <ThemedText
+                          style={{
+                            color: isDark ? "#e2e8f0" : "#334155",
+                            fontSize: 12,
+                            fontWeight: "700",
+                          }}
+                        >
+                          Match -{" "}
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            color: "#059669",
+                            fontSize: 12,
+                            fontWeight: "800",
+                          }}
+                        >
+                          {formatNassauHousesSpaced(ns.overallHouses)}
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            color: isDark ? "#e2e8f0" : "#334155",
+                            fontSize: 12,
+                            fontWeight: "700",
+                          }}
+                        >
+                          {"  &  Half - "}
+                        </ThemedText>
+                        <ThemedText
+                          style={{
+                            color: "#059669",
+                            fontSize: 12,
+                            fontWeight: "800",
+                          }}
+                        >
+                          {[
+                            ns.front9Halfs.team1,
+                            ns.front9Halfs.team2,
+                            ns.back9Halfs.team1,
+                            ns.back9Halfs.team2,
+                          ].join(" ")}
+                        </ThemedText>
+                      </HStack>
+                    </HStack>
                       <ThemedText
                         style={{
                           fontSize: 11,
