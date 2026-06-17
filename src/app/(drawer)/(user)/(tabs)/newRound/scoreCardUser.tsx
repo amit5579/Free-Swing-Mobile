@@ -2,6 +2,8 @@
 import {
   computeSplitSixSummary,
   computeNassauState,
+  formatNassauHouses,
+  formatNassauHousesSpaced,
   computeHighLowHolePoints,
   calculateSplitSixPoints,
   computeHighLowSummary,
@@ -91,6 +93,7 @@ export default function ScoreCardUserPage() {
   const isDark = scheme === "dark";
 
   const [visible, setVisible] = useState(false);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
   const [scoreCardDetails, setScoreCardDetails] = useState<any>([]);
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
@@ -1125,50 +1128,71 @@ export default function ScoreCardUserPage() {
               Scorecard
             </ThemedText>
 
-            {/* ⚖️ SPACER */}
-            <View style={{ width: 40 }} />
+            {/* ⚖️ TOGGLE */}
+            <Pressable
+              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
           </HStack>
 
           {/* 📌 META INFO ROW */}
           <HStack
             style={{
-              marginTop: 8,
-              alignItems: "center",
+              marginTop: 12,
               justifyContent: "space-between",
+              alignItems: "center",
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              backgroundColor: isDark ? "#111827" : "#f8fafc",
             }}
           >
             {/* 📝 SCORING TYPE */}
-            <ThemedText
+            <HStack style={{ alignItems: "center" }}>
+              <Ionicons
+                name="person-outline"
+                size={14}
+                color={isDark ? "#94a3b8" : "#64748b"}
+              />
+
+              <Text
+                style={{
+                  marginLeft: 6,
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: isDark ? "#e5e7eb" : "#374151",
+                }}
+              >
+                Handicap: {handicap ?? "N/A"}
+              </Text>
+            </HStack>
+
+            {/* 🟢 HANDICAP BADGE */}
+            <Text
               style={{
+                flex: 1,
+                marginLeft: 12,
                 fontSize: 12,
                 color: isDark ? "#94a3b8" : "#64748b",
-                flex: 1,
+                textAlign: "right",
               }}
             >
               {getScoringLabel()}
-            </ThemedText>
-
-            {/* 🟢 HANDICAP BADGE */}
-            <Box
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 10,
-                backgroundColor: "rgba(139,195,74,0.15)",
-                borderWidth: 1,
-                borderColor: "rgba(139,195,74,0.3)",
-              }}
-            >
-              <ThemedText
-                style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: "#2E7D32",
-                }}
-              >
-                HC: {handicap ?? "N/A"}
-              </ThemedText>
-            </Box>
+            </Text>
           </HStack>
         </VStack>
       </Box>
@@ -1272,12 +1296,15 @@ export default function ScoreCardUserPage() {
                   {partners.length < 2 ? (
                     <VStack
                       style={{
-                        backgroundColor: "transparent",
                         borderRadius: 14,
                         overflow: "hidden",
+                        borderWidth: 1,
+                        borderColor: isDark ? "#1e293b" : "#e5e7eb",
+                        backgroundColor: isDark ? "#020617" : "#ffffff",
                         shadowColor: "#000",
                         shadowOpacity: 0.12,
                         shadowRadius: 6,
+                        elevation: 2,
                       }}
                     >
                       {/* 🔹 HEADER */}
@@ -1285,17 +1312,17 @@ export default function ScoreCardUserPage() {
                         style={{
                           paddingVertical: 12,
                           backgroundColor: isDark
-                            ? "rgba(38, 38, 38, 0.8)"
-                            : "rgba(243, 244, 246, 0.8)",
+                            ? "#111827"
+                            : "#f8fafc",
                           borderBottomWidth: 1,
-                          borderColor: isDark ? "#444" : "#ddd",
+                          borderColor: isDark ? "#1e293b" : "#e5e7eb",
                         }}
                       >
                         {[
                           "Hole",
-                          "Stroke\nIndex",
-                          "Yards",
-                          "Par",
+                          isDetailsVisible && "SI",
+                          isDetailsVisible && "Yards",
+                          isDetailsVisible && "Par",
                           "Score",
                           "Net",
                           isStableford && "Pts",
@@ -1307,8 +1334,8 @@ export default function ScoreCardUserPage() {
                               style={{
                                 flex: 1,
                                 textAlign: "center",
-                                fontWeight: "600",
-                                fontSize: 13,
+                                fontWeight: "700",
+                                fontSize: 12,
                               }}
                             >
                               {item}
@@ -1325,9 +1352,9 @@ export default function ScoreCardUserPage() {
                               alignItems: "center",
                               borderBottomWidth: 0.5,
                               backgroundColor: isDark
-                                ? "rgba(15, 23, 42, 0.7)"
-                                : "rgba(255, 255, 255, 0.7)",
-                              borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                                ? "#020617"
+                                : "#ffffff",
+                              borderColor: isDark ? "#1e293b" : "#e5e7eb",
                             }}
                           >
                             <ThemedText
@@ -1335,27 +1362,31 @@ export default function ScoreCardUserPage() {
                             >
                               {h.holeNumber}
                             </ThemedText>
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {h.strokeIndex}
-                            </ThemedText>
+                            {isDetailsVisible && (
+                              <>
+                                <ThemedText
+                                  style={{ flex: 1, textAlign: "center" }}
+                                >
+                                  {h.strokeIndex}
+                                </ThemedText>
 
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                color: "#888",
-                              }}
-                            >
-                              {h.yardage}
-                            </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    flex: 1,
+                                    textAlign: "center",
+                                    color: "#888",
+                                  }}
+                                >
+                                  {h.yardage}
+                                </ThemedText>
 
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {h.par}
-                            </ThemedText>
+                                <ThemedText
+                                  style={{ flex: 1, textAlign: "center" }}
+                                >
+                                  {h.par}
+                                </ThemedText>
+                              </>
+                            )}
 
                             {/*  SCORE INPUT */}
                             <View
@@ -1434,11 +1465,11 @@ export default function ScoreCardUserPage() {
                             <HStack
                               style={{
                                 backgroundColor: isDark
-                                  ? "rgba(38, 38, 38, 0.8)"
-                                  : "rgba(243, 244, 246, 0.8)",
+                                  ? "#111827"
+                                  : "#f8fafc",
                                 paddingVertical: 10,
                                 borderTopWidth: 1,
-                                borderColor: isDark ? "#444" : "#ddd",
+                                borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               }}
                             >
                               <ThemedText
@@ -1451,22 +1482,25 @@ export default function ScoreCardUserPage() {
                                 Front 9
                               </ThemedText>
 
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {frontTotals.strokeIndex}
-                              </ThemedText>
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {frontTotals.yards}
-                              </ThemedText>
-
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {frontTotals.par}
-                              </ThemedText>
+                              {isDetailsVisible && (
+                                <>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {frontTotals.strokeIndex}
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {frontTotals.yards}
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {frontTotals.par}
+                                  </ThemedText>
+                                </>
+                              )}
 
                               <ThemedText
                                 style={{
@@ -1503,11 +1537,11 @@ export default function ScoreCardUserPage() {
                             <HStack
                               style={{
                                 backgroundColor: isDark
-                                  ? "rgba(38, 38, 38, 0.8)"
-                                  : "rgba(243, 244, 246, 0.8)",
+                                  ? "#111827"
+                                  : "#f8fafc",
                                 paddingVertical: 10,
                                 borderTopWidth: 1,
-                                borderColor: isDark ? "#444" : "#ddd",
+                                borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               }}
                             >
                               <ThemedText
@@ -1520,22 +1554,25 @@ export default function ScoreCardUserPage() {
                                 Back 9
                               </ThemedText>
 
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {backTotals.strokeIndex}
-                              </ThemedText>
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {backTotals.yards}
-                              </ThemedText>
-
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
-                              >
-                                {backTotals.par}
-                              </ThemedText>
+                              {isDetailsVisible && (
+                                <>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {backTotals.strokeIndex}
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {backTotals.yards}
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{ flex: 1, textAlign: "center" }}
+                                  >
+                                    {backTotals.par}
+                                  </ThemedText>
+                                </>
+                              )}
 
                               <ThemedText
                                 style={{
@@ -1621,9 +1658,7 @@ export default function ScoreCardUserPage() {
                       };
                       const totalWidth =
                         50 +
-                        55 +
-                        60 +
-                        50 +
+                        (isDetailsVisible ? 55 + 60 + 50 : 0) +
                         partners.length * 95 +
                         (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
                         (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
@@ -1638,6 +1673,9 @@ export default function ScoreCardUserPage() {
                               width: totalWidth,
                               borderRadius: 14,
                               overflow: "hidden",
+                              borderWidth: 1,
+                              borderColor: isDark ? "#1e293b" : "#e5e7eb",
+                              backgroundColor: isDark ? "#020617" : "#ffffff",
                             }}
                           >
                             {/* Headers */}
@@ -1645,10 +1683,10 @@ export default function ScoreCardUserPage() {
                               style={{
                                 paddingVertical: 12,
                                 backgroundColor: isDark
-                                  ? "rgba(38,38,38,0.8)"
-                                  : "rgba(243,244,246,0.8)",
+                                  ? "#111827"
+                                  : "#f8fafc",
                                 borderBottomWidth: 1,
-                                borderColor: isDark ? "#444" : "#ddd",
+                                borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               }}
                             >
                               <ThemedText
@@ -1661,36 +1699,40 @@ export default function ScoreCardUserPage() {
                               >
                                 Hole
                               </ThemedText>
-                              <ThemedText
-                                style={{
-                                  width: 55,
-                                  textAlign: "center",
-                                  fontWeight: "700",
-                                  fontSize: 12,
-                                }}
-                              >
-                                SI
-                              </ThemedText>
-                              <ThemedText
-                                style={{
-                                  width: 60,
-                                  textAlign: "center",
-                                  fontWeight: "700",
-                                  fontSize: 12,
-                                }}
-                              >
-                                Yards
-                              </ThemedText>
-                              <ThemedText
-                                style={{
-                                  width: 50,
-                                  textAlign: "center",
-                                  fontWeight: "700",
-                                  fontSize: 12,
-                                }}
-                              >
-                                Par
-                              </ThemedText>
+                              {isDetailsVisible && (
+                                <>
+                                  <ThemedText
+                                    style={{
+                                      width: 55,
+                                      textAlign: "center",
+                                      fontWeight: "700",
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    SI
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{
+                                      width: 60,
+                                      textAlign: "center",
+                                      fontWeight: "700",
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    Yards
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{
+                                      width: 50,
+                                      textAlign: "center",
+                                      fontWeight: "700",
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    Par
+                                  </ThemedText>
+                                </>
+                              )}
                               {partners.map((p: any, idx: number) => {
                                 let badgeText = "";
                                 let badgeColor = "";
@@ -1854,10 +1896,10 @@ export default function ScoreCardUserPage() {
                                       borderBottomWidth: 0.5,
                                       borderColor: isDark
                                         ? "#1e293b"
-                                        : "#e2e8f0",
+                                        : "#e5e7eb",
                                       backgroundColor: isDark
-                                        ? "rgba(15, 23, 42, 0.7)"
-                                        : "rgba(255, 255, 255, 0.7)",
+                                        ? "#020617"
+                                        : "#ffffff",
                                     }}
                                   >
                                     <ThemedText
@@ -1865,25 +1907,35 @@ export default function ScoreCardUserPage() {
                                     >
                                       {h.holeNumber}
                                     </ThemedText>
-                                    <ThemedText
-                                      style={{ width: 55, textAlign: "center" }}
-                                    >
-                                      {h.strokeIndex}
-                                    </ThemedText>
-                                    <ThemedText
-                                      style={{
-                                        width: 60,
-                                        textAlign: "center",
-                                        color: "#888",
-                                      }}
-                                    >
-                                      {h.yardage}
-                                    </ThemedText>
-                                    <ThemedText
-                                      style={{ width: 50, textAlign: "center" }}
-                                    >
-                                      {h.par}
-                                    </ThemedText>
+                                    {isDetailsVisible && (
+                                      <>
+                                        <ThemedText
+                                          style={{
+                                            width: 55,
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {h.strokeIndex}
+                                        </ThemedText>
+                                        <ThemedText
+                                          style={{
+                                            width: 60,
+                                            textAlign: "center",
+                                            color: "#888",
+                                          }}
+                                        >
+                                          {h.yardage}
+                                        </ThemedText>
+                                        <ThemedText
+                                          style={{
+                                            width: 50,
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {h.par}
+                                        </ThemedText>
+                                      </>
+                                    )}
 
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
@@ -2291,11 +2343,13 @@ export default function ScoreCardUserPage() {
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
-                                          ? "rgba(38,38,38,0.8)"
-                                          : "rgba(243,244,246,0.8)",
+                                          ? "#111827"
+                                          : "#f8fafc",
                                         paddingVertical: 10,
                                         borderTopWidth: 1,
-                                        borderColor: isDark ? "#444" : "#ddd",
+                                        borderColor: isDark
+                                          ? "#1e293b"
+                                          : "#e5e7eb",
                                       }}
                                     >
                                       <ThemedText
@@ -2307,28 +2361,32 @@ export default function ScoreCardUserPage() {
                                       >
                                         F9
                                       </ThemedText>
-                                      <ThemedText
-                                        style={{
-                                          width: 55,
-                                          textAlign: "center",
-                                        }}
-                                      />
-                                      <ThemedText
-                                        style={{
-                                          width: 60,
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        {frontTotals.yards}
-                                      </ThemedText>
-                                      <ThemedText
-                                        style={{
-                                          width: 50,
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        {frontTotals.par}
-                                      </ThemedText>
+                                      {isDetailsVisible && (
+                                        <>
+                                          <ThemedText
+                                            style={{
+                                              width: 55,
+                                              textAlign: "center",
+                                            }}
+                                          />
+                                          <ThemedText
+                                            style={{
+                                              width: 60,
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {frontTotals.yards}
+                                          </ThemedText>
+                                          <ThemedText
+                                            style={{
+                                              width: 50,
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {frontTotals.par}
+                                          </ThemedText>
+                                        </>
+                                      )}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedFront9,
@@ -2514,34 +2572,17 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            {ns.front9Houses?.map(
-                                              (
-                                                val: number,
-                                                i: number,
-                                                arr: number[],
-                                              ) => {
-                                                let color = isDark
-                                                  ? "#fff"
-                                                  : "#000";
-                                                if (val > 0) color = "#22c55e";
-                                                if (val < 0) color = "#3b82f6";
-                                                return (
-                                                  <Text
-                                                    key={i}
-                                                    style={{
-                                                      color,
-                                                      fontWeight: "bold",
-                                                      fontSize: 11,
-                                                    }}
-                                                  >
-                                                    {Math.abs(val)}
-                                                    {i < arr.length - 1
-                                                      ? " "
-                                                      : ""}
-                                                  </Text>
-                                                );
-                                              },
-                                            )}
+                                            <Text
+                                              style={{
+                                                color: isDark ? "#fff" : "#000",
+                                                fontWeight: "bold",
+                                                fontSize: 11,
+                                              }}
+                                            >
+                                              {formatNassauHouses(
+                                                ns.front9Houses,
+                                              )}
+                                            </Text>
                                           </VStack>
                                         )}
                                     </HStack>
@@ -2552,11 +2593,13 @@ export default function ScoreCardUserPage() {
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
-                                          ? "rgba(38,38,38,0.8)"
-                                          : "rgba(243,244,246,0.8)",
+                                          ? "#111827"
+                                          : "#f8fafc",
                                         paddingVertical: 10,
                                         borderTopWidth: 1,
-                                        borderColor: isDark ? "#444" : "#ddd",
+                                        borderColor: isDark
+                                          ? "#1e293b"
+                                          : "#e5e7eb",
                                       }}
                                     >
                                       <ThemedText
@@ -2568,28 +2611,32 @@ export default function ScoreCardUserPage() {
                                       >
                                         B9
                                       </ThemedText>
-                                      <ThemedText
-                                        style={{
-                                          width: 55,
-                                          textAlign: "center",
-                                        }}
-                                      />
-                                      <ThemedText
-                                        style={{
-                                          width: 60,
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        {backTotals.yards}
-                                      </ThemedText>
-                                      <ThemedText
-                                        style={{
-                                          width: 50,
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        {backTotals.par}
-                                      </ThemedText>
+                                      {isDetailsVisible && (
+                                        <>
+                                          <ThemedText
+                                            style={{
+                                              width: 55,
+                                              textAlign: "center",
+                                            }}
+                                          />
+                                          <ThemedText
+                                            style={{
+                                              width: 60,
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {backTotals.yards}
+                                          </ThemedText>
+                                          <ThemedText
+                                            style={{
+                                              width: 50,
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {backTotals.par}
+                                          </ThemedText>
+                                        </>
+                                      )}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedBack9,
@@ -2775,34 +2822,17 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            {ns.back9Houses?.map(
-                                              (
-                                                val: number,
-                                                i: number,
-                                                arr: number[],
-                                              ) => {
-                                                let color = isDark
-                                                  ? "#fff"
-                                                  : "#000";
-                                                if (val > 0) color = "#22c55e";
-                                                if (val < 0) color = "#3b82f6";
-                                                return (
-                                                  <Text
-                                                    key={i}
-                                                    style={{
-                                                      color,
-                                                      fontWeight: "bold",
-                                                      fontSize: 11,
-                                                    }}
-                                                  >
-                                                    {Math.abs(val)}
-                                                    {i < arr.length - 1
-                                                      ? " "
-                                                      : ""}
-                                                  </Text>
-                                                );
-                                              },
-                                            )}
+                                            <Text
+                                              style={{
+                                                color: isDark ? "#fff" : "#000",
+                                                fontWeight: "bold",
+                                                fontSize: 11,
+                                              }}
+                                            >
+                                              {formatNassauHouses(
+                                                ns.back9Houses,
+                                              )}
+                                            </Text>
                                           </VStack>
                                         )}
                                     </HStack>
@@ -2829,27 +2859,31 @@ export default function ScoreCardUserPage() {
                               >
                                 Total
                               </ThemedText>
-                              <ThemedText
-                                style={{ width: 55, textAlign: "center" }}
-                              />
-                              <ThemedText
-                                style={{
-                                  width: 60,
-                                  textAlign: "center",
-                                  color: "#fff",
-                                }}
-                              >
-                                {grandTotals.yards}
-                              </ThemedText>
-                              <ThemedText
-                                style={{
-                                  width: 50,
-                                  textAlign: "center",
-                                  color: "#fff",
-                                }}
-                              >
-                                {grandTotals.par}
-                              </ThemedText>
+                              {isDetailsVisible && (
+                                <>
+                                  <ThemedText
+                                    style={{ width: 55, textAlign: "center" }}
+                                  />
+                                  <ThemedText
+                                    style={{
+                                      width: 60,
+                                      textAlign: "center",
+                                      color: "#fff",
+                                    }}
+                                  >
+                                    {grandTotals.yards}
+                                  </ThemedText>
+                                  <ThemedText
+                                    style={{
+                                      width: 50,
+                                      textAlign: "center",
+                                      color: "#fff",
+                                    }}
+                                  >
+                                    {grandTotals.par}
+                                  </ThemedText>
+                                </>
+                              )}
                               {partners.map((p: any) => {
                                 const t = getPlayerTotals(processedHoles, p);
                                 return (
@@ -3022,26 +3056,15 @@ export default function ScoreCardUserPage() {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  {ns.overallHouses?.map(
-                                    (val: number, i: number, arr: number[]) => {
-                                      let color = "#fff";
-                                      if (val > 0) color = "#22c55e";
-                                      if (val < 0) color = "#3b82f6";
-                                      return (
-                                        <Text
-                                          key={i}
-                                          style={{
-                                            color,
-                                            fontWeight: "800",
-                                            fontSize: 11,
-                                          }}
-                                        >
-                                          {Math.abs(val)}
-                                          {i < arr.length - 1 ? " " : ""}
-                                        </Text>
-                                      );
-                                    },
-                                  )}
+                                  <Text
+                                    style={{
+                                      color: "#fff",
+                                      fontWeight: "800",
+                                      fontSize: 11,
+                                    }}
+                                  >
+                                    {formatNassauHouses(ns.overallHouses)}
+                                  </Text>
                                 </VStack>
                               )}
                             </HStack>
@@ -3718,23 +3741,76 @@ export default function ScoreCardUserPage() {
                                 />
                                 <View
                                   style={{
-                                    borderTopWidth: 0.5,
-                                    borderColor: isDark ? "#444" : "#ddd",
+                                    // borderTopWidth: 0.5,
+                                    // borderColor: isDark ? "#444" : "#ddd",
                                     paddingTop: 10,
                                     alignItems: "center",
-                                    marginTop: 6,
+                                    marginTop: 3,
                                   }}
                                 >
-                                  <ThemedText
+                                  <HStack
                                     style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      color: isDark ? "#e2e8f0" : "#334155",
-                                      marginBottom: 6,
+                                      alignItems: "center",
+                                      borderBottomWidth: 0.5,
+                                      borderColor: isDark ? "#333" : "#e5e5e5",
+                                      paddingVertical: 8,
                                     }}
                                   >
-                                    Final Result (Net)
-                                  </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        color: isDark ? "#e2e8f0" : "#334155",
+                                        flex: 1,
+                                        fontSize: 12,
+                                        fontWeight: "700",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      Final Result
+                                    </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        color: isDark ? "#e2e8f0" : "#334155",
+                                        fontSize: 12,
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      Match -{" "}
+                                    </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        color: "#059669",
+                                        fontSize: 12,
+                                        fontWeight: "800",
+                                      }}
+                                    >
+                                      {formatNassauHousesSpaced(
+                                        ns.overallHouses,
+                                      )}
+                                    </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        color: isDark ? "#e2e8f0" : "#334155",
+                                        fontSize: 12,
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      {"  &  Half - "}
+                                    </ThemedText>
+                                    <ThemedText
+                                      style={{
+                                        color: "#059669",
+                                        fontSize: 12,
+                                        fontWeight: "800",
+                                      }}
+                                    >
+                                      {[
+                                        ns.front9Halfs.team1,
+                                        ns.front9Halfs.team2,
+                                        ns.back9Halfs.team1,
+                                        ns.back9Halfs.team2,
+                                      ].join(" ")}
+                                    </ThemedText>
+                                  </HStack>
                                   <ThemedText
                                     style={{
                                       fontSize: 11,

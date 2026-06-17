@@ -28,6 +28,9 @@ export type HoleResult = {
 };
 
 export type NassauState = {
+  front9Houses: number[];
+  back9Houses: number[];
+  overallHouses: number[];
   front9Halfs: { team1: number; team2: number };
   back9Halfs: { team1: number; team2: number };
   overallMatches: { team1: number; team2: number };
@@ -579,6 +582,14 @@ export function tallyHalfs(houses: number[]): { team1: number; team2: number } {
   return { team1, team2 };
 }
 
+export function formatNassauHouses(houses: number[] = []): string {
+  return houses.map((v) => Math.abs(v)).join("");
+}
+
+export function formatNassauHousesSpaced(houses: number[] = []): string {
+  return houses.map((v) => Math.abs(v)).join(" ");
+}
+
 /**
  * Compute the full Nassau state.
  */
@@ -612,6 +623,7 @@ export function computeNassauState(
     .filter((i) => i !== -1);
   const front9Winners = front9Indices.map((i) => allWinners[i]);
   const front9Sim = simulateHouses(front9Winners);
+  const front9Houses = front9Sim.finalHouses;
   const front9Halfs = tallyHalfs(front9Sim.finalHouses);
 
   // Back 9 houses (holes 10-18)
@@ -620,11 +632,17 @@ export function computeNassauState(
     .filter((i) => i !== -1);
   const back9Winners = back9Indices.map((i) => allWinners[i]);
   const back9Sim = simulateHouses(back9Winners);
+  const back9Houses = back9Sim.finalHouses;
   const back9Halfs = tallyHalfs(back9Sim.finalHouses);
 
   // Overall 18 houses (independent run 1-18)
   const overallSim = simulateHouses(allWinners);
+  const overallHouses = overallSim.finalHouses;
   const overallMatches = tallyHalfs(overallSim.finalHouses);
+
+  // console.log("Front9 Houses", front9Houses);
+  // console.log("Back9 Houses", back9Houses);
+  // console.log("Overall Houses", overallHouses);
 
   // Build per-hole results with house snapshots from the overall simulation
   const holeResults: Record<number, HoleResult> = {};
@@ -699,6 +717,9 @@ export function computeNassauState(
   const minX = Math.min(rawTeamAX, rawTeamBX);
 
   return {
+    front9Houses,
+    back9Houses,
+    overallHouses,
     front9Halfs,
     back9Halfs,
     overallMatches,

@@ -9,6 +9,8 @@ import {
 import {
   computeSplitSixSummary,
   computeNassauState,
+  formatNassauHouses,
+  formatNassauHousesSpaced,
   computeHighLowHolePoints,
   calculateSplitSixPoints,
   computeHighLowSummary,
@@ -66,6 +68,7 @@ export default function ResumeScorecard() {
   const [isStableford, setIsStableford] = useState(false);
   const [displayFront, setDisplayFront] = useState(true);
   const [displayBack, setDisplayBack] = useState(true);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
   const textScoresRef = useRef<Record<number, string>>({});
   const holesRef = useRef<ScorecardHole[]>([]);
@@ -1097,15 +1100,12 @@ export default function ResumeScorecard() {
                 : {}),
             }));
             console.log("pppp", payload);
-            
+
             await updateHoleScoresApi(id!, payload);
             await AsyncStorage.removeItem(storageKey);
 
-            Alert.alert("Success", "Round finished successfully"
-              , [
-              { text: "OK"
-                , onPress: () => router.back() 
-              },
+            Alert.alert("Success", "Round finished successfully", [
+              { text: "OK", onPress: () => router.back() },
             ]);
           } catch (err) {
             console.error(err);
@@ -1430,8 +1430,18 @@ export default function ResumeScorecard() {
             </Text> */}
           </VStack>
 
-          {/* ⚖️ SPACER */}
-          <View style={{ width: 40 }} />
+          {/* ⚖️ TOGGLE */}
+          <Pressable
+            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+            style={{ width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#1e293b" : "#f1f5f9" }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
         </HStack>
 
         {/* 📊 INFO ROW */}
@@ -1520,10 +1530,18 @@ export default function ResumeScorecard() {
           <>
             <View
               className="z-10 shadow-sm"
-              style={{ backgroundColor: isDark ? "#020617" : "#FFFFFF" }}
+              style={{
+                backgroundColor: isDark ? "#020617" : "#FFFFFF",
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                borderWidth: 1,
+                borderBottomWidth: 0,
+                borderColor: isDark ? "#1e293b" : "#e5e7eb",
+                overflow: "hidden",
+              }}
             >
               <View
-                className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
+                className={`flex-row p-3 ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
                 style={{
                   borderBottomWidth: 1,
                   borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
@@ -1531,18 +1549,20 @@ export default function ResumeScorecard() {
               >
                 {[
                   "Hole",
-                  "SI",
-                  "Yards",
-                  "Par",
+                  isDetailsVisible && "SI",
+                  isDetailsVisible && "Yards",
+                  isDetailsVisible && "Par",
                   "Score ✎",
                   "Net",
                   ...(isStableford ? ["Pts"] : []),
-                ].map((h) => (
+                ]
+                  .filter(Boolean)
+                  .map((h) => (
                   <Text
-                    key={h}
+                    key={h as string}
                     className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                   >
-                    {h}
+                    {h as string}
                   </Text>
                 ))}
               </View>
@@ -1551,6 +1571,9 @@ export default function ResumeScorecard() {
             <View
               className={`${isDark ? "bg-[#020617]" : "bg-white"} rounded-b-xl overflow-hidden mb-4`}
               style={{
+                borderWidth: 1,
+                borderTopWidth: 0,
+                borderColor: isDark ? "#1e293b" : "#e5e7eb",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
@@ -1573,21 +1596,25 @@ export default function ResumeScorecard() {
                           >
                             {h.holeNumber}
                           </Text>
-                          <Text
-                            className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {h.strokeIndex}
-                          </Text>
-                          <Text
-                            className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {h.yardage}
-                          </Text>
-                          <Text
-                            className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                          >
-                            {h.par}
-                          </Text>
+                          {isDetailsVisible && (
+                            <>
+                              <Text
+                                className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                              >
+                                {h.strokeIndex}
+                              </Text>
+                              <Text
+                                className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                              >
+                                {h.yardage}
+                              </Text>
+                              <Text
+                                className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                              >
+                                {h.par}
+                              </Text>
+                            </>
+                          )}
                           <View className="flex-1 items-center justify-center relative">
                             {renderScoreIndicator(
                               h.score ?? null,
@@ -1685,17 +1712,21 @@ export default function ResumeScorecard() {
                       >
                         Front 9
                       </Text>
-                      <Text className="flex-1" />
-                      <Text
-                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                      >
-                        {sumYardage(holes.filter((h) => h.holeNumber <= 9))}
-                      </Text>
-                      <Text
-                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                      >
-                        {sumPar(holes.filter((h) => h.holeNumber <= 9))}
-                      </Text>
+                      {isDetailsVisible && (
+                        <>
+                          <Text className="flex-1" />
+                          <Text
+                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                          >
+                            {sumYardage(holes.filter((h) => h.holeNumber <= 9))}
+                          </Text>
+                          <Text
+                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                          >
+                            {sumPar(holes.filter((h) => h.holeNumber <= 9))}
+                          </Text>
+                        </>
+                      )}
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
@@ -1732,21 +1763,25 @@ export default function ResumeScorecard() {
                           >
                             {h.holeNumber}
                           </Text>
-                          <Text
-                            className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {h.strokeIndex}
-                          </Text>
-                          <Text
-                            className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {h.yardage}
-                          </Text>
-                          <Text
-                            className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                          >
-                            {h.par}
-                          </Text>
+                          {isDetailsVisible && (
+                            <>
+                              <Text
+                                className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                              >
+                                {h.strokeIndex}
+                              </Text>
+                              <Text
+                                className={`flex-1 text-center font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                              >
+                                {h.yardage}
+                              </Text>
+                              <Text
+                                className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                              >
+                                {h.par}
+                              </Text>
+                            </>
+                          )}
                           <View className="flex-1 items-center justify-center relative">
                             {renderScoreIndicator(
                               h.score ?? null,
@@ -1841,17 +1876,21 @@ export default function ResumeScorecard() {
                       >
                         Back 9
                       </Text>
-                      <Text className="flex-1" />
-                      <Text
-                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                      >
-                        {sumYardage(holes.filter((h) => h.holeNumber >= 10))}
-                      </Text>
-                      <Text
-                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                      >
-                        {sumPar(holes.filter((h) => h.holeNumber >= 10))}
-                      </Text>
+                      {isDetailsVisible && (
+                        <>
+                          <Text className="flex-1" />
+                          <Text
+                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                          >
+                            {sumYardage(holes.filter((h) => h.holeNumber >= 10))}
+                          </Text>
+                          <Text
+                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                          >
+                            {sumPar(holes.filter((h) => h.holeNumber >= 10))}
+                          </Text>
+                        </>
+                      )}
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
@@ -1891,25 +1930,29 @@ export default function ResumeScorecard() {
                 >
                   Grand Total
                 </Text>
-                <Text className="flex-1" />
-                <Text className="flex-1 text-center font-bold text-white">
-                  {sumYardage(
-                    holes.filter(
-                      (h) =>
-                        (displayFront && h.holeNumber <= 9) ||
-                        (displayBack && h.holeNumber >= 10),
-                    ),
-                  )}
-                </Text>
-                <Text className="flex-1 text-center font-bold text-white">
-                  {sumPar(
-                    holes.filter(
-                      (h) =>
-                        (displayFront && h.holeNumber <= 9) ||
-                        (displayBack && h.holeNumber >= 10),
-                    ),
-                  )}
-                </Text>
+                {isDetailsVisible && (
+                  <>
+                    <Text className="flex-1" />
+                    <Text className="flex-1 text-center font-bold text-white">
+                      {sumYardage(
+                        holes.filter(
+                          (h) =>
+                            (displayFront && h.holeNumber <= 9) ||
+                            (displayBack && h.holeNumber >= 10),
+                        ),
+                      )}
+                    </Text>
+                    <Text className="flex-1 text-center font-bold text-white">
+                      {sumPar(
+                        holes.filter(
+                          (h) =>
+                            (displayFront && h.holeNumber <= 9) ||
+                            (displayBack && h.holeNumber >= 10),
+                        ),
+                      )}
+                    </Text>
+                  </>
+                )}
                 <Text className="flex-1 text-center font-bold text-white">
                   {sumScores(
                     holes.filter(
@@ -2003,9 +2046,7 @@ export default function ResumeScorecard() {
 
             const totalWidth =
               50 +
-              55 +
-              60 +
-              50 +
+              (isDetailsVisible ? 55 + 60 + 50 : 0) +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
               (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
@@ -2016,10 +2057,10 @@ export default function ResumeScorecard() {
                 style={{
                   paddingVertical: 12,
                   backgroundColor: isDark
-                    ? "rgba(38,38,38,0.8)"
-                    : "rgba(243,244,246,0.8)",
+                    ? "#111827"
+                    : "#f8fafc",
                   borderBottomWidth: 1,
-                  borderColor: isDark ? "#444" : "#ddd",
+                  borderColor: isDark ? "#1e293b" : "#e5e7eb",
                 }}
               >
                 <ThemedText
@@ -2032,36 +2073,40 @@ export default function ResumeScorecard() {
                 >
                   Hole
                 </ThemedText>
-                <ThemedText
-                  style={{
-                    width: 55,
-                    textAlign: "center",
-                    fontWeight: "700",
-                    fontSize: 12,
-                  }}
-                >
-                  SI
-                </ThemedText>
-                <ThemedText
-                  style={{
-                    width: 60,
-                    textAlign: "center",
-                    fontWeight: "700",
-                    fontSize: 12,
-                  }}
-                >
-                  Yards
-                </ThemedText>
-                <ThemedText
-                  style={{
-                    width: 50,
-                    textAlign: "center",
-                    fontWeight: "700",
-                    fontSize: 12,
-                  }}
-                >
-                  Par
-                </ThemedText>
+                {isDetailsVisible && (
+                  <>
+                    <ThemedText
+                      style={{
+                        width: 55,
+                        textAlign: "center",
+                        fontWeight: "700",
+                        fontSize: 12,
+                      }}
+                    >
+                      SI
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        width: 60,
+                        textAlign: "center",
+                        fontWeight: "700",
+                        fontSize: 12,
+                      }}
+                    >
+                      Yards
+                    </ThemedText>
+                    <ThemedText
+                      style={{
+                        width: 50,
+                        textAlign: "center",
+                        fontWeight: "700",
+                        fontSize: 12,
+                      }}
+                    >
+                      Par
+                    </ThemedText>
+                  </>
+                )}
                 {partners.map((p, idx) => {
                   let badgeText = "";
                   let badgeColor = "";
@@ -2206,6 +2251,9 @@ export default function ResumeScorecard() {
                     width: totalWidth,
                     borderRadius: 14,
                     overflow: "hidden",
+                    borderWidth: 1,
+                    borderColor: isDark ? "#1e293b" : "#e5e7eb",
+                    backgroundColor: isDark ? "#020617" : "#ffffff",
                   }}
                 >
                   {renderMultiplayerHeaders()}
@@ -2227,10 +2275,10 @@ export default function ResumeScorecard() {
                               paddingVertical: 8,
                               alignItems: "center",
                               borderBottomWidth: 0.5,
-                              borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                              borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               backgroundColor: isDark
-                                ? "rgba(15, 23, 42, 0.7)"
-                                : "rgba(255, 255, 255, 0.7)",
+                                ? "#020617"
+                                : "#ffffff",
                             }}
                           >
                             <ThemedText
@@ -2238,25 +2286,29 @@ export default function ResumeScorecard() {
                             >
                               {h.holeNumber}
                             </ThemedText>
-                            <ThemedText
-                              style={{ width: 55, textAlign: "center" }}
-                            >
-                              {h.strokeIndex}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                width: 60,
-                                textAlign: "center",
-                                color: "#888",
-                              }}
-                            >
-                              {h.yardage}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
-                            >
-                              {h.par}
-                            </ThemedText>
+                            {isDetailsVisible && (
+                              <>
+                                <ThemedText
+                                  style={{ width: 55, textAlign: "center" }}
+                                >
+                                  {h.strokeIndex}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    width: 60,
+                                    textAlign: "center",
+                                    color: "#888",
+                                  }}
+                                >
+                                  {h.yardage}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{ width: 50, textAlign: "center" }}
+                                >
+                                  {h.par}
+                                </ThemedText>
+                              </>
+                            )}
 
                             {partners.map((p, pIndex) => {
                               const info = getPlayerHoleInfo(h, p);
@@ -2599,11 +2651,11 @@ export default function ResumeScorecard() {
                     <HStack
                       style={{
                         backgroundColor: isDark
-                          ? "rgba(38,38,38,0.8)"
-                          : "rgba(243,244,246,0.8)",
+                          ? "#111827"
+                          : "#f8fafc",
                         paddingVertical: 10,
                         borderTopWidth: 1,
-                        borderColor: isDark ? "#444" : "#ddd",
+                        borderColor: isDark ? "#1e293b" : "#e5e7eb",
                       }}
                     >
                       <ThemedText
@@ -2615,13 +2667,17 @@ export default function ResumeScorecard() {
                       >
                         F9
                       </ThemedText>
-                      <ThemedText style={{ width: 55, textAlign: "center" }} />
-                      <ThemedText style={{ width: 60, textAlign: "center" }}>
-                        {sumYardage(front9Holes)}
-                      </ThemedText>
-                      <ThemedText style={{ width: 50, textAlign: "center" }}>
-                        {sumPar(front9Holes)}
-                      </ThemedText>
+                      {isDetailsVisible && (
+                        <>
+                          <ThemedText style={{ width: 55, textAlign: "center" }} />
+                          <ThemedText style={{ width: 60, textAlign: "center" }}>
+                            {sumYardage(front9Holes)}
+                          </ThemedText>
+                          <ThemedText style={{ width: 50, textAlign: "center" }}>
+                            {sumPar(front9Holes)}
+                          </ThemedText>
+                        </>
+                      )}
                       {partners.map((p) => {
                         const t = getPlayerTotals(front9Holes, p);
                         return (
@@ -2776,26 +2832,15 @@ export default function ResumeScorecard() {
                             flexWrap: "wrap",
                           }}
                         >
-                          {ns.front9Houses?.map(
-                            (val: number, i: number, arr: number[]) => {
-                              let color = isDark ? "#fff" : "#000";
-                              if (val > 0) color = "#22c55e";
-                              if (val < 0) color = "#3b82f6";
-                              return (
-                                <Text
-                                  key={i}
-                                  style={{
-                                    color,
-                                    fontWeight: "bold",
-                                    fontSize: 11,
-                                  }}
-                                >
-                                  {Math.abs(val)}
-                                  {i < arr.length - 1 ? " " : ""}
-                                </Text>
-                              );
-                            }
-                          )}
+                          <Text
+                            style={{
+                              color: isDark ? "#fff" : "#000",
+                              fontWeight: "bold",
+                              fontSize: 11,
+                            }}
+                          >
+                            {formatNassauHouses(ns.front9Houses)}
+                          </Text>
                         </VStack>
                       )}
                     </HStack>
@@ -2820,10 +2865,10 @@ export default function ResumeScorecard() {
                               paddingVertical: 8,
                               alignItems: "center",
                               borderBottomWidth: 0.5,
-                              borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                              borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               backgroundColor: isDark
-                                ? "rgba(15, 23, 42, 0.7)"
-                                : "rgba(255, 255, 255, 0.7)",
+                                ? "#020617"
+                                : "#ffffff",
                             }}
                           >
                             <ThemedText
@@ -2831,25 +2876,29 @@ export default function ResumeScorecard() {
                             >
                               {h.holeNumber}
                             </ThemedText>
-                            <ThemedText
-                              style={{ width: 55, textAlign: "center" }}
-                            >
-                              {h.strokeIndex}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                width: 60,
-                                textAlign: "center",
-                                color: "#888",
-                              }}
-                            >
-                              {h.yardage}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
-                            >
-                              {h.par}
-                            </ThemedText>
+                            {isDetailsVisible && (
+                              <>
+                                <ThemedText
+                                  style={{ width: 55, textAlign: "center" }}
+                                >
+                                  {h.strokeIndex}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    width: 60,
+                                    textAlign: "center",
+                                    color: "#888",
+                                  }}
+                                >
+                                  {h.yardage}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{ width: 50, textAlign: "center" }}
+                                >
+                                  {h.par}
+                                </ThemedText>
+                              </>
+                            )}
 
                             {partners.map((p, pIndex) => {
                               const info = getPlayerHoleInfo(h, p);
@@ -3186,11 +3235,11 @@ export default function ResumeScorecard() {
                     <HStack
                       style={{
                         backgroundColor: isDark
-                          ? "rgba(38,38,38,0.8)"
-                          : "rgba(243,244,246,0.8)",
+                          ? "#111827"
+                          : "#f8fafc",
                         paddingVertical: 10,
                         borderTopWidth: 1,
-                        borderColor: isDark ? "#444" : "#ddd",
+                        borderColor: isDark ? "#1e293b" : "#e5e7eb",
                       }}
                     >
                       <ThemedText
@@ -3202,13 +3251,17 @@ export default function ResumeScorecard() {
                       >
                         B9
                       </ThemedText>
-                      <ThemedText style={{ width: 55, textAlign: "center" }} />
-                      <ThemedText style={{ width: 60, textAlign: "center" }}>
-                        {sumYardage(back9Holes)}
-                      </ThemedText>
-                      <ThemedText style={{ width: 50, textAlign: "center" }}>
-                        {sumPar(back9Holes)}
-                      </ThemedText>
+                      {isDetailsVisible && (
+                        <>
+                          <ThemedText style={{ width: 55, textAlign: "center" }} />
+                          <ThemedText style={{ width: 60, textAlign: "center" }}>
+                            {sumYardage(back9Holes)}
+                          </ThemedText>
+                          <ThemedText style={{ width: 50, textAlign: "center" }}>
+                            {sumPar(back9Holes)}
+                          </ThemedText>
+                        </>
+                      )}
                       {partners.map((p) => {
                         const t = getPlayerTotals(back9Holes, p);
                         return (
@@ -3354,26 +3407,15 @@ export default function ResumeScorecard() {
                             flexWrap: "wrap",
                           }}
                         >
-                          {ns.back9Houses?.map(
-                            (val: number, i: number, arr: number[]) => {
-                              let color = isDark ? "#fff" : "#000";
-                              if (val > 0) color = "#22c55e";
-                              if (val < 0) color = "#3b82f6";
-                              return (
-                                <Text
-                                  key={i}
-                                  style={{
-                                    color,
-                                    fontWeight: "bold",
-                                    fontSize: 11,
-                                  }}
-                                >
-                                  {Math.abs(val)}
-                                  {i < arr.length - 1 ? " " : ""}
-                                </Text>
-                              );
-                            }
-                          )}
+                          <Text
+                            style={{
+                              color: isDark ? "#fff" : "#000",
+                              fontWeight: "bold",
+                              fontSize: 11,
+                            }}
+                          >
+                            {formatNassauHouses(ns.back9Houses)}
+                          </Text>
                         </VStack>
                       )}
                     </HStack>
@@ -3398,17 +3440,21 @@ export default function ResumeScorecard() {
                     >
                       Total
                     </ThemedText>
-                    <ThemedText style={{ width: 55, textAlign: "center" }} />
-                    <ThemedText
-                      style={{ width: 60, textAlign: "center", color: "#fff" }}
-                    >
-                      {sumYardage(holes)}
-                    </ThemedText>
-                    <ThemedText
-                      style={{ width: 50, textAlign: "center", color: "#fff" }}
-                    >
-                      {sumPar(holes)}
-                    </ThemedText>
+                    {isDetailsVisible && (
+                      <>
+                        <ThemedText style={{ width: 55, textAlign: "center" }} />
+                        <ThemedText
+                          style={{ width: 60, textAlign: "center", color: "#fff" }}
+                        >
+                          {sumYardage(holes)}
+                        </ThemedText>
+                        <ThemedText
+                          style={{ width: 50, textAlign: "center", color: "#fff" }}
+                        >
+                          {sumPar(holes)}
+                        </ThemedText>
+                      </>
+                    )}
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (
@@ -3553,26 +3599,15 @@ export default function ResumeScorecard() {
                           flexWrap: "wrap",
                         }}
                       >
-                        {ns.overallHouses?.map(
-                          (val: number, i: number, arr: number[]) => {
-                            let color = "#fff";
-                            if (val > 0) color = "#22c55e";
-                            if (val < 0) color = "#3b82f6";
-                            return (
-                              <Text
-                                key={i}
-                                style={{
-                                  color,
-                                  fontWeight: "800",
-                                  fontSize: 11,
-                                }}
-                              >
-                                {Math.abs(val)}
-                                {i < arr.length - 1 ? " " : ""}
-                              </Text>
-                            );
-                          }
-                        )}
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontWeight: "800",
+                            fontSize: 11,
+                          }}
+                        >
+                          {formatNassauHouses(ns.overallHouses)}
+                        </Text>
                       </VStack>
                     )}
                   </HStack>
@@ -4118,13 +4153,83 @@ export default function ResumeScorecard() {
                           />
                           <View
                             style={{
-                              borderTopWidth: 0.5,
-                              borderColor: isDark ? "#444" : "#ddd",
+                              // borderTopWidth: 0.5,
+                              // borderColor: isDark ? "#444" : "#ddd",
                               paddingTop: 10,
                               alignItems: "center",
                               marginTop: 6,
                             }}
                           >
+                             <HStack
+                            style={{
+                              alignItems: "flex-start",
+                              borderBottomWidth: 0.5,
+                              borderColor: isDark ? "#333" : "#e5e5e5",
+                              paddingVertical: 8,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                color: isDark ? "#e2e8f0" : "#334155",
+                                flex: 1,
+                                fontSize: 12,
+                                fontWeight: "700",
+                                textAlign: "center",
+                              }}
+                            >
+                              Final Result
+                            </ThemedText>
+                            <HStack
+                              style={{
+                                alignItems: "center",
+                                flex: 2,
+                                flexWrap: "wrap",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  color: isDark ? "#e2e8f0" : "#334155",
+                                  fontSize: 12,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Match -{" "}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  color: "#059669",
+                                  fontSize: 12,
+                                  fontWeight: "800",
+                                }}
+                              >
+                                {formatNassauHousesSpaced(ns.overallHouses)}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  color: isDark ? "#e2e8f0" : "#334155",
+                                  fontSize: 12,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {"  &  Half - "}
+                              </ThemedText>
+                              <ThemedText
+                                style={{
+                                  color: "#059669",
+                                  fontSize: 12,
+                                  fontWeight: "800",
+                                }}
+                              >
+                                {[
+                                  ns.front9Halfs.team1,
+                                  ns.front9Halfs.team2,
+                                  ns.back9Halfs.team1,
+                                  ns.back9Halfs.team2,
+                                ].join(" ")}
+                              </ThemedText>
+                            </HStack>
+                          </HStack>
                             <ThemedText
                               style={{
                                 fontSize: 11,
