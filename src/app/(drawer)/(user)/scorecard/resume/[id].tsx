@@ -162,12 +162,12 @@ export default function ResumeScorecard() {
             ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
             : {}),
         }));
-        console.log(
-          "SENDING EXACT PAYLOAD TO API:",
-          JSON.stringify(payload, null, 2),
-        );
+        // console.log(
+        //   "SENDING EXACT PAYLOAD TO API:",
+        //   JSON.stringify(payload, null, 2),
+        // );
         await updateHoleScoresApi(id!, payload);
-        console.log("Successfully synced scorecard:", id);
+        // console.log("Successfully synced scorecard:", id);
         return true;
       } catch (err) {
         console.error("Sync failed for scorecard:", id, err);
@@ -200,7 +200,7 @@ export default function ResumeScorecard() {
           data = draftHoles;
           setTextScores(draftScores);
           textScoresRef.current = draftScores;
-          console.log("Loaded from local draft");
+          // console.log("Loaded from local draft");
         } else {
           throw err;
         }
@@ -329,10 +329,10 @@ export default function ResumeScorecard() {
         // const apiCourseHalf = sanitizedData.length > 0 ? sanitizedData[0].courseHalf : null;
         const apiCourseHalf = sanitizedData[0].courseHalf;
 
-        if (apiCourseHalf === "Front9") {
+        if (apiCourseHalf === "Front9" || apiCourseHalf === "Front 9") {
           setDisplayFront(true);
           setDisplayBack(false);
-        } else if (apiCourseHalf === "Back9") {
+        } else if (apiCourseHalf === "Back9" || apiCourseHalf === "Back 9") {
           setDisplayFront(false);
           setDisplayBack(true);
         } else {
@@ -964,14 +964,14 @@ export default function ResumeScorecard() {
             : null
           : h.stablefordPoints;
 
-        console.log("Hole Updated:", {
-          hole: h.holeNumber,
-          si: h.strokeIndex,
-          yard: h.yardage,
-          par: h.par,
-          score: validScore !== null && validScore >= 0 ? validScore : "-",
-          net: netScore > 0 ? netScore : "-",
-        });
+        // console.log("Hole Updated:", {
+        //   hole: h.holeNumber,
+        //   si: h.strokeIndex,
+        //   yard: h.yardage,
+        //   par: h.par,
+        //   score: validScore !== null && validScore >= 0 ? validScore : "-",
+        //   net: netScore > 0 ? netScore : "-",
+        // });
 
         return { ...h, score: validScore, netScore, stablefordPoints };
       }
@@ -992,7 +992,7 @@ export default function ResumeScorecard() {
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      console.log("Triggering debounced save to web for scorecard:", id);
+      // console.log("Triggering debounced save to web for scorecard:", id);
       saveToServer(updatedHoles);
     }, 500);
 
@@ -1099,7 +1099,7 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
-            console.log("pppp", payload);
+            // console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
             await AsyncStorage.removeItem(storageKey);
@@ -1140,7 +1140,7 @@ export default function ResumeScorecard() {
   const sumNet = (arr: ScorecardHole[]) => {
     if (isHighLow) return "-";
     const total = arr.reduce(
-      (t, h) => t + (h.score !== null && h.score >= 0 ? h.netScore || 0 : 0),
+      (t, h) => t + (h.score !== null && h.score >= 0 ? h.score || 0 : 0),
       0,
     );
     const hasAnyScore = arr.some(
@@ -2017,31 +2017,31 @@ export default function ResumeScorecard() {
                   teamBSandys: teamBInfos.map((i: any) => i.sandy),
                 };
               });
-              console.log("NASSAU DEBUG - allData length:", allData.length);
-              if (allData.length > 0) {
-                console.log(
-                  "NASSAU DEBUG - first hole data:",
-                  JSON.stringify(allData[0]),
-                );
-              }
-              ns = computeNassauState(mode as "best" | "combined", allData);
-              console.log(
-                "NASSAU DEBUG - ns result:",
-                ns ? "Calculated" : "Null",
-                ns ? Object.keys(ns.holeResults).length : 0,
-              );
-              if (ns && ns.holeResults[1]) {
-                console.log(
-                  "NASSAU DEBUG - HOLE 1 RESULT:",
-                  JSON.stringify(ns.holeResults[1]),
-                );
-              }
-              if (ns && ns.holeResults[10]) {
-                console.log(
-                  "NASSAU DEBUG - HOLE 10 RESULT:",
-                  JSON.stringify(ns.holeResults[10]),
-                );
-              }
+              // console.log("NASSAU DEBUG - allData length:", allData.length);
+              // if (allData.length > 0) {
+              //   console.log(
+              //     "NASSAU DEBUG - first hole data:",
+              //     JSON.stringify(allData[0]),
+              //   );
+              // }
+              // ns = computeNassauState(mode as "best" | "combined", allData);
+              // console.log(
+              //   "NASSAU DEBUG - ns result:",
+              //   ns ? "Calculated" : "Null",
+              //   ns ? Object.keys(ns.holeResults).length : 0,
+              // );
+              // if (ns && ns.holeResults[1]) {
+              //   console.log(
+              //     "NASSAU DEBUG - HOLE 1 RESULT:",
+              //     JSON.stringify(ns.holeResults[1]),
+              //   );
+              // }
+              // if (ns && ns.holeResults[10]) {
+              //   console.log(
+              //     "NASSAU DEBUG - HOLE 10 RESULT:",
+              //     JSON.stringify(ns.holeResults[10]),
+              //   );
+              // }
             }
 
             const totalWidth =

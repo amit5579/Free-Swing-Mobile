@@ -472,8 +472,18 @@ const ScoreCard: React.FC = () => {
     return hasAnyScore ? total : "-";
   };
 
-  const front9 = holes.slice(0, 9);
-  const back9 = holes.slice(9, 18);
+  const courseHalfStr = holes.length > 0 ? (holes[0] as any).courseHalf : null;
+  const isFront9Only = courseHalfStr === "Front9" || courseHalfStr === "Front 9";
+  const isBack9Only = courseHalfStr === "Back9" || courseHalfStr === "Back 9";
+
+  const displayHoles = holes.filter((h: any) => {
+    if (isFront9Only) return h.holeNumber <= 9;
+    if (isBack9Only) return h.holeNumber > 9;
+    return true;
+  });
+
+  const front9 = displayHoles.filter((h: any) => h.holeNumber <= 9);
+  const back9 = displayHoles.filter((h: any) => h.holeNumber > 9);
 
   const renderScoreIndicator = (
     score: number | null,
@@ -928,7 +938,7 @@ const ScoreCard: React.FC = () => {
               </View>
             </View>
 
-            {front9.map((h, index) => (
+            {front9.length > 0 && front9.map((h, index) => (
               <View
                 key={h.holeId}
                 className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
@@ -1020,6 +1030,7 @@ const ScoreCard: React.FC = () => {
               </View>
             ))}
 
+            {front9.length > 0 && (
             <View
               className={`flex-row p-3 ${isDark ? "border-b border-[#444]" : "border-b border-gray-200"}`}
               style={{
@@ -1066,6 +1077,7 @@ const ScoreCard: React.FC = () => {
                 </Text>
               )}
             </View>
+            )}
 
             {back9.length > 0 &&
               back9.map((h, index) => (
@@ -1224,22 +1236,22 @@ const ScoreCard: React.FC = () => {
                 <>
                   <Text className="flex-1" />
                   <Text className="flex-1 text-center font-bold text-l text-white">
-                    {sumYardage(holes)}
+                    {sumYardage(displayHoles)}
                   </Text>
                   <Text className="flex-1 text-center font-bold text-l text-white">
-                    {sumPar(holes)}
+                    {sumPar(displayHoles)}
                   </Text>
                 </>
               )}
               <Text className="flex-1 text-center font-black text-l text-white">
-                {sumScores(holes)}
+                {sumScores(displayHoles)}
               </Text>
               <Text className="flex-1 text-center font-black text-l text-white">
-                {sumNet(holes)}
+                {sumNet(displayHoles)}
               </Text>
               {isStableford && (
                 <Text className="flex-1 text-center font-black text-l text-white">
-                  {sumPts(holes)}
+                  {sumPts(displayHoles)}
                 </Text>
               )}
             </View>
@@ -1254,7 +1266,7 @@ const ScoreCard: React.FC = () => {
 
             let ns: any = null;
             if (isNassau && partners.length >= 2) {
-              const allData = holes.map((h: any) => {
+              const allData = displayHoles.map((h: any) => {
                 const teamAInfos = teamAPartners.map((p: any) =>
                   getPlayerHoleInfo(h, p),
                 );
@@ -1486,7 +1498,7 @@ const ScoreCard: React.FC = () => {
                   </HStack>
 
                   {/* Rows */}
-                  {holes.map((h: any, index: number) => {
+                  {displayHoles.map((h: any, index: number) => {
                     let s6Pts: number[] = [];
                     if (isSplit6 && partners.length >= 3) {
                       const s1 = getPlayerHoleInfo(h, partners[0]).score;
@@ -2408,7 +2420,7 @@ const ScoreCard: React.FC = () => {
                       (() => {
                         let totalPts = [0, 0, 0];
                         let hasAnyTotal = false;
-                        holes.forEach((th) => {
+                        displayHoles.forEach((th) => {
                           const raw1 = getPlayerHoleInfo(th, partners[0]).score;
                           const raw2 = getPlayerHoleInfo(th, partners[1]).score;
                           const raw3 = getPlayerHoleInfo(th, partners[2]).score;
@@ -2451,7 +2463,7 @@ const ScoreCard: React.FC = () => {
                         let totalPtsA = 0;
                         let totalPtsB = 0;
                         let hasAnyTotal = false;
-                        holes.forEach((fh) => {
+                        displayHoles.forEach((fh) => {
                           const i1 = getPlayerHoleInfo(fh, partners[0]);
                           const i2 = getPlayerHoleInfo(fh, partners[1]);
                           const i3 = getPlayerHoleInfo(fh, partners[2]);
@@ -2557,7 +2569,7 @@ const ScoreCard: React.FC = () => {
             {isSplit6 &&
               partners.length >= 3 &&
               (() => {
-                const allData = holes.map((h: any) => {
+                const allData = displayHoles.map((h: any) => {
                   const i1 = getPlayerHoleInfo(h, partners[0]);
                   const i2 = getPlayerHoleInfo(h, partners[1]);
                   const i3 = getPlayerHoleInfo(h, partners[2]);
@@ -2579,7 +2591,7 @@ const ScoreCard: React.FC = () => {
                 const pNames = partners
                   .slice(0, 3)
                   .map((p: any) => (p.isPrimary ? "You" : p.name));
-                const hasBack = holes.some((h: any) => h.holeNumber > 9);
+                const hasBack = displayHoles.some((h: any) => h.holeNumber > 9);
                 const SumRow = ({
                   label,
                   vals,
@@ -2690,7 +2702,7 @@ const ScoreCard: React.FC = () => {
                   High-Low Summary
                 </ThemedText>
                 {(() => {
-                  const allData = holes.map((h: any) => {
+                  const allData = displayHoles.map((h: any) => {
                     const i1 = getPlayerHoleInfo(h, partners[0]);
                     const i2 = getPlayerHoleInfo(h, partners[1]);
                     const i3 = getPlayerHoleInfo(h, partners[2]);
@@ -2724,7 +2736,7 @@ const ScoreCard: React.FC = () => {
                   const margin = Math.abs(
                     s.finalScore.teamA - s.finalScore.teamB,
                   );
-                  const hasBack = holes.some((h: any) => h.holeNumber > 9);
+                  const hasBack = displayHoles.some((h: any) => h.holeNumber > 9);
                   const Row = ({
                     label,
                     a,
@@ -2908,7 +2920,7 @@ const ScoreCard: React.FC = () => {
                   partners.length >= 4
                     ? [partners[2], partners[3]]
                     : [partners[1]];
-                const allData = holes.map((h: any) => {
+                const allData = displayHoles.map((h: any) => {
                   const teamAInfos = teamAPartners.map((p: any) =>
                     getPlayerHoleInfo(h, p),
                   );
@@ -3254,7 +3266,7 @@ const ScoreCard: React.FC = () => {
                         Houses
                       </ThemedText>
                     </HStack>
-                    {holes.map((h: any) => {
+                    {displayHoles.map((h: any) => {
                       const r = ns.holeResults[h.holeNumber];
                       if (!r) return null;
                       return (
@@ -3350,7 +3362,7 @@ const ScoreCard: React.FC = () => {
             quadBogey: 0,
           };
 
-          holes.forEach((h) => {
+          displayHoles.forEach((h) => {
             const playersToCount =
               partners.length >= 2
                 ? partners
@@ -3655,7 +3667,7 @@ const ScoreCard: React.FC = () => {
 
           return (
             <View
-              className="mb-20 p-4 rounded-2xl"
+              className="mb-20 mt-7 p-4 rounded-2xl"
               style={{
                 backgroundColor: isDark
                   ? "rgba(31,31,31,0.6)"
