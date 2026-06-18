@@ -475,15 +475,29 @@ const ScoreCard: React.FC = () => {
   const courseHalfStr = holes.length > 0 ? (holes[0] as any).courseHalf : null;
   const isFront9Only = courseHalfStr === "Front9" || courseHalfStr === "Front 9";
   const isBack9Only = courseHalfStr === "Back9" || courseHalfStr === "Back 9";
+useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},[courseHalfStr])
+  const nassauStartingNine = holes[0]?.nassauStartingNine || holes[0]?.NassauStartingNine || null;
 
-  const displayHoles = holes.filter((h: any) => {
+  const rawDisplayHoles = holes.filter((h: any) => {
     if (isFront9Only) return h.holeNumber <= 9;
     if (isBack9Only) return h.holeNumber > 9;
     return true;
   });
 
-  const front9 = displayHoles.filter((h: any) => h.holeNumber <= 9);
-  const back9 = displayHoles.filter((h: any) => h.holeNumber > 9);
+  const displayHoles = nassauStartingNine === "back"
+    ? [...rawDisplayHoles].sort((a: any, b: any) => {
+        const aVal = a.holeNumber >= 10 ? a.holeNumber - 10 : a.holeNumber + 8;
+        const bVal = b.holeNumber >= 10 ? b.holeNumber - 10 : b.holeNumber + 8;
+        return aVal - bVal;
+      })
+    : rawDisplayHoles;
+
+  const front9 = nassauStartingNine === "back"
+    ? displayHoles.filter((h: any) => h.holeNumber > 9)
+    : displayHoles.filter((h: any) => h.holeNumber <= 9);
+  const back9 = nassauStartingNine === "back"
+    ? displayHoles.filter((h: any) => h.holeNumber <= 9)
+    : displayHoles.filter((h: any) => h.holeNumber > 9);
 
   const renderScoreIndicator = (
     score: number | null,
@@ -1879,7 +1893,7 @@ const ScoreCard: React.FC = () => {
                                     (val: number, i: number, arr: number[]) =>
                                       renderHouse(val, i, arr),
                                   )}
-                                  {h.holeNumber >= 10 &&
+                                  {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                     hRes.housesDisplay.length > 0 && (
                                       <Text
                                         style={{
@@ -1890,7 +1904,7 @@ const ScoreCard: React.FC = () => {
                                         {" & "}
                                       </Text>
                                     )}
-                                  {h.holeNumber >= 10 &&
+                                  {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                     hRes.housesDisplay.map(
                                       (val: number, i: number, arr: number[]) =>
                                         renderHouse(val, i, arr),
@@ -1901,7 +1915,7 @@ const ScoreCard: React.FC = () => {
                         </HStack>
 
                         {/* FRONT 9 TOTALS ROW */}
-                        {h.holeNumber === 9 && (
+                        {((nassauStartingNine === "back" ? index === 8 : h.holeNumber === 9)) && (
                           <HStack
                             style={{
                               backgroundColor: isDark
@@ -1919,7 +1933,7 @@ const ScoreCard: React.FC = () => {
                                 textAlign: "center",
                               }}
                             >
-                              F9
+                              {nassauStartingNine === "back" ? "B9" : "F9"}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
@@ -2114,7 +2128,7 @@ const ScoreCard: React.FC = () => {
                                     fontSize: 11,
                                   }}
                                 >
-                                  {formatNassauHouses(ns.front9Houses)}
+                                  {formatNassauHouses(nassauStartingNine === "back" ? ns.back9Houses : ns.front9Houses)}
                                 </Text>
                               </VStack>
                             )}
@@ -2122,7 +2136,7 @@ const ScoreCard: React.FC = () => {
                         )}
 
                         {/* BACK 9 TOTALS ROW */}
-                        {h.holeNumber === 18 && (
+                        {((nassauStartingNine === "back" ? index === 17 : h.holeNumber === 18)) && (
                           <HStack
                             style={{
                               backgroundColor: isDark
@@ -2140,7 +2154,7 @@ const ScoreCard: React.FC = () => {
                                 textAlign: "center",
                               }}
                             >
-                              B9
+                              {nassauStartingNine === "back" ? "F9" : "B9"}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
@@ -2335,7 +2349,7 @@ const ScoreCard: React.FC = () => {
                                     fontSize: 11,
                                   }}
                                 >
-                                  {formatNassauHouses(ns.back9Houses)}
+                                  {formatNassauHouses(nassauStartingNine === "back" ? ns.front9Houses : ns.back9Houses)}
                                 </Text>
                               </VStack>
                             )}
@@ -2867,8 +2881,8 @@ const ScoreCard: React.FC = () => {
                       />
                       <View
                         style={{
-                          borderTopWidth: 0.5,
-                          borderColor: isDark ? "#444" : "#ddd",
+                          // borderTopWidth: 0.5,
+                          // borderColor: isDark ? "#444" : "#ddd",
                           paddingTop: 10,
                           alignItems: "center",
                           marginTop: 6,

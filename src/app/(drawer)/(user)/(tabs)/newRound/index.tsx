@@ -25,7 +25,11 @@ import {
   RadioIndicator,
   RadioLabel,
 } from "@/components/radio";
-import { getCourseBySearch, getHandicapDetails, saveExternalCourse } from "@/api/modules/newRound.api";
+import {
+  getCourseBySearch,
+  getHandicapDetails,
+  saveExternalCourse,
+} from "@/api/modules/newRound.api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
@@ -87,17 +91,17 @@ export default function StartNewRoundPage() {
       setSearchLoading(true);
       await saveExternalCourse(sourceCourse);
       Toast.show({ type: "success", text1: "Course added successfully" });
-      
+
       // Refresh local course list
       fetchCourses();
-      
+
       // Update the searched list to show "Saved" for this course
-      setSearchedCourseList((prevList: any[]) => 
-        prevList.map(c => 
-          c.externalCourseId === sourceCourse.id 
-            ? { ...c, alreadyImported: true } 
-            : c
-        )
+      setSearchedCourseList((prevList: any[]) =>
+        prevList.map((c) =>
+          c.externalCourseId === sourceCourse.id
+            ? { ...c, alreadyImported: true }
+            : c,
+        ),
       );
     } catch (error) {
       console.error("Error saving courses", error);
@@ -110,9 +114,6 @@ export default function StartNewRoundPage() {
   useEffect(() => {
     handleSearch();
   }, [search]);
-
-
-
 
   const RenderHeader = () => {
     return (
@@ -231,11 +232,21 @@ export default function StartNewRoundPage() {
         <HStack className="justify-between items-start mb-4">
           <View style={{ flex: 1 }}>
             <Skeleton isDark={isDark} height={18} width="70%" />
-            <Skeleton isDark={isDark} height={14} width="40%" style={{ marginTop: 6 }} />
+            <Skeleton
+              isDark={isDark}
+              height={14}
+              width="40%"
+              style={{ marginTop: 6 }}
+            />
           </View>
           <Skeleton isDark={isDark} height={24} width={50} borderRadius={6} />
         </HStack>
-        <Skeleton isDark={isDark} height={14} width="90%" style={{ marginBottom: 12 }} />
+        <Skeleton
+          isDark={isDark}
+          height={14}
+          width="90%"
+          style={{ marginBottom: 12 }}
+        />
         <HStack className="gap-2">
           <Skeleton isDark={isDark} height={24} width={80} borderRadius={12} />
           <Skeleton isDark={isDark} height={24} width={80} borderRadius={12} />
@@ -244,7 +255,6 @@ export default function StartNewRoundPage() {
       </View>
     );
   };
-
 
   return (
     <>
@@ -298,15 +308,28 @@ export default function StartNewRoundPage() {
                       {/* Search Results Header */}
                       <HStack className="justify-between items-center mb-4">
                         <VStack>
-                          <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
+                          <ThemedText
+                            style={{ fontSize: 18, fontWeight: "700" }}
+                          >
                             Search Results
                           </ThemedText>
-                          <ThemedText style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#64748b" }}>
+                          <ThemedText
+                            style={{
+                              fontSize: 13,
+                              color: isDark ? "#94a3b8" : "#64748b",
+                            }}
+                          >
                             Query: {search}
                           </ThemedText>
                         </VStack>
                         <Box className="bg-[#f1f5f9] px-2 py-1 rounded-md">
-                          <ThemedText style={{ fontSize: 12, fontWeight: "600", color: "#475569" }}>
+                          <ThemedText
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: "#475569",
+                            }}
+                          >
                             {searchedCourseList.length} result(s)
                           </ThemedText>
                         </Box>
@@ -328,7 +351,9 @@ export default function StartNewRoundPage() {
                           />
                         ))
                       ) : (
-                        <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                        <ThemedText
+                          style={{ textAlign: "center", marginTop: 20 }}
+                        >
                           No golf courses found for "{search}"
                         </ThemedText>
                       )}
@@ -355,7 +380,7 @@ export default function StartNewRoundPage() {
 }
 
 /* ---------- EXTERNAL COURSE CARD ---------- */
-function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
+function ExternalCourseCard({ course, isDark, handleCourseSave }: any) {
   const textColor = isDark ? "#f8fafc" : "#0f172a";
   const subTextColor = isDark ? "#94a3b8" : "#64748b";
 
@@ -365,15 +390,17 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
       style={{
         borderWidth: 1,
         backgroundColor: isDark
-            ? "rgba(15, 23, 42, 0.7)"
-            : "rgba(255, 255, 255, 0.7)",
-          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark ? "#1e293b" : "#e2e8f0",
       }}
     >
       {/* Top Row: Name and ID */}
       <HStack className="justify-between items-start mb-1">
         <VStack className="flex-1 mr-2">
-          <ThemedText style={{ fontSize: 17, fontWeight: "700", color: textColor }}>
+          <ThemedText
+            style={{ fontSize: 17, fontWeight: "700", color: textColor }}
+          >
             {course.courseName}
           </ThemedText>
           <ThemedText style={{ fontSize: 13, color: subTextColor }}>
@@ -381,7 +408,9 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
           </ThemedText>
         </VStack>
         <Box className="bg-[#f1f5f9] px-2 py-0.5 rounded-md border border-[#e2e8f0]">
-          <ThemedText style={{ fontSize: 10, fontWeight: "700", color: "#64748b" }}>
+          <ThemedText
+            style={{ fontSize: 10, fontWeight: "700", color: "#64748b" }}
+          >
             ID {course.externalCourseId}
           </ThemedText>
         </Box>
@@ -392,18 +421,22 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
         {course.alreadyImported ? (
           <Box className="flex-row items-center gap-1 border border-[#8bc34a] px-4 py-1.5 rounded-lg bg-[#f0f9eb]">
             <Ionicons name="checkmark-circle" size={16} color="#8bc34a" />
-            <ThemedText style={{ fontSize: 13, fontWeight: "700", color: "#8bc34a" }}>
+            <ThemedText
+              style={{ fontSize: 13, fontWeight: "700", color: "#8bc34a" }}
+            >
               Saved
             </ThemedText>
           </Box>
         ) : (
           <Pressable
-          onPress={() => handleCourseSave(course.sourceCourse)}
+            onPress={() => handleCourseSave(course.sourceCourse)}
             className="flex-row items-center gap-1 bg-[#8bc34a] px-5 py-2 rounded-lg"
             android_ripple={{ color: "rgba(255,255,255,0.2)" }}
           >
             <Ionicons name="download-outline" size={16} color="#fff" />
-            <ThemedText style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>
+            <ThemedText
+              style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
+            >
               Save
             </ThemedText>
           </Pressable>
@@ -412,8 +445,13 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
 
       {/* Address Row */}
       <HStack className="items-start gap-1 mb-4 pr-4">
-        <Ionicons name="location" size={16} color="#ef4444" style={{ marginTop: 2 }} />
-        <ThemedText 
+        <Ionicons
+          name="location"
+          size={16}
+          color="#ef4444"
+          style={{ marginTop: 2 }}
+        />
+        <ThemedText
           numberOfLines={2}
           style={{ fontSize: 13, color: subTextColor, lineHeight: 18, flex: 1 }}
         >
@@ -424,28 +462,34 @@ function ExternalCourseCard({ course, isDark , handleCourseSave }: any) {
       {/* Bottom Badges */}
       <HStack className="gap-2 flex-wrap">
         <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
-          <ThemedText style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}>
+          <ThemedText
+            style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}
+          >
             Male Tees: {course.maleTeeCount}
           </ThemedText>
         </Box>
         <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
-          <ThemedText style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}>
+          <ThemedText
+            style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}
+          >
             Female Tees: {course.femaleTeeCount}
           </ThemedText>
         </Box>
-        <Box 
+        <Box
           className="px-2.5 py-1 rounded-full"
-          style={{ 
+          style={{
             backgroundColor: course.alreadyImported ? "#ecfdf5" : "#f1f5f9",
             borderWidth: 1,
-            borderColor: course.alreadyImported ? "#10b981" : "#94a3b8"
+            borderColor: course.alreadyImported ? "#10b981" : "#94a3b8",
           }}
         >
-          <ThemedText style={{ 
-            fontSize: 11, 
-            fontWeight: "700", 
-            color: course.alreadyImported ? "#047857" : "#475569" 
-          }}>
+          <ThemedText
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              color: course.alreadyImported ? "#047857" : "#475569",
+            }}
+          >
             {course.alreadyImported ? "Already in DB" : "Not saved locally"}
           </ThemedText>
         </Box>
@@ -467,7 +511,11 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
     split_six: { excluded: false, stableford: false, split_six: true },
     high_low: { excluded: false, stableford: false, high_low: true },
     nassau_best: { excluded: false, stableford: false, nassau_best: true },
-    nassau_combined: { excluded: false, stableford: false, nassau_combined: true },
+    nassau_combined: {
+      excluded: false,
+      stableford: false,
+      nassau_combined: true,
+    },
   };
 
   const holesOptions = {
@@ -508,7 +556,11 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
   // Auto-set numberOfPlayers and handle dropdown logic based on scoring mode
   useEffect(() => {
-    if (scoreType === "net_including" || scoreType === "net_excluding" || scoreType === "stableford") {
+    if (
+      scoreType === "net_including" ||
+      scoreType === "net_excluding" ||
+      scoreType === "stableford"
+    ) {
       setNumberOfPlayers("solo");
     } else if (scoreType === "split_six") {
       setNumberOfPlayers("3");
@@ -520,9 +572,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
         Alert.alert(
           "Invalid Player Count",
           "You can select 2 or 4 players for this scoring mode.",
-          [
-            { text: "OK", onPress: () => setNumberOfPlayers("2") }
-          ]
+          [{ text: "OK", onPress: () => setNumberOfPlayers("2") }],
         );
       }
     }
@@ -546,7 +596,8 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
     return playerList
       .filter((p: any) => {
         if (profile && p.id === profile.id) return false;
-        if (otherPlayerIds.includes(p.id) && p.id !== currentPlayerId) return false;
+        if (otherPlayerIds.includes(p.id) && p.id !== currentPlayerId)
+          return false;
         return true;
       })
       .map((p: any) => ({
@@ -556,8 +607,14 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
   };
 
   const savePendingRoundContext = async () => {
-    const playerCount = numberOfPlayers === "solo" ? 1 : Number(numberOfPlayers);
-    const sideGameMode = scoreType === "high_low" ? "high-low" : (scoreType === "split_six" ? "split-six" : "none");
+    const playerCount =
+      numberOfPlayers === "solo" ? 1 : Number(numberOfPlayers);
+    const sideGameMode =
+      scoreType === "high_low"
+        ? "high-low"
+        : scoreType === "split_six"
+          ? "split-six"
+          : "none";
 
     if (playerCount <= 1 && sideGameMode === "none") {
       return undefined;
@@ -624,7 +681,10 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
     const contextId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     try {
-      await AsyncStorage.setItem(`pending_round_context_v1_${contextId}`, JSON.stringify(context));
+      await AsyncStorage.setItem(
+        `pending_round_context_v1_${contextId}`,
+        JSON.stringify(context),
+      );
     } catch (e) {
       console.error("Error saving pending round context", e);
     }
@@ -718,19 +778,19 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
             </ThemedText>
           </HStack>
         </HStack>
-         {/* Tee Boxes */}
-          <HStack className="items-center mt-2" style={{ flexShrink: 0 }}>
-            <Ionicons name="cube" size={18} color="blue" />
-            <ThemedText
-              style={{
-                marginLeft: 6,
-                fontSize: 14,
-                opacity: 0.7,
-              }}
-            >
-              {course.teeBoxes.length} Tee Boxes
-            </ThemedText>
-          </HStack>
+        {/* Tee Boxes */}
+        <HStack className="items-center mt-2" style={{ flexShrink: 0 }}>
+          <Ionicons name="cube" size={18} color="blue" />
+          <ThemedText
+            style={{
+              marginLeft: 6,
+              fontSize: 14,
+              opacity: 0.7,
+            }}
+          >
+            {course.teeBoxes.length} Tee Boxes
+          </ThemedText>
+        </HStack>
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
         <Pressable
@@ -808,7 +868,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
               </Pressable>
             </HStack>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <ThemedText style={{fontSize: 13}}>
+              <ThemedText style={{ fontSize: 13 }}>
                 You are now starting a round for {course.name}
               </ThemedText>
               <Controller
@@ -816,7 +876,9 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                 name="teeBoxId"
                 render={({ field: { onChange, value } }) => (
                   <Dropdown
-                    backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                    backgroundColor={
+                      isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                    }
                     style={[
                       styles.dropdown,
                       {
@@ -912,13 +974,13 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                           value: "high_low",
                         },
                         {
-                          label:"Nassau (Best Score)",
-                        value:"nassau_best",
+                          label: "Nassau (Best Score)",
+                          value: "nassau_best",
                         },
                         {
-                          label:"Nassau (Combined Score)",
-                        value:"nassau_combined",
-                        }
+                          label: "Nassau (Combined Score)",
+                          value: "nassau_combined",
+                        },
                       ].map((item) => (
                         <Radio
                           key={item.value}
@@ -965,11 +1027,19 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
               {/* Number of Players & Player Slots Selection */}
               <View style={{ paddingHorizontal: 20, marginBottom: 15 }}>
-                <ThemedText style={{ color: textColor, marginBottom: 6, fontWeight: "600" }}>
+                <ThemedText
+                  style={{
+                    color: textColor,
+                    marginBottom: 6,
+                    fontWeight: "600",
+                  }}
+                >
                   Number of Players
                 </ThemedText>
                 <Dropdown
-                  backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                  backgroundColor={
+                    isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                  }
                   disable={
                     scoreType === "net_including" ||
                     scoreType === "net_excluding" ||
@@ -980,25 +1050,27 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   style={[
                     styles.dropdown,
                     {
-                      backgroundColor: (
+                      backgroundColor:
                         scoreType === "net_including" ||
                         scoreType === "net_excluding" ||
                         scoreType === "stableford" ||
                         scoreType === "split_six" ||
                         scoreType === "high_low"
-                      )
-                        ? (isDark ? "#222" : "#f1f5f9")
-                        : cardBg,
+                          ? isDark
+                            ? "#222"
+                            : "#f1f5f9"
+                          : cardBg,
                       borderColor: borderColor,
                       borderWidth: 1,
                       marginTop: 0,
-                      opacity: (
+                      opacity:
                         scoreType === "net_including" ||
                         scoreType === "net_excluding" ||
                         scoreType === "stableford" ||
                         scoreType === "split_six" ||
                         scoreType === "high_low"
-                      ) ? 0.7 : 1,
+                          ? 0.7
+                          : 1,
                     },
                   ]}
                   placeholderStyle={{ color: subTextColor, fontSize: 14 }}
@@ -1027,13 +1099,20 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   placeholder="Select number of players"
                   value={numberOfPlayers}
                   onChange={(item: any) => {
-                    if ((scoreType === "nassau_best" || scoreType === "nassau_combined") && (item.value === "solo" || item.value === "3")) {
+                    if (
+                      (scoreType === "nassau_best" ||
+                        scoreType === "nassau_combined") &&
+                      (item.value === "solo" || item.value === "3")
+                    ) {
                       Alert.alert(
                         "Invalid Player Count",
                         "You can select 2 or 4 players for this scoring mode.",
                         [
-                          { text: "OK", onPress: () => setNumberOfPlayers("2") }
-                        ]
+                          {
+                            text: "OK",
+                            onPress: () => setNumberOfPlayers("2"),
+                          },
+                        ],
                       );
                     } else {
                       setNumberOfPlayers(item.value);
@@ -1047,20 +1126,45 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                 {numberOfPlayers === "solo" ? (
                   /* Solo: Player 1 (You) takes full width */
                   <View style={{ width: "100%" }}>
-                    <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                    <HStack
+                      style={{ alignItems: "center", gap: 6, marginBottom: 4 }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: textColor,
+                        }}
+                      >
                         Player 1
                       </ThemedText>
                       {scoreType === "high_low" && (
-                        <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                        <View
+                          style={{
+                            backgroundColor: "#dcfce7",
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 4,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: "#166534",
+                              fontWeight: "700",
+                            }}
+                          >
+                            Team 1
+                          </Text>
                         </View>
                       )}
                     </HStack>
                     <Dropdown
                       disable
                       renderRightIcon={() => null}
-                      backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                      backgroundColor={
+                        isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                      }
                       style={[
                         styles.dropdown,
                         {
@@ -1073,8 +1177,13 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                         },
                       ]}
                       placeholderStyle={{ color: subTextColor, fontSize: 14 }}
-                      selectedTextStyle={{ color: isDark ? "#aaa" : "#555", fontSize: 14 }}
-                      data={[{ label: profile?.username || "You", value: "you" }]}
+                      selectedTextStyle={{
+                        color: isDark ? "#aaa" : "#555",
+                        fontSize: 14,
+                      }}
+                      data={[
+                        { label: profile?.username || "You", value: "you" },
+                      ]}
                       labelField="label"
                       valueField="value"
                       value="you"
@@ -1087,20 +1196,51 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     <HStack style={{ gap: 12, marginBottom: 12 }}>
                       {/* Player 1 (You) */}
                       <View style={{ flex: 1 }}>
-                        <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
-                          <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                        <HStack
+                          style={{
+                            alignItems: "center",
+                            gap: 6,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              fontSize: 13,
+                              fontWeight: "600",
+                              color: textColor,
+                            }}
+                          >
                             Player 1
                           </ThemedText>
-                          {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
-                            <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                              <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                          {(scoreType === "high_low" ||
+                            scoreType === "nassau_best" ||
+                            scoreType === "nassau_combined") && (
+                            <View
+                              style={{
+                                backgroundColor: "#dcfce7",
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 4,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  color: "#166534",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Team 1
+                              </Text>
                             </View>
                           )}
                         </HStack>
                         <Dropdown
                           disable
                           renderRightIcon={() => null}
-                          backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                          backgroundColor={
+                            isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                          }
                           style={[
                             styles.dropdown,
                             {
@@ -1112,9 +1252,17 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                               opacity: 0.7,
                             },
                           ]}
-                          placeholderStyle={{ color: subTextColor, fontSize: 14 }}
-                          selectedTextStyle={{ color: isDark ? "#aaa" : "#555", fontSize: 14 }}
-                          data={[{ label: profile?.username || "You", value: "you" }]}
+                          placeholderStyle={{
+                            color: subTextColor,
+                            fontSize: 14,
+                          }}
+                          selectedTextStyle={{
+                            color: isDark ? "#aaa" : "#555",
+                            fontSize: 14,
+                          }}
+                          data={[
+                            { label: profile?.username || "You", value: "you" },
+                          ]}
                           labelField="label"
                           valueField="value"
                           value="you"
@@ -1124,23 +1272,72 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
                       {/* Player 2 */}
                       <View style={{ flex: 1 }}>
-                        <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
-                          <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                        <HStack
+                          style={{
+                            alignItems: "center",
+                            gap: 6,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              fontSize: 13,
+                              fontWeight: "600",
+                              color: textColor,
+                            }}
+                          >
                             Player 2
                           </ThemedText>
-                          {(scoreType === "high_low" || ((scoreType === "nassau_best" || scoreType === "nassau_combined") && numberOfPlayers === "4")) && (
-                            <View style={{ backgroundColor: "#dcfce7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                              <Text style={{ fontSize: 10, color: "#166534", fontWeight: "700" }}>Team 1</Text>
+                          {(scoreType === "high_low" ||
+                            ((scoreType === "nassau_best" ||
+                              scoreType === "nassau_combined") &&
+                              numberOfPlayers === "4")) && (
+                            <View
+                              style={{
+                                backgroundColor: "#dcfce7",
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 4,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  color: "#166534",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Team 1
+                              </Text>
                             </View>
                           )}
-                          {((scoreType === "nassau_best" || scoreType === "nassau_combined") && numberOfPlayers === "2") && (
-                            <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                              <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
-                            </View>
-                          )}
+                          {(scoreType === "nassau_best" ||
+                            scoreType === "nassau_combined") &&
+                            numberOfPlayers === "2" && (
+                              <View
+                                style={{
+                                  backgroundColor: "#dbeafe",
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 4,
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 10,
+                                    color: "#1e40af",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  Team 2
+                                </Text>
+                              </View>
+                            )}
                         </HStack>
                         <Dropdown
-                          backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                          backgroundColor={
+                            isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                          }
                           style={[
                             styles.dropdown,
                             {
@@ -1151,7 +1348,10 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                               height: 44,
                             },
                           ]}
-                          placeholderStyle={{ color: subTextColor, fontSize: 14 }}
+                          placeholderStyle={{
+                            color: subTextColor,
+                            fontSize: 14,
+                          }}
                           selectedTextStyle={{ color: textColor, fontSize: 14 }}
                           itemTextStyle={{ color: textColor, fontSize: 14 }}
                           containerStyle={{
@@ -1183,18 +1383,49 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                       <HStack style={{ gap: 12, marginBottom: 12 }}>
                         {/* Player 3 */}
                         <View style={{ flex: 1 }}>
-                          <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
-                            <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                          <HStack
+                            style={{
+                              alignItems: "center",
+                              gap: 6,
+                              marginBottom: 4,
+                            }}
+                          >
+                            <ThemedText
+                              style={{
+                                fontSize: 13,
+                                fontWeight: "600",
+                                color: textColor,
+                              }}
+                            >
                               Player 3
                             </ThemedText>
-                            {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
-                              <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                                <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
+                            {(scoreType === "high_low" ||
+                              scoreType === "nassau_best" ||
+                              scoreType === "nassau_combined") && (
+                              <View
+                                style={{
+                                  backgroundColor: "#dbeafe",
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 4,
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 10,
+                                    color: "#1e40af",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  Team 2
+                                </Text>
                               </View>
                             )}
                           </HStack>
                           <Dropdown
-                            backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                            backgroundColor={
+                              isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                            }
                             style={[
                               styles.dropdown,
                               {
@@ -1205,8 +1436,14 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                                 height: 44,
                               },
                             ]}
-                            placeholderStyle={{ color: subTextColor, fontSize: 14 }}
-                            selectedTextStyle={{ color: textColor, fontSize: 14 }}
+                            placeholderStyle={{
+                              color: subTextColor,
+                              fontSize: 14,
+                            }}
+                            selectedTextStyle={{
+                              color: textColor,
+                              fontSize: 14,
+                            }}
                             itemTextStyle={{ color: textColor, fontSize: 14 }}
                             containerStyle={{
                               backgroundColor: isDark ? "#333" : "#eee",
@@ -1235,18 +1472,49 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                         <View style={{ flex: 1 }}>
                           {numberOfPlayers === "4" ? (
                             <>
-                              <HStack style={{ alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                <ThemedText style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+                              <HStack
+                                style={{
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginBottom: 4,
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontSize: 13,
+                                    fontWeight: "600",
+                                    color: textColor,
+                                  }}
+                                >
                                   Player 4
                                 </ThemedText>
-                                {(scoreType === "high_low" || scoreType === "nassau_best" || scoreType === "nassau_combined") && (
-                                  <View style={{ backgroundColor: "#dbeafe", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                                    <Text style={{ fontSize: 10, color: "#1e40af", fontWeight: "700" }}>Team 2</Text>
+                                {(scoreType === "high_low" ||
+                                  scoreType === "nassau_best" ||
+                                  scoreType === "nassau_combined") && (
+                                  <View
+                                    style={{
+                                      backgroundColor: "#dbeafe",
+                                      paddingHorizontal: 6,
+                                      paddingVertical: 2,
+                                      borderRadius: 4,
+                                    }}
+                                  >
+                                    <Text
+                                      style={{
+                                        fontSize: 10,
+                                        color: "#1e40af",
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      Team 2
+                                    </Text>
                                   </View>
                                 )}
                               </HStack>
                               <Dropdown
-                                backgroundColor={isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"}
+                                backgroundColor={
+                                  isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
+                                }
                                 style={[
                                   styles.dropdown,
                                   {
@@ -1257,9 +1525,18 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                                     height: 44,
                                   },
                                 ]}
-                                placeholderStyle={{ color: subTextColor, fontSize: 14 }}
-                                selectedTextStyle={{ color: textColor, fontSize: 14 }}
-                                itemTextStyle={{ color: textColor, fontSize: 14 }}
+                                placeholderStyle={{
+                                  color: subTextColor,
+                                  fontSize: 14,
+                                }}
+                                selectedTextStyle={{
+                                  color: textColor,
+                                  fontSize: 14,
+                                }}
+                                itemTextStyle={{
+                                  color: textColor,
+                                  fontSize: 14,
+                                }}
                                 containerStyle={{
                                   backgroundColor: isDark ? "#333" : "#eee",
                                   borderRadius: 8,
@@ -1271,7 +1548,10 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                                   backgroundColor: isDark ? "#333" : "#eee",
                                 }}
                                 activeColor={isDark ? "#333" : "#eee"}
-                                data={getPlayerOptions(player4, [player2, player3])}
+                                data={getPlayerOptions(player4, [
+                                  player2,
+                                  player3,
+                                ])}
                                 labelField="label"
                                 valueField="value"
                                 mode="modal"
@@ -1317,13 +1597,20 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                           value: "back9",
                         },
                       ].map((item) => {
-                        const isDisabled = (scoreType === "nassau_best" || scoreType === "nassau_combined") && (item.value === "front9" || item.value === "back9");
+                        const isDisabled =
+                          (scoreType === "nassau_best" ||
+                            scoreType === "nassau_combined") &&
+                          (item.value === "front9" || item.value === "back9");
                         return (
                           <Radio
                             key={item.value}
                             value={item.value}
                             isDisabled={isDisabled}
-                            style={{ flexDirection: "row", marginBottom: 10, opacity: isDisabled ? 0.4 : 1 }}
+                            style={{
+                              flexDirection: "row",
+                              marginBottom: 10,
+                              opacity: isDisabled ? 0.4 : 1,
+                            }}
                           >
                             <RadioIndicator
                               style={{
@@ -1359,9 +1646,89 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   </Text>
                 )}
               </View>
+
+              {/* start from */}
+              {(scoreType === "nassau_best" ||
+                scoreType === "nassau_combined") && (
+                <View style={styles.container}>
+                  <Controller
+                    control={control}
+                    name="startFrom"
+                    render={({ field: { onChange, value } }) => (
+                      <RadioGroup value={value} onChange={onChange}>
+                        <ThemedText
+                          style={{ color: textColor, marginBottom: 3 }}
+                        >
+                          Which nine would you like to play first?
+                        </ThemedText>
+
+                        {[
+                          {
+                            label: "Hole 1 (Front Nine First)",
+                            value: "front",
+                          },
+                          {
+                            label: "Hole 10 (Back Nine First)",
+                            value: "back",
+                          },
+                        ].map((item) => {
+                          // const isDisabled =
+                          //   (scoreType === "net_including" ||
+                          //     scoreType === "net_excluding" ||
+                          //     scoreType === "stableford" ||
+                          //     scoreType === "gross_score" ||
+                          //     scoreType === "split_six" ||
+                          //     scoreType === "high_low") &&
+                          //   (item.value === "fnf" || item.value === "bnf");
+                          return (
+                            <Radio
+                              key={item.value}
+                              value={item.value}
+                              // isDisabled={isDisabled}
+                              style={{
+                                flexDirection: "row",
+                                marginBottom: 10,
+                                // opacity: isDisabled ? 0.4 : 1,
+                              }}
+                            >
+                              <RadioIndicator
+                                style={{
+                                  borderColor: textColor,
+                                  borderWidth: 2,
+                                  marginRight: 10,
+                                }}
+                              >
+                                {value === item.value && (
+                                  <View
+                                    style={{
+                                      width: 10,
+                                      height: 10,
+                                      borderRadius: 5,
+                                      backgroundColor: textColor,
+                                    }}
+                                  />
+                                )}
+                              </RadioIndicator>
+
+                              <RadioLabel style={{ color: textColor }}>
+                                {item.label}
+                              </RadioLabel>
+                            </Radio>
+                          );
+                        })}
+                      </RadioGroup>
+                    )}
+                  />
+                  {errors.startFrom && (
+                    <Text style={styles.errorText}>
+                      {errors.startFrom.message}
+                    </Text>
+                  )}
+                </View>
+              )}
             </ScrollView>
 
-             {/* BUTTONS */}
+            {/* BUTTONS */}
             <HStack style={styles.buttonRow}>
               <Pressable
                 style={[
@@ -1391,20 +1758,36 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     Alert.alert("Please select all players");
                     return;
                   }
-                  if (numberOfPlayers === "4" && (!player2 || !player3 || !player4)) {
+                  if (
+                    numberOfPlayers === "4" &&
+                    (!player2 || !player3 || !player4)
+                  ) {
                     Alert.alert("Please select all players");
                     return;
                   }
 
                   const selectedScore = scoringOptions[data.scoreType];
                   const selectedHoles = holesOptions[data.holesToPlay];
+                  const startFrom = data.startFrom || "";
 
                   // Save player configuration to AsyncStorage
                   try {
-                    await AsyncStorage.setItem("numberOfPlayers", numberOfPlayers);
-                    await AsyncStorage.setItem("player2Id", player2 ? String(player2) : "");
-                    await AsyncStorage.setItem("player3Id", player3 ? String(player3) : "");
-                    await AsyncStorage.setItem("player4Id", player4 ? String(player4) : "");
+                    await AsyncStorage.setItem(
+                      "numberOfPlayers",
+                      numberOfPlayers,
+                    );
+                    await AsyncStorage.setItem(
+                      "player2Id",
+                      player2 ? String(player2) : "",
+                    );
+                    await AsyncStorage.setItem(
+                      "player3Id",
+                      player3 ? String(player3) : "",
+                    );
+                    await AsyncStorage.setItem(
+                      "player4Id",
+                      player4 ? String(player4) : "",
+                    );
                   } catch (e) {
                     console.error("Error saving player selections", e);
                   }
@@ -1414,7 +1797,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   setHandicapView(false);
                   setModalVisible(false);
 
-                  let url = `/newRound/scoreCardUser?selectedScore=${JSON.stringify(selectedScore)}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}&numberOfPlayers=${numberOfPlayers}&player2Id=${player2 || ""}&player3Id=${player3 || ""}&player4Id=${player4 || ""}&forceNew=true`;
+                  let url = `/newRound/scoreCardUser?selectedScore=${JSON.stringify(selectedScore)}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}&numberOfPlayers=${numberOfPlayers}&player2Id=${player2 || ""}&player3Id=${player3 || ""}&player4Id=${player4 || ""}&forceNew=true&startFrom=${startFrom}`;
                   if (roundContextId) {
                     url += `&roundContextId=${roundContextId}`;
                   }

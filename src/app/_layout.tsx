@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 
 import { AuthProvider } from "@/context/AuthContext";
@@ -51,6 +52,7 @@ export default function RootLayout() {
               <NoConnectionScreen />
             ) : (
               <>
+                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
                 <Stack screenOptions={{ headerShown: false }} />
                 <Toast />
               </>

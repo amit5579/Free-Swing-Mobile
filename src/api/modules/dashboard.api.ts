@@ -238,6 +238,8 @@ export type ScorecardHole = {
   playingGroupRoundKey?: string | null;
   PlayingGroupRoundKey?: string | null;
   matchScoringType?: string | null;
+  nassauStartingNine?: string | null;
+  NassauStartingNine?: string | null;
 };
 
 export const getScorecardDetails = async (scorecardId: string | number): Promise<ScorecardHole[]> => {
