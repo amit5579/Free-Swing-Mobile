@@ -88,6 +88,13 @@ export default function ResumeScorecard() {
   const [isNassauCombined, setIsNassauCombined] = useState(false);
   const isNassau = isNassauBest || isNassauCombined;
   const [roundContextId, setRoundContextId] = useState<string | null>(null);
+  const nassauStartingNine = holes[0]?.nassauStartingNine || holes[0]?.NassauStartingNine || null;
+  const front9Holes = nassauStartingNine === "back"
+    ? holes.filter((h) => h.holeNumber >= 10)
+    : holes.filter((h) => h.holeNumber <= 9);
+  const back9Holes = nassauStartingNine === "back"
+    ? holes.filter((h) => h.holeNumber <= 9)
+    : holes.filter((h) => h.holeNumber >= 10);
 
   // const renderScoringType =
   //   holes.length > 0
@@ -152,6 +159,8 @@ export default function ResumeScorecard() {
                   : null,
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
+          nassauStartingNine: nassauStartingNine,
+          NassauStartingNine: nassauStartingNine,
           ...(playingGroupRoundKey
             ? {
                 playingGroupRoundKey,
@@ -328,7 +337,6 @@ export default function ResumeScorecard() {
         // Determine which halves to display based on courseHalf from API or hole numbers fallback
         // const apiCourseHalf = sanitizedData.length > 0 ? sanitizedData[0].courseHalf : null;
         const apiCourseHalf = sanitizedData[0].courseHalf;
-
         if (apiCourseHalf === "Front9" || apiCourseHalf === "Front 9") {
           setDisplayFront(true);
           setDisplayBack(false);
@@ -399,6 +407,8 @@ export default function ResumeScorecard() {
       isExcluded: h.isExcluded || false,
       companionScoresJson: h.companionScoresJson || null,
       companionSandysJson: h.companionSandysJson || null,
+      nassauStartingNine: nassauStartingNine,
+      NassauStartingNine: nassauStartingNine,
       ...(playingGroupRoundKey
         ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey }
         : {}),
@@ -1099,7 +1109,7 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
-            // console.log("pppp", payload);
+            console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
             await AsyncStorage.removeItem(storageKey);
@@ -1582,10 +1592,9 @@ export default function ResumeScorecard() {
               }}
             >
               {displayFront &&
-                holes.filter((h) => h.holeNumber <= 9).length > 0 && (
+                front9Holes.length > 0 && (
                   <>
-                    {holes
-                      .filter((h) => h.holeNumber <= 9)
+                    {front9Holes
                       .map((h, index) => (
                         <View
                           key={h.holeId}
@@ -1710,7 +1719,7 @@ export default function ResumeScorecard() {
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
-                        Front 9
+                        {nassauStartingNine === "back" ? "Back 9" : "Front 9"}
                       </Text>
                       {isDetailsVisible && (
                         <>
@@ -1718,30 +1727,30 @@ export default function ResumeScorecard() {
                           <Text
                             className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                           >
-                            {sumYardage(holes.filter((h) => h.holeNumber <= 9))}
+                            {sumYardage(front9Holes)}
                           </Text>
                           <Text
                             className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                           >
-                            {sumPar(holes.filter((h) => h.holeNumber <= 9))}
+                            {sumPar(front9Holes)}
                           </Text>
                         </>
                       )}
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
-                        {sumScores(holes.filter((h) => h.holeNumber <= 9))}
+                        {sumScores(front9Holes)}
                       </Text>
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                       >
-                        {sumNet(holes.filter((h) => h.holeNumber <= 9))}
+                        {sumNet(front9Holes)}
                       </Text>
                       {isStableford && (
                         <Text
                           className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                         >
-                          {sumPts(holes.filter((h) => h.holeNumber <= 9))}
+                          {sumPts(front9Holes)}
                         </Text>
                       )}
                     </View>
@@ -1749,10 +1758,9 @@ export default function ResumeScorecard() {
                 )}
 
               {displayBack &&
-                holes.filter((h) => h.holeNumber >= 10).length > 0 && (
+                back9Holes.length > 0 && (
                   <>
-                    {holes
-                      .filter((h) => h.holeNumber >= 10)
+                    {back9Holes
                       .map((h, index) => (
                         <View
                           key={h.holeId}
@@ -1874,7 +1882,7 @@ export default function ResumeScorecard() {
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
-                        Back 9
+                        {nassauStartingNine === "back" ? "Front 9" : "Back 9"}
                       </Text>
                       {isDetailsVisible && (
                         <>
@@ -1882,30 +1890,30 @@ export default function ResumeScorecard() {
                           <Text
                             className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                           >
-                            {sumYardage(holes.filter((h) => h.holeNumber >= 10))}
+                            {sumYardage(back9Holes)}
                           </Text>
                           <Text
                             className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
                           >
-                            {sumPar(holes.filter((h) => h.holeNumber >= 10))}
+                            {sumPar(back9Holes)}
                           </Text>
                         </>
                       )}
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
-                        {sumScores(holes.filter((h) => h.holeNumber >= 10))}
+                        {sumScores(back9Holes)}
                       </Text>
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
                       >
-                        {sumNet(holes.filter((h) => h.holeNumber >= 10))}
+                        {sumNet(back9Holes)}
                       </Text>
                       {isStableford && (
                         <Text
                           className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                         >
-                          {sumPts(holes.filter((h) => h.holeNumber >= 10))}
+                          {sumPts(back9Holes)}
                         </Text>
                       )}
                     </View>
@@ -2017,31 +2025,7 @@ export default function ResumeScorecard() {
                   teamBSandys: teamBInfos.map((i: any) => i.sandy),
                 };
               });
-              // console.log("NASSAU DEBUG - allData length:", allData.length);
-              // if (allData.length > 0) {
-              //   console.log(
-              //     "NASSAU DEBUG - first hole data:",
-              //     JSON.stringify(allData[0]),
-              //   );
-              // }
-              // ns = computeNassauState(mode as "best" | "combined", allData);
-              // console.log(
-              //   "NASSAU DEBUG - ns result:",
-              //   ns ? "Calculated" : "Null",
-              //   ns ? Object.keys(ns.holeResults).length : 0,
-              // );
-              // if (ns && ns.holeResults[1]) {
-              //   console.log(
-              //     "NASSAU DEBUG - HOLE 1 RESULT:",
-              //     JSON.stringify(ns.holeResults[1]),
-              //   );
-              // }
-              // if (ns && ns.holeResults[10]) {
-              //   console.log(
-              //     "NASSAU DEBUG - HOLE 10 RESULT:",
-              //     JSON.stringify(ns.holeResults[10]),
-              //   );
-              // }
+              ns = computeNassauState(mode as "best" | "combined", allData);
             }
 
             const totalWidth =
@@ -2238,8 +2222,7 @@ export default function ResumeScorecard() {
               </HStack>
             );
 
-            const front9Holes = holes.filter((h) => h.holeNumber <= 9);
-            const back9Holes = holes.filter((h) => h.holeNumber >= 10);
+
 
             return (
               <ScrollView
@@ -2665,7 +2648,7 @@ export default function ResumeScorecard() {
                           textAlign: "center",
                         }}
                       >
-                        F9
+                        {nassauStartingNine === "back" ? "B9" : "F9"}
                       </ThemedText>
                       {isDetailsVisible && (
                         <>
@@ -2839,7 +2822,7 @@ export default function ResumeScorecard() {
                               fontSize: 11,
                             }}
                           >
-                            {formatNassauHouses(ns.front9Houses)}
+                            {formatNassauHouses(nassauStartingNine === "back" ? ns.back9Houses : ns.front9Houses)}
                           </Text>
                         </VStack>
                       )}
@@ -3091,7 +3074,7 @@ export default function ResumeScorecard() {
                                         flexWrap: "wrap",
                                       }}
                                     >
-                                      {(h.holeNumber <= 9
+                                      {(((nassauStartingNine === "back" ? h.holeNumber >= 10 : h.holeNumber <= 9))
                                         ? hRes.housesDisplay
                                         : hRes.overallHousesDisplay || []
                                       ).map(
@@ -3101,7 +3084,7 @@ export default function ResumeScorecard() {
                                           arr: number[],
                                         ) => renderHouse(val, i, arr),
                                       )}
-                                      {h.holeNumber >= 10 &&
+                                      {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                         hRes.housesDisplay.length > 0 && (
                                           <Text
                                             style={{
@@ -3114,7 +3097,7 @@ export default function ResumeScorecard() {
                                             {" & "}
                                           </Text>
                                         )}
-                                      {h.holeNumber >= 10 &&
+                                      {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                         hRes.housesDisplay.map(
                                           (
                                             val: number,
@@ -3249,7 +3232,7 @@ export default function ResumeScorecard() {
                           textAlign: "center",
                         }}
                       >
-                        B9
+                        {nassauStartingNine === "back" ? "F9" : "B9"}
                       </ThemedText>
                       {isDetailsVisible && (
                         <>
@@ -3414,7 +3397,7 @@ export default function ResumeScorecard() {
                               fontSize: 11,
                             }}
                           >
-                            {formatNassauHouses(ns.back9Houses)}
+                            {formatNassauHouses(nassauStartingNine === "back" ? ns.front9Houses : ns.back9Houses)}
                           </Text>
                         </VStack>
                       )}
@@ -3892,7 +3875,7 @@ export default function ResumeScorecard() {
                         Team B
                       </ThemedText>
                     </HStack>
-                    <Row
+                    {/* <Row
                       label="Front 9"
                       a={s.front9MatchPts.teamA}
                       b={s.front9MatchPts.teamB}
@@ -3903,7 +3886,7 @@ export default function ResumeScorecard() {
                         a={s.back9MatchPts.teamA}
                         b={s.back9MatchPts.teamB}
                       />
-                    )}
+                    )} */}
                     <Row
                       label="Overall Match Pts"
                       a={s.overallMatchPts.teamA}
@@ -3928,8 +3911,8 @@ export default function ResumeScorecard() {
                     />
                     <View
                       style={{
-                        borderTopWidth: 0.5,
-                        borderColor: isDark ? "#444" : "#ddd",
+                        // borderTopWidth: 0.5,
+                        // borderColor: isDark ? "#444" : "#ddd",
                         paddingTop: 10,
                         alignItems: "center",
                         marginTop: 6,
@@ -4163,8 +4146,8 @@ export default function ResumeScorecard() {
                              <HStack
                             style={{
                               alignItems: "flex-start",
-                              borderBottomWidth: 0.5,
-                              borderColor: isDark ? "#333" : "#e5e5e5",
+                              // borderBottomWidth: 0.5,
+                              // borderColor: isDark ? "#333" : "#e5e5e5",
                               paddingVertical: 8,
                             }}
                           >

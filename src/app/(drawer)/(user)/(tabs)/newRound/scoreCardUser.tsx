@@ -63,6 +63,7 @@ export default function ScoreCardUserPage() {
     player3Id,
     player4Id,
     roundContextId,
+    startFrom
   } = useLocalSearchParams();
 
   const [pendingRoundContext, setPendingRoundContext] = useState<any>(null);
@@ -180,9 +181,9 @@ export default function ScoreCardUserPage() {
     )
       return "Gross Score";
     if (!isExcluded && !isStableford && isSplit6 && !isHighLow)
-      return "Net Score • Split 6";
+      return "Split 6";
     if (!isExcluded && !isStableford && !isSplit6 && isHighLow)
-      return "Net Score • High-Low";
+      return "High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
     return "";
@@ -433,13 +434,15 @@ export default function ScoreCardUserPage() {
     return counts;
   };
 
+  const nassauStartingNine = (startFrom === "front" || startFrom === "back") ? startFrom : null;
+
   const processedAllHoles = scoreCardDetails.map(calculateHole);
 
   const processedFront9 = processedAllHoles.filter(
-    (h: any) => h.holeNumber <= 9,
+    (h: any) => nassauStartingNine === "back" ? h.holeNumber >= 10 : h.holeNumber <= 9,
   );
   const processedBack9 = processedAllHoles.filter(
-    (h: any) => h.holeNumber >= 10,
+    (h: any) => nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10,
   );
   const legendCounts = getScoreLegendCounts(processedAllHoles);
 
@@ -464,6 +467,13 @@ export default function ScoreCardUserPage() {
     if (holes === "front9" || holes === "Front9" || holes === "Front 9") return h.holeNumber <= 9;
     if (holes === "back9" || holes === "Back9" || holes === "Back 9") return h.holeNumber >= 10;
     return true;
+  }).sort((a: any, b: any) => {
+    if (nassauStartingNine === "back") {
+      const aVal = a.holeNumber >= 10 ? a.holeNumber - 10 : a.holeNumber + 8;
+      const bVal = b.holeNumber >= 10 ? b.holeNumber - 10 : b.holeNumber + 8;
+      return aVal - bVal;
+    }
+    return a.holeNumber - b.holeNumber;
   });
 
   const grandTotals = getTotals(processedHoles, getScoringLabel());
@@ -512,6 +522,8 @@ export default function ScoreCardUserPage() {
             userId: Number(userId),
             companionScoresJson: h.companionScoresJson || null,
             companionSandysJson: h.companionSandysJson || null,
+            nassauStartingNine: nassauStartingNine,
+            NassauStartingNine: nassauStartingNine,
             ...(playingGroupRoundKey
               ? {
                   playingGroupRoundKey,
@@ -628,6 +640,8 @@ export default function ScoreCardUserPage() {
         userId: Number(userId),
         companionScoresJson: h.companionScoresJson || null,
         companionSandysJson: h.companionSandysJson || null,
+        nassauStartingNine: nassauStartingNine,
+        NassauStartingNine: nassauStartingNine,
         ...(playingGroupRoundKey
           ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey }
           : {}),
@@ -2312,7 +2326,7 @@ export default function ScoreCardUserPage() {
                                                 arr: number[],
                                               ) => renderHouse(val, i, arr),
                                             )}
-                                            {h.holeNumber >= 10 &&
+                                            {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                               hRes.housesDisplay.length > 0 && (
                                                 <Text
                                                   style={{
@@ -2325,7 +2339,7 @@ export default function ScoreCardUserPage() {
                                                   {" & "}
                                                 </Text>
                                               )}
-                                            {h.holeNumber >= 10 &&
+                                            {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
                                               hRes.housesDisplay.map(
                                                 (
                                                   val: number,
@@ -2339,7 +2353,7 @@ export default function ScoreCardUserPage() {
                                   </HStack>
 
                                   {/* FRONT 9 TOTALS ROW */}
-                                  {h.holeNumber === 9 && (
+                                  {((nassauStartingNine === "back" ? index === 8 : h.holeNumber === 9)) && (
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
@@ -2359,7 +2373,7 @@ export default function ScoreCardUserPage() {
                                           textAlign: "center",
                                         }}
                                       >
-                                        F9
+                                        {nassauStartingNine === "back" ? "B9" : "F9"}
                                       </ThemedText>
                                       {isDetailsVisible && (
                                         <>
@@ -2580,7 +2594,7 @@ export default function ScoreCardUserPage() {
                                               }}
                                             >
                                               {formatNassauHouses(
-                                                ns.front9Houses,
+                                                nassauStartingNine === "back" ? ns.back9Houses : ns.front9Houses,
                                               )}
                                             </Text>
                                           </VStack>
@@ -2589,7 +2603,7 @@ export default function ScoreCardUserPage() {
                                   )}
 
                                   {/* BACK 9 TOTALS ROW */}
-                                  {h.holeNumber === 18 && (
+                                  {((nassauStartingNine === "back" ? index === 17 : h.holeNumber === 18)) && (
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
@@ -2609,7 +2623,7 @@ export default function ScoreCardUserPage() {
                                           textAlign: "center",
                                         }}
                                       >
-                                        B9
+                                        {nassauStartingNine === "back" ? "F9" : "B9"}
                                       </ThemedText>
                                       {isDetailsVisible && (
                                         <>
@@ -2830,7 +2844,7 @@ export default function ScoreCardUserPage() {
                                               }}
                                             >
                                               {formatNassauHouses(
-                                                ns.back9Houses,
+                                                nassauStartingNine === "back" ? ns.front9Houses : ns.back9Houses,
                                               )}
                                             </Text>
                                           </VStack>
@@ -3095,22 +3109,26 @@ export default function ScoreCardUserPage() {
                         Total
                       </ThemedText>
 
-                      <ThemedText
-                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                      >
-                        {grandTotals.strokeIndex}
-                      </ThemedText>
-                      <ThemedText
-                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                      >
-                        {grandTotals.yards}
-                      </ThemedText>
+                      {isDetailsVisible && (
+                        <>
+                          <ThemedText
+                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                          >
+                            {grandTotals.strokeIndex}
+                          </ThemedText>
+                          <ThemedText
+                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                          >
+                            {grandTotals.yards}
+                          </ThemedText>
 
-                      <ThemedText
-                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                      >
-                        {grandTotals.par}
-                      </ThemedText>
+                          <ThemedText
+                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                          >
+                            {grandTotals.par}
+                          </ThemedText>
+                        </>
+                      )}
 
                       <ThemedText
                         style={{
@@ -3481,8 +3499,8 @@ export default function ScoreCardUserPage() {
                                 />
                                 <View
                                   style={{
-                                    borderTopWidth: 0.5,
-                                    borderColor: isDark ? "#444" : "#ddd",
+                                    // borderTopWidth: 0.5,
+                                    // borderColor: isDark ? "#444" : "#ddd",
                                     paddingTop: 10,
                                     alignItems: "center",
                                     marginTop: 6,

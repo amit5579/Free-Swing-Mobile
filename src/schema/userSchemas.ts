@@ -41,13 +41,42 @@ export type ContactAdminType = z.infer<typeof contactAdminSchema>;
 
 
 
-export const newRoundSchema = z.object({
-  teeBoxId: z.number().min(1, "Please select a tee box"),
-  scoreType: z.enum(["net_including", "net_excluding", "stableford","gross_score","split_six","high_low", "nassau_best", "nassau_combined"], {
-    message: "Please select a scoring mode",
-  }),
-  holesToPlay: z.enum(["18", "front9", "back9"], {
-    message: "Please select holes to play",
-  }),
-});
+export const newRoundSchema = z
+  .object({
+    teeBoxId: z.number().min(1, "Please select a tee box"),
+    scoreType: z.enum(
+      [
+        "net_including",
+        "net_excluding",
+        "stableford",
+        "gross_score",
+        "split_six",
+        "high_low",
+        "nassau_best",
+        "nassau_combined",
+      ],
+      {
+        message: "Please select a scoring mode",
+      }
+    ),
+    holesToPlay: z.enum(["18", "front9", "back9"], {
+      message: "Please select holes to play",
+    }),
+    startFrom: z.enum(["front", "back"]).optional(),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.scoreType === "nassau_best" ||
+        data.scoreType === "nassau_combined"
+      ) {
+        return !!data.startFrom;
+      }
+      return true;
+    },
+    {
+      message: "Please select a starting hole",
+      path: ["startFrom"],
+    }
+  );
 export type NewRoundFormValues = z.infer<typeof newRoundSchema>;
