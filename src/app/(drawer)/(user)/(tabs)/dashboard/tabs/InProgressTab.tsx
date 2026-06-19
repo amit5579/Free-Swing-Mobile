@@ -288,6 +288,8 @@ export function InProgressTab({
                         : "#E0E0E0",
                   borderRadius: 22,
                   overflow: "hidden",
+                  paddingVertical: 9,
+                  paddingHorizontal: 5
                 }}
               >
                 <Box className="p-4">
@@ -380,6 +382,7 @@ export function InProgressTab({
                       style={{
                         borderColor: isDark ? "#EF4444" : "#FCA5A5",
                         width: "48%",
+                        height: 42,
                         opacity: deletingId === game.id ? 0.7 : 1,
                       }}
                     >
@@ -417,6 +420,7 @@ export function InProgressTab({
                         backgroundColor:
                           resumingId === game.id ? "#A5D6A7" : "#8BC34A",
                         width: "48%",
+                        height: 42,
                         opacity: resumingId === game.id ? 0.7 : 1,
                       }}
                     >
@@ -425,6 +429,7 @@ export function InProgressTab({
                           color: "#FFFFFF",
                           fontWeight: "600",
                           marginRight: 6,
+                          
                         }}
                       >
                         {resumingId === game.id ? "Opening..." : "Resume"}

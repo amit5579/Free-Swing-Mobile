@@ -125,6 +125,7 @@ const ScoreCard: React.FC = () => {
       try {
         setLoading(true);
         const data = await getScorecardDetails(scoreCard!);
+        
         setHoles(data);
 
         const showPts = data.some(

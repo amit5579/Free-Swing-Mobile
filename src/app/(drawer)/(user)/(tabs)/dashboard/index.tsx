@@ -337,7 +337,7 @@ export default function DashboardScreen() {
                         // Reset search query when changing main tabs
                         setSearchQuery("");
                       }}
-                      className="flex-1 flex-row py-2 px-1 items-center justify-center rounded-full"
+                      className="flex-1 flex-row py-3 px-1 items-center justify-center rounded-full"
                       style={{
                         backgroundColor: active ? "#8BC34A" : "transparent",
                       }}
@@ -349,7 +349,7 @@ export default function DashboardScreen() {
                       />
 
                       <Text
-                        className="text-sm font-bold ml-1"
+                        className="text-md font-bold ml-1"
                         style={{
                           color: active
                             ? "#fff"
@@ -399,7 +399,8 @@ export default function DashboardScreen() {
                       flex: 1,
                       marginLeft: 8,
                       color: isDark ? "#fff" : "#111",
-                      fontSize: 14,
+                      fontSize: 15,
+                      paddingVertical: 5
                     }}
                   />
                   {searchQuery !== "" && (

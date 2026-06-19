@@ -386,7 +386,7 @@ const FeedCard = ({
               <Pressable
                 onPress={() => handleLike(card.id)}
                 hitSlop={10}
-                className="p-1 px-2.5 rounded-full flex-row items-center"
+                className="py-2 px-2.5 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark
                     ? "rgba(255,255,255,0.05)"
@@ -427,7 +427,7 @@ const FeedCard = ({
                   }
                 >
                   <Ionicons
-                    name="shield-outline"
+                    name="shield"
                     size={10}
                     color={
                       !card.isDQ && card.canAuthenticate
@@ -460,7 +460,7 @@ const FeedCard = ({
                   onActivity(card.id);
                 //   handleViewScorecard(card.id);
                 }}
-                className="p-1 px-2.5 rounded-full flex-row items-center"
+                className="px-3 h-10 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark
                     ? "rgba(255,255,255,0.05)"
@@ -468,12 +468,12 @@ const FeedCard = ({
                 }}
               >
                 <Ionicons
-                  name="people-outline"
+                  name="people"
                   size={14}
                   color={isDark ? "#fff" : "#6b7280"}
                 />
                 <Text
-                  className="ml-1 text-xs font-semibold"
+                  className="mx-1 text-xs font-semibold"
                   style={{ color: isDark ? "#fff" : "#6b7280" }}
                 >
                   Activity
@@ -481,13 +481,13 @@ const FeedCard = ({
               </Pressable>
               {/*  handleViewScorecard(card.id, card.playerName, card.courseName) */}
               <Button
-                size="xs"
-                className="rounded-full px-3 h-8 shadow-sm"
+                size="md"
+                className="rounded-full px-3 h-10 shadow-sm items-center"
                 style={{ backgroundColor: "#8BC34A" }}
                 onPress={() => handleViewScorecard(card.id)}
               >
-                <Ionicons name="eye-outline" size={12} color="#fff" />
-                <ButtonText className="text-white text-[10px] font-extrabold ml-1">
+                <Ionicons name="eye" size={16} color="#fff" />
+                <ButtonText className="text-white text-md font-semibold mx-1">
                   View
                 </ButtonText>
               </Button>
