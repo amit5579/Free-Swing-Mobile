@@ -46,6 +46,7 @@ import Watermark from "@/components/watermark";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ThemedText } from "@/components/themed-text";
+import Toast from "react-native-toast-message";
 
 export default function ResumeScorecard() {
   const { id, handicap: handicapParam } = useLocalSearchParams<{
@@ -947,6 +948,10 @@ export default function ResumeScorecard() {
     ).catch((err) => console.error("Failed to save draft:", err));
 
     saveToServer(updatedHoles);
+    Toast.show({
+      type: "success",
+      text1: "You got a sandy!",
+    });
   };
 
   const handleScoreChange = (holeId: number, text: string) => {
@@ -1094,6 +1099,7 @@ export default function ResumeScorecard() {
               isCompleted: true,
               isExcluded: h.isExcluded || false,
               matchScoringType: h.matchScoringType || "",
+              nassauStartingNine: nassauStartingNine,
               companionScoresJson: h.companionScoresJson || null,
               companionSandysJson: h.companionSandysJson || null,
               ...(playingGroupRoundKey

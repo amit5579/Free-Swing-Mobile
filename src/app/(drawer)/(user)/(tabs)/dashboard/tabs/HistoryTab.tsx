@@ -406,12 +406,12 @@ export function HistoryTab({
                   <HStack className="mt-4 w-full">
                     <Button
                       size="sm"
-                      className="w-full rounded-full h-10 flex-row items-center justify-center"
+                      className="w-full rounded-2xl h-10 flex-row items-center justify-center"
                       style={{ backgroundColor: "#8BC34A" }}
                       onPress={() => handleViewScorecard(item.id, item.course)}
                     >
                       <Ionicons name="eye-outline" size={14} color="white" />
-                      <ButtonText className="text-white text-xs font-bold ml-1.5">
+                      <ButtonText className="text-white text-md font-bold ml-1.5">
                         View
                       </ButtonText>
                     </Button>

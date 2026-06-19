@@ -592,10 +592,14 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
     }
   }, [numberOfPlayers]);
 
-  const getPlayerOptions = (currentPlayerId: any, otherPlayerIds: any[]) => {
+  const getPlayerOptions = (currentPlayerId: any, otherPlayerIds: any[]) => {    
     return playerList
       .filter((p: any) => {
-        if (profile && p.id === profile.id) return false;
+        if(p.subscriptionStatus === "Blocked"){
+          return false;
+        }
+        if (profile && p.id === profile.id)
+          return false;
         if (otherPlayerIds.includes(p.id) && p.id !== currentPlayerId)
           return false;
         return true;
