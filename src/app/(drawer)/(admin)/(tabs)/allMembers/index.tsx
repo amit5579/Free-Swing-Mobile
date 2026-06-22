@@ -361,7 +361,7 @@ export default function AllMembersScreen({
       });
 
       setMembers(sortedMembers);
-      console.log("members", sortedMembers);
+      // console.log("members", sortedMembers);
       const courseData = await getCourse();
       setCourses(courseData);
       if (data.length > 0) {
@@ -685,7 +685,7 @@ export default function AllMembersScreen({
                   Total: {members.length}
                 </ThemedText>
               </Box>
-              {members.filter((m) => m.hasPendingSubscriptionRequest).length >
+              {/* {members.filter((m) => m.hasPendingSubscriptionRequest).length >
                 0 && (
                 <Box
                   style={{
@@ -711,7 +711,7 @@ export default function AllMembersScreen({
                     }
                   </ThemedText>
                 </Box>
-              )}
+              )} */}
             </Box>
           </HStack>
         )}
@@ -998,7 +998,7 @@ export default function AllMembersScreen({
                               }}
                               style={{
                                 backgroundColor: "#8BC34A",
-                                paddingHorizontal: 16,
+                                paddingHorizontal: 10,
                                 paddingVertical: 10,
                                 borderRadius: 12,
                                 alignItems: "center",
@@ -1012,7 +1012,7 @@ export default function AllMembersScreen({
                               <ThemedText
                                 style={{
                                   color: "white",
-                                  fontWeight: "900",
+                                  fontWeight: "700",
                                   fontSize: 12,
                                 }}
                               >
