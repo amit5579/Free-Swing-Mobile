@@ -18,10 +18,12 @@ import Watermark from "@/components/watermark";
 import {
   getLeaderboard,
   getTeeboxDetails,
+  authenticateScores,
 } from "@/api/modules/admin/tournaments.api";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import { Box } from "@/components/box";
+import Toast from "react-native-toast-message";
 
 export default function LeaderboardUser() {
   const colorScheme = useColorScheme();
@@ -36,6 +38,11 @@ export default function LeaderboardUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // console.log("hhhh", holes);
+    // console.log("llllll",leaderboard);
+    console.log("hhhhoollees", holes);
+    console.log("lllllll", leaderboard);
+
     fetchData();
   }, []);
 
@@ -77,10 +84,38 @@ export default function LeaderboardUser() {
 
       setLeaderboard(lb);
       setHoles(teebox);
+
     } catch (err) {
       console.log("Error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAuthenticate = async (player: any) => {
+    try {
+      if (!player.scorecardId) return;
+      await authenticateScores(player.scorecardId);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Player authenticated successfully",
+      });
+      // Update local state to show verified
+      setLeaderboard((prev) =>
+        prev.map((item) =>
+          item.scorecardId === player.scorecardId
+            ? { ...item, isAuthenticated: true }
+            : item
+        )
+      );
+    } catch (error) {
+      console.log(error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to authenticate player",
+      });
     }
   };
 
@@ -439,6 +474,7 @@ export default function LeaderboardUser() {
   const HOLE_WIDTH = 35;
   const TOTAL_WIDTH = 45;
   const STAT_WIDTH = 55;
+  const ACTIONS_WIDTH = 190;
 
   const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
 
@@ -446,7 +482,7 @@ export default function LeaderboardUser() {
     const holeCols = HOLE_WIDTH * 18;
     const totals = TOTAL_WIDTH * 2;
     const stats = STAT_WIDTH * 6; // GROSS, NET, PTS, EGL, BRD, PAR
-    return holeCols + totals + stats;
+    return holeCols + totals + stats + ACTIONS_WIDTH;
   }, []);
 
   const TableHeaderLeft = () => (
@@ -531,6 +567,9 @@ export default function LeaderboardUser() {
       <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
         PAR
       </ThemedText>
+      <ThemedText style={[styles.headerText, { width: ACTIONS_WIDTH }]}>
+        ACTIONS
+      </ThemedText>
     </HStack>
   );
 
@@ -604,7 +643,7 @@ export default function LeaderboardUser() {
       >
         {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
       </ThemedText>
-      <View style={{ width: STAT_WIDTH * 5 }} />
+      <View style={{ width: STAT_WIDTH * 5 + ACTIONS_WIDTH }} />
     </HStack>
   );
 
@@ -747,6 +786,91 @@ export default function LeaderboardUser() {
         <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
           {player.pars}
         </ThemedText>
+
+        {/* Actions Cell */}
+        <HStack
+          style={{
+            width: ACTIONS_WIDTH,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 8,
+          }}
+        >
+          {/* History Button (with Eye icon) */}
+          <Pressable
+            disabled={!player.scorecardId}
+            onPress={() => {
+              routePage.push({
+                pathname: "/(drawer)/(user)/(tabs)/tournaments/tournamentHistory",
+                params: {
+                  tournamentId,
+                  tournamentName,
+                  teeBoxId: teeboxId,
+                  scoringType,
+                  scorecardId: player.scorecardId,
+                  handicap: player.handicap,
+                },
+              });
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isDark ? "rgba(6, 182, 212, 0.15)" : "#ecfeff",
+              borderWidth: 1,
+              borderColor: "#06b6d4",
+              borderRadius: 6,
+              paddingVertical: 4,
+              paddingHorizontal: 8,
+              height: 32,
+              opacity: player.scorecardId ? 1 : 0.4,
+            }}
+          >
+            <Ionicons name="eye-outline" size={14} color="#06b6d4" style={{ marginRight: 4 }} />
+            <ThemedText style={{ color: "#06b6d4", fontSize: 11, fontWeight: "600" }}>History</ThemedText>
+          </Pressable>
+
+          {/* Authenticate Button / Badge (with Lock icon) */}
+          {player.isAuthenticated ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isDark ? "rgba(139, 195, 74, 0.15)" : "#f1f8e9",
+                borderWidth: 1,
+                borderColor: "#8bc34a",
+                borderRadius: 6,
+                paddingVertical: 4,
+                paddingHorizontal: 8,
+                height: 32,
+              }}
+            >
+              <Ionicons name="checkmark-circle" size={14} color="#8bc34a" style={{ marginRight: 4 }} />
+              <ThemedText style={{ color: "#8bc34a", fontSize: 11, fontWeight: "600" }}>Verified</ThemedText>
+            </View>
+          ) : (
+            <Pressable
+              disabled={!player.scorecardId}
+              onPress={() => handleAuthenticate(player)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#8bc34a",
+                borderRadius: 6,
+                paddingVertical: 4,
+                paddingHorizontal: 8,
+                height: 32,
+                opacity: player.scorecardId ? 1 : 0.4,
+              }}
+            >
+              <Ionicons name="lock-closed-outline" size={14} color="white" style={{ marginRight: 4 }} />
+              <ThemedText style={{ color: "white", fontSize: 11, fontWeight: "600" }}>Auth</ThemedText>
+            </Pressable>
+          )}
+        </HStack>
       </HStack>
     );
   };

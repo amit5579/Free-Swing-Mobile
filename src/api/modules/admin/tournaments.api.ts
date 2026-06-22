@@ -346,3 +346,17 @@ export const postSecretHoles = async (tournamentId: number, secretHoles: number[
         throw error;
     }
 };
+
+// authenticate the scores:
+// feed/authenticate/29239
+
+export const authenticateScores = async (scoreCardId: number) => {
+    try {
+        const response = await client.post(`feed/authenticate/${scoreCardId}`);
+        console.log("Authenticated scores:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Authenticated scores Error:", error);
+        throw error;
+    }
+};

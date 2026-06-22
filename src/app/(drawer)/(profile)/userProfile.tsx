@@ -82,16 +82,17 @@ export default function UserProfile() {
   };
 
   const handleCertificateClick = () => {
-    // if (userCertificate?.isEligible === true && userCertificate?.certificate) {
+    // completedHolesCount >= 180
+    if (userCertificate?.completedHolesCount >= 180 && userCertificate?.certificate) {
       router.push("/(drawer)/(profile)/certificate");
-    // } else {
-    //   Toast.show({
-    //     type: "error",
-    //     text1: "You are not eligible for handicap certificate",
-    //     text2: `You have only played ${userCertificate?.completedHolesCount} holes (Required 180 holes)`,
-    //     // position: "bottom"
-    //   });
-    // }
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "You are not eligible for handicap certificate",
+        text2: `You have only played ${userCertificate?.completedHolesCount} holes (Required 180 holes)`,
+        // position: "bottom"
+      });
+    }
   };
 
   const pickImage = async () => {

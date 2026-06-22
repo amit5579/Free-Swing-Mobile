@@ -578,7 +578,7 @@ export default function TournamentsScreen() {
                             </Pressable>
 
                             {/* My History */}
-                            {tournament.isPlayed == true && (
+                            {/* {tournament.isPlayed == true && (
                               <Pressable
                                 onPress={() =>
                                   routePage.push(
@@ -602,7 +602,7 @@ export default function TournamentsScreen() {
                                   History
                                 </ThemedText>
                               </Pressable>
-                            )}
+                            )} */}
                           </HStack>
 
                           {/* Manage & Play Row */}

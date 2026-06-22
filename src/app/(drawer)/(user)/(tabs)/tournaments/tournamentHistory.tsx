@@ -42,7 +42,7 @@ export default function TournamentHistory() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, tournamentName, teeBoxId, scoringType } =
+  const { tournamentId, tournamentName, teeBoxId, scoringType, scorecardId, handicap: paramHandicap } =
     useLocalSearchParams();
 
   // const formatScoringType =
@@ -273,29 +273,41 @@ export default function TournamentHistory() {
   const fetchScoreCard = async () => {
     try {
       setLoading(true);
-      const hcp = await getScorecardHandicap(Number(teeBoxId));
-      // console.log("Handicap:", hcp);
+      
+      let hcp = null;
+      if (paramHandicap) {
+        hcp = { handicap: Number(paramHandicap) };
+        setHandicap(hcp);
+      } else if (teeBoxId) {
+        hcp = await getScorecardHandicap(Number(teeBoxId));
+        setHandicap(hcp);
+      }
 
-      const sco = await getScoreCardOpen(Number(tournamentId));
-      // console.log("Scorecard Open:", sco);
+      if (tournamentId) {
+        try {
+          const sco = await getScoreCardOpen(Number(tournamentId));
+          // console.log("Scorecard Open:", sco);
+        } catch (e) {
+          console.log("Error fetching scorecard open:", e);
+        }
+      }
 
-      const sht = await getTournamentHistoryByUserId(Number(tournamentId));
-      // console.log("Tournament History:", sht);
+      let finalScorecardId = scorecardId ? Number(scorecardId) : null;
+      if (!finalScorecardId && tournamentId) {
+        const sht = await getTournamentHistoryByUserId(Number(tournamentId));
+        // console.log("Tournament History:", sht);
+        finalScorecardId = Array.isArray(sht)
+          ? sht[0]?.scorecardId
+          : sht?.scorecardId;
+      }
 
-      const scorecardId = Array.isArray(sht)
-        ? sht[0]?.scorecardId
-        : sht?.scorecardId;
-
-      if (scorecardId) {
-        const scd = await getScorecardDetails(scorecardId);
+      if (finalScorecardId) {
+        const scd = await getScorecardDetails(finalScorecardId);
         // console.log("Scorecard Details:", scd);
         setScorecardDetails(scd);
       } else {
         console.warn("No scorecardId found in history results");
       }
-
-      setHandicap(hcp);
-      // setTournamentHistory(Array.isArray(sht) ? sht : [sht].filter(Boolean));
     } catch (error) {
       console.log("Error fetching scorecard details apis:", error);
     } finally {

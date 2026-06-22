@@ -20,6 +20,7 @@ import {
   getLeaderboard,
   getTeeboxDetails,
   postSecretHoles,
+  authenticateScores,
 } from "@/api/modules/admin/tournaments.api";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
@@ -95,6 +96,7 @@ export default function SubAdminLeaderboardPage() {
   const HOLE_WIDTH = 35;
   const TOTAL_WIDTH = 45;
   const STAT_WIDTH = 55;
+  const ACTIONS_WIDTH = 100;
 
   const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
 
@@ -102,7 +104,7 @@ export default function SubAdminLeaderboardPage() {
     const holeCols = HOLE_WIDTH * 18;
     const totals = TOTAL_WIDTH * 2;
     const stats = STAT_WIDTH * 6; // GROSS, NET, PTS, EGL, BRD, PAR
-    return holeCols + totals + stats;
+    return holeCols + totals + stats + ACTIONS_WIDTH;
   }, []);
 
   const EmptyState = () => (
@@ -206,6 +208,34 @@ export default function SubAdminLeaderboardPage() {
       console.log("Error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAuthenticate = async (player: any) => {
+    if (!player.scorecardId) {
+      Toast.show({
+        type: "error",
+        text1: "No scorecard ID found for player",
+      });
+      return;
+    }
+    try {
+      await authenticateScores(player.scorecardId);
+      Toast.show({
+        type: "success",
+        text1: "Player authenticated successfully",
+      });
+      setLeaderboard((prev) =>
+        prev.map((p) =>
+          p.userId === player.userId ? { ...p, isAuthenticated: true } : p
+        )
+      );
+    } catch (error) {
+      console.log("Auth error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to authenticate the player",
+      });
     }
   };
 
@@ -444,6 +474,9 @@ export default function SubAdminLeaderboardPage() {
       <ThemedText style={[styles.headerText, { width: STAT_WIDTH }]}>
         PAR
       </ThemedText>
+      <ThemedText style={[styles.headerText, { width: ACTIONS_WIDTH }]}>
+        ACTIONS
+      </ThemedText>
     </HStack>
   );
 
@@ -517,7 +550,7 @@ export default function SubAdminLeaderboardPage() {
       >
         {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
       </ThemedText>
-      <View style={{ width: STAT_WIDTH * 5 }} />
+      <View style={{ width: STAT_WIDTH * 5 + ACTIONS_WIDTH }} />
     </HStack>
   );
 
@@ -660,6 +693,46 @@ export default function SubAdminLeaderboardPage() {
         <ThemedText style={[styles.cellText, { width: STAT_WIDTH }]}>
           {player.pars}
         </ThemedText>
+
+        {/* Actions Cell */}
+        <HStack
+          style={{
+            width: ACTIONS_WIDTH,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 8,
+          }}
+        >
+          {/* View Scorecard Button (with Eye icon) */}
+          <Pressable
+            disabled={!player.scorecardId}
+            onPress={() => {
+              routePage.push({
+                pathname: "/(drawer)/(subAdmin)/(tabs)/tournaments/playerScorecard",
+                params: {
+                  scorecardId: player.scorecardId,
+                },
+              });
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isDark ? "rgba(6, 182, 212, 0.15)" : "#ecfeff",
+              borderWidth: 1,
+              borderColor: "#06b6d4",
+              borderRadius: 6,
+              paddingVertical: 4,
+              paddingHorizontal: 8,
+              height: 32,
+              opacity: player.scorecardId ? 1 : 0.4,
+            }}
+          >
+            <Ionicons name="eye-outline" size={14} color="#06b6d4" style={{ marginRight: 4 }} />
+            <ThemedText style={{ color: "#06b6d4", fontSize: 11, fontWeight: "600" }}>View</ThemedText>
+          </Pressable>
+        </HStack>
       </HStack>
     );
   };
