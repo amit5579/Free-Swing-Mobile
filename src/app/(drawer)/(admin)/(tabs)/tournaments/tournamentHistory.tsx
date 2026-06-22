@@ -14,7 +14,6 @@ import { ThemedView } from "@/components/themed-view";
 import { Ionicons } from "@expo/vector-icons";
 import {
   getTournamentHistory,
-  getTournamentHistoryByUserId,
 } from "@/api/modules/admin/tournaments.api";
 import { Skeleton } from "@/components/Skeleton";
 
@@ -31,11 +30,10 @@ export default function tournamentHistory() {
     try {
       setLoading(true);
       const data = await getTournamentHistory(Number(tournamentId));
-      const hData = await getTournamentHistoryByUserId(Number(tournamentId));
-      // console.log("hData", hData);
-      setHistory(data);
+      setHistory(data || []);
     } catch (error) {
       console.error("Error fetching history:", error);
+      setHistory([]);
     } finally {
       setLoading(false);
     }

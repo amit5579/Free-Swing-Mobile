@@ -815,7 +815,7 @@ function TournamentCard({
   const routePage = useRouter();
 
   function routePlayersPage(tournamentId: string, tournamentName: string) {
-    console.log(tournamentId);
+    // console.log(tournamentId);
     routePage.push(
       `/tournaments/managePlayers?tournamentId=${tournamentId}&tournamentName=${tournamentName}`,
     );
