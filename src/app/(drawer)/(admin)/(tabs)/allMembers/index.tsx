@@ -680,7 +680,7 @@ export default function AllMembersScreen({
                 }}
               >
                 <ThemedText
-                  style={{ fontSize: 12, fontWeight: "900", color: "#111" }}
+                  style={{ fontSize: 12, fontWeight: "900" }}
                 >
                   Total: {members.length}
                 </ThemedText>
@@ -892,7 +892,7 @@ export default function AllMembersScreen({
                                 style={{ opacity: 0.5 }}
                               >
                                 <Ionicons
-                                  name="person-outline"
+                                  name="person"
                                   size={10}
                                   color={isDark ? "#fff" : "#111"}
                                 />
@@ -976,8 +976,7 @@ export default function AllMembersScreen({
                               <ThemedText
                                 style={{ fontSize: 13, fontWeight: "700" }}
                               >
-                                {member.invitedBySubAdminName ||
-                                  "Direct / Admin"}
+                                {member.invitedBySubAdminName ? member.invitedBySubAdminName : "Direct"}
                               </ThemedText>
                             </VStack>
                             <TouchableOpacity
@@ -999,7 +998,7 @@ export default function AllMembersScreen({
                               style={{
                                 backgroundColor: "#8BC34A",
                                 paddingHorizontal: 10,
-                                paddingVertical: 10,
+                                paddingVertical: 7,
                                 borderRadius: 12,
                                 alignItems: "center",
                                 shadowColor: "#8BC34A",
