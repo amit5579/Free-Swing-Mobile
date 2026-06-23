@@ -13,6 +13,7 @@ import {
   saveScoreCard,
   getSubScorecardHandicap,
 } from "@/api/modules/scoreCard.api";
+import { saveDraft } from "@/utils/draftStorage";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { ThemedText } from "@/components/themed-text";
@@ -32,6 +33,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  BackHandler,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
@@ -64,7 +66,10 @@ export default function ScoreCardUserPage() {
     player4Id,
     roundContextId,
     startFrom,
+    courseName,
   } = useLocalSearchParams();
+
+  const [hasInitializedDraft, setHasInitializedDraft] = useState(false);
 
   const [pendingRoundContext, setPendingRoundContext] = useState<any>(null);
 
@@ -573,6 +578,100 @@ export default function ScoreCardUserPage() {
     [courseId, isExcluded, teeBoxId, userId, routePage, navigation],
   );
 
+  const handleGoBack = useCallback(async () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    const playingGroupRoundKey = roundContextId
+      ? String(roundContextId)
+      : undefined;
+    const playingPartnersJson = pendingRoundContext
+      ? JSON.stringify(pendingRoundContext.players)
+      : undefined;
+
+    const payload = scoreCardRef.current
+      .map(calculateHole)
+      .map((h: any) => ({
+        courseId: courseId ? Number(courseId) : h.courseId,
+        courseHalf:
+          holes === "front9" || holes === "Front9" || holes === "Front 9"
+            ? "Front9"
+            : holes === "back9" || holes === "Back9" || holes === "Back 9"
+              ? "Back9"
+              : null,
+        holeId: h.holeId,
+        isCompleted: false,
+        isExcluded: isExcluded,
+        matchScoringType: isSplit6
+          ? "split-six"
+          : isHighLow
+            ? "high-low"
+            : isNassauBest
+              ? "nassau-best"
+              : isNassauCombined
+                ? "nassau-combined"
+                : null,
+        roundNumber: h.roundNumber || 1,
+        score:
+          h.score === undefined || h.score === null || h.score === ""
+            ? null
+            : Number(h.score),
+        stablefordPoints: h.stablefordPoints,
+        teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
+        tournamentId: null,
+        userId: Number(userId),
+        companionScoresJson: h.companionScoresJson || null,
+        companionSandysJson: h.companionSandysJson || null,
+        nassauStartingNine: nassauStartingNine,
+        NassauStartingNine: nassauStartingNine,
+        ...(playingGroupRoundKey
+          ? {
+              playingGroupRoundKey,
+              PlayingGroupRoundKey: playingGroupRoundKey,
+            }
+          : {}),
+        ...(playingPartnersJson
+          ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
+          : {}),
+      }));
+
+    try {
+      await saveScoreCard(payload);
+    } catch (err) {
+      console.error("Final save failed:", err);
+    }
+
+    routePage.back();
+  }, [
+    routePage,
+    courseId,
+    holes,
+    isExcluded,
+    isSplit6,
+    isHighLow,
+    isNassauBest,
+    isNassauCombined,
+    teeBoxId,
+    userId,
+    nassauStartingNine,
+    roundContextId,
+    pendingRoundContext,
+  ]);
+
+  useEffect(() => {
+    const backAction = () => {
+      handleGoBack();
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
+    return () => backHandler.remove();
+  }, [handleGoBack]);
+
   useEffect(() => {
     const appStateListener = AppState.addEventListener(
       "change",
@@ -583,19 +682,160 @@ export default function ScoreCardUserPage() {
       },
     );
 
-    const beforeRemoveListener = navigation.addListener("beforeRemove", () => {
-      saveRound(false, false);
-    });
-
     return () => {
       appStateListener.remove();
-      beforeRemoveListener();
     };
-  }, [saveRound, navigation]);
+  }, [saveRound]);
 
   const handleFinishRound = async () => {
     await saveRound(true, true);
   };
+
+  const triggerSaveDraft = async (updatedHoles: any[]) => {
+    try {
+      const sanitized = updatedHoles.map(calculateHole).map((h: any) => ({
+        ...h,
+        score: h.score !== null && h.score !== undefined && h.score !== "" ? Number(h.score) : null,
+        netScore: h.netScore === "-" || h.netScore === undefined ? null : Number(h.netScore),
+        stablefordPoints: h.stablefordPoints,
+      }));
+
+      const holesPlayed = sanitized.filter((h: any) => h.score !== null && h.score > 0).length;
+      const scoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
+      const netScoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
+      const parVal = sanitized.reduce((sum: number, h: any) => sum + (h.par || 0), 0);
+
+      const courseHalfStr =
+        holes === "front9" || holes === "Front9" || holes === "Front 9"
+          ? "Front9"
+          : holes === "back9" || holes === "Back9" || holes === "Back 9"
+            ? "Back9"
+            : "";
+
+      const currentUserId = userId || Number(await AsyncStorage.getItem("userId")) || 0;
+      const scorecardId = String(updatedHoles[0]?.scorecardId || "");
+
+      if (scorecardId) {
+        const newText: Record<number, string> = {};
+        sanitized.forEach((h: any) => {
+          if (h.score !== null && h.score !== undefined && h.score >= 0) {
+            newText[h.holeId] = h.score.toString();
+          }
+        });
+
+        await saveDraft({
+          scorecardId,
+          userId: currentUserId,
+          courseName: (courseName as string) || "Unknown Course",
+          date: new Date().toISOString(),
+          holesPlayed,
+          score: scoreVal,
+          netScore: netScoreVal,
+          par: parVal,
+          courseHalf: courseHalfStr,
+          holes: sanitized,
+          textScores: newText,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to save draft:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!scoreCardDetails || scoreCardDetails.length === 0) return;
+    if (roundContextId && !pendingRoundContext) return;
+    if (hasInitializedDraft) return;
+
+    setHasInitializedDraft(true);
+
+    const initializeDraftAndSave = async () => {
+      try {
+        const sanitized = scoreCardDetails.map(calculateHole).map((h: any) => ({
+          ...h,
+          score: h.score !== null && h.score !== undefined && h.score !== "" ? Number(h.score) : null,
+          netScore: h.netScore === "-" || h.netScore === undefined ? null : Number(h.netScore),
+          stablefordPoints: h.stablefordPoints,
+        }));
+
+        const holesPlayed = sanitized.filter((h: any) => h.score !== null && h.score > 0).length;
+        const scoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
+        const netScoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
+        const parVal = sanitized.reduce((sum: number, h: any) => sum + (h.par || 0), 0);
+
+        const courseHalfStr =
+          holes === "front9" || holes === "Front9" || holes === "Front 9"
+            ? "Front9"
+            : holes === "back9" || holes === "Back9" || holes === "Back 9"
+              ? "Back9"
+              : "";
+
+        const currentUserId = userId || Number(await AsyncStorage.getItem("userId")) || 0;
+        const scorecardId = String(scoreCardDetails[0]?.scorecardId || "");
+
+        if (scorecardId) {
+          const newText: Record<number, string> = {};
+          sanitized.forEach((h: any) => {
+            if (h.score !== null && h.score !== undefined && h.score >= 0) {
+              newText[h.holeId] = h.score.toString();
+            }
+          });
+
+          await saveDraft({
+            scorecardId,
+            userId: currentUserId,
+            courseName: (courseName as string) || "Unknown Course",
+            date: new Date().toISOString(),
+            holesPlayed,
+            score: scoreVal,
+            netScore: netScoreVal,
+            par: parVal,
+            courseHalf: courseHalfStr,
+            holes: sanitized,
+            textScores: newText,
+          });
+        }
+
+        const playingGroupRoundKey = roundContextId ? String(roundContextId) : undefined;
+        const playingPartnersJson = pendingRoundContext ? JSON.stringify(pendingRoundContext.players) : undefined;
+
+        const payload = sanitized.map((h: any) => ({
+          courseId: courseId ? Number(courseId) : h.courseId,
+          courseHalf: courseHalfStr || null,
+          holeId: h.holeId,
+          isCompleted: false,
+          isExcluded: isExcluded,
+          matchScoringType: isSplit6
+            ? "split-six"
+            : isHighLow
+              ? "high-low"
+              : isNassauBest
+                ? "nassau-best"
+                : isNassauCombined
+                  ? "nassau-combined"
+                  : null,
+          roundNumber: h.roundNumber || 1,
+          score: h.score === undefined || h.score === null || h.score === "" ? null : Number(h.score),
+          stablefordPoints: h.stablefordPoints,
+          teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
+          tournamentId: null,
+          userId: Number(currentUserId),
+          companionScoresJson: h.companionScoresJson || null,
+          companionSandysJson: h.companionSandysJson || null,
+          nassauStartingNine: nassauStartingNine,
+          NassauStartingNine: nassauStartingNine,
+          ...(playingGroupRoundKey ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey } : {}),
+          ...(playingPartnersJson ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson } : {}),
+        }));
+
+        await saveScoreCard(payload);
+      } catch (err) {
+        console.error("Error in initial draft/server save:", err);
+      }
+    };
+
+    initializeDraftAndSave();
+  }, [scoreCardDetails, pendingRoundContext, roundContextId, hasInitializedDraft]);
 
   useEffect(() => {
     fetchScoreCard();
@@ -746,6 +986,7 @@ export default function ScoreCardUserPage() {
 
     setScoreCardDetails(updatedDetails);
     triggerAutoSave(updatedDetails);
+    triggerSaveDraft(updatedDetails);
 
     if (index !== undefined && pIndex !== undefined) {
       const flatIndex = index * partners.length + pIndex;
@@ -899,11 +1140,12 @@ export default function ScoreCardUserPage() {
     } else {
       // allow empty
       if (value === "") {
-        setScoreCardDetails((prev: any[]) =>
-          prev.map((hole) =>
-            hole.holeId === holeId ? { ...hole, score: "" } : hole,
-          ),
+        const updatedDetails = scoreCardDetails.map((hole: any) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
         );
+        setScoreCardDetails(updatedDetails);
+        triggerAutoSave(updatedDetails);
+        triggerSaveDraft(updatedDetails);
         return;
       }
 
@@ -923,11 +1165,12 @@ export default function ScoreCardUserPage() {
           type: "error",
           text1: "Maximum score per hole is 15.",
         });
-        setScoreCardDetails((prev: any[]) =>
-          prev.map((hole) =>
-            hole.holeId === holeId ? { ...hole, score: "" } : hole,
-          ),
+        const updatedDetails = scoreCardDetails.map((hole: any) =>
+          hole.holeId === holeId ? { ...hole, score: "" } : hole,
         );
+        setScoreCardDetails(updatedDetails);
+        triggerAutoSave(updatedDetails);
+        triggerSaveDraft(updatedDetails);
         return;
       }
 
@@ -938,6 +1181,7 @@ export default function ScoreCardUserPage() {
       setScoreCardDetails(updatedDetails);
 
       triggerAutoSave(updatedDetails);
+      triggerSaveDraft(updatedDetails);
     }
 
     // Auto-focus next input if 2 digits are entered
@@ -1126,7 +1370,7 @@ export default function ScoreCardUserPage() {
           >
             {/* 🔙 BACK */}
             <Pressable
-              onPress={() => routePage.back()}
+              onPress={() => handleGoBack()}
               style={{
                 width: 40,
                 height: 40,

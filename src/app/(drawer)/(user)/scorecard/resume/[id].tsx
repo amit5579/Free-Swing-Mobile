@@ -18,6 +18,12 @@ import {
 import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  getDraft,
+  saveDraft,
+  deleteDraft,
+  getLatestRoundState,
+} from "@/utils/draftStorage";
 import React, {
   useEffect,
   useState,
@@ -49,9 +55,11 @@ import { ThemedText } from "@/components/themed-text";
 import Toast from "react-native-toast-message";
 
 export default function ResumeScorecard() {
-  const { id, handicap: handicapParam } = useLocalSearchParams<{
+  const { id, handicap: handicapParam, courseName: courseNameParam, date: dateParam } = useLocalSearchParams<{
     id: string;
     handicap: string;
+    courseName?: string;
+    date?: string;
   }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -76,7 +84,36 @@ export default function ResumeScorecard() {
   const inputRefs = useRef<any[]>([]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const storageKey = `scorecard_draft_${id}`;
+
+  const triggerSaveDraft = async (
+    updatedHoles: ScorecardHole[],
+    newTextScores: Record<number, string>
+  ) => {
+    try {
+      const holesPlayed = updatedHoles.filter(h => h.score !== null && h.score > 0).length;
+      const score = updatedHoles.reduce((sum, h) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
+      const netScore = updatedHoles.reduce((sum, h) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
+      const par = updatedHoles.reduce((sum, h) => sum + (h.par || 0), 0);
+      const courseHalf = updatedHoles[0]?.courseHalf || "";
+      const currentUserId = userId || Number(await AsyncStorage.getItem("userId")) || 0;
+
+      await saveDraft({
+        scorecardId: id!,
+        userId: currentUserId,
+        courseName: courseNameParam || "Unknown Course",
+        date: dateParam || new Date().toISOString(),
+        holesPlayed,
+        score,
+        netScore,
+        par,
+        courseHalf,
+        holes: updatedHoles,
+        textScores: newTextScores,
+      });
+    } catch (err) {
+      console.error("Failed to save draft:", err);
+    }
+  };
 
   const [partners, setPartners] = useState<any[]>([]);
   const [companionHandicaps, setCompanionHandicaps] = useState<
@@ -195,22 +232,88 @@ export default function ResumeScorecard() {
     try {
       setLoading(true);
       const storedUserId = await AsyncStorage.getItem("userId");
-      if (storedUserId) setUserId(Number(storedUserId));
+      const currentUserId = storedUserId ? Number(storedUserId) : 0;
+      if (storedUserId) setUserId(currentUserId);
 
+      const localDraft = await getDraft(id!);
       let data: ScorecardHole[] | null = null;
+      let loadedFromDraft = false;
+
       try {
-        data = await getScorecardDetails(id!);
-        // console.log("ddd", data);
+        const serverHoles = await getScorecardDetails(id!);
+        if (serverHoles && serverHoles.length > 0) {
+          const normalizedServerHoles = serverHoles.map((h: any) => ({
+            ...h,
+            courseHalf: h.courseHalf !== undefined && h.courseHalf !== null ? h.courseHalf : h.CourseHalf,
+            companionScoresJson: h.companionScoresJson !== undefined && h.companionScoresJson !== null ? h.companionScoresJson : h.CompanionScoresJson,
+            companionSandysJson: h.companionSandysJson !== undefined && h.companionSandysJson !== null ? h.companionSandysJson : h.CompanionSandysJson,
+            playingPartnersJson: h.playingPartnersJson !== undefined && h.playingPartnersJson !== null ? h.playingPartnersJson : h.PlayingPartnersJson,
+            playingGroupRoundKey: h.playingGroupRoundKey !== undefined && h.playingGroupRoundKey !== null ? h.playingGroupRoundKey : h.PlayingGroupRoundKey,
+            matchScoringType: h.matchScoringType !== undefined && h.matchScoringType !== null ? h.matchScoringType : h.MatchScoringType,
+            nassauStartingNine: h.nassauStartingNine !== undefined && h.nassauStartingNine !== null ? h.nassauStartingNine : h.NassauStartingNine,
+          }));
+
+          const state = getLatestRoundState(
+            localDraft,
+            normalizedServerHoles,
+            dateParam
+          );
+
+          if (state.source === "draft" && localDraft) {
+            data = localDraft.holes;
+            setTextScores(localDraft.textScores);
+            textScoresRef.current = localDraft.textScores;
+            loadedFromDraft = true;
+          } else {
+            data = normalizedServerHoles;
+            
+            // Server is newer or no draft exists, save/update local draft with server data
+            const sanitized = normalizedServerHoles.map((h) => ({
+              ...h,
+              score: h.score !== null && h.score !== undefined ? h.score : null,
+              netScore: h.netScore,
+              stablefordPoints: h.stablefordPoints,
+            }));
+            const newText: Record<number, string> = {};
+            sanitized.forEach((h) => {
+              if (h.score !== null && h.score !== undefined && h.score >= 0) {
+                newText[h.holeId] = h.score.toString();
+              }
+            });
+
+            const holesPlayed = sanitized.filter(h => h.score !== null && h.score > 0).length;
+            const score = sanitized.reduce((sum, h) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
+            const netScore = sanitized.reduce((sum, h) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
+            const par = sanitized.reduce((sum, h) => sum + (h.par || 0), 0);
+            const courseHalf = sanitized[0]?.courseHalf || "";
+
+            await saveDraft({
+              scorecardId: id!,
+              userId: currentUserId || (localDraft ? localDraft.userId : 0),
+              courseName: courseNameParam || (localDraft ? localDraft.courseName : "Unknown Course"),
+              date: dateParam || (localDraft ? localDraft.date : new Date().toISOString()),
+              holesPlayed,
+              score,
+              netScore,
+              par,
+              courseHalf,
+              holes: sanitized,
+              textScores: newText,
+              updatedAt: dateParam || new Date().toISOString(),
+            });
+
+            // Update text scores in state/ref
+            setTextScores(newText);
+            textScoresRef.current = newText;
+          }
+        }
       } catch (err) {
         console.error("Failed to load from API, checking local draft...");
-        const draft = await AsyncStorage.getItem(storageKey);
-        if (draft) {
-          const { holes: draftHoles, textScores: draftScores } =
-            JSON.parse(draft);
-          data = draftHoles;
-          setTextScores(draftScores);
-          textScoresRef.current = draftScores;
-          // console.log("Loaded from local draft");
+        if (localDraft) {
+          data = localDraft.holes;
+          setTextScores(localDraft.textScores);
+          textScoresRef.current = localDraft.textScores;
+          loadedFromDraft = true;
         } else {
           throw err;
         }
@@ -224,25 +327,25 @@ export default function ResumeScorecard() {
           stablefordPoints: h.stablefordPoints,
         }));
         setHoles(sanitizedData);
-        // console.log("dd", sanitizedData);
-
         holesRef.current = sanitizedData;
 
-        // Merge API scores into textScoresRef if not already present
-        const currentText = textScoresRef.current || {};
-        const newText = { ...currentText };
-        let changed = false;
-        data.forEach((h) => {
-          if (h.score !== null && h.score !== undefined && h.score >= 0) {
-            if (newText[h.holeId] === undefined) {
-              newText[h.holeId] = h.score.toString();
-              changed = true;
+        // If not loaded from draft, merge API scores into textScoresRef if not already present
+        if (!loadedFromDraft) {
+          const currentText = textScoresRef.current || {};
+          const newText = { ...currentText };
+          let changed = false;
+          data.forEach((h) => {
+            if (h.score !== null && h.score !== undefined && h.score >= 0) {
+              if (newText[h.holeId] === undefined) {
+                newText[h.holeId] = h.score.toString();
+                changed = true;
+              }
             }
+          });
+          if (changed || Object.keys(currentText).length === 0) {
+            setTextScores(newText);
+            textScoresRef.current = newText;
           }
-        });
-        if (changed || Object.keys(currentText).length === 0) {
-          setTextScores(newText);
-          textScoresRef.current = newText;
         }
 
         const showPts = data.some(
@@ -336,7 +439,6 @@ export default function ResumeScorecard() {
         }
 
         // Determine which halves to display based on courseHalf from API or hole numbers fallback
-        // const apiCourseHalf = sanitizedData.length > 0 ? sanitizedData[0].courseHalf : null;
         const apiCourseHalf = sanitizedData[0].courseHalf;
         if (apiCourseHalf === "Front9" || apiCourseHalf === "Front 9") {
           setDisplayFront(true);
@@ -367,7 +469,7 @@ export default function ResumeScorecard() {
     } finally {
       setLoading(false);
     }
-  }, [id, storageKey]);
+  }, [id, courseNameParam]);
 
   useFocusEffect(
     useCallback(() => {
@@ -406,6 +508,15 @@ export default function ResumeScorecard() {
       roundNumber: h.roundNumber || 1,
       isCompleted: h.isCompleted || false,
       isExcluded: h.isExcluded || false,
+      matchScoringType: isSplit6
+        ? "split-six"
+        : isHighLow
+          ? "high-low"
+          : isNassauBest
+            ? "nassau-best"
+            : isNassauCombined
+              ? "nassau-combined"
+              : h.matchScoringType || null,
       companionScoresJson: h.companionScoresJson || null,
       companionSandysJson: h.companionSandysJson || null,
       nassauStartingNine: nassauStartingNine,
@@ -880,13 +991,7 @@ export default function ResumeScorecard() {
       textScoresRef.current = newTextScores;
     }
 
-    AsyncStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        holes: updatedHoles,
-        textScores: newTextScores,
-      }),
-    ).catch((err) => console.error("Failed to save draft:", err));
+    triggerSaveDraft(updatedHoles, newTextScores);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
@@ -939,13 +1044,7 @@ export default function ResumeScorecard() {
     setHoles(updatedHoles);
     holesRef.current = updatedHoles;
 
-    AsyncStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        holes: updatedHoles,
-        textScores: textScoresRef.current,
-      }),
-    ).catch((err) => console.error("Failed to save draft:", err));
+    triggerSaveDraft(updatedHoles, textScoresRef.current);
 
     saveToServer(updatedHoles);
     Toast.show({
@@ -997,13 +1096,7 @@ export default function ResumeScorecard() {
     holesRef.current = updatedHoles;
 
     const newTextScores = { ...textScoresRef.current };
-    AsyncStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        holes: updatedHoles,
-        textScores: newTextScores,
-      }),
-    ).catch((err) => console.error("Failed to save draft:", err));
+    triggerSaveDraft(updatedHoles, newTextScores);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
@@ -1055,8 +1148,19 @@ export default function ResumeScorecard() {
         roundNumber: h.roundNumber || 1,
         isCompleted: h.isCompleted || false,
         isExcluded: h.isExcluded || false,
+        matchScoringType: isSplit6
+          ? "split-six"
+          : isHighLow
+            ? "high-low"
+            : isNassauBest
+              ? "nassau-best"
+              : isNassauCombined
+                ? "nassau-combined"
+                : h.matchScoringType || null,
         companionScoresJson: h.companionScoresJson || null,
         companionSandysJson: h.companionSandysJson || null,
+        nassauStartingNine: nassauStartingNine,
+        NassauStartingNine: nassauStartingNine,
         ...(playingGroupRoundKey
           ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey }
           : {}),
@@ -1098,7 +1202,15 @@ export default function ResumeScorecard() {
               roundNumber: h.roundNumber || 1,
               isCompleted: true,
               isExcluded: h.isExcluded || false,
-              matchScoringType: h.matchScoringType || "",
+              matchScoringType: isSplit6
+                ? "split-six"
+                : isHighLow
+                  ? "high-low"
+                  : isNassauBest
+                    ? "nassau-best"
+                    : isNassauCombined
+                      ? "nassau-combined"
+                      : h.matchScoringType || "",
               nassauStartingNine: nassauStartingNine,
               companionScoresJson: h.companionScoresJson || null,
               companionSandysJson: h.companionSandysJson || null,
@@ -1118,7 +1230,7 @@ export default function ResumeScorecard() {
             console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
-            await AsyncStorage.removeItem(storageKey);
+            await deleteDraft(id!);
 
             Alert.alert("Success", "Round finished successfully", [
               { text: "OK", onPress: () => router.back() },

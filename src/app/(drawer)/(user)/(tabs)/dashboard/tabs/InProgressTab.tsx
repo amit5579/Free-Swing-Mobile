@@ -22,6 +22,11 @@ import {
 } from "@/api/modules/dashboard.api";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "expo-router";
+import {
+  getUserDrafts,
+  deleteDraft,
+  mergeInProgressRoundsWithDrafts,
+} from "@/utils/draftStorage";
 
 export type InProgressGame = {
   id: string;
@@ -29,12 +34,14 @@ export type InProgressGame = {
   date: string;
   holesPlayed: number;
   isDQ: boolean;
+  hasLocalDraft?: boolean;
+  isLocalDraftOnly?: boolean;
 };
 
 type InProgressTabProps = {
   playerId: number;
   onDelete?: (id: string) => void;
-  onResume?: (id: string) => void;
+  onResume?: (id: string, courseName: string, date?: string) => void;
   searchQuery?: string;
 };
 
@@ -51,14 +58,14 @@ export function InProgressTab({
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleResume = (id: string) => {
+  const handleResume = (id: string, courseName: string, date?: string) => {
     if (resumingId || deletingId) return;
     setResumingId(id);
-    onResume(id);
+    onResume(id, courseName, date);
     setTimeout(() => setResumingId(null), 1000);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string, isLocalOnly: boolean) => {
     if (resumingId || deletingId) return;
     Alert.alert(
       "Delete Game",
@@ -71,9 +78,13 @@ export function InProgressTab({
           onPress: async () => {
             try {
               setDeletingId(id);
-              await deleteScorecardApi(id);
+              if (isLocalOnly) {
+                await deleteDraft(id);
+              } else {
+                await deleteScorecardApi(id);
+                await deleteDraft(id);
+              }
               fetchGames();
-              // setGames((prev) => prev.filter((g) => g.id !== id));
             } catch (err) {
               console.error(err);
               Alert.alert("Error", "Failed to delete game.");
@@ -105,13 +116,17 @@ export function InProgressTab({
     try {
       if (showSkeleton) setLoading(true);
       const data: InProgressApiItem[] = await getInProgressGames(playerId);
+      const drafts = await getUserDrafts(playerId);
+      const merged = mergeInProgressRoundsWithDrafts(data, drafts);
 
-      const mapped = data.map((item) => ({
+      const mapped = merged.map((item: any) => ({
         id: item.scorecardId.toString(),
         courseName: item.courseName,
         date: item.date,
         holesPlayed: item.holesPlayed,
         isDQ: !!item.isDQ,
+        hasLocalDraft: !!item.hasLocalDraft,
+        isLocalDraftOnly: !!item.isLocalDraftOnly,
       }));
 
       setGames(mapped);
@@ -373,6 +388,56 @@ export function InProgressTab({
                         {game.holesPlayed} Holes Played
                       </Text>
                     </Badge>
+                    {game.hasLocalDraft && !game.isLocalDraftOnly && (
+                      <Badge
+                        style={{
+                          backgroundColor: isDark
+                            ? "rgba(139, 195, 74, 0.15)"
+                            : "rgba(139, 195, 74, 0.1)",
+                          borderWidth: 1,
+                          borderColor: "#8BC34A",
+                          borderRadius: 6,
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          marginLeft: 4,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#8BC34A",
+                            fontSize: 10,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Draft
+                        </Text>
+                      </Badge>
+                    )}
+                    {game.isLocalDraftOnly && (
+                      <Badge
+                        style={{
+                          backgroundColor: isDark
+                            ? "rgba(245, 158, 11, 0.15)"
+                            : "rgba(245, 158, 11, 0.1)",
+                          borderWidth: 1,
+                          borderColor: "#F59E0B",
+                          borderRadius: 6,
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          marginLeft: 4,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#F59E0B",
+                            fontSize: 10,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Offline Draft
+                        </Text>
+                      </Badge>
+                    )}
                     {game.isDQ && (
                       <Badge
                         style={{
@@ -401,7 +466,7 @@ export function InProgressTab({
                       variant="outline"
                       size="sm"
                       disabled={deletingId === game.id}
-                      onPress={() => handleDelete(game.id)}
+                      onPress={() => handleDelete(game.id, !!game.isLocalDraftOnly)}
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         borderColor: isDark ? "#EF4444" : "#FCA5A5",
@@ -438,7 +503,7 @@ export function InProgressTab({
                     <Button
                       size="sm"
                       disabled={resumingId === game.id}
-                      onPress={() => handleResume(game.id)}
+                      onPress={() => handleResume(game.id, game.courseName, game.date)}
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         backgroundColor:

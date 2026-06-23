@@ -1882,7 +1882,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   setHandicapView(false);
                   setModalVisible(false);
 
-                  let url = `/newRound/scoreCardUser?selectedScore=${JSON.stringify(selectedScore)}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}&numberOfPlayers=${numberOfPlayers}&player2Id=${player2 || ""}&player3Id=${player3 || ""}&player4Id=${player4 || ""}&forceNew=true&startFrom=${startFrom}`;
+                  let url = `/newRound/scoreCardUser?selectedScore=${JSON.stringify(selectedScore)}&holes=${selectedHoles}&handicap=${handicapDetails.handicap}&courseId=${course.courseId}&teeBoxId=${data.teeBoxId}&numberOfPlayers=${numberOfPlayers}&player2Id=${player2 || ""}&player3Id=${player3 || ""}&player4Id=${player4 || ""}&forceNew=true&startFrom=${startFrom}&courseName=${encodeURIComponent(course.name)}`;
                   if (roundContextId) {
                     url += `&roundContextId=${roundContextId}`;
                   }

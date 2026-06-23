@@ -177,7 +177,7 @@ export default function SubAdminGameHistoryScoreCard() {
   const fetchScorecard = async () => {
     try {
       const response = await getPlayerScorecard(Number(scorecardId));
-      const rsc = await getSubScorecardHandicap(response[0].teeBoxId);
+      const rsc = await getSubScorecardHandicap(response[0].userId, response[0].teeBoxId);
       // {handicap: 8, handicapIndex: 9.5, slope: 102, rating: 71.6, par: 72}
       // console.log("rsc",rsc);
 
