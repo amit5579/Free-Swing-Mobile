@@ -11,12 +11,13 @@ import {
   useColorScheme,
   ActivityIndicator,
   View,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import { useEffect, useState, useCallback } from "react";
 import { getScoreHistory, ScoreHistoryItem } from "@/api/modules/dashboard.api";
 import { router, useFocusEffect } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
-import { ScrollView } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 
 export type GameHistory = {
@@ -47,16 +48,23 @@ export function HistoryTab({
 
   const [history, setHistory] = useState<GameHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      fetchHistory();
+      fetchHistory(true);
     }, [playerId]),
   );
 
-  const fetchHistory = async () => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchHistory();
+    setRefreshing(false);
+  }, [playerId]);
+
+  const fetchHistory = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const data: ScoreHistoryItem[] = await getScoreHistory(playerId);
 
       const mapped: GameHistory[] = data.map((item) => ({
@@ -75,7 +83,7 @@ export function HistoryTab({
     } catch (error) {
       console.error("Failed to fetch history:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -88,109 +96,122 @@ export function HistoryTab({
       <View
         style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
       >
-        <VStack className="p-4 space-y-4">
-          <HStack className="justify-between items-center mb-3">
-            <VStack>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
+          <VStack className="pt-4 space-y-4">
+            <HStack className="justify-between items-center mb-3">
+              <VStack>
+                <Skeleton
+                  isDark={isDark}
+                  width={140}
+                  height={20}
+                  style={{ marginBottom: 6 }}
+                />
+                <Skeleton isDark={isDark} width={220} height={14} />
+              </VStack>
               <Skeleton
                 isDark={isDark}
-                width={140}
-                height={20}
-                style={{ marginBottom: 6 }}
+                width={36}
+                height={36}
+                borderRadius={18}
               />
-              <Skeleton isDark={isDark} width={220} height={14} />
-            </VStack>
-            <Skeleton
-              isDark={isDark}
-              width={36}
-              height={36}
-              borderRadius={18}
-            />
-          </HStack>
+            </HStack>
 
-          {[1, 2, 3].map((key) => (
-            <Box
-              key={key}
-              className="rounded-2xl mb-4"
-              style={{
-                shadowColor: "#8BC34A",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: isDark ? 0.4 : 0.15,
-                shadowRadius: 14,
-                backgroundColor: isDark
-                  ? "rgba(26,26,26,0.6)"
-                  : "rgba(255,255,255,0.6)",
-                borderLeftWidth: 6,
-                borderLeftColor: "#8BC34A",
-                borderTopWidth: 1,
-                borderRightWidth: 1,
-                borderBottomWidth: 1,
-                borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
-                borderRadius: 22,
-                padding: 16,
-              }}
-            >
-              <HStack className="justify-between items-start">
-                <VStack style={{ flex: 1 }}>
-                  <Skeleton
-                    isDark={isDark}
-                    width="70%"
-                    height={18}
-                    style={{ marginBottom: 8 }}
-                  />
-
-                  <Skeleton
-                    isDark={isDark}
-                    width={90}
-                    height={18}
-                    borderRadius={12}
-                  />
-                </VStack>
-
-                <VStack className="items-end">
-                  <Skeleton
-                    isDark={isDark}
-                    width={80}
-                    height={14}
-                    style={{ marginBottom: 6 }}
-                  />
-                  <Skeleton isDark={isDark} width={60} height={12} />
-                </VStack>
-              </HStack>
-
-              <HStack space="sm" className="mt-4">
-                {[1, 2, 3].map((i) => (
-                  <Box
-                    key={i}
-                    className="flex-1 items-center py-3 rounded-xl"
-                    style={{
-                      backgroundColor: isDark
-                        ? "rgba(22, 22, 24, 0.6)"
-                        : "rgba(255, 255, 255, 0.6)",
-                      borderColor: "rgba(139,195,74,0.3)",
-                      borderWidth: 1,
-                    }}
-                  >
+            {[1, 2, 3].map((key) => (
+              <Box
+                key={key}
+                className="rounded-2xl mb-4"
+                style={{
+                  shadowColor: "#8BC34A",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowRadius: 14,
+                  backgroundColor: isDark
+                    ? "rgba(26,26,26,0.6)"
+                    : "rgba(255,255,255,0.6)",
+                  borderLeftWidth: 6,
+                  borderLeftColor: "#8BC34A",
+                  borderTopWidth: 1,
+                  borderRightWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                  borderRadius: 22,
+                  padding: 16,
+                }}
+              >
+                <HStack className="justify-between items-start">
+                  <VStack style={{ flex: 1 }}>
                     <Skeleton
                       isDark={isDark}
-                      width={40}
-                      height={10}
+                      width="70%"
+                      height={18}
+                      style={{ marginBottom: 8 }}
+                    />
+
+                    <Skeleton
+                      isDark={isDark}
+                      width={90}
+                      height={18}
+                      borderRadius={12}
+                    />
+                  </VStack>
+
+                  <VStack className="items-end">
+                    <Skeleton
+                      isDark={isDark}
+                      width={80}
+                      height={14}
                       style={{ marginBottom: 6 }}
                     />
-                    <Skeleton isDark={isDark} width={50} height={20} />
-                  </Box>
-                ))}
-              </HStack>
+                    <Skeleton isDark={isDark} width={60} height={12} />
+                  </VStack>
+                </HStack>
 
-              <Skeleton
-                isDark={isDark}
-                width="100%"
-                height={40}
-                borderRadius={20}
-                style={{ marginTop: 16 }}
-              />
-            </Box>
-          ))}
-        </VStack>
+                <HStack space="sm" className="mt-4">
+                  {[1, 2, 3].map((i) => (
+                    <Box
+                      key={i}
+                      className="flex-1 items-center py-3 rounded-xl"
+                      style={{
+                        backgroundColor: isDark
+                          ? "rgba(22, 22, 24, 0.6)"
+                          : "rgba(255, 255, 255, 0.6)",
+                        borderColor: "rgba(139,195,74,0.3)",
+                        borderWidth: 1,
+                      }}
+                    >
+                      <Skeleton
+                        isDark={isDark}
+                        width={40}
+                        height={10}
+                        style={{ marginBottom: 6 }}
+                      />
+                      <Skeleton isDark={isDark} width={50} height={20} />
+                    </Box>
+                  ))}
+                </HStack>
+
+                <Skeleton
+                  isDark={isDark}
+                  width="100%"
+                  height={40}
+                  borderRadius={20}
+                  style={{ marginTop: 16 }}
+                />
+              </Box>
+            ))}
+          </VStack>
+        </ScrollView>
       </View>
     );
   }
@@ -225,7 +246,7 @@ export function HistoryTab({
           </Text>
         </VStack>
 
-        <Pressable onPress={fetchHistory} className="p-2 rounded-full">
+        <Pressable onPress={() => fetchHistory()} className="p-2 rounded-full">
           <Ionicons
             name="sync-outline"
             size={20}
@@ -237,6 +258,14 @@ export function HistoryTab({
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
       >
         {filteredHistory.length === 0 ? (
           <Box

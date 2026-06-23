@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { GestureResponderEvent, StyleSheet } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import React, { useEffect, useState, useCallback } from "react";
+import { GestureResponderEvent, StyleSheet, ScrollView, RefreshControl } from "react-native";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
@@ -36,10 +35,17 @@ export default function adminCoursePage() {
   const routePage = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
 
   const [courseList, setCourseList] = useState<any>([]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCourse();
+    setRefreshing(false);
+  }, []);
 
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -62,9 +68,9 @@ export default function adminCoursePage() {
     },
   });
 
-  const fetchCourse = async () => {
+  const fetchCourse = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
 
       const response = await getCourse();
       setCourseList(response);
@@ -72,7 +78,7 @@ export default function adminCoursePage() {
     } catch (error) {
       console.error("Failed to fetch course list", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -167,7 +173,7 @@ export default function adminCoursePage() {
   }, [search]);
 
   useEffect(() => {
-    fetchCourse();
+    fetchCourse(true);
   }, []);
 
   const CourseCardSkeleton = ({ isDark }: { isDark: boolean }) => {
@@ -352,7 +358,17 @@ export default function adminCoursePage() {
         {renderHeader()}
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
               {loading ? (

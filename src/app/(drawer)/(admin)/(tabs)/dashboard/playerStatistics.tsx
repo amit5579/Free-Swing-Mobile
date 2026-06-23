@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   useColorScheme,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { PlayerApi } from "@/api/modules/admin/dashboard.api";
 import { useRouter } from "expo-router";
@@ -288,12 +289,16 @@ interface PlayerStatisticsProps {
   players: PlayerApi[];
   loading: boolean;
   searchQuery?: string;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 export default function PlayerStatistics({
   players,
   loading,
   searchQuery = "",
+  refreshing = false,
+  onRefresh,
 }: PlayerStatisticsProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -434,6 +439,16 @@ export default function PlayerStatistics({
           paddingHorizontal: 16,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          ) : undefined
+        }
       />
     </View>
   );

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -284,21 +285,28 @@ export default function SubAdminCoursePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [players, setPlayers] = useState<UserApi[]>([]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, []);
+
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchData();
+      fetchData(true);
     }, []),
   );
 
-  const fetchData = async () => {
+  const fetchData = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const [, playerData] = await Promise.all([
         getSubAdminCourses(),
         getSubAdminPlayers(),
@@ -311,7 +319,7 @@ export default function SubAdminCoursePage() {
     } catch (error) {
       console.error("Failed to fetch SubAdmin course data", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -444,6 +452,14 @@ export default function SubAdminCoursePage() {
           paddingTop: 12,
           paddingBottom: 120,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
       >
         {loading ? (
           <>

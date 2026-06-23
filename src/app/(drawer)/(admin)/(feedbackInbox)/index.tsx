@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView } from "react-native-gesture-handler";
+import React, { useEffect, useState, useCallback } from "react";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,7 +9,7 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Pressable, TextInput, useColorScheme, View } from "react-native";
+import { Pressable, TextInput, useColorScheme, View, ScrollView, RefreshControl } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,8 +26,15 @@ export default function FeedbackInboxPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [feedbackData, setFeedbackData] = useState<any>([]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchInbox();
+    setRefreshing(false);
+  }, []);
 
   const tabs = [
     { key: "all", label: "All", icon: "grid-outline" },
@@ -37,11 +43,11 @@ export default function FeedbackInboxPage() {
     { key: "resolved", label: "Resolved", icon: "people-outline" },
   ];
 
-  const fetchInbox = async () => {
-    setIsLoading(true);
+  const fetchInbox = async (showSkeleton = true) => {
+    if (showSkeleton) setIsLoading(true);
     const feedback = await getFeedback();
     setFeedbackData(feedback);
-    setIsLoading(false);
+    if (showSkeleton) setIsLoading(false);
   };
 
   const setUpdateFeedback = async (
@@ -58,7 +64,7 @@ export default function FeedbackInboxPage() {
   };
 
   useEffect(() => {
-    fetchInbox();
+    fetchInbox(true);
   }, []);
 
   const LoadingState = () => {
@@ -301,7 +307,17 @@ export default function FeedbackInboxPage() {
         }}
       >
         <Watermark />
-        <ScrollView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="flex-1 p-4">
             {/* HEADER (FIXED) */}
             {renderHeader()}

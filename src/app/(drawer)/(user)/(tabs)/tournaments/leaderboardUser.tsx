@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -36,14 +37,10 @@ export default function LeaderboardUser() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // console.log("hhhh", holes);
-    // console.log("llllll",leaderboard);
-    console.log("hhhhoollees", holes);
-    console.log("lllllll", leaderboard);
-
-    fetchData();
+    fetchData(true);
   }, []);
 
   const getScoringLabel = (scoringType: string) => {
@@ -75,22 +72,32 @@ export default function LeaderboardUser() {
     return holes.reduce((total, hole) => total + hole.par, 0);
   };
 
-  const fetchData = async () => {
+  const fetchData = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       // getHolesByTeeBox
       const lb = await getLeaderboard(Number(tournamentId));
       const teebox = await getTeeboxDetails(Number(teeboxId));
 
       setLeaderboard(lb);
       setHoles(teebox);
-
     } catch (err) {
       console.log("Error:", err);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } catch (error) {
+      console.error("Error refreshing", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   const handleAuthenticate = async (player: any) => {
     try {
@@ -106,8 +113,8 @@ export default function LeaderboardUser() {
         prev.map((item) =>
           item.scorecardId === player.scorecardId
             ? { ...item, isAuthenticated: true }
-            : item
-        )
+            : item,
+        ),
       );
     } catch (error) {
       console.log(error);
@@ -802,7 +809,8 @@ export default function LeaderboardUser() {
             disabled={!player.scorecardId}
             onPress={() => {
               routePage.push({
-                pathname: "/(drawer)/(user)/(tabs)/tournaments/tournamentHistory",
+                pathname:
+                  "/(drawer)/(user)/(tabs)/tournaments/tournamentHistory",
                 params: {
                   tournamentId,
                   tournamentName,
@@ -827,8 +835,17 @@ export default function LeaderboardUser() {
               opacity: player.scorecardId ? 1 : 0.4,
             }}
           >
-            <Ionicons name="eye-outline" size={14} color="#06b6d4" style={{ marginRight: 4 }} />
-            <ThemedText style={{ color: "#06b6d4", fontSize: 11, fontWeight: "600" }}>History</ThemedText>
+            <Ionicons
+              name="eye-outline"
+              size={14}
+              color="#06b6d4"
+              style={{ marginRight: 4 }}
+            />
+            <ThemedText
+              style={{ color: "#06b6d4", fontSize: 11, fontWeight: "600" }}
+            >
+              History
+            </ThemedText>
           </Pressable>
 
           {/* Authenticate Button / Badge (with Lock icon) */}
@@ -838,7 +855,9 @@ export default function LeaderboardUser() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: isDark ? "rgba(139, 195, 74, 0.15)" : "#f1f8e9",
+                backgroundColor: isDark
+                  ? "rgba(139, 195, 74, 0.15)"
+                  : "#f1f8e9",
                 borderWidth: 1,
                 borderColor: "#8bc34a",
                 borderRadius: 6,
@@ -847,8 +866,17 @@ export default function LeaderboardUser() {
                 height: 32,
               }}
             >
-              <Ionicons name="checkmark-circle" size={14} color="#8bc34a" style={{ marginRight: 4 }} />
-              <ThemedText style={{ color: "#8bc34a", fontSize: 11, fontWeight: "600" }}>Verified</ThemedText>
+              <Ionicons
+                name="checkmark-circle"
+                size={14}
+                color="#8bc34a"
+                style={{ marginRight: 4 }}
+              />
+              <ThemedText
+                style={{ color: "#8bc34a", fontSize: 11, fontWeight: "600" }}
+              >
+                Verified
+              </ThemedText>
             </View>
           ) : (
             <Pressable
@@ -866,8 +894,17 @@ export default function LeaderboardUser() {
                 opacity: player.scorecardId ? 1 : 0.4,
               }}
             >
-              <Ionicons name="lock-closed-outline" size={14} color="white" style={{ marginRight: 4 }} />
-              <ThemedText style={{ color: "white", fontSize: 11, fontWeight: "600" }}>Auth</ThemedText>
+              <Ionicons
+                name="lock-closed-outline"
+                size={14}
+                color="white"
+                style={{ marginRight: 4 }}
+              />
+              <ThemedText
+                style={{ color: "white", fontSize: 11, fontWeight: "600" }}
+              >
+                Auth
+              </ThemedText>
             </Pressable>
           )}
         </HStack>
@@ -1000,6 +1037,14 @@ export default function LeaderboardUser() {
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8bc34a"]}
+            tintColor="#8bc34a"
+          />
+        }
           >
             <HStack
               style={{

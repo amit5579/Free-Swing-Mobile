@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { StyleSheet, Text, ScrollView, RefreshControl } from "react-native";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
@@ -43,6 +42,16 @@ export default function SubAdminTeeBookingPage() {
 
   // const [userId, setUserId] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      fetchCourses(),
+      fetchTeeTiming(),
+    ]);
+    setRefreshing(false);
+  }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
   const getSeatKey = (
     date: string,
     teeBox: number,
@@ -63,7 +72,7 @@ export default function SubAdminTeeBookingPage() {
         value: c.courseId,
       }));
       setCourses(formattedCourses);
-      if (formattedCourses.length > 0) {
+      if (formattedCourses.length > 0 && !selectedCourse) {
         setSelectedCourse(formattedCourses[0].value);
       }
     } catch (error) {
@@ -71,11 +80,11 @@ export default function SubAdminTeeBookingPage() {
     }
   };
 
-  const fetchTeeTiming = async () => {
+  const fetchTeeTiming = async (showSkeleton = true) => {
     // debugger;
     if (!availableDates[selectedDateIndex]) return;
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const teeDetails = await getSubAdminTeeTimeSeats(
         selectedCourse,
         availableDates[selectedDateIndex],
@@ -85,7 +94,7 @@ export default function SubAdminTeeBookingPage() {
     } catch (error) {
       console.error("Error fetching tee timings:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -637,7 +646,17 @@ export default function SubAdminTeeBookingPage() {
         <RenderHeader />
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="px-4 pt-5 pb-20">
             {/* Date tabs */}
             <ThemedView
@@ -806,7 +825,7 @@ export default function SubAdminTeeBookingPage() {
                     justifyContent: "center",
                     alignItems: "center",
                   }}
-                  onPress={fetchTeeTiming}
+                  onPress={() => fetchTeeTiming()}
                 >
                   <Ionicons name="refresh" size={16} color="#fff" />
                 </Pressable>

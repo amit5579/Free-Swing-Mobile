@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -7,8 +7,9 @@ import {
   TextInput,
   FlatList,
   Text,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Box } from "@/components/box";
@@ -29,22 +30,29 @@ export default function SubscriptionsPage() {
   const routePage = useRouter();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchSubscriptions = async () => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchSubscriptions();
+    setRefreshing(false);
+  }, []);
+
+  const fetchSubscriptions = async (showSkeleton = true) => {
     try {
+      if (showSkeleton) setLoading(true);
       const uu = await getUser();
 
       setUserData(uu);
-      setLoading(true);
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubscriptions();
+    fetchSubscriptions(true);
   }, []);
 
   const formatDate = (dateString: any) => {
@@ -275,7 +283,17 @@ export default function SubscriptionsPage() {
       <RenderHeader />
       <Watermark />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
+      >
         {loading ? (
           <SubscriptionPageSkeleton isDark={isDark} />
         ) : (

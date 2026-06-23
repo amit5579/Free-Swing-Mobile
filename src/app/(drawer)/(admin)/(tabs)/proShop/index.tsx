@@ -31,6 +31,7 @@ export default function ProShop() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [imgLoadingMap, setImgLoadingMap] = useState<{
     [key: number]: boolean;
@@ -39,23 +40,29 @@ export default function ProShop() {
     {},
   );
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+  }, [products]);
+
   useFocusEffect(
     useCallback(() => {
       setNavigating(false);
-      fetchProducts();
-    }, []),
+      fetchProducts(true);
+    }, [products]),
   );
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (showSkeleton = true) => {
     try {
       // Only show full-screen skeleton on initial load or if list is empty
-      if (products.length === 0) setLoading(true);
+      if (showSkeleton && products.length === 0) setLoading(true);
       const data = await getProducts();
       setProducts(data);
     } catch (error) {
       console.error("Fetch products error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -164,6 +171,14 @@ export default function ProShop() {
               paddingBottom: 150,
               paddingHorizontal: 16,
             }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8BC34A"]}
+                tintColor="#8BC34A"
+              />
+            }
           >
             <VStack style={{ gap: 20 }}>
               {[1, 2, 3, 4].map((item) => (
@@ -251,8 +266,8 @@ export default function ProShop() {
             }}
             refreshControl={
               <RefreshControl
-                refreshing={loading}
-                onRefresh={fetchProducts}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
                 colors={["#8BC34A"]}
                 tintColor="#8BC34A"
               />
@@ -530,7 +545,7 @@ export default function ProShop() {
                   Item" to start managing your inventory.
                 </ThemedText>
                 <TouchableOpacity
-                  onPress={fetchProducts}
+                  onPress={() => fetchProducts()}
                   style={{
                     backgroundColor: "#8BC34A",
                     paddingHorizontal: 24,

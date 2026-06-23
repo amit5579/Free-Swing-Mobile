@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
   PanResponder,
+  RefreshControl,
 } from "react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -41,7 +42,14 @@ export default function AdminDashboard() {
   });
   const [players, setPlayers] = useState<PlayerApi[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchStats();
+    setRefreshing(false);
+  }, []);
 
   const swipePanResponder = useRef(
     PanResponder.create({
@@ -59,7 +67,7 @@ export default function AdminDashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchStats();
+      fetchStats(true);
 
       const onBackPress = () => {
         if (activeTab !== "overview") {
@@ -80,9 +88,9 @@ export default function AdminDashboard() {
     }, [activeTab]),
   );
 
-  const fetchStats = async () => {
+  const fetchStats = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const [players, courses] = await Promise.all([
         getPlayers(),
         getCourses(),
@@ -120,7 +128,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Dashboard stats error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -244,6 +252,14 @@ export default function AdminDashboard() {
               paddingHorizontal: 16,
               paddingBottom: 120,
             }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8BC34A"]}
+                tintColor="#8BC34A"
+              />
+            }
           >
             {loading ? (
               <VStack className="space-y-4 pt-4">
@@ -501,6 +517,8 @@ export default function AdminDashboard() {
             players={players}
             loading={loading}
             searchQuery={searchQuery}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         )}
       </View>

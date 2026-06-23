@@ -227,6 +227,7 @@ export default function ShopScreen() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -236,9 +237,15 @@ export default function ShopScreen() {
     transform: [{ translateX: cartTranslateX.value }],
   }));
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      fetchProducts();
+      fetchProducts(true);
     }, []),
   );
 
@@ -248,8 +255,8 @@ export default function ShopScreen() {
     });
   }, [cart.length]);
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = async (showSkeleton = true) => {
+    if (showSkeleton) setLoading(true);
     try {
       const data: ProductApi[] = await getProducts();
 
@@ -269,7 +276,7 @@ export default function ShopScreen() {
     } catch (error) {
       console.log("Error fetching products:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -401,8 +408,8 @@ export default function ShopScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
-            onRefresh={fetchProducts}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             colors={["#8BC34A"]}
             tintColor="#8BC34A"
           />
@@ -527,7 +534,7 @@ export default function ShopScreen() {
               check back later!
             </ThemedText>
             <TouchableOpacity
-              onPress={fetchProducts}
+              onPress={() => fetchProducts()}
               style={{
                 backgroundColor: "#8BC34A",
                 paddingHorizontal: 24,

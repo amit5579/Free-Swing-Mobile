@@ -12,6 +12,7 @@ import {
   useColorScheme,
   View,
   BackHandler,
+  RefreshControl,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 
@@ -67,6 +68,7 @@ export default function SubAdminProfile() {
   });
 
   const [pageLoading, setPageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   // const [image, setImage] = useState<string | null>(null);
@@ -76,6 +78,12 @@ export default function SubAdminProfile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProfile();
+    setRefreshing(false);
+  }, []);
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -116,20 +124,20 @@ export default function SubAdminProfile() {
     }
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (showSkeleton = true) => {
     try {
-      setPageLoading(true);
+      if (showSkeleton) setPageLoading(true);
       const data = await getProfile();
       setProfileData(data);
     } catch (error) {
       console.error("Failed to fetch sub-admin profile", error);
     } finally {
-      setPageLoading(false);
+      if (showSkeleton) setPageLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProfile();
+    fetchProfile(true);
   }, []);
 
   const onSubmit = (data: any) => {
@@ -182,7 +190,17 @@ export default function SubAdminProfile() {
     >
       <ThemedView className="flex-1 px-5">
         <Watermark />
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           {pageLoading ? (
             <>
               <HStack className="items-center my-6">

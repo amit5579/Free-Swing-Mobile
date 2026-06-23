@@ -63,7 +63,7 @@ export default function ScoreCardUserPage() {
     player3Id,
     player4Id,
     roundContextId,
-    startFrom
+    startFrom,
   } = useLocalSearchParams();
 
   const [pendingRoundContext, setPendingRoundContext] = useState<any>(null);
@@ -434,15 +434,16 @@ export default function ScoreCardUserPage() {
     return counts;
   };
 
-  const nassauStartingNine = (startFrom === "front" || startFrom === "back") ? startFrom : null;
+  const nassauStartingNine =
+    startFrom === "front" || startFrom === "back" ? startFrom : null;
 
   const processedAllHoles = scoreCardDetails.map(calculateHole);
 
-  const processedFront9 = processedAllHoles.filter(
-    (h: any) => nassauStartingNine === "back" ? h.holeNumber >= 10 : h.holeNumber <= 9,
+  const processedFront9 = processedAllHoles.filter((h: any) =>
+    nassauStartingNine === "back" ? h.holeNumber >= 10 : h.holeNumber <= 9,
   );
-  const processedBack9 = processedAllHoles.filter(
-    (h: any) => nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10,
+  const processedBack9 = processedAllHoles.filter((h: any) =>
+    nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10,
   );
   const legendCounts = getScoreLegendCounts(processedAllHoles);
 
@@ -462,19 +463,23 @@ export default function ScoreCardUserPage() {
   const frontTotals = getTotals(processedFront9, getScoringLabel());
   const backTotals = getTotals(processedBack9, getScoringLabel());
 
-  const processedHoles = processedAllHoles.filter((h: any) => {
-    if (holes === "18") return true;
-    if (holes === "front9" || holes === "Front9" || holes === "Front 9") return h.holeNumber <= 9;
-    if (holes === "back9" || holes === "Back9" || holes === "Back 9") return h.holeNumber >= 10;
-    return true;
-  }).sort((a: any, b: any) => {
-    if (nassauStartingNine === "back") {
-      const aVal = a.holeNumber >= 10 ? a.holeNumber - 10 : a.holeNumber + 8;
-      const bVal = b.holeNumber >= 10 ? b.holeNumber - 10 : b.holeNumber + 8;
-      return aVal - bVal;
-    }
-    return a.holeNumber - b.holeNumber;
-  });
+  const processedHoles = processedAllHoles
+    .filter((h: any) => {
+      if (holes === "18") return true;
+      if (holes === "front9" || holes === "Front9" || holes === "Front 9")
+        return h.holeNumber <= 9;
+      if (holes === "back9" || holes === "Back9" || holes === "Back 9")
+        return h.holeNumber >= 10;
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      if (nassauStartingNine === "back") {
+        const aVal = a.holeNumber >= 10 ? a.holeNumber - 10 : a.holeNumber + 8;
+        const bVal = b.holeNumber >= 10 ? b.holeNumber - 10 : b.holeNumber + 8;
+        return aVal - bVal;
+      }
+      return a.holeNumber - b.holeNumber;
+    });
 
   const grandTotals = getTotals(processedHoles, getScoringLabel());
 
@@ -494,9 +499,9 @@ export default function ScoreCardUserPage() {
           .map((h: any) => ({
             courseId: courseId ? Number(courseId) : h.courseId,
             courseHalf:
-              (holes === "front9" || holes === "Front9" || holes === "Front 9")
+              holes === "front9" || holes === "Front9" || holes === "Front 9"
                 ? "Front9"
-                : (holes === "back9" || holes === "Back9" || holes === "Back 9")
+                : holes === "back9" || holes === "Back9" || holes === "Back 9"
                   ? "Back9"
                   : null,
             holeId: h.holeId,
@@ -550,16 +555,22 @@ export default function ScoreCardUserPage() {
         }
 
         if (shouldGoBack) {
-          if (isCompleted) {
-            setScoreCardDetails([]); // Clear inputs for fresh start
-          }
+          // if (isCompleted) {
+          //   setScoreCardDetails([]); // Clear inputs for fresh start
+          // }
           routePage.push("/(drawer)/(user)/(tabs)/dashboard");
+          setTimeout(() => {
+            (navigation as any).reset({
+              index: 0,
+              routes: [{ name: "index" }],
+            });
+          }, 500);
         }
       } catch (error) {
         console.log("Error saving round:", error);
       }
     },
-    [courseId, isExcluded, teeBoxId, userId, routePage],
+    [courseId, isExcluded, teeBoxId, userId, routePage, navigation],
   );
 
   useEffect(() => {
@@ -616,7 +627,11 @@ export default function ScoreCardUserPage() {
       const payload = updatedDetails.map(calculateHole).map((h: any) => ({
         courseId: courseId ? Number(courseId) : h.courseId,
         courseHalf:
-          (holes === "front9" || holes === "Front9" || holes === "Front 9") ? "Front9" : (holes === "back9" || holes === "Back9" || holes === "Back 9") ? "Back9" : null,
+          holes === "front9" || holes === "Front9" || holes === "Front 9"
+            ? "Front9"
+            : holes === "back9" || holes === "Back9" || holes === "Back 9"
+              ? "Back9"
+              : null,
         holeId: h.holeId,
         isCompleted: false,
         isExcluded: isExcluded,
@@ -752,7 +767,7 @@ export default function ScoreCardUserPage() {
           if (nextFlatIndex < totalInputs) {
             inputRefs.current[nextFlatIndex]?.focus();
           }
-        }, 3000);
+        }, 1500);
       }
     }
   };
@@ -942,7 +957,7 @@ export default function ScoreCardUserPage() {
         if (nextIndex < processedHoles.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 3000);
+      }, 1500);
     }
   };
 
@@ -1325,9 +1340,7 @@ export default function ScoreCardUserPage() {
                       <HStack
                         style={{
                           paddingVertical: 12,
-                          backgroundColor: isDark
-                            ? "#111827"
-                            : "#f8fafc",
+                          backgroundColor: isDark ? "#111827" : "#f8fafc",
                           borderBottomWidth: 1,
                           borderColor: isDark ? "#1e293b" : "#e5e7eb",
                         }}
@@ -1336,7 +1349,7 @@ export default function ScoreCardUserPage() {
                           "Hole",
                           isDetailsVisible && "SI",
                           isDetailsVisible && "Yards",
-                          isDetailsVisible && "Par",
+                          "Par",
                           "Score",
                           "Net",
                           isStableford && "Pts",
@@ -1365,9 +1378,7 @@ export default function ScoreCardUserPage() {
                               paddingVertical: 12,
                               alignItems: "center",
                               borderBottomWidth: 0.5,
-                              backgroundColor: isDark
-                                ? "#020617"
-                                : "#ffffff",
+                              backgroundColor: isDark ? "#020617" : "#ffffff",
                               borderColor: isDark ? "#1e293b" : "#e5e7eb",
                             }}
                           >
@@ -1393,14 +1404,14 @@ export default function ScoreCardUserPage() {
                                 >
                                   {h.yardage}
                                 </ThemedText>
-
-                                <ThemedText
-                                  style={{ flex: 1, textAlign: "center" }}
-                                >
-                                  {h.par}
-                                </ThemedText>
                               </>
                             )}
+
+                            <ThemedText
+                              style={{ flex: 1, textAlign: "center" }}
+                            >
+                              {h.par}
+                            </ThemedText>
 
                             {/*  SCORE INPUT */}
                             <View
@@ -1478,9 +1489,7 @@ export default function ScoreCardUserPage() {
                           {h.holeNumber === 9 && (
                             <HStack
                               style={{
-                                backgroundColor: isDark
-                                  ? "#111827"
-                                  : "#f8fafc",
+                                backgroundColor: isDark ? "#111827" : "#f8fafc",
                                 paddingVertical: 10,
                                 borderTopWidth: 1,
                                 borderColor: isDark ? "#1e293b" : "#e5e7eb",
@@ -1508,13 +1517,14 @@ export default function ScoreCardUserPage() {
                                   >
                                     {frontTotals.yards}
                                   </ThemedText>
-                                  <ThemedText
-                                    style={{ flex: 1, textAlign: "center" }}
-                                  >
-                                    {frontTotals.par}
-                                  </ThemedText>
                                 </>
                               )}
+
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {frontTotals.par}
+                              </ThemedText>
 
                               <ThemedText
                                 style={{
@@ -1550,9 +1560,7 @@ export default function ScoreCardUserPage() {
                           {h.holeNumber === 18 && (
                             <HStack
                               style={{
-                                backgroundColor: isDark
-                                  ? "#111827"
-                                  : "#f8fafc",
+                                backgroundColor: isDark ? "#111827" : "#f8fafc",
                                 paddingVertical: 10,
                                 borderTopWidth: 1,
                                 borderColor: isDark ? "#1e293b" : "#e5e7eb",
@@ -1580,13 +1588,14 @@ export default function ScoreCardUserPage() {
                                   >
                                     {backTotals.yards}
                                   </ThemedText>
-                                  <ThemedText
-                                    style={{ flex: 1, textAlign: "center" }}
-                                  >
-                                    {backTotals.par}
-                                  </ThemedText>
                                 </>
                               )}
+
+                              <ThemedText
+                                style={{ flex: 1, textAlign: "center" }}
+                              >
+                                {backTotals.par}
+                              </ThemedText>
 
                               <ThemedText
                                 style={{
@@ -1672,7 +1681,8 @@ export default function ScoreCardUserPage() {
                       };
                       const totalWidth =
                         50 +
-                        (isDetailsVisible ? 55 + 60 + 50 : 0) +
+                        50 + // par is always visible
+                        (isDetailsVisible ? 55 + 60 : 0) +
                         partners.length * 95 +
                         (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
                         (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
@@ -1696,9 +1706,7 @@ export default function ScoreCardUserPage() {
                             <HStack
                               style={{
                                 paddingVertical: 12,
-                                backgroundColor: isDark
-                                  ? "#111827"
-                                  : "#f8fafc",
+                                backgroundColor: isDark ? "#111827" : "#f8fafc",
                                 borderBottomWidth: 1,
                                 borderColor: isDark ? "#1e293b" : "#e5e7eb",
                               }}
@@ -1735,18 +1743,18 @@ export default function ScoreCardUserPage() {
                                   >
                                     Yards
                                   </ThemedText>
-                                  <ThemedText
-                                    style={{
-                                      width: 50,
-                                      textAlign: "center",
-                                      fontWeight: "700",
-                                      fontSize: 12,
-                                    }}
-                                  >
-                                    Par
-                                  </ThemedText>
                                 </>
                               )}
+                              <ThemedText
+                                style={{
+                                  width: 50,
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                  fontSize: 12,
+                                }}
+                              >
+                                Par
+                              </ThemedText>
                               {partners.map((p: any, idx: number) => {
                                 let badgeText = "";
                                 let badgeColor = "";
@@ -1940,16 +1948,16 @@ export default function ScoreCardUserPage() {
                                         >
                                           {h.yardage}
                                         </ThemedText>
-                                        <ThemedText
-                                          style={{
-                                            width: 50,
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {h.par}
-                                        </ThemedText>
                                       </>
                                     )}
+                                    <ThemedText
+                                      style={{
+                                        width: 50,
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {h.par}
+                                    </ThemedText>
 
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
@@ -2106,33 +2114,6 @@ export default function ScoreCardUserPage() {
                                               </Text>
                                             </Pressable>
 
-                                            {/* {isSplit6 && s6Pts.length > 0 && info.score !== null && (
-                                              <Text style={{ fontSize: 9, color: '#84cc16', fontWeight: 'bold' }}>
-                                                P:{s6Pts[pIndex]}
-                                              </Text>
-                                            )}
-
-                                            {isHighLow && hlStats && info.score !== null && (
-                                              <Text style={{ fontSize: 9, color: pIndex < 2 ? '#38bdf8' : '#f43f5e', fontWeight: 'bold' }}>
-                                                N:{info.netScore}
-                                              </Text>
-                                            )} */}
-                                            {/* const getScoringLabel = () => {
-    if (isExcluded && !isStableford)
-      return "Net Score • Exclude Par 3";
-    if (!isExcluded && isStableford) return "Stableford";
-    if (!isExcluded && !isStableford && !isSplit6 && !isHighLow && !isGross)
-      return "Net Score • Include Par 3";
-    if (isExcluded && isStableford)
-      return "Stableford • Exclude Par 3";
-    if (isGross && !isExcluded && !isStableford && !isSplit6 && !isHighLow)
-      return "Gross Score";
-    if (!isExcluded && !isStableford && isSplit6 && !isHighLow)
-      return "Net Score • Split 6";
-    if (!isExcluded && !isStableford && !isSplit6 && isHighLow)
-      return "Net Score • High-Low";
-    return "";
-  }; */}
                                             {info.score !== null &&
                                               getScoringLabel() !==
                                                 "Net Score • Include Par 3" &&
@@ -2326,7 +2307,9 @@ export default function ScoreCardUserPage() {
                                                 arr: number[],
                                               ) => renderHouse(val, i, arr),
                                             )}
-                                            {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
+                                            {(nassauStartingNine === "back"
+                                              ? h.holeNumber <= 9
+                                              : h.holeNumber >= 10) &&
                                               hRes.housesDisplay.length > 0 && (
                                                 <Text
                                                   style={{
@@ -2339,7 +2322,9 @@ export default function ScoreCardUserPage() {
                                                   {" & "}
                                                 </Text>
                                               )}
-                                            {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
+                                            {(nassauStartingNine === "back"
+                                              ? h.holeNumber <= 9
+                                              : h.holeNumber >= 10) &&
                                               hRes.housesDisplay.map(
                                                 (
                                                   val: number,
@@ -2353,7 +2338,9 @@ export default function ScoreCardUserPage() {
                                   </HStack>
 
                                   {/* FRONT 9 TOTALS ROW */}
-                                  {((nassauStartingNine === "back" ? index === 8 : h.holeNumber === 9)) && (
+                                  {(nassauStartingNine === "back"
+                                    ? index === 8
+                                    : h.holeNumber === 9) && (
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
@@ -2373,7 +2360,9 @@ export default function ScoreCardUserPage() {
                                           textAlign: "center",
                                         }}
                                       >
-                                        {nassauStartingNine === "back" ? "B9" : "F9"}
+                                        {nassauStartingNine === "back"
+                                          ? "B9"
+                                          : "F9"}
                                       </ThemedText>
                                       {isDetailsVisible && (
                                         <>
@@ -2391,16 +2380,16 @@ export default function ScoreCardUserPage() {
                                           >
                                             {frontTotals.yards}
                                           </ThemedText>
-                                          <ThemedText
-                                            style={{
-                                              width: 50,
-                                              textAlign: "center",
-                                            }}
-                                          >
-                                            {frontTotals.par}
-                                          </ThemedText>
                                         </>
                                       )}
+                                      <ThemedText
+                                        style={{
+                                          width: 50,
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {frontTotals.par}
+                                      </ThemedText>
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedFront9,
@@ -2594,7 +2583,9 @@ export default function ScoreCardUserPage() {
                                               }}
                                             >
                                               {formatNassauHouses(
-                                                nassauStartingNine === "back" ? ns.back9Houses : ns.front9Houses,
+                                                nassauStartingNine === "back"
+                                                  ? ns.back9Houses
+                                                  : ns.front9Houses,
                                               )}
                                             </Text>
                                           </VStack>
@@ -2603,7 +2594,9 @@ export default function ScoreCardUserPage() {
                                   )}
 
                                   {/* BACK 9 TOTALS ROW */}
-                                  {((nassauStartingNine === "back" ? index === 17 : h.holeNumber === 18)) && (
+                                  {(nassauStartingNine === "back"
+                                    ? index === 17
+                                    : h.holeNumber === 18) && (
                                     <HStack
                                       style={{
                                         backgroundColor: isDark
@@ -2623,7 +2616,9 @@ export default function ScoreCardUserPage() {
                                           textAlign: "center",
                                         }}
                                       >
-                                        {nassauStartingNine === "back" ? "F9" : "B9"}
+                                        {nassauStartingNine === "back"
+                                          ? "F9"
+                                          : "B9"}
                                       </ThemedText>
                                       {isDetailsVisible && (
                                         <>
@@ -2641,16 +2636,16 @@ export default function ScoreCardUserPage() {
                                           >
                                             {backTotals.yards}
                                           </ThemedText>
-                                          <ThemedText
-                                            style={{
-                                              width: 50,
-                                              textAlign: "center",
-                                            }}
-                                          >
-                                            {backTotals.par}
-                                          </ThemedText>
                                         </>
                                       )}
+                                      <ThemedText
+                                        style={{
+                                          width: 50,
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {backTotals.par}
+                                      </ThemedText>
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedBack9,
@@ -2844,7 +2839,9 @@ export default function ScoreCardUserPage() {
                                               }}
                                             >
                                               {formatNassauHouses(
-                                                nassauStartingNine === "back" ? ns.front9Houses : ns.back9Houses,
+                                                nassauStartingNine === "back"
+                                                  ? ns.front9Houses
+                                                  : ns.back9Houses,
                                               )}
                                             </Text>
                                           </VStack>
@@ -2887,17 +2884,17 @@ export default function ScoreCardUserPage() {
                                   >
                                     {grandTotals.yards}
                                   </ThemedText>
-                                  <ThemedText
-                                    style={{
-                                      width: 50,
-                                      textAlign: "center",
-                                      color: "#fff",
-                                    }}
-                                  >
-                                    {grandTotals.par}
-                                  </ThemedText>
                                 </>
                               )}
+                              <ThemedText
+                                style={{
+                                  width: 50,
+                                  textAlign: "center",
+                                  color: "#fff",
+                                }}
+                              >
+                                {grandTotals.par}
+                              </ThemedText>
                               {partners.map((p: any) => {
                                 const t = getPlayerTotals(processedHoles, p);
                                 return (
@@ -3112,23 +3109,35 @@ export default function ScoreCardUserPage() {
                       {isDetailsVisible && (
                         <>
                           <ThemedText
-                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              color: "#fff",
+                            }}
                           >
                             {grandTotals.strokeIndex}
                           </ThemedText>
                           <ThemedText
-                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              color: "#fff",
+                            }}
                           >
                             {grandTotals.yards}
                           </ThemedText>
-
-                          <ThemedText
-                            style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                          >
-                            {grandTotals.par}
-                          </ThemedText>
                         </>
                       )}
+
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          color: "#fff",
+                        }}
+                      >
+                        {grandTotals.par}
+                      </ThemedText>
 
                       <ThemedText
                         style={{

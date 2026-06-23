@@ -12,6 +12,7 @@ import {
   useColorScheme,
   View,
   BackHandler,
+  RefreshControl,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 
@@ -68,6 +69,7 @@ export default function AdminProfile() {
   });
 
   const [pageLoading, setPageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [uploading, setUploading] = useState(false);
   const [adminProfile, setAdminProfile] = useState<any>(null);
@@ -117,9 +119,9 @@ export default function AdminProfile() {
       }
     }
   };
-  const fetchAdminProfile = async () => {
+  const fetchAdminProfile = async (showSkeleton = true) => {
     try {
-      setPageLoading(true);
+      if (showSkeleton) setPageLoading(true);
 
       const adminProfile = await getProfile();
 
@@ -127,12 +129,18 @@ export default function AdminProfile() {
     } catch (error) {
       console.error("Failed to fetch admin profile", error);
     } finally {
-      setPageLoading(false);
+      if (showSkeleton) setPageLoading(false);
     }
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAdminProfile();
+    setRefreshing(false);
+  }, []);
+
   useEffect(() => {
-    fetchAdminProfile();
+    fetchAdminProfile(true);
   }, []);
 
   const onSubmit = (data: any) => {
@@ -206,7 +214,17 @@ export default function AdminProfile() {
       >
         <ThemedView className="flex-1 px-5">
           <Watermark />
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8bc34a"]}
+                tintColor="#8bc34a"
+              />
+            }
+          >
             {pageLoading ? (
               <>
                 <HStack className="items-center my-6">

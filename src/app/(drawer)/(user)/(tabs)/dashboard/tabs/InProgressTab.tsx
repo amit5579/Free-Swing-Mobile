@@ -13,6 +13,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  RefreshControl,
 } from "react-native";
 import {
   getInProgressGames,
@@ -45,6 +46,7 @@ export function InProgressTab({
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [resumingId, setResumingId] = useState<string | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -89,13 +91,19 @@ export function InProgressTab({
 
   useFocusEffect(
     useCallback(() => {
-      fetchGames();
+      fetchGames(true);
     }, [playerId]),
   );
 
-  const fetchGames = async () => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchGames();
+    setRefreshing(false);
+  }, [playerId]);
+
+  const fetchGames = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const data: InProgressApiItem[] = await getInProgressGames(playerId);
 
       const mapped = data.map((item) => ({
@@ -111,7 +119,7 @@ export function InProgressTab({
       console.error("Error fetching in-progress games:", error);
       setGames([]);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -138,7 +146,7 @@ export function InProgressTab({
               Games you are currently playing
             </Text>
           </VStack>
-          <Pressable onPress={fetchGames} className="p-2 rounded-full">
+          <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
             <Ionicons
               name="sync-outline"
               size={20}
@@ -149,6 +157,14 @@ export function InProgressTab({
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         >
           <VStack space="md" className="pt-4">
             {[1, 2].map((key) => (
@@ -228,7 +244,7 @@ export function InProgressTab({
             Games you are currently playing
           </Text>
         </VStack>
-        <Pressable onPress={fetchGames} className="p-2 rounded-full">
+        <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
           <Ionicons
             name="sync-outline"
             size={20}
@@ -240,6 +256,14 @@ export function InProgressTab({
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
       >
         {!filteredGames.length ? (
           <Box

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -6,8 +6,9 @@ import {
   View,
   TextInput,
   FlatList,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Box } from "@/components/box";
@@ -35,7 +36,14 @@ export default function SubAdminContactAdminPage() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchFeedback();
+    setRefreshing(false);
+  }, []);
 
   // Dummy feedback history (replace with API)
   const [feedbacks, setFeedbacks] = useState<any[]>([
@@ -59,21 +67,21 @@ export default function SubAdminContactAdminPage() {
     resolver: zodResolver(contactAdminSchema),
   });
 
-  const fetchFeedback = async () => {
+  const fetchFeedback = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
 
       const response = await getFeedbackHistory();
       setFeedbacks(response);
     } catch (error) {
       console.error("Error fetching feedback:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFeedback();
+    fetchFeedback(true);
   }, []);
 
   const onSubmit = async (data: ContactAdminType) => {
@@ -256,7 +264,17 @@ export default function SubAdminContactAdminPage() {
       <RenderHeader />
       <Watermark />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
+      >
         <VStack className="px-4 pt-5 pb-20">
           {/* BUTTON */}
           <Pressable

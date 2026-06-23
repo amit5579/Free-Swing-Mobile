@@ -9,6 +9,7 @@ import {
   Alert,
   StyleSheet,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -53,6 +54,7 @@ export default function AllMembersScreen({
   const isDark = colorScheme === "dark";
   const [members, setMembers] = useState<UserListApi[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
   const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>(
     {},
@@ -60,6 +62,12 @@ export default function AllMembersScreen({
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUsers();
+    setRefreshing(false);
+  }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -127,12 +135,12 @@ export default function AllMembersScreen({
       setUserRole(storedRole?.toLowerCase() || null);
     };
     loadRole();
-    fetchUsers();
+    fetchUsers(true);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchUsers();
+      fetchUsers(true);
     }, []),
   );
 
@@ -348,9 +356,9 @@ export default function AllMembersScreen({
   //     setLoading(false);
   //   }
   // };
-  const fetchUsers = async () => {
+  const fetchUsers = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const data = await getUsers();
 
       const sortedMembers = [...data].sort((a, b) => {
@@ -370,7 +378,7 @@ export default function AllMembersScreen({
     } catch (error) {
       console.error("Fetch users error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -775,6 +783,14 @@ export default function AllMembersScreen({
             paddingHorizontal: 16,
             paddingBottom: 100,
           }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         >
           <VStack>
             <MemberCardSkeleton
@@ -800,6 +816,14 @@ export default function AllMembersScreen({
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         >
           <VStack className={hideAdminControls ? "px-2" : "px-2"}>
             <VStack space="md" style={{ gap: 16 }}>

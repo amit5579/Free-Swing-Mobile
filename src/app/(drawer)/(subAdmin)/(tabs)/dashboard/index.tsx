@@ -6,6 +6,7 @@ import {
   BackHandler,
   TouchableOpacity,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,6 +32,7 @@ export default function SubAdminDashboard() {
   const isDark = colorScheme === "dark";
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [stats, setStats] = useState({
     players: 0,
@@ -38,9 +40,15 @@ export default function SubAdminDashboard() {
     updates: 0,
   });
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchStats();
+    setRefreshing(false);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      fetchStats();
+      fetchStats(true);
 
       const onBackPress = () => {
         router.replace("/(auth)/login");
@@ -56,9 +64,9 @@ export default function SubAdminDashboard() {
     }, []),
   );
 
-  const fetchStats = async () => {
+  const fetchStats = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const [players, courses, updates] = await Promise.all([
         getSubAdminPlayers(),
         getSubAdminCourses(),
@@ -72,7 +80,7 @@ export default function SubAdminDashboard() {
     } catch (error) {
       console.error("SubAdmin dashboard stats error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -155,6 +163,14 @@ export default function SubAdminDashboard() {
           paddingHorizontal: 16,
           paddingBottom: 120,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#8BC34A"]}
+            tintColor="#8BC34A"
+          />
+        }
       >
         {loading ? (
           <HStack className="space-x-2 mb-4" style={{ gap: 8 }}>

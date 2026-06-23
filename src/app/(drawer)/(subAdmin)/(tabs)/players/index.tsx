@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   KeyboardAvoidingView,
+  RefreshControl,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
@@ -68,11 +69,18 @@ export default function SubAdminPlayersPage() {
   const routePage = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchPlayers();
+    setRefreshing(false);
+  }, []);
 
   // ── Delete Modal State ──
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -128,9 +136,9 @@ export default function SubAdminPlayersPage() {
   const watchedDob = watch("dateOfBirth");
 
   // ── Fetch ──
-  const fetchPlayers = async () => {
+  const fetchPlayers = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const data = await getSubAdminPlayers();
       const courseData = await getSubAdminCourses();
       setPlayers(data);
@@ -138,12 +146,12 @@ export default function SubAdminPlayersPage() {
     } catch (error) {
       console.error("Error fetching players:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPlayers();
+    fetchPlayers(true);
   }, []);
 
   const filteredPlayers = useMemo(() => {
@@ -170,8 +178,8 @@ export default function SubAdminPlayersPage() {
   }, [players, searchQuery, statusFilter]);
 
   useFocusEffect(
-    React.useCallback(() => {
-      fetchPlayers();
+    useCallback(() => {
+      fetchPlayers(true);
     }, []),
   );
 
@@ -826,61 +834,15 @@ export default function SubAdminPlayersPage() {
           renderItem={() => <PlayerCardSkeleton />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         />
-      ) : players.length === 0 ? (
-        <EmptyState />
-      ) : filteredPlayers.length === 0 ? (
-        <VStack
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 60,
-            paddingHorizontal: 24,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: colors.iconBg,
-              padding: 18,
-              borderRadius: 50,
-              marginBottom: 16,
-            }}
-          >
-            <Ionicons name="search" size={32} color={colors.subText} />
-          </View>
-          <ThemedText
-            style={{
-              fontSize: 18,
-              fontWeight: "600",
-              color: colors.text,
-              marginBottom: 6,
-            }}
-          >
-            No Results Found
-          </ThemedText>
-          <ThemedText
-            style={{
-              fontSize: 14,
-              color: colors.subText,
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-          >
-            We couldn't find any players matching "{searchQuery}" in{" "}
-            {statusFilter} status.
-          </ThemedText>
-          <Pressable
-            onPress={() => {
-              setSearchQuery("");
-              setStatusFilter("All");
-            }}
-            style={{ marginTop: 20 }}
-          >
-            <ThemedText style={{ color: colors.accent, fontWeight: "600" }}>
-              Clear all filters
-            </ThemedText>
-          </Pressable>
-        </VStack>
       ) : (
         <FlatList
           data={filteredPlayers}
@@ -888,6 +850,71 @@ export default function SubAdminPlayersPage() {
           renderItem={renderPlayerCard}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            players.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <VStack
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 60,
+                  paddingHorizontal: 24,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: colors.iconBg,
+                    padding: 18,
+                    borderRadius: 50,
+                    marginBottom: 16,
+                  }}
+                >
+                  <Ionicons name="search" size={32} color={colors.subText} />
+                </View>
+                <ThemedText
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "600",
+                    color: colors.text,
+                    marginBottom: 6,
+                  }}
+                >
+                  No Results Found
+                </ThemedText>
+                <ThemedText
+                  style={{
+                    fontSize: 14,
+                    color: colors.subText,
+                    textAlign: "center",
+                    lineHeight: 20,
+                  }}
+                >
+                  We couldn't find any players matching "{searchQuery}" in{" "}
+                  {statusFilter} status.
+                </ThemedText>
+                <Pressable
+                  onPress={() => {
+                    setSearchQuery("");
+                    setStatusFilter("All");
+                  }}
+                  style={{ marginTop: 20 }}
+                >
+                  <ThemedText style={{ color: colors.accent, fontWeight: "600" }}>
+                    Clear all filters
+                  </ThemedText>
+                </Pressable>
+              </VStack>
+            )
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         />
       )}
 

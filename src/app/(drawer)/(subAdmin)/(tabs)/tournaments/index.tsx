@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -8,9 +8,10 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { Dropdown } from "react-native-element-dropdown";
 
@@ -46,12 +47,19 @@ export default function SubAdminTournamentsPage() {
   const isDark = colorScheme === "dark";
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const [tournaments, setTournaments] = useState<any>([]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchTournaments();
+    setRefreshing(false);
+  }, []);
   const [courses, setCourses] = useState<any>([]);
   const [teeBox, setTeeBox] = useState<any>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -206,9 +214,9 @@ export default function SubAdminTournamentsPage() {
     }
   };
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
 
       const id = await AsyncStorage.getItem("userId");
       if (id) setUserId(id);
@@ -226,17 +234,17 @@ export default function SubAdminTournamentsPage() {
     } catch (error) {
       console.error("Error fetching tournaments:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTournaments();
+    fetchTournaments(true);
   }, []);
 
   useFocusEffect(
-    React.useCallback(() => {
-      fetchTournaments();
+    useCallback(() => {
+      fetchTournaments(true);
     }, []),
   );
 
@@ -389,7 +397,17 @@ export default function SubAdminTournamentsPage() {
         <Watermark />
         {renderHeader()}
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="px-4 pb-20 mt-4 gap-4">
             {loading ? (
               <>

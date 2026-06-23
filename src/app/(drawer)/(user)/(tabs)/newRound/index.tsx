@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Alert, StyleSheet, TextInput } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
@@ -12,7 +11,15 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, useColorScheme, View, Text } from "react-native";
+import {
+  Modal,
+  Pressable,
+  useColorScheme,
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getCourse } from "@/api/modules/admin/courses.api";
@@ -48,10 +55,11 @@ export default function StartNewRoundPage() {
   const [searchedCourseList, setSearchedCourseList] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       const uu = await getProfile();
       const ccs = await getCourse();
       const gp = await getAllPlayers();
@@ -59,9 +67,9 @@ export default function StartNewRoundPage() {
       setCourseList(ccs);
       setPlayerList(gp);
     } catch (error) {
-      throw console.log("Error fetching courses", error);
+      console.log("Error fetching courses", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -70,21 +78,35 @@ export default function StartNewRoundPage() {
     fetchCourses();
   }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = async (showSearchLoading = true) => {
     if (!search.trim()) {
       setSearchedCourseList([]);
       return;
     }
     try {
-      setSearchLoading(true);
+      if (showSearchLoading) setSearchLoading(true);
       const response = await getCourseBySearch(search);
       setSearchedCourseList(response || []);
     } catch (error) {
       console.error("Error searching courses", error);
     } finally {
-      setSearchLoading(false);
+      if (showSearchLoading) setSearchLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (search.trim()) {
+        await handleSearch(false);
+      }
+      await fetchCourses();
+    } catch (error) {
+      console.error("Error refreshing", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [search]);
 
   const handleCourseSave = async (sourceCourse: any) => {
     try {
@@ -256,6 +278,14 @@ export default function StartNewRoundPage() {
     );
   };
 
+  const filteredLocalCourses = courseList.filter((course: any) => {
+    if (!search.trim()) return true;
+    const query = search.trim().toLowerCase();
+    const nameMatch = course.name?.toLowerCase().includes(query);
+    const locationMatch = course.location?.toLowerCase().includes(query);
+    return nameMatch || locationMatch;
+  });
+
   return (
     <>
       <View
@@ -269,7 +299,57 @@ export default function StartNewRoundPage() {
         <RenderHeader />
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 🔍 SEARCH BAR */}
+        {!loading && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                gap: 8,
+              }}
+            >
+              <Ionicons name="search" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+              <TextInput
+                placeholder="Search courses by name or location..."
+                placeholderTextColor={isDark ? "#94a3b8" : "#64748b"}
+                value={search}
+                onChangeText={setSearch}
+                style={{
+                  flex: 1,
+                  color: isDark ? "#fff" : "#000",
+                  fontSize: 15,
+                  paddingVertical: 0,
+                }}
+              />
+              {search.length > 0 && (
+                <Pressable onPress={() => setSearch("")}>
+                  <Ionicons name="close-circle" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8bc34a"]}
+              tintColor="#8bc34a"
+            />
+          }
+        >
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
               {loading ? (
@@ -280,42 +360,44 @@ export default function StartNewRoundPage() {
                 </>
               ) : (
                 <>
-                  {/* <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                      backgroundColor: isDark
-                        ? "rgba(15, 23, 42, 0.7)"
-                        : "rgba(255, 255, 255, 0.7)",
-                      borderRadius: 10,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <TextInput
-                      placeholder="Search golf courses..."
-                      placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
-                      value={search}
-                      onChangeText={setSearch}
-                      style={{
-                        color: isDark ? "#fff" : "#000",
-                      }}
-                    />
-                  </View> */}
-                  {search.length > 0 ? (
+                  {search.trim().length > 0 ? (
                     <>
-                      {/* Search Results Header */}
+                      {/* My Saved Courses matching the query */}
+                      {filteredLocalCourses.length > 0 && (
+                        <VStack className="mb-6">
+                          <ThemedText
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "700",
+                              marginBottom: 12,
+                              color: "#8bc34a",
+                            }}
+                          >
+                            My Courses ({filteredLocalCourses.length})
+                          </ThemedText>
+                          {filteredLocalCourses.map((course: any) => (
+                            <CourseCard
+                              key={course.courseId}
+                              course={course}
+                              isDark={isDark}
+                              playerList={playerList}
+                              profile={profile}
+                            />
+                          ))}
+                        </VStack>
+                      )}
+
+                      {/* Online Database Search results */}
                       <HStack className="justify-between items-center mb-4">
                         <VStack>
                           <ThemedText
-                            style={{ fontSize: 18, fontWeight: "700" }}
+                            style={{ fontSize: 16, fontWeight: "700" }}
                           >
-                            Search Results
+                            Online Database Results
                           </ThemedText>
                           <ThemedText
                             style={{
-                              fontSize: 13,
+                              fontSize: 12,
                               color: isDark ? "#94a3b8" : "#64748b",
                             }}
                           >
@@ -352,9 +434,9 @@ export default function StartNewRoundPage() {
                         ))
                       ) : (
                         <ThemedText
-                          style={{ textAlign: "center", marginTop: 20 }}
+                          style={{ textAlign: "center", marginVertical: 20 }}
                         >
-                          No golf courses found for "{search}"
+                          No online golf courses found for "{search}"
                         </ThemedText>
                       )}
                     </>
@@ -592,14 +674,13 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
     }
   }, [numberOfPlayers]);
 
-  const getPlayerOptions = (currentPlayerId: any, otherPlayerIds: any[]) => {    
+  const getPlayerOptions = (currentPlayerId: any, otherPlayerIds: any[]) => {
     return playerList
       .filter((p: any) => {
-        if(p.subscriptionStatus === "Blocked"){
+        if (p.subscriptionStatus === "Blocked") {
           return false;
         }
-        if (profile && p.id === profile.id)
-          return false;
+        if (profile && p.id === profile.id) return false;
         if (otherPlayerIds.includes(p.id) && p.id !== currentPlayerId)
           return false;
         return true;
