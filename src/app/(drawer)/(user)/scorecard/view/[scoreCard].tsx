@@ -127,7 +127,17 @@ const ScoreCard: React.FC = () => {
     const fetchScorecard = async () => {
       try {
         setLoading(true);
-        const data = await getScorecardDetails(scoreCard!);
+        const rawData = await getScorecardDetails(scoreCard!);
+        const data = rawData.map((h: any) => ({
+          ...h,
+          courseHalf: h.courseHalf !== undefined && h.courseHalf !== null ? h.courseHalf : h.CourseHalf,
+          companionScoresJson: h.companionScoresJson !== undefined && h.companionScoresJson !== null ? h.companionScoresJson : h.CompanionScoresJson,
+          companionSandysJson: h.companionSandysJson !== undefined && h.companionSandysJson !== null ? h.companionSandysJson : h.CompanionSandysJson,
+          playingPartnersJson: h.playingPartnersJson !== undefined && h.playingPartnersJson !== null ? h.playingPartnersJson : h.PlayingPartnersJson,
+          playingGroupRoundKey: h.playingGroupRoundKey !== undefined && h.playingGroupRoundKey !== null ? h.playingGroupRoundKey : h.PlayingGroupRoundKey,
+          matchScoringType: h.matchScoringType !== undefined && h.matchScoringType !== null ? h.matchScoringType : h.MatchScoringType,
+          nassauStartingNine: h.nassauStartingNine !== undefined && h.nassauStartingNine !== null ? h.nassauStartingNine : h.NassauStartingNine,
+        }));
         
         setHoles(data);
 

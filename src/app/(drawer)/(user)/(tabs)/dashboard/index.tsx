@@ -880,10 +880,10 @@ export default function DashboardScreen() {
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
               onDelete={() => {}}
-              onResume={(id) => {
+              onResume={(id, courseName, date) => {
                 router.push({
                   pathname: "/(drawer)/(user)/scorecard/resume/[id]",
-                  params: { id: id, handicap: profile?.handicap || 0 },
+                  params: { id: id, handicap: profile?.handicap || 0, courseName, date },
                 });
               }}
             />

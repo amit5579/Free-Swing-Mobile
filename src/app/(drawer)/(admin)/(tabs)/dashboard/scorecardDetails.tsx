@@ -50,11 +50,11 @@ export default function ScorecardDetailsScreen() {
 
   const calculateTotals = (data: ScorecardHoleApi[]) => {
     return {
-      yards: data.reduce((a, b) => a + b.yardage, 0),
-      par: data.reduce((a, b) => a + b.par, 0),
-      score: data.reduce((a, b) => a + b.score, 0),
-      net: data.reduce((a, b) => a + b.netScore, 0),
-      pts: data.reduce((a, b) => a + b.stablefordPoints, 0),
+      yards: data.reduce((a, b) => a + (b.yardage || 0), 0),
+      par: data.reduce((a, b) => a + (b.par || 0), 0),
+      score: data.reduce((a, b) => a + (b.score || 0), 0),
+      net: data.reduce((a, b) => a + (b.netScore || 0), 0),
+      pts: data.reduce((a, b) => a + (b.stablefordPoints || 0), 0),
     };
   };
 
