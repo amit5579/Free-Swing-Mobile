@@ -44,7 +44,7 @@ export default function PlayScoreCard() {
 const dispatch = useAppDispatch();
 
 const { loading, scorecardData, handicapData, error } = useAppSelector(
-  (state: RootState) => state.userScoreCard
+  (state: RootState) => state.userScoreCard as any
 );
 
   // const [loading, setLoading] = useState(false);
@@ -289,7 +289,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         if (nextIndex < updatedScoreCard.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 3000);
+      }, 1500);
     }
   };
 

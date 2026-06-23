@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, useColorScheme } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { ActivityIndicator, StyleSheet, useColorScheme, Modal, Pressable, View, ScrollView, RefreshControl } from "react-native";
 import { Skeleton } from "@/components/Skeleton";
 
 import { VStack } from "@/components/vstack";
@@ -10,7 +9,6 @@ import { ThemedText } from "@/components/themed-text";
 import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
-import { Modal, Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
 
@@ -58,11 +56,12 @@ export default function CombinedLeaderboardsPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // ─── Fetch tournament list ──────────────────────────────────────────────────
 
-  const fetchTournaments = useCallback(async () => {
-    setLoadingTournaments(true);
+  const fetchTournaments = useCallback(async (showSkeleton = true) => {
+    if (showSkeleton) setLoadingTournaments(true);
     try {
       const data = await getTournaments();
       // console.log("[CombinedLeaderboards] tournaments:", data?.length);
@@ -71,12 +70,21 @@ export default function CombinedLeaderboardsPage() {
       console.error("[CombinedLeaderboards] fetchTournaments error:", error);
       setTournaments([]);
     } finally {
-      setLoadingTournaments(false);
+      if (showSkeleton) setLoadingTournaments(false);
     }
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      fetchTournaments(),
+      selectedIds.length > 0 && hasGenerated ? generateLeaderboard() : Promise.resolve(),
+    ]);
+    setRefreshing(false);
+  }, [fetchTournaments, selectedIds, hasGenerated]);
+
   useEffect(() => {
-    fetchTournaments();
+    fetchTournaments(true);
   }, [fetchTournaments]);
 
   // ─── Toggle selection ───────────────────────────────────────────────────────
@@ -89,10 +97,12 @@ export default function CombinedLeaderboardsPage() {
 
   // ─── Generate combined leaderboard ─────────────────────────────────────────
 
-  const generateLeaderboard = async () => {
+  const generateLeaderboard = async (showSkeleton = true) => {
     if (selectedIds.length === 0) return;
-    setModalVisible(false);
-    setLoadingLeaderboard(true);
+    if (showSkeleton) {
+      setModalVisible(false);
+      setLoadingLeaderboard(true);
+    }
     setHasGenerated(true);
 
     try {
@@ -134,7 +144,7 @@ export default function CombinedLeaderboardsPage() {
       console.error("[CombinedLeaderboards] generateLeaderboard error:", error);
       setLeaderboard([]);
     } finally {
-      setLoadingLeaderboard(false);
+      if (showSkeleton) setLoadingLeaderboard(false);
     }
   };
 
@@ -239,7 +249,17 @@ export default function CombinedLeaderboardsPage() {
 
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="px-4 pt-4 pb-20">
             {/* Select button */}
             <Pressable
@@ -537,7 +557,7 @@ export default function CombinedLeaderboardsPage() {
                 styles.applyButton,
                 selectedIds.length === 0 && { opacity: 0.5 },
               ]}
-              onPress={generateLeaderboard}
+              onPress={() => generateLeaderboard()}
               disabled={selectedIds.length === 0}
             >
               <Text style={styles.applyButtonText}>

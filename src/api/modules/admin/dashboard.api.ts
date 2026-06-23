@@ -301,7 +301,7 @@ export const getScorecardDetails = async (
 
 export const verifyScoreApi = async (roundRefId: number | string) => {
   try {
-    const response = await client.post(`/scorecard/authenticate/${roundRefId}`);
+    const response = await client.post(`feed/authenticate/${roundRefId}`);
     return response.data;
   } catch (error) {
     console.error(`Error verifying scorecard ${roundRefId}:`, error);

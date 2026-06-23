@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -8,10 +8,10 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import Checkbox from "expo-checkbox";
-
-import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 
 import { VStack } from "@/components/vstack";
@@ -51,8 +51,15 @@ export default function subAdminsPage() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const [pageLoading, setPageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [subAdminList, setSubAdminList] = useState<any>([]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchSubAdmin();
+    setRefreshing(false);
+  }, []);
 
   const [courseList, setCourseList] = useState<any>([]);
 
@@ -114,9 +121,9 @@ export default function subAdminsPage() {
     }
   };
 
-  const fetchSubAdmin = async () => {
+  const fetchSubAdmin = async (showSkeleton = true) => {
     try {
-      setPageLoading(true);
+      if (showSkeleton) setPageLoading(true);
 
       const subAdminList = await getSubAdminList();
       const courseData = await getCourse();
@@ -133,12 +140,12 @@ export default function subAdminsPage() {
     } catch (error) {
       console.error("Failed to fetch sub admin list", error);
     } finally {
-      setPageLoading(false);
+      if (showSkeleton) setPageLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubAdmin();
+    fetchSubAdmin(true);
   }, []);
 
   useEffect(() => {
@@ -327,7 +334,17 @@ export default function subAdminsPage() {
         {/* Header */}
         {renderHeader()}
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack className="px-4 pb-20 mt-4 gap-4">
             {pageLoading ? (
               <>

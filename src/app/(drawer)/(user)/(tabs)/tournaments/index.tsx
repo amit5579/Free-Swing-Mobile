@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   Pressable,
@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   useColorScheme,
+  RefreshControl,
 } from "react-native";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -59,6 +60,7 @@ export default function TournamentsScreen() {
   const [userId, setUserId] = useState<any>("");
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     control: waiverControl,
@@ -103,9 +105,9 @@ export default function TournamentsScreen() {
     });
   };
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       // postAcceptanceWeiver (tournamentId: number, isUnder18: boolean, parentGuardianMobile: string, parentGuardianName: string, parentGuardianRelation: string)
       const response = await getAllTournaments();
 
@@ -115,9 +117,20 @@ export default function TournamentsScreen() {
     } catch (error) {
       console.error("Fetching tournaments Error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchTournaments();
+    } catch (error) {
+      console.error("Error refreshing", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   // const renderHomeCourse = () => {
 
@@ -376,6 +389,14 @@ export default function TournamentsScreen() {
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8bc34a"]}
+                tintColor="#8bc34a"
+              />
+            }
           >
             {loading ? (
               <>

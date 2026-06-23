@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, ScrollView, Pressable, View, Text } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { StyleSheet, ScrollView, Pressable, View, Text, RefreshControl } from "react-native";
 import { Skeleton } from "@/components/Skeleton";
 
 const ScorecardSkeleton = () => (
@@ -60,6 +60,7 @@ export default function TournamentHistory() {
 
   // Net Score Include Par 3
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [handicap, setHandicap] = useState<any>(null);
 
@@ -270,9 +271,9 @@ export default function TournamentHistory() {
     return counts;
   };
 
-  const fetchScoreCard = async () => {
+  const fetchScoreCard = async (showSkeleton = true) => {
     try {
-      setLoading(true);
+      if (showSkeleton) setLoading(true);
       
       let hcp = null;
       if (paramHandicap) {
@@ -311,12 +312,18 @@ export default function TournamentHistory() {
     } catch (error) {
       console.log("Error fetching scorecard details apis:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchScoreCard();
+    setRefreshing(false);
+  }, []);
+
   useEffect(() => {
-    fetchScoreCard();
+    fetchScoreCard(true);
   }, []);
 
   const ScorecardRow = ({ h, index }: { h: any; index: number }) => (
@@ -648,7 +655,17 @@ export default function TournamentHistory() {
           <ScorecardSkeleton />
         </View>
       ) : !scorecardDetails || scorecardDetails.length === 0 ? (
-        <ScrollView className="px-4">
+        <ScrollView
+          className="px-4"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
+        >
           <VStack
             style={{
               alignItems: "center",
@@ -677,6 +694,14 @@ export default function TournamentHistory() {
         <ScrollView
           className="px-4 flex-1"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#8BC34A"]}
+              tintColor="#8BC34A"
+            />
+          }
         >
           {/* ─── Table Header ─── */}
           <View

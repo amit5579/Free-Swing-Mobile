@@ -12,6 +12,7 @@ import {
   useColorScheme,
   View,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -58,6 +59,7 @@ export default function UserProfile() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [pageLoading, setPageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
   // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
@@ -67,9 +69,15 @@ export default function UserProfile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const fetchUserProfile = async () => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUserProfile();
+    setRefreshing(false);
+  }, []);
+
+  const fetchUserProfile = async (showSkeleton = true) => {
     try {
-      setPageLoading(true);
+      if (showSkeleton) setPageLoading(true);
       const profile = await getProfile();
       const certificate = await getCertificateByUserId();
       setUserProfile(profile);
@@ -77,7 +85,7 @@ export default function UserProfile() {
     } catch (error) {
       console.error("Failed to fetch user profile", error);
     } finally {
-      setPageLoading(false);
+      if (showSkeleton) setPageLoading(false);
     }
   };
 
@@ -240,7 +248,17 @@ export default function UserProfile() {
       >
         <ThemedView className="flex-1 px-5">
           <Watermark />
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8BC34A"]}
+                tintColor="#8BC34A"
+              />
+            }
+          >
             {pageLoading ? (
               <>
                 <View

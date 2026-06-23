@@ -88,6 +88,8 @@ const ScoreCard: React.FC = () => {
       (holes[0] as any).scoring_type ||
       ""
     ).toLowerCase();
+   
+    
     const isGross = mode.includes("gross");
 
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
@@ -121,6 +123,7 @@ const ScoreCard: React.FC = () => {
   };
 
   useEffect(() => {
+    
     const fetchScorecard = async () => {
       try {
         setLoading(true);
@@ -935,7 +938,7 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                   "Hole",
                   isDetailsVisible && "Stroke\nIndex",
                   isDetailsVisible && "Yards",
-                  isDetailsVisible && "Par",
+                  "Par",
                   "Score",
                   "Net",
                   ...(isStableford ? ["Pts"] : []),
@@ -975,13 +978,13 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                     >
                       {h.yardage}
                     </Text>
-                    <Text
-                      className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                    >
-                      {h.par}
-                    </Text>
                   </>
                 )}
+                <Text
+                  className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                >
+                  {h.par}
+                </Text>
                 <View
                   className="flex-1 items-center justify-center relative"
                   pointerEvents="none"
@@ -1067,13 +1070,13 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                   >
                     {sumYardage(front9)}
                   </Text>
-                  <Text
-                    className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                  >
-                    {sumPar(front9)}
-                  </Text>
                 </>
               )}
+              <Text
+                className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+              >
+                {sumPar(front9)}
+              </Text>
               <Text
                 className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
               >
@@ -1117,13 +1120,13 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                       >
                         {h.yardage}
                       </Text>
-                      <Text
-                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                      >
-                        {h.par}
-                      </Text>
                     </>
                   )}
+                  <Text
+                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                  >
+                    {h.par}
+                  </Text>
                   <View
                     className="flex-1 items-center justify-center relative"
                     pointerEvents="none"
@@ -1213,13 +1216,13 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                     >
                       {sumYardage(back9)}
                     </Text>
-                    <Text
-                      className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                    >
-                      {sumPar(back9)}
-                    </Text>
                   </>
                 )}
+                <Text
+                  className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                >
+                  {sumPar(back9)}
+                </Text>
                 <Text
                   className={`flex-1 text-center font-black text-xs ${isDark ? "text-white" : "text-black"}`}
                 >
@@ -1253,11 +1256,11 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                   <Text className="flex-1 text-center font-bold text-l text-white">
                     {sumYardage(displayHoles)}
                   </Text>
-                  <Text className="flex-1 text-center font-bold text-l text-white">
-                    {sumPar(displayHoles)}
-                  </Text>
                 </>
               )}
+              <Text className="flex-1 text-center font-bold text-l text-white">
+                {sumPar(displayHoles)}
+              </Text>
               <Text className="flex-1 text-center font-black text-l text-white">
                 {sumScores(displayHoles)}
               </Text>
@@ -1308,7 +1311,8 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
 
             const totalWidth =
               50 +
-              (isDetailsVisible ? 55 + 60 + 50 : 0) +
+              50 + // Par is always visible
+              (isDetailsVisible ? 55 + 60 : 0) +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
               (isHighLow && partners.length >= 4 ? 2 * 95 : 0) +
@@ -1368,18 +1372,18 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                         >
                           Yards
                         </ThemedText>
-                        <ThemedText
-                          style={{
-                            width: 50,
-                            textAlign: "center",
-                            fontWeight: "700",
-                            fontSize: 12,
-                          }}
-                        >
-                          Par
-                        </ThemedText>
                       </>
                     )}
+                    <ThemedText
+                      style={{
+                        width: 50,
+                        textAlign: "center",
+                        fontWeight: "700",
+                        fontSize: 12,
+                      }}
+                    >
+                      Par
+                    </ThemedText>
                     {partners.map((p, idx) => {
                       let badgeText = "";
                       let badgeColor = "";
@@ -1556,13 +1560,13 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                               >
                                 {h.yardage}
                               </ThemedText>
-                              <ThemedText
-                                style={{ width: 50, textAlign: "center" }}
-                              >
-                                {h.par}
-                              </ThemedText>
                             </>
                           )}
+                          <ThemedText
+                            style={{ width: 50, textAlign: "center" }}
+                          >
+                            {h.par}
+                          </ThemedText>
 
                           {partners.map((p, pIndex) => {
                             const info = getPlayerHoleInfo(h, p);
@@ -1942,11 +1946,11 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                                 <ThemedText style={{ width: 60, textAlign: "center" }}>
                                   {sumYardage(front9)}
                                 </ThemedText>
-                                <ThemedText style={{ width: 50, textAlign: "center" }}>
-                                  {sumPar(front9)}
-                                </ThemedText>
                               </>
                             )}
+                            <ThemedText style={{ width: 50, textAlign: "center" }}>
+                              {sumPar(front9)}
+                            </ThemedText>
                             {partners.map((p) => {
                               const t = getPlayerTotals(front9, p);
                               return (
@@ -2163,11 +2167,11 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                                 <ThemedText style={{ width: 60, textAlign: "center" }}>
                                   {sumYardage(back9)}
                                 </ThemedText>
-                                <ThemedText style={{ width: 50, textAlign: "center" }}>
-                                  {sumPar(back9)}
-                                </ThemedText>
                               </>
                             )}
+                            <ThemedText style={{ width: 50, textAlign: "center" }}>
+                              {sumPar(back9)}
+                            </ThemedText>
                             {partners.map((p) => {
                               const t = getPlayerTotals(back9, p);
                               return (
@@ -2385,11 +2389,11 @@ useEffect(() => {console.log("inside useEffect   courseHalfStr",courseHalfStr)},
                         <ThemedText style={{ width: 60, textAlign: "center", color: "#fff" }}>
                           {sumYardage(holes)}
                         </ThemedText>
-                        <ThemedText style={{ width: 50, textAlign: "center", color: "#fff" }}>
-                          {sumPar(holes)}
-                        </ThemedText>
                       </>
                     )}
+                    <ThemedText style={{ width: 50, textAlign: "center", color: "#fff" }}>
+                      {sumPar(holes)}
+                    </ThemedText>
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (

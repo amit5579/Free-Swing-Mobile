@@ -6,8 +6,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { VStack } from "@/components/vstack";
@@ -32,6 +32,7 @@ export default function PlayerHandicapSetup() {
   const [players, setPlayers] = useState<User[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -40,9 +41,15 @@ export default function PlayerHandicapSetup() {
   }>({});
   const [isSaving, setIsSaving] = useState<{ [key: string]: boolean }>({});
 
-  const fetchPlayers = async (isRefreshing = false) => {
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchPlayers();
+    setRefreshing(false);
+  }, []);
+
+  const fetchPlayers = async (showSkeleton = true) => {
     try {
-      if (!isRefreshing) setLoading(true);
+      if (showSkeleton) setLoading(true);
       const data = await getUsers();
       setPlayers(data);
 
@@ -70,7 +77,7 @@ export default function PlayerHandicapSetup() {
     } catch (error) {
       console.error("Fetch players error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -89,7 +96,7 @@ export default function PlayerHandicapSetup() {
   };
 
   useEffect(() => {
-    fetchPlayers();
+    fetchPlayers(true);
   }, []);
 
   const togglePlayer = (id: number | string) => {
@@ -255,8 +262,8 @@ export default function PlayerHandicapSetup() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={loading && players.length > 0}
-              onRefresh={() => fetchPlayers(true)}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
               tintColor="#8bc34a"
               colors={["#8bc34a"]}
             />

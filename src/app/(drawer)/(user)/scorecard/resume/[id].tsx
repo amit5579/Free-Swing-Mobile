@@ -910,7 +910,7 @@ export default function ResumeScorecard() {
         if (nextIndex < holes.length * partners.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 3000);
+      }, 1500);
     }
   };
 
@@ -1030,7 +1030,7 @@ export default function ResumeScorecard() {
         if (nextIndex < flatHoles.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 3000);
+      }, 1500);
     }
   };
 
@@ -1567,8 +1567,8 @@ export default function ResumeScorecard() {
                   "Hole",
                   isDetailsVisible && "SI",
                   isDetailsVisible && "Yards",
-                  isDetailsVisible && "Par",
-                  "Score ✎",
+                  "Par",
+                  "Score",
                   "Net",
                   ...(isStableford ? ["Pts"] : []),
                 ]
@@ -1623,13 +1623,13 @@ export default function ResumeScorecard() {
                               >
                                 {h.yardage}
                               </Text>
-                              <Text
-                                className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                              >
-                                {h.par}
-                              </Text>
                             </>
                           )}
+                          <Text
+                            className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                          >
+                            {h.par}
+                          </Text>
                           <View className="flex-1 items-center justify-center relative">
                             {renderScoreIndicator(
                               h.score ?? null,
@@ -1735,13 +1735,13 @@ export default function ResumeScorecard() {
                           >
                             {sumYardage(front9Holes)}
                           </Text>
-                          <Text
-                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {sumPar(front9Holes)}
-                          </Text>
                         </>
                       )}
+                      <Text
+                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {sumPar(front9Holes)}
+                      </Text>
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
@@ -1789,13 +1789,13 @@ export default function ResumeScorecard() {
                               >
                                 {h.yardage}
                               </Text>
-                              <Text
-                                className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                              >
-                                {h.par}
-                              </Text>
                             </>
                           )}
+                          <Text
+                            className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
+                          >
+                            {h.par}
+                          </Text>
                           <View className="flex-1 items-center justify-center relative">
                             {renderScoreIndicator(
                               h.score ?? null,
@@ -1898,13 +1898,13 @@ export default function ResumeScorecard() {
                           >
                             {sumYardage(back9Holes)}
                           </Text>
-                          <Text
-                            className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
-                          >
-                            {sumPar(back9Holes)}
-                          </Text>
                         </>
                       )}
+                      <Text
+                        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                      >
+                        {sumPar(back9Holes)}
+                      </Text>
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
                       >
@@ -1956,17 +1956,17 @@ export default function ResumeScorecard() {
                         ),
                       )}
                     </Text>
-                    <Text className="flex-1 text-center font-bold text-white">
-                      {sumPar(
-                        holes.filter(
-                          (h) =>
-                            (displayFront && h.holeNumber <= 9) ||
-                            (displayBack && h.holeNumber >= 10),
-                        ),
-                      )}
-                    </Text>
                   </>
                 )}
+                <Text className="flex-1 text-center font-bold text-white">
+                  {sumPar(
+                    holes.filter(
+                      (h) =>
+                        (displayFront && h.holeNumber <= 9) ||
+                        (displayBack && h.holeNumber >= 10),
+                    ),
+                  )}
+                </Text>
                 <Text className="flex-1 text-center font-bold text-white">
                   {sumScores(
                     holes.filter(
@@ -2036,7 +2036,8 @@ export default function ResumeScorecard() {
 
             const totalWidth =
               50 +
-              (isDetailsVisible ? 55 + 60 + 50 : 0) +
+              50 +
+              (isDetailsVisible ? 55 + 60 : 0) +
               partners.length * 95 +
               (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
               (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
@@ -2085,18 +2086,18 @@ export default function ResumeScorecard() {
                     >
                       Yards
                     </ThemedText>
-                    <ThemedText
-                      style={{
-                        width: 50,
-                        textAlign: "center",
-                        fontWeight: "700",
-                        fontSize: 12,
-                      }}
-                    >
-                      Par
-                    </ThemedText>
                   </>
                 )}
+                <ThemedText
+                  style={{
+                    width: 50,
+                    textAlign: "center",
+                    fontWeight: "700",
+                    fontSize: 12,
+                  }}
+                >
+                  Par
+                </ThemedText>
                 {partners.map((p, idx) => {
                   let badgeText = "";
                   let badgeColor = "";
@@ -2228,8 +2229,6 @@ export default function ResumeScorecard() {
               </HStack>
             );
 
-
-
             return (
               <ScrollView
                 horizontal={true}
@@ -2291,13 +2290,13 @@ export default function ResumeScorecard() {
                                 >
                                   {h.yardage}
                                 </ThemedText>
-                                <ThemedText
-                                  style={{ width: 50, textAlign: "center" }}
-                                >
-                                  {h.par}
-                                </ThemedText>
                               </>
                             )}
+                            <ThemedText
+                              style={{ width: 50, textAlign: "center" }}
+                            >
+                              {h.par}
+                            </ThemedText>
 
                             {partners.map((p, pIndex) => {
                               const info = getPlayerHoleInfo(h, p);
@@ -2440,36 +2439,6 @@ export default function ResumeScorecard() {
                                         S
                                       </Text>
                                     </TouchableOpacity>
-
-                                    {info.score !== null &&
-                                      getScoringLabel() !==
-                                        "Net Score • Include Par 3" &&
-                                      getScoringLabel() !==
-                                        "Net Score • Exclude Par 3" &&
-                                      getScoringLabel() !== "Stableford" &&
-                                      getScoringLabel() !==
-                                        "Stableford • Exclude Par 3" &&
-                                      (() => {
-                                        const badgeVal = getBadgeMultiplier(
-                                          info.score,
-                                          h.par,
-                                          info.sandy,
-                                        );
-                                        if (badgeVal > 0) {
-                                          return (
-                                            <Text
-                                              style={{
-                                                fontSize: 9,
-                                                color: "#f59e0b",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              {badgeVal}x
-                                            </Text>
-                                          );
-                                        }
-                                        return null;
-                                      })()}
                                   </HStack>
                                 </View>
                               );
@@ -2477,35 +2446,15 @@ export default function ResumeScorecard() {
                             {isSplit6 &&
                               partners.length >= 3 &&
                               (() => {
-                                const s1 = getPlayerHoleInfo(
-                                  h,
-                                  partners[0],
-                                ).score;
-                                const s2 = getPlayerHoleInfo(
-                                  h,
-                                  partners[1],
-                                ).score;
-                                const s3 = getPlayerHoleInfo(
-                                  h,
-                                  partners[2],
-                                ).score;
-                                const pts = calculateSplitSixPoints(s1, s2, s3);
-                                const raw1 = getPlayerHoleInfo(
-                                  h,
-                                  partners[0],
-                                ).score;
-                                const raw2 = getPlayerHoleInfo(
-                                  h,
-                                  partners[1],
-                                ).score;
-                                const raw3 = getPlayerHoleInfo(
-                                  h,
-                                  partners[2],
-                                ).score;
+                                const pts = calculateSplitSixPoints(
+                                  getPlayerHoleInfo(h, partners[0]).score,
+                                  getPlayerHoleInfo(h, partners[1]).score,
+                                  getPlayerHoleInfo(h, partners[2]).score,
+                                );
                                 const hasScore =
-                                  raw1 !== null &&
-                                  raw2 !== null &&
-                                  raw3 !== null;
+                                  getPlayerHoleInfo(h, partners[0]).score !== null &&
+                                  getPlayerHoleInfo(h, partners[1]).score !== null &&
+                                  getPlayerHoleInfo(h, partners[2]).score !== null;
 
                                 return partners.slice(0, 3).map((p, idx) => (
                                   <View
@@ -2662,11 +2611,11 @@ export default function ResumeScorecard() {
                           <ThemedText style={{ width: 60, textAlign: "center" }}>
                             {sumYardage(front9Holes)}
                           </ThemedText>
-                          <ThemedText style={{ width: 50, textAlign: "center" }}>
-                            {sumPar(front9Holes)}
-                          </ThemedText>
                         </>
                       )}
+                      <ThemedText style={{ width: 50, textAlign: "center", fontWeight: "700" }}>
+                        {sumPar(front9Holes)}
+                      </ThemedText>
                       {partners.map((p) => {
                         const t = getPlayerTotals(front9Holes, p);
                         return (
@@ -2683,15 +2632,6 @@ export default function ResumeScorecard() {
                             >
                               {t.gross}
                             </Text>
-                            {/* {isStableford ? (
-                              <Text style={{ fontSize: 9, color: "#f59e0b" }}>
-                                Pts:{t.stableford}
-                              </Text>
-                            ) : (
-                              <Text style={{ fontSize: 9, color: "#84cc16" }}>
-                                Net:{t.net}
-                              </Text>
-                            )} */}
                           </VStack>
                         );
                       })}
@@ -2701,36 +2641,11 @@ export default function ResumeScorecard() {
                           let f9Pts = [0, 0, 0];
                           let hasAnyF9 = false;
                           front9Holes.forEach((fh) => {
-                            const raw1 = getPlayerHoleInfo(
-                              fh,
-                              partners[0],
-                            ).score;
-                            const raw2 = getPlayerHoleInfo(
-                              fh,
-                              partners[1],
-                            ).score;
-                            const raw3 = getPlayerHoleInfo(
-                              fh,
-                              partners[2],
-                            ).score;
-                            if (
-                              raw1 !== null &&
-                              raw2 !== null &&
-                              raw3 !== null
-                            ) {
-                              const s1 = getPlayerHoleInfo(
-                                fh,
-                                partners[0],
-                              ).score;
-                              const s2 = getPlayerHoleInfo(
-                                fh,
-                                partners[1],
-                              ).score;
-                              const s3 = getPlayerHoleInfo(
-                                fh,
-                                partners[2],
-                              ).score;
-                              const pts = calculateSplitSixPoints(s1, s2, s3);
+                            const raw1 = getPlayerHoleInfo(fh, partners[0]).score;
+                            const raw2 = getPlayerHoleInfo(fh, partners[1]).score;
+                            const raw3 = getPlayerHoleInfo(fh, partners[2]).score;
+                            if (raw1 !== null && raw2 !== null && raw3 !== null) {
+                              const pts = calculateSplitSixPoints(raw1, raw2, raw3);
                               f9Pts[0] += pts[0];
                               f9Pts[1] += pts[1];
                               f9Pts[2] += pts[2];
@@ -2837,16 +2752,7 @@ export default function ResumeScorecard() {
 
                   {displayBack &&
                     back9Holes.map((h, index) => {
-                      let s6Pts: number[] = [];
-                      if (isSplit6 && partners.length >= 3) {
-                        const s1 = getPlayerHoleInfo(h, partners[0]).score;
-                        const s2 = getPlayerHoleInfo(h, partners[1]).score;
-                        const s3 = getPlayerHoleInfo(h, partners[2]).score;
-                        s6Pts = calculateSplitSixPoints(s1, s2, s3);
-                      }
-
                       const front9Offset = front9Holes.length * partners.length;
-
                       return (
                         <View key={h.holeId}>
                           <HStack
@@ -2881,13 +2787,13 @@ export default function ResumeScorecard() {
                                 >
                                   {h.yardage}
                                 </ThemedText>
-                                <ThemedText
-                                  style={{ width: 50, textAlign: "center" }}
-                                >
-                                  {h.par}
-                                </ThemedText>
                               </>
                             )}
+                            <ThemedText
+                              style={{ width: 50, textAlign: "center" }}
+                            >
+                              {h.par}
+                            </ThemedText>
 
                             {partners.map((p, pIndex) => {
                               const info = getPlayerHoleInfo(h, p);
@@ -2991,46 +2897,6 @@ export default function ResumeScorecard() {
                                       }}
                                     />
                                   </View>
-
-                                  <HStack
-                                    style={{
-                                      alignItems: "center",
-                                      gap: 4,
-                                      marginTop: 4,
-                                    }}
-                                  >
-                                    <TouchableOpacity
-                                      onPress={() =>
-                                        handleSandyToggle(h.holeId, p.playerId)
-                                      }
-                                      style={{
-                                        width: 18,
-                                        height: 18,
-                                        borderRadius: 9,
-                                        backgroundColor: info.sandy
-                                          ? "#2e7d32"
-                                          : isDark
-                                            ? "#333"
-                                            : "#e5e5e5",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <Text
-                                        style={{
-                                          fontSize: 9,
-                                          fontWeight: "bold",
-                                          color: info.sandy
-                                            ? "#fff"
-                                            : isDark
-                                              ? "#aaa"
-                                              : "#666",
-                                        }}
-                                      >
-                                        S
-                                      </Text>
-                                    </TouchableOpacity>
-                                  </HStack>
                                 </View>
                               );
                             })}
@@ -3053,8 +2919,8 @@ export default function ResumeScorecard() {
                                     arr: number[],
                                   ) => {
                                     let color = isDark ? "#fff" : "#000";
-                                    if (val > 0) color = "#22c55e"; // green
-                                    if (val < 0) color = "#3b82f6"; // blue
+                                    if (val > 0) color = "#22c55e";
+                                    if (val < 0) color = "#3b82f6";
                                     return (
                                       <Text
                                         key={idx}
@@ -3090,130 +2956,11 @@ export default function ResumeScorecard() {
                                           arr: number[],
                                         ) => renderHouse(val, i, arr),
                                       )}
-                                      {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
-                                        hRes.housesDisplay.length > 0 && (
-                                          <Text
-                                            style={{
-                                              color: isDark
-                                                ? "#94a3b8"
-                                                : "#64748b",
-                                              fontSize: 11,
-                                            }}
-                                          >
-                                            {" & "}
-                                          </Text>
-                                        )}
-                                      {((nassauStartingNine === "back" ? h.holeNumber <= 9 : h.holeNumber >= 10)) &&
-                                        hRes.housesDisplay.map(
-                                          (
-                                            val: number,
-                                            i: number,
-                                            arr: number[],
-                                          ) => renderHouse(val, i, arr),
-                                        )}
                                     </View>
                                   );
                                 })()}
                               </VStack>
                             )}
-                            {isSplit6 &&
-                              partners.length >= 3 &&
-                              (() => {
-                                const s1 = getPlayerHoleInfo(
-                                  h,
-                                  partners[0],
-                                ).score;
-                                const s2 = getPlayerHoleInfo(
-                                  h,
-                                  partners[1],
-                                ).score;
-                                const s3 = getPlayerHoleInfo(
-                                  h,
-                                  partners[2],
-                                ).score;
-                                const pts = calculateSplitSixPoints(s1, s2, s3);
-                                const raw1 = getPlayerHoleInfo(
-                                  h,
-                                  partners[0],
-                                ).score;
-                                const raw2 = getPlayerHoleInfo(
-                                  h,
-                                  partners[1],
-                                ).score;
-                                const raw3 = getPlayerHoleInfo(
-                                  h,
-                                  partners[2],
-                                ).score;
-                                const hasScore =
-                                  raw1 !== null &&
-                                  raw2 !== null &&
-                                  raw3 !== null;
-
-                                return partners.slice(0, 3).map((p, idx) => (
-                                  <View
-                                    key={`pts-${h.holeId}-${p.playerId}`}
-                                    style={{
-                                      width: 95,
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <ThemedText
-                                      style={{
-                                        fontWeight: "bold",
-                                        color: "#84cc16",
-                                        fontSize: 13,
-                                      }}
-                                    >
-                                      {hasScore ? pts[idx] : "-"}
-                                    </ThemedText>
-                                  </View>
-                                ));
-                              })()}
-                            {isHighLow &&
-                              partners.length >= 4 &&
-                              (() => {
-                                const stats = getHighLowHoleStats(h);
-                                const allFilled = stats.isComplete;
-                                return (
-                                  <>
-                                    <View
-                                      style={{
-                                        width: 80,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "bold",
-                                          color: "#38bdf8",
-                                          fontSize: 13,
-                                        }}
-                                      >
-                                        {allFilled ? stats.teamAMatchPts : "-"}
-                                      </ThemedText>
-                                    </View>
-                                    <View
-                                      style={{
-                                        width: 80,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "bold",
-                                          color: "#f43f5e",
-                                          fontSize: 13,
-                                        }}
-                                      >
-                                        {allFilled ? stats.teamBMatchPts : "-"}
-                                      </ThemedText>
-                                    </View>
-                                  </>
-                                );
-                              })()}
                           </HStack>
                         </View>
                       );
@@ -3246,11 +2993,11 @@ export default function ResumeScorecard() {
                           <ThemedText style={{ width: 60, textAlign: "center" }}>
                             {sumYardage(back9Holes)}
                           </ThemedText>
-                          <ThemedText style={{ width: 50, textAlign: "center" }}>
-                            {sumPar(back9Holes)}
-                          </ThemedText>
                         </>
                       )}
+                      <ThemedText style={{ width: 50, textAlign: "center", fontWeight: "700" }}>
+                        {sumPar(back9Holes)}
+                      </ThemedText>
                       {partners.map((p) => {
                         const t = getPlayerTotals(back9Holes, p);
                         return (
@@ -3270,143 +3017,6 @@ export default function ResumeScorecard() {
                           </VStack>
                         );
                       })}
-                      {isSplit6 &&
-                        partners.length >= 3 &&
-                        (() => {
-                          let b9Pts = [0, 0, 0];
-                          let hasAnyB9 = false;
-                          back9Holes.forEach((bh) => {
-                            const raw1 = getPlayerHoleInfo(
-                              bh,
-                              partners[0],
-                            ).score;
-                            const raw2 = getPlayerHoleInfo(
-                              bh,
-                              partners[1],
-                            ).score;
-                            const raw3 = getPlayerHoleInfo(
-                              bh,
-                              partners[2],
-                            ).score;
-                            if (
-                              raw1 !== null &&
-                              raw2 !== null &&
-                              raw3 !== null
-                            ) {
-                              const s1 = getPlayerHoleInfo(
-                                bh,
-                                partners[0],
-                              ).score;
-                              const s2 = getPlayerHoleInfo(
-                                bh,
-                                partners[1],
-                              ).score;
-                              const s3 = getPlayerHoleInfo(
-                                bh,
-                                partners[2],
-                              ).score;
-                              const pts = calculateSplitSixPoints(s1, s2, s3);
-                              b9Pts[0] += pts[0];
-                              b9Pts[1] += pts[1];
-                              b9Pts[2] += pts[2];
-                              hasAnyB9 = true;
-                            }
-                          });
-                          return partners.slice(0, 3).map((p, idx) => (
-                            <VStack
-                              key={`b9-pts-${p.playerId}`}
-                              style={{
-                                width: 95,
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: "700",
-                                  color: isDark ? "#fff" : "#000",
-                                }}
-                              >
-                                {hasAnyB9 ? b9Pts[idx] : "-"}
-                              </Text>
-                            </VStack>
-                          ));
-                        })()}
-                      {isHighLow &&
-                        partners.length >= 4 &&
-                        (() => {
-                          let b9A = 0,
-                            b9B = 0;
-                          let hasAny = false;
-                          back9Holes.forEach((bh: any) => {
-                            const st = getHighLowHoleStats(bh);
-                            if (st.isComplete) {
-                              b9A += st.teamAMatchPts;
-                              b9B += st.teamBMatchPts;
-                              hasAny = true;
-                            }
-                          });
-                          return (
-                            <>
-                              <VStack
-                                style={{
-                                  width: 80,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    fontSize: 10,
-                                    fontWeight: "700",
-                                    color: isDark ? "#fff" : "#000",
-                                  }}
-                                >
-                                  {hasAny ? b9A : "-"}
-                                </Text>
-                              </VStack>
-                              <VStack
-                                style={{
-                                  width: 80,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    fontSize: 10,
-                                    fontWeight: "700",
-                                    color: isDark ? "#fff" : "#000",
-                                  }}
-                                >
-                                  {hasAny ? b9B : "-"}
-                                </Text>
-                              </VStack>
-                            </>
-                          );
-                        })()}
-                      {isNassau && partners.length >= 2 && ns && (
-                        <VStack
-                          style={{
-                            width: 100,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: isDark ? "#fff" : "#000",
-                              fontWeight: "bold",
-                              fontSize: 11,
-                            }}
-                          >
-                            {formatNassauHouses(nassauStartingNine === "back" ? ns.front9Houses : ns.back9Houses)}
-                          </Text>
-                        </VStack>
-                      )}
                     </HStack>
                   )}
 
@@ -3437,13 +3047,13 @@ export default function ResumeScorecard() {
                         >
                           {sumYardage(holes)}
                         </ThemedText>
-                        <ThemedText
-                          style={{ width: 50, textAlign: "center", color: "#fff" }}
-                        >
-                          {sumPar(holes)}
-                        </ThemedText>
                       </>
                     )}
+                    <ThemedText
+                      style={{ width: 50, textAlign: "center", color: "#fff", fontWeight: "700" }}
+                    >
+                      {sumPar(holes)}
+                    </ThemedText>
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (

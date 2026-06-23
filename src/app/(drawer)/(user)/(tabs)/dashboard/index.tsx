@@ -16,6 +16,7 @@ import {
   TextInput,
   PanResponder,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +48,7 @@ export default function DashboardScreen() {
   const [cards, setCards] = useState<Scorecard[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const statsScrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
@@ -56,6 +58,27 @@ export default function DashboardScreen() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statsScrollIndex, setStatsScrollIndex] = useState(0);
   const [overviewSubTab, setOverviewSubTab] = useState<"feed" | "paradise" | "members">("feed");
+
+// useEffect(() => {
+//   console.log("cccc",cards);
+  
+// }, [])
+
+  const fetchAllData = async (showSkeleton = true) => {
+    if (showSkeleton) setLoading(true);
+    await Promise.all([
+      fetchFeed(false),
+      fetchStats(),
+      fetchProfile()
+    ]);
+    if (showSkeleton) setLoading(false);
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAllData();
+    setRefreshing(false);
+  }, []);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -90,10 +113,7 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      fetchFeed();
-      fetchStats();
-      fetchProfile();
+      fetchAllData(true);
     }, []),
   );
 
@@ -140,8 +160,9 @@ export default function DashboardScreen() {
     }
   };
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (showSkeleton = true) => {
     try {
+      if (showSkeleton) setLoading(true);
       const data = await getFeedApi();
       if (data != null) {
         const mappedCards: Scorecard[] = data.map((item: any) => ({
@@ -172,7 +193,7 @@ export default function DashboardScreen() {
     } catch (error) {
       console.log("Fetch error:", error);
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
@@ -426,6 +447,14 @@ export default function DashboardScreen() {
                 paddingHorizontal: 16,
                 paddingBottom: 100,
               }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={["#8BC34A"]}
+                  tintColor="#8BC34A"
+                />
+              }
             >
               {loading ? (
                 <VStack className="space-y-4">
@@ -864,7 +893,7 @@ export default function DashboardScreen() {
             <HistoryTab
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
-              onViewGame={(id) => console.log("View game", id)}
+              // onViewGame={(id) => console.log("View game", id)}
             />
           )}
         </View>
