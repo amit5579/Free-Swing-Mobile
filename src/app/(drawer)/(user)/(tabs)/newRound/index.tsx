@@ -301,7 +301,9 @@ export default function StartNewRoundPage() {
 
         {/* 🔍 SEARCH BAR */}
         {!loading && (
-          <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}
+          >
             <View
               style={{
                 flexDirection: "row",
@@ -317,7 +319,11 @@ export default function StartNewRoundPage() {
                 gap: 8,
               }}
             >
-              <Ionicons name="search" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+              <Ionicons
+                name="search"
+                size={20}
+                color={isDark ? "#94a3b8" : "#64748b"}
+              />
               <TextInput
                 placeholder="Search courses by name or location..."
                 placeholderTextColor={isDark ? "#94a3b8" : "#64748b"}
@@ -332,7 +338,11 @@ export default function StartNewRoundPage() {
               />
               {search.length > 0 && (
                 <Pressable onPress={() => setSearch("")}>
-                  <Ionicons name="close-circle" size={20} color={isDark ? "#94a3b8" : "#64748b"} />
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={isDark ? "#94a3b8" : "#64748b"}
+                  />
                 </Pressable>
               )}
             </View>
@@ -638,13 +648,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
   // Auto-set numberOfPlayers and handle dropdown logic based on scoring mode
   useEffect(() => {
-    if (
-      scoreType === "net_including" ||
-      scoreType === "net_excluding" ||
-      scoreType === "stableford"
-    ) {
-      setNumberOfPlayers("solo");
-    } else if (scoreType === "split_six") {
+    if (scoreType === "split_six") {
       setNumberOfPlayers("3");
     } else if (scoreType === "high_low") {
       setNumberOfPlayers("4");
@@ -1126,9 +1130,9 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)"
                   }
                   disable={
-                    scoreType === "net_including" ||
-                    scoreType === "net_excluding" ||
-                    scoreType === "stableford" ||
+                    // scoreType === "net_including" ||
+                    // scoreType === "net_excluding" ||
+                    // scoreType === "stableford" ||
                     scoreType === "split_six" ||
                     scoreType === "high_low"
                   }
@@ -1136,9 +1140,9 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     styles.dropdown,
                     {
                       backgroundColor:
-                        scoreType === "net_including" ||
-                        scoreType === "net_excluding" ||
-                        scoreType === "stableford" ||
+                        // scoreType === "net_including" ||
+                        // scoreType === "net_excluding" ||
+                        // scoreType === "stableford" ||
                         scoreType === "split_six" ||
                         scoreType === "high_low"
                           ? isDark
@@ -1149,9 +1153,9 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                       borderWidth: 1,
                       marginTop: 0,
                       opacity:
-                        scoreType === "net_including" ||
-                        scoreType === "net_excluding" ||
-                        scoreType === "stableford" ||
+                        // scoreType === "net_including" ||
+                        // scoreType === "net_excluding" ||
+                        // scoreType === "stableford" ||
                         scoreType === "split_six" ||
                         scoreType === "high_low"
                           ? 0.7
@@ -1184,7 +1188,19 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   placeholder="Select number of players"
                   value={numberOfPlayers}
                   onChange={(item: any) => {
-                    if (
+                    if (scoreType === "split_six" && item.value !== "3") {
+                      Alert.alert(
+                        "Invalid Player Count",
+                        "Split Six requires exactly 3 players.",
+                        [{ text: "OK", onPress: () => setNumberOfPlayers("3") }]
+                      );
+                    } else if (scoreType === "high_low" && item.value !== "4") {
+                      Alert.alert(
+                        "Invalid Player Count",
+                        "High-Low requires exactly 4 players.",
+                        [{ text: "OK", onPress: () => setNumberOfPlayers("4") }]
+                      );
+                    } else if (
                       (scoreType === "nassau_best" ||
                         scoreType === "nassau_combined") &&
                       (item.value === "solo" || item.value === "3")
@@ -1848,6 +1864,24 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     (!player2 || !player3 || !player4)
                   ) {
                     Alert.alert("Please select all players");
+                    return;
+                  }
+
+                  // Validate player count for specific modes on submit
+                  if (data.scoreType === "split_six" && numberOfPlayers !== "3") {
+                    Alert.alert("Split Six requires exactly 3 players.");
+                    return;
+                  }
+                  if (data.scoreType === "high_low" && numberOfPlayers !== "4") {
+                    Alert.alert("High-Low requires exactly 4 players.");
+                    return;
+                  }
+                  if (
+                    (data.scoreType === "nassau_best" || data.scoreType === "nassau_combined") &&
+                    numberOfPlayers !== "2" &&
+                    numberOfPlayers !== "4"
+                  ) {
+                    Alert.alert("Nassau requires 2 or 4 players.");
                     return;
                   }
 
