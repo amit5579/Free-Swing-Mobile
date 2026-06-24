@@ -194,7 +194,7 @@ export default function ResumeScorecard() {
                 ? "nassau-best"
                 : isNassauCombined
                   ? "nassau-combined"
-                  : null,
+                  : h.matchScoringType || null,
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
           nassauStartingNine: nassauStartingNine,
@@ -535,7 +535,7 @@ export default function ResumeScorecard() {
     }
 
     router.back();
-  }, [router, id, userId]);
+  }, [router, id, userId, partners, roundContextId, isSplit6, isHighLow, isNassauBest, isNassauCombined, nassauStartingNine]);
 
   useEffect(() => {
     const backAction = () => {
