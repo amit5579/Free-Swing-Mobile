@@ -246,13 +246,13 @@ export function HistoryTab({
           </Text>
         </VStack>
 
-        <Pressable onPress={() => fetchHistory()} className="p-2 rounded-full">
+        {/* <Pressable onPress={() => fetchHistory()} className="p-2 rounded-full">
           <Ionicons
             name="sync-outline"
             size={20}
             color={isDark ? "#fff" : "#6B7280"}
           />
-        </Pressable>
+        </Pressable> */}
       </HStack>
 
       <ScrollView

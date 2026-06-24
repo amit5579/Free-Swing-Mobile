@@ -161,13 +161,13 @@ export function InProgressTab({
               Games you are currently playing
             </Text>
           </VStack>
-          <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
+          {/* <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
             <Ionicons
               name="sync-outline"
               size={20}
               color={isDark ? "#fff" : "#6B7280"}
             />
-          </Pressable>
+          </Pressable> */}
         </HStack>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -259,13 +259,13 @@ export function InProgressTab({
             Games you are currently playing
           </Text>
         </VStack>
-        <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
+        {/* <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
           <Ionicons
             name="sync-outline"
             size={20}
             color={isDark ? "#fff" : "#6B7280"}
           />
-        </Pressable>
+        </Pressable> */}
       </HStack>
 
       <ScrollView

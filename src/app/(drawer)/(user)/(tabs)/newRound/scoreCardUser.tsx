@@ -1,4 +1,3 @@
-// strokeIndex
 import {
   computeSplitSixSummary,
   computeNassauState,
@@ -150,6 +149,15 @@ export default function ScoreCardUserPage() {
   const isNassauBest = parsedScore.nassau_best === true;
   const isNassauCombined = parsedScore.nassau_combined === true;
   const isNassau = isNassauBest || isNassauCombined;
+  const isDoublePeoria =
+    parsedScore.double_peoria === true ||
+    parsedScore.scoring_type === "double-peoria" ||
+    parsedScore.scoringType === "double-peoria" ||
+    parsedScore.scoring_type === "double-peoria-net" ||
+    parsedScore.scoringType === "double-peoria-net" ||
+    parsedScore.scoring_type === "double-peoria-stableford" ||
+    parsedScore.scoringType === "double-peoria-stableford" ||
+    (scoreCardDetails && scoreCardDetails.some((h: any) => h.isDoublePeoria === true));
   const [displayFront9, setDisplayFront9] = useState(true);
   const [displayBack9, setDisplayBack9] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
@@ -216,11 +224,31 @@ export default function ScoreCardUserPage() {
     }
   };
 
-  const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
-    const base = Math.floor(playerHandicap / 18);
-    const remainder = playerHandicap % 18;
+  const is9Hole =
+    holes === "front9" ||
+    holes === "Front9" ||
+    holes === "Front 9" ||
+    holes === "back9" ||
+    holes === "Back9" ||
+    holes === "Back 9" ||
+    holes === "9";
 
-    return base + (strokeIndex <= remainder ? 1 : 0);
+  const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
+    const rawHc = Math.round(Number(playerHandicap) || 0);
+    const hc = is9Hole ? Math.round(rawHc / 2) : rawHc;
+
+    if (hc >= 0) {
+      const base = Math.floor(hc / 18);
+      const remainder = hc % 18;
+      // Positive handicap: Receives strokes on hardest holes (lowest index)
+      return base + (strokeIndex <= remainder ? 1 : 0);
+    } else {
+      const absHandicap = Math.abs(hc);
+      const base = Math.floor(absHandicap / 18);
+      const remainder = absHandicap % 18;
+      // Plus handicap: Gives strokes back on easiest holes (highest index)
+      return -(base + (strokeIndex > 18 - remainder ? 1 : 0));
+    }
   };
 
   const calculateHole = (hole: any) => {
@@ -246,13 +274,14 @@ export default function ScoreCardUserPage() {
       strokesReceived = 0;
     }
 
-    const netScore = score - strokesReceived;
+    const isDP = isDoublePeoria || hole.isDoublePeoria === true;
+    const netScore = isDP ? score : score - strokesReceived;
 
     // Stableford
     let stablefordPoints = null;
 
     if (isStableford && hole.score !== null) {
-      const pts = hole.par - score + 2;
+      const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
     }
 
@@ -325,6 +354,7 @@ export default function ScoreCardUserPage() {
       };
     }
 
+    const isDP = isDoublePeoria || hole.isDoublePeoria === true;
     const playerHandicap = isPrimary
       ? parseInt(String(handicap)) || 0
       : companionHandicaps[userId] || 0;
@@ -332,7 +362,7 @@ export default function ScoreCardUserPage() {
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
-    const netScore = rawScore - strokesReceived;
+    const netScore = isDP ? rawScore : rawScore - strokesReceived;
 
     let stablefordPoints = null;
     if (isStableford) {
@@ -457,10 +487,10 @@ export default function ScoreCardUserPage() {
     yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
     par: holes.reduce((sum, h) => sum + (h.par || 0), 0),
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
-    net: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
+    net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
 
     stableford:
-      mode === "stableford"
+      isStableford
         ? holes.reduce((sum, h) => sum + (Number(h.stablefordPoints) || 0), 0)
         : 0,
   });
@@ -591,51 +621,49 @@ export default function ScoreCardUserPage() {
       ? JSON.stringify(pendingRoundContext.players)
       : undefined;
 
-    const payload = scoreCardRef.current
-      .map(calculateHole)
-      .map((h: any) => ({
-        courseId: courseId ? Number(courseId) : h.courseId,
-        courseHalf:
-          holes === "front9" || holes === "Front9" || holes === "Front 9"
-            ? "Front9"
-            : holes === "back9" || holes === "Back9" || holes === "Back 9"
-              ? "Back9"
+    const payload = scoreCardRef.current.map(calculateHole).map((h: any) => ({
+      courseId: courseId ? Number(courseId) : h.courseId,
+      courseHalf:
+        holes === "front9" || holes === "Front9" || holes === "Front 9"
+          ? "Front9"
+          : holes === "back9" || holes === "Back9" || holes === "Back 9"
+            ? "Back9"
+            : null,
+      holeId: h.holeId,
+      isCompleted: false,
+      isExcluded: isExcluded,
+      matchScoringType: isSplit6
+        ? "split-six"
+        : isHighLow
+          ? "high-low"
+          : isNassauBest
+            ? "nassau-best"
+            : isNassauCombined
+              ? "nassau-combined"
               : null,
-        holeId: h.holeId,
-        isCompleted: false,
-        isExcluded: isExcluded,
-        matchScoringType: isSplit6
-          ? "split-six"
-          : isHighLow
-            ? "high-low"
-            : isNassauBest
-              ? "nassau-best"
-              : isNassauCombined
-                ? "nassau-combined"
-                : null,
-        roundNumber: h.roundNumber || 1,
-        score:
-          h.score === undefined || h.score === null || h.score === ""
-            ? null
-            : Number(h.score),
-        stablefordPoints: h.stablefordPoints,
-        teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
-        tournamentId: null,
-        userId: Number(userId),
-        companionScoresJson: h.companionScoresJson || null,
-        companionSandysJson: h.companionSandysJson || null,
-        nassauStartingNine: nassauStartingNine,
-        NassauStartingNine: nassauStartingNine,
-        ...(playingGroupRoundKey
-          ? {
-              playingGroupRoundKey,
-              PlayingGroupRoundKey: playingGroupRoundKey,
-            }
-          : {}),
-        ...(playingPartnersJson
-          ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
-          : {}),
-      }));
+      roundNumber: h.roundNumber || 1,
+      score:
+        h.score === undefined || h.score === null || h.score === ""
+          ? null
+          : Number(h.score),
+      stablefordPoints: h.stablefordPoints,
+      teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
+      tournamentId: null,
+      userId: Number(userId),
+      companionScoresJson: h.companionScoresJson || null,
+      companionSandysJson: h.companionSandysJson || null,
+      nassauStartingNine: nassauStartingNine,
+      NassauStartingNine: nassauStartingNine,
+      ...(playingGroupRoundKey
+        ? {
+            playingGroupRoundKey,
+            PlayingGroupRoundKey: playingGroupRoundKey,
+          }
+        : {}),
+      ...(playingPartnersJson
+        ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
+        : {}),
+    }));
 
     try {
       await saveScoreCard(payload);
@@ -695,15 +723,33 @@ export default function ScoreCardUserPage() {
     try {
       const sanitized = updatedHoles.map(calculateHole).map((h: any) => ({
         ...h,
-        score: h.score !== null && h.score !== undefined && h.score !== "" ? Number(h.score) : null,
-        netScore: h.netScore === "-" || h.netScore === undefined ? null : Number(h.netScore),
+        score:
+          h.score !== null && h.score !== undefined && h.score !== ""
+            ? Number(h.score)
+            : null,
+        netScore:
+          h.netScore === "-" || h.netScore === undefined
+            ? null
+            : Number(h.netScore),
         stablefordPoints: h.stablefordPoints,
       }));
 
-      const holesPlayed = sanitized.filter((h: any) => h.score !== null && h.score > 0).length;
-      const scoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
-      const netScoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
-      const parVal = sanitized.reduce((sum: number, h: any) => sum + (h.par || 0), 0);
+      const holesPlayed = sanitized.filter(
+        (h: any) => h.score !== null && h.score > 0,
+      ).length;
+      const scoreVal = sanitized.reduce(
+        (sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0),
+        0,
+      );
+      const netScoreVal = sanitized.reduce(
+        (sum: number, h: any) =>
+          sum + (h.netScore && h.netScore > 0 ? h.netScore : 0),
+        0,
+      );
+      const parVal = sanitized.reduce(
+        (sum: number, h: any) => sum + (h.par || 0),
+        0,
+      );
 
       const courseHalfStr =
         holes === "front9" || holes === "Front9" || holes === "Front 9"
@@ -712,7 +758,8 @@ export default function ScoreCardUserPage() {
             ? "Back9"
             : "";
 
-      const currentUserId = userId || Number(await AsyncStorage.getItem("userId")) || 0;
+      const currentUserId =
+        userId || Number(await AsyncStorage.getItem("userId")) || 0;
       const scorecardId = String(updatedHoles[0]?.scorecardId || "");
 
       if (scorecardId) {
@@ -753,15 +800,33 @@ export default function ScoreCardUserPage() {
       try {
         const sanitized = scoreCardDetails.map(calculateHole).map((h: any) => ({
           ...h,
-          score: h.score !== null && h.score !== undefined && h.score !== "" ? Number(h.score) : null,
-          netScore: h.netScore === "-" || h.netScore === undefined ? null : Number(h.netScore),
+          score:
+            h.score !== null && h.score !== undefined && h.score !== ""
+              ? Number(h.score)
+              : null,
+          netScore:
+            h.netScore === "-" || h.netScore === undefined
+              ? null
+              : Number(h.netScore),
           stablefordPoints: h.stablefordPoints,
         }));
 
-        const holesPlayed = sanitized.filter((h: any) => h.score !== null && h.score > 0).length;
-        const scoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0), 0);
-        const netScoreVal = sanitized.reduce((sum: number, h: any) => sum + (h.netScore && h.netScore > 0 ? h.netScore : 0), 0);
-        const parVal = sanitized.reduce((sum: number, h: any) => sum + (h.par || 0), 0);
+        const holesPlayed = sanitized.filter(
+          (h: any) => h.score !== null && h.score > 0,
+        ).length;
+        const scoreVal = sanitized.reduce(
+          (sum: number, h: any) => sum + (h.score && h.score > 0 ? h.score : 0),
+          0,
+        );
+        const netScoreVal = sanitized.reduce(
+          (sum: number, h: any) =>
+            sum + (h.netScore && h.netScore > 0 ? h.netScore : 0),
+          0,
+        );
+        const parVal = sanitized.reduce(
+          (sum: number, h: any) => sum + (h.par || 0),
+          0,
+        );
 
         const courseHalfStr =
           holes === "front9" || holes === "Front9" || holes === "Front 9"
@@ -770,7 +835,8 @@ export default function ScoreCardUserPage() {
               ? "Back9"
               : "";
 
-        const currentUserId = userId || Number(await AsyncStorage.getItem("userId")) || 0;
+        const currentUserId =
+          userId || Number(await AsyncStorage.getItem("userId")) || 0;
         const scorecardId = String(scoreCardDetails[0]?.scorecardId || "");
 
         if (scorecardId) {
@@ -796,8 +862,12 @@ export default function ScoreCardUserPage() {
           });
         }
 
-        const playingGroupRoundKey = roundContextId ? String(roundContextId) : undefined;
-        const playingPartnersJson = pendingRoundContext ? JSON.stringify(pendingRoundContext.players) : undefined;
+        const playingGroupRoundKey = roundContextId
+          ? String(roundContextId)
+          : undefined;
+        const playingPartnersJson = pendingRoundContext
+          ? JSON.stringify(pendingRoundContext.players)
+          : undefined;
 
         const payload = sanitized.map((h: any) => ({
           courseId: courseId ? Number(courseId) : h.courseId,
@@ -815,7 +885,10 @@ export default function ScoreCardUserPage() {
                   ? "nassau-combined"
                   : null,
           roundNumber: h.roundNumber || 1,
-          score: h.score === undefined || h.score === null || h.score === "" ? null : Number(h.score),
+          score:
+            h.score === undefined || h.score === null || h.score === ""
+              ? null
+              : Number(h.score),
           stablefordPoints: h.stablefordPoints,
           teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
           tournamentId: null,
@@ -824,8 +897,15 @@ export default function ScoreCardUserPage() {
           companionSandysJson: h.companionSandysJson || null,
           nassauStartingNine: nassauStartingNine,
           NassauStartingNine: nassauStartingNine,
-          ...(playingGroupRoundKey ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey } : {}),
-          ...(playingPartnersJson ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson } : {}),
+          ...(playingGroupRoundKey
+            ? {
+                playingGroupRoundKey,
+                PlayingGroupRoundKey: playingGroupRoundKey,
+              }
+            : {}),
+          ...(playingPartnersJson
+            ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
+            : {}),
         }));
 
         await saveScoreCard(payload);
@@ -835,7 +915,12 @@ export default function ScoreCardUserPage() {
     };
 
     initializeDraftAndSave();
-  }, [scoreCardDetails, pendingRoundContext, roundContextId, hasInitializedDraft]);
+  }, [
+    scoreCardDetails,
+    pendingRoundContext,
+    roundContextId,
+    hasInitializedDraft,
+  ]);
 
   useEffect(() => {
     fetchScoreCard();
@@ -1209,77 +1294,71 @@ export default function ScoreCardUserPage() {
     score: number | string | null,
     par: number,
     isDark: boolean,
+    rawValue?: string,
   ) => {
-    if (score === null || score === "" || score === undefined) return null;
+    const finalRaw =
+      rawValue !== undefined
+        ? rawValue
+        : score !== null && score !== undefined
+          ? String(score)
+          : "";
+
+    if (
+      finalRaw === "" ||
+      score === null ||
+      score === undefined ||
+      score === ""
+    )
+      return null;
 
     const numericScore = Number(score);
-    const diff = numericScore - par;
 
-    // 🟡 Hole-in-One (Priority 1)
+    if (numericScore === 0) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
+            <View style={[styles.innerCircle, { borderColor: "#006064" }]} />
+          </View>
+        </View>
+      );
+    }
     if (numericScore === 1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[
-              styles.singleCircle,
-              {
-                borderColor: "#fbc02d",
-              },
-            ]}
-          />
+          <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
+            <View style={[styles.innerCircle, { borderColor: "#ffd700" }]} />
+          </View>
         </View>
       );
     }
 
-    // 🟦 Albatross (-3)
-    if (diff <= -3) {
+    const diff = numericScore - par;
+
+    if (diff === -3) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[
-              styles.singleCircle,
-              {
-                borderColor: "#00838f",
-              },
-            ]}
-          />
+          <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
+            <View style={[styles.innerCircle, { borderColor: "#006064" }]} />
+          </View>
         </View>
       );
     }
-
-    // 🟢 Eagle (-2)
     if (diff === -2) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[
-              styles.singleCircle,
-              {
-                borderColor: "#2e7d32",
-              },
-            ]}
-          />
+          <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
+            <View style={[styles.innerCircle, { borderColor: "#2e7d32" }]} />
+          </View>
         </View>
       );
     }
-
-    // 🟢 Birdie (-1)
     if (diff === -1) {
       return (
         <View style={styles.indicatorContainer}>
-          <View
-            style={[
-              styles.singleCircle,
-              {
-                borderColor: "#66bb6a",
-              },
-            ]}
-          />
+          <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />
         </View>
       );
     }
-
-    // ⚪ Par (0) - Dashed square
     if (diff === 0) {
       return (
         <View style={styles.indicatorContainer}>
@@ -1296,8 +1375,35 @@ export default function ScoreCardUserPage() {
         </View>
       );
     }
-
-    // ⬛ Quadruple+ (>= +4) - Check most specific bogey first
+    if (diff === 1) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />
+        </View>
+      );
+    }
+    if (diff === 2) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
+            <View style={[styles.innerSquare, { borderColor: "#d32f2f" }]} />
+          </View>
+        </View>
+      );
+    }
+    if (diff === 3) {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
+            <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a" }]}>
+              <View
+                style={[styles.tripleSquareInner, { borderColor: "#6a1b9a" }]}
+              />
+            </View>
+          </View>
+        </View>
+      );
+    }
     if (diff >= 4) {
       return (
         <View style={styles.indicatorContainer}>
@@ -1310,38 +1416,6 @@ export default function ScoreCardUserPage() {
         </View>
       );
     }
-
-    // 🟣 Triple Bogey (+3)
-    if (diff === 3) {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.doubleSquare, { borderColor: "#8e24aa" }]}>
-            <View style={[styles.innerSquare, { borderColor: "#8e24aa" }]} />
-          </View>
-        </View>
-      );
-    }
-
-    // 🔴 Double Bogey (+2)
-    if (diff === 2) {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.doubleSquare, { borderColor: "#e53935" }]}>
-            <View style={[styles.innerSquare, { borderColor: "#e53935" }]} />
-          </View>
-        </View>
-      );
-    }
-
-    // 🔴 Bogey (+1)
-    if (diff === 1) {
-      return (
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.singleSquare, { borderColor: "#e53935" }]} />
-        </View>
-      );
-    }
-
     return null;
   };
 
@@ -1595,7 +1669,7 @@ export default function ScoreCardUserPage() {
                           isDetailsVisible && "Yards",
                           "Par",
                           "Score",
-                          "Net",
+                          !isGross && "Net",
                           isStableford && "Pts",
                         ]
                           .filter(Boolean)
@@ -1709,16 +1783,18 @@ export default function ScoreCardUserPage() {
                               />
                             </View>
 
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                fontWeight: "600",
-                                color: "#8BC34A",
-                              }}
-                            >
-                              {h.score}
-                            </ThemedText>
+                            {!isGross && (
+                              <ThemedText
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  fontWeight: "600",
+                                  color: "#8BC34A",
+                                }}
+                              >
+                                {h.netScore ?? "-"}
+                              </ThemedText>
+                            )}
 
                             {isStableford && (
                               <ThemedText
@@ -1780,15 +1856,17 @@ export default function ScoreCardUserPage() {
                                 {Number(frontTotals.score)}
                               </ThemedText>
 
-                              <ThemedText
-                                style={{
-                                  flex: 1,
-                                  textAlign: "center",
-                                  fontWeight: "700",
-                                }}
-                              >
-                                {frontTotals.net}
-                              </ThemedText>
+                              {!isGross && (
+                                <ThemedText
+                                  style={{
+                                    flex: 1,
+                                    textAlign: "center",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  {frontTotals.net}
+                                </ThemedText>
+                              )}
 
                               {isStableford && (
                                 <ThemedText
@@ -1851,15 +1929,17 @@ export default function ScoreCardUserPage() {
                                 {backTotals.score}
                               </ThemedText>
 
-                              <ThemedText
-                                style={{
-                                  flex: 1,
-                                  textAlign: "center",
-                                  fontWeight: "700",
-                                }}
-                              >
-                                {backTotals.net}
-                              </ThemedText>
+                              {!isGross && (
+                                <ThemedText
+                                  style={{
+                                    flex: 1,
+                                    textAlign: "center",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  {backTotals.net}
+                                </ThemedText>
+                              )}
 
                               {isStableford && (
                                 <ThemedText
@@ -3393,16 +3473,18 @@ export default function ScoreCardUserPage() {
                       >
                         {grandTotals.score}
                       </ThemedText>
-                      <ThemedText
-                        style={{
-                          flex: 1,
-                          textAlign: "center",
-                          color: "#fff",
-                          fontWeight: "700",
-                        }}
-                      >
-                        {grandTotals.net}
-                      </ThemedText>
+                      {!isGross && (
+                        <ThemedText
+                          style={{
+                            flex: 1,
+                            textAlign: "center",
+                            color: "#fff",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {grandTotals.net}
+                        </ThemedText>
+                      )}
 
                       {isStableford && (
                         <ThemedText
@@ -4684,6 +4766,28 @@ const styles = StyleSheet.create({
   innerSquare: {
     width: 26,
     height: 26,
+    borderWidth: 1.5,
+  },
+  tripleSquareOuter: {
+    width: 36,
+    height: 36,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tripleSquareMid: {
+    width: 28,
+    height: 28,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tripleSquareInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 2,
     borderWidth: 1.5,
   },
   legendItemStyle: {
