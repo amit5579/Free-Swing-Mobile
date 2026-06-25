@@ -1293,7 +1293,7 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
-            console.log("pppp", payload);
+            // console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
             await deleteDraft(id!);
@@ -3522,7 +3522,7 @@ export default function ResumeScorecard() {
                           fontWeight: bold ? "700" : "500",
                           width: 60,
                           textAlign: "center",
-                          color: bold ? "#84cc16" : undefined,
+                          color: bold ? "#84cc16" : isDark ? "#fff" : "#4B5563",
                         }}
                       >
                         {v}
