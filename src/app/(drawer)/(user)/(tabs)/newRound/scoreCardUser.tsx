@@ -157,7 +157,8 @@ export default function ScoreCardUserPage() {
     parsedScore.scoringType === "double-peoria-net" ||
     parsedScore.scoring_type === "double-peoria-stableford" ||
     parsedScore.scoringType === "double-peoria-stableford" ||
-    (scoreCardDetails && scoreCardDetails.some((h: any) => h.isDoublePeoria === true));
+    (scoreCardDetails &&
+      scoreCardDetails.some((h: any) => h.isDoublePeoria === true));
   const [displayFront9, setDisplayFront9] = useState(true);
   const [displayBack9, setDisplayBack9] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
@@ -489,10 +490,9 @@ export default function ScoreCardUserPage() {
     score: holes.reduce((sum, h) => sum + (Number(h.score) || 0), 0),
     net: holes.reduce((sum, h) => sum + (Number(h.netScore) || 0), 0),
 
-    stableford:
-      isStableford
-        ? holes.reduce((sum, h) => sum + (Number(h.stablefordPoints) || 0), 0)
-        : 0,
+    stableford: isStableford
+      ? holes.reduce((sum, h) => sum + (Number(h.stablefordPoints) || 0), 0)
+      : 0,
   });
 
   const frontTotals = getTotals(processedFront9, getScoringLabel());
@@ -1996,18 +1996,22 @@ export default function ScoreCardUserPage() {
                         );
                       }
 
-                      const colWidths = {
-                        hole: 50,
-                        si: 55,
-                        yards: 60,
-                        par: 50,
-                        player: 95,
-                      };
+                      const pScoreWidth = 75;
+                      const pNetWidth = 80;
+                      const pPtsWidth = 80;
+
+                      let partnerColsWidth = 0;
+                      partners.forEach(() => {
+                        partnerColsWidth += pScoreWidth;
+                        if (!isGross) partnerColsWidth += pNetWidth;
+                        if (isStableford) partnerColsWidth += pPtsWidth;
+                      });
+
                       const totalWidth =
                         50 +
                         50 + // par is always visible
                         (isDetailsVisible ? 55 + 60 : 0) +
-                        partners.length * 95 +
+                        partnerColsWidth +
                         (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
                         (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
                         (isNassau && partners.length >= 2 ? 100 : 0);
@@ -2079,6 +2083,7 @@ export default function ScoreCardUserPage() {
                               >
                                 Par
                               </ThemedText>
+                              {/* Score Input Headers (LHS) */}
                               {partners.map((p: any, idx: number) => {
                                 let badgeText = "";
                                 let badgeColor = "";
@@ -2086,10 +2091,15 @@ export default function ScoreCardUserPage() {
                                   badgeText = idx < 2 ? "Team A" : "Team B";
                                   badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
                                 }
+                                const pName = p.isPrimary ? "You" : p.name;
                                 return (
                                   <VStack
-                                    key={p.playerId}
-                                    style={{ width: 95, alignItems: "center" }}
+                                    key={`score-col-hdr-${p.playerId}`}
+                                    style={{
+                                      width: pScoreWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
                                   >
                                     <ThemedText
                                       numberOfLines={1}
@@ -2099,7 +2109,7 @@ export default function ScoreCardUserPage() {
                                         fontSize: 12,
                                       }}
                                     >
-                                      {p.isPrimary ? "You" : p.name}
+                                      {pName}
                                     </ThemedText>
                                     {badgeText !== "" && (
                                       <View
@@ -2125,6 +2135,62 @@ export default function ScoreCardUserPage() {
                                   </VStack>
                                 );
                               })}
+
+                              {/* Calculated Net Points Headers (RHS) */}
+                              {!isGross &&
+                                partners.map((p: any) => {
+                                  const pName = p.isPrimary ? "You" : p.name;
+                                  return (
+                                    <VStack
+                                      key={`net-col-hdr-${p.playerId}`}
+                                      style={{
+                                        width: pNetWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        numberOfLines={1}
+                                        style={{
+                                          textAlign: "center",
+                                          fontWeight: "700",
+                                          fontSize: 11,
+                                          color: "#8BC34A",
+                                        }}
+                                      >
+                                        {`Net(${pName})`}
+                                      </ThemedText>
+                                    </VStack>
+                                  );
+                                })}
+
+                              {/* Stableford Points Headers (RHS) */}
+                              {isStableford &&
+                                partners.map((p: any) => {
+                                  const pName = p.isPrimary ? "You" : p.name;
+                                  return (
+                                    <VStack
+                                      key={`pts-col-hdr-${p.playerId}`}
+                                      style={{
+                                        width: pPtsWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        numberOfLines={1}
+                                        style={{
+                                          textAlign: "center",
+                                          fontWeight: "700",
+                                          fontSize: 11,
+                                          color: "#f59e0b",
+                                        }}
+                                      >
+                                        {`Pts(${pName})`}
+                                      </ThemedText>
+                                    </VStack>
+                                  );
+                                })}
                               {isSplit6 &&
                                 partners.length >= 3 &&
                                 partners.slice(0, 3).map((p: any) => (
@@ -2283,6 +2349,7 @@ export default function ScoreCardUserPage() {
                                       {h.par}
                                     </ThemedText>
 
+                                    {/* Score Input Columns (LHS) */}
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
 
@@ -2305,11 +2372,12 @@ export default function ScoreCardUserPage() {
 
                                       return (
                                         <View
-                                          key={p.playerId}
+                                          key={`score-cell-${p.playerId}`}
                                           style={{
-                                            width: 95,
+                                            width: pScoreWidth,
                                             alignItems: "center",
                                             justifyContent: "center",
+                                            paddingVertical: 4,
                                             backgroundColor: bgColor,
                                           }}
                                         >
@@ -2396,83 +2464,184 @@ export default function ScoreCardUserPage() {
                                             />
                                           </View>
 
-                                          <HStack
-                                            style={{
-                                              alignItems: "center",
-                                              gap: 4,
-                                              marginTop: 4,
-                                            }}
-                                          >
-                                            <Pressable
-                                              onPress={() =>
-                                                handleSandyToggle(
-                                                  h.holeId,
-                                                  p.playerId,
-                                                )
-                                              }
-                                              style={{
-                                                width: 18,
-                                                height: 18,
-                                                borderRadius: 9,
-                                                backgroundColor: info.sandy
-                                                  ? "#2e7d32"
-                                                  : isDark
-                                                    ? "#334155"
-                                                    : "#e2e8f0",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                              }}
-                                            >
-                                              <Text
+                                          {getScoringLabel() !==
+                                            "Net Score • Include Par 3" &&
+                                            getScoringLabel() !==
+                                              "Net Score • Exclude Par 3" &&
+                                            getScoringLabel() !==
+                                              "Stableford" &&
+                                            getScoringLabel() !==
+                                              "Stableford • Exclude Par 3" && (
+                                              <HStack
                                                 style={{
-                                                  fontSize: 9,
-                                                  fontWeight: "bold",
-                                                  color: info.sandy
-                                                    ? "#fff"
-                                                    : isDark
-                                                      ? "#94a3b8"
-                                                      : "#64748b",
+                                                  alignItems: "center",
+                                                  gap: 4,
+                                                  marginTop: 4,
                                                 }}
                                               >
-                                                S
-                                              </Text>
-                                            </Pressable>
+                                                <Pressable
+                                                  onPress={() =>
+                                                    handleSandyToggle(
+                                                      h.holeId,
+                                                      p.playerId,
+                                                    )
+                                                  }
+                                                  style={{
+                                                    width: 18,
+                                                    height: 18,
+                                                    borderRadius: 9,
+                                                    backgroundColor: info.sandy
+                                                      ? "#2e7d32"
+                                                      : isDark
+                                                        ? "#334155"
+                                                        : "#e2e8f0",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                  }}
+                                                >
+                                                  <Text
+                                                    style={{
+                                                      fontSize: 9,
+                                                      fontWeight: "bold",
+                                                      color: info.sandy
+                                                        ? "#fff"
+                                                        : isDark
+                                                          ? "#94a3b8"
+                                                          : "#64748b",
+                                                    }}
+                                                  >
+                                                    S
+                                                  </Text>
+                                                </Pressable>
 
-                                            {info.score !== null &&
-                                              getScoringLabel() !==
-                                                "Net Score • Include Par 3" &&
-                                              getScoringLabel() !==
-                                                "Net Score • Exclude Par 3" &&
-                                              getScoringLabel() !==
-                                                "Stableford" &&
-                                              getScoringLabel() !==
-                                                "Stableford • Exclude Par 3" &&
-                                              (() => {
-                                                const badgeVal =
-                                                  getBadgeMultiplier(
-                                                    info.score,
-                                                    h.par,
-                                                    info.sandy,
-                                                  );
-                                                if (badgeVal > 0) {
-                                                  return (
-                                                    <Text
-                                                      style={{
-                                                        fontSize: 9,
-                                                        color: "#f59e0b",
-                                                        fontWeight: "bold",
-                                                      }}
-                                                    >
-                                                      {badgeVal}x
-                                                    </Text>
-                                                  );
-                                                }
-                                                return null;
-                                              })()}
-                                          </HStack>
+                                                {info.score !== null &&
+                                                  getScoringLabel() !==
+                                                    "Net Score • Include Par 3" &&
+                                                  getScoringLabel() !==
+                                                    "Net Score • Exclude Par 3" &&
+                                                  getScoringLabel() !==
+                                                    "Stableford" &&
+                                                  getScoringLabel() !==
+                                                    "Stableford • Exclude Par 3" &&
+                                                  (() => {
+                                                    const badgeVal =
+                                                      getBadgeMultiplier(
+                                                        info.score,
+                                                        h.par,
+                                                        info.sandy,
+                                                      );
+                                                    if (badgeVal > 0) {
+                                                      return (
+                                                        <Text
+                                                          style={{
+                                                            fontSize: 9,
+                                                            color: "#f59e0b",
+                                                            fontWeight: "bold",
+                                                          }}
+                                                        >
+                                                          {badgeVal}x
+                                                        </Text>
+                                                      );
+                                                    }
+                                                    return null;
+                                                  })()}
+                                              </HStack>
+                                            )}
                                         </View>
                                       );
                                     })}
+
+                                    {/* Net Score Columns (RHS) */}
+                                    {!isGross &&
+                                      partners.map((p: any, pIndex: number) => {
+                                        const info = getPlayerHoleInfo(h, p);
+
+                                        let bgColor = "transparent";
+                                        if (
+                                          isNassau &&
+                                          ns &&
+                                          ns.holeResults[h.holeNumber]
+                                        ) {
+                                          const winner =
+                                            ns.holeResults[h.holeNumber].winner;
+                                          const isTeamA =
+                                            pIndex <
+                                            (partners.length >= 4 ? 2 : 1);
+                                          if (winner === "teamA" && isTeamA)
+                                            bgColor = "rgba(25, 135, 84, 0.15)";
+                                          if (winner === "teamB" && !isTeamA)
+                                            bgColor =
+                                              "rgba(13, 110, 253, 0.15)";
+                                        }
+
+                                        return (
+                                          <View
+                                            key={`net-cell-${p.playerId}`}
+                                            style={{
+                                              width: pNetWidth,
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              backgroundColor: bgColor,
+                                            }}
+                                          >
+                                            <ThemedText
+                                              style={{
+                                                fontWeight: "bold",
+                                                color: "#8BC34A",
+                                                fontSize: 13,
+                                              }}
+                                            >
+                                              {info.netScore ?? "-"}
+                                            </ThemedText>
+                                          </View>
+                                        );
+                                      })}
+
+                                    {/* Stableford Points Columns (RHS) */}
+                                    {isStableford &&
+                                      partners.map((p: any, pIndex: number) => {
+                                        const info = getPlayerHoleInfo(h, p);
+
+                                        let bgColor = "transparent";
+                                        if (
+                                          isNassau &&
+                                          ns &&
+                                          ns.holeResults[h.holeNumber]
+                                        ) {
+                                          const winner =
+                                            ns.holeResults[h.holeNumber].winner;
+                                          const isTeamA =
+                                            pIndex <
+                                            (partners.length >= 4 ? 2 : 1);
+                                          if (winner === "teamA" && isTeamA)
+                                            bgColor = "rgba(25, 135, 84, 0.15)";
+                                          if (winner === "teamB" && !isTeamA)
+                                            bgColor =
+                                              "rgba(13, 110, 253, 0.15)";
+                                        }
+
+                                        return (
+                                          <View
+                                            key={`pts-cell-${p.playerId}`}
+                                            style={{
+                                              width: pPtsWidth,
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              backgroundColor: bgColor,
+                                            }}
+                                          >
+                                            <ThemedText
+                                              style={{
+                                                fontWeight: "bold",
+                                                color: "#f59e0b",
+                                                fontSize: 13,
+                                              }}
+                                            >
+                                              {info.stablefordPoints ?? "-"}
+                                            </ThemedText>
+                                          </View>
+                                        );
+                                      })}
                                     {isSplit6 &&
                                       partners.length >= 3 &&
                                       (() => {
@@ -2714,6 +2883,7 @@ export default function ScoreCardUserPage() {
                                       >
                                         {frontTotals.par}
                                       </ThemedText>
+                                      {/* Front 9 Gross Totals (LHS) */}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedFront9,
@@ -2721,10 +2891,11 @@ export default function ScoreCardUserPage() {
                                         );
                                         return (
                                           <VStack
-                                            key={p.playerId}
+                                            key={`gross-front-${p.playerId}`}
                                             style={{
-                                              width: 95,
+                                              width: pScoreWidth,
                                               alignItems: "center",
+                                              justifyContent: "center",
                                             }}
                                           >
                                             <Text
@@ -2736,28 +2907,67 @@ export default function ScoreCardUserPage() {
                                             >
                                               {t.gross}
                                             </Text>
-                                            {/* {isStableford ? (
+                                          </VStack>
+                                        );
+                                      })}
+
+                                      {/* Front 9 Net Totals (RHS) */}
+                                      {!isGross &&
+                                        partners.map((p: any) => {
+                                          const t = getPlayerTotals(
+                                            processedFront9,
+                                            p,
+                                          );
+                                          return (
+                                            <VStack
+                                              key={`net-front-${p.playerId}`}
+                                              style={{
+                                                width: pNetWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                              }}
+                                            >
                                               <Text
                                                 style={{
-                                                  fontSize: 9,
-                                                  color: "#f59e0b",
-                                                }}
-                                              >
-                                                Pts:{t.stableford}
-                                              </Text>
-                                            ) : (
-                                              <Text
-                                                style={{
-                                                  fontSize: 9,
-                                                  color: "#84cc16",
+                                                  fontSize: 13,
+                                                  fontWeight: "800",
+                                                  color: "#8BC34A",
                                                 }}
                                               >
                                                 {t.net}
                                               </Text>
-                                            )} */}
-                                          </VStack>
-                                        );
-                                      })}
+                                            </VStack>
+                                          );
+                                        })}
+
+                                      {/* Front 9 Stableford Totals (RHS) */}
+                                      {isStableford &&
+                                        partners.map((p: any) => {
+                                          const t = getPlayerTotals(
+                                            processedFront9,
+                                            p,
+                                          );
+                                          return (
+                                            <VStack
+                                              key={`pts-front-${p.playerId}`}
+                                              style={{
+                                                width: pPtsWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                              }}
+                                            >
+                                              <Text
+                                                style={{
+                                                  fontSize: 13,
+                                                  fontWeight: "800",
+                                                  color: "#f59e0b",
+                                                }}
+                                              >
+                                                {t.stableford}
+                                              </Text>
+                                            </VStack>
+                                          );
+                                        })}
                                       {isSplit6 &&
                                         partners.length >= 3 &&
                                         (() => {
@@ -2970,6 +3180,7 @@ export default function ScoreCardUserPage() {
                                       >
                                         {backTotals.par}
                                       </ThemedText>
+                                      {/* Back 9 Gross Totals (LHS) */}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedBack9,
@@ -2977,10 +3188,11 @@ export default function ScoreCardUserPage() {
                                         );
                                         return (
                                           <VStack
-                                            key={p.playerId}
+                                            key={`gross-back-${p.playerId}`}
                                             style={{
-                                              width: 95,
+                                              width: pScoreWidth,
                                               alignItems: "center",
+                                              justifyContent: "center",
                                             }}
                                           >
                                             <Text
@@ -2992,28 +3204,67 @@ export default function ScoreCardUserPage() {
                                             >
                                               {t.gross}
                                             </Text>
-                                            {/* {isStableford ? (
+                                          </VStack>
+                                        );
+                                      })}
+
+                                      {/* Back 9 Net Totals (RHS) */}
+                                      {!isGross &&
+                                        partners.map((p: any) => {
+                                          const t = getPlayerTotals(
+                                            processedBack9,
+                                            p,
+                                          );
+                                          return (
+                                            <VStack
+                                              key={`net-back-${p.playerId}`}
+                                              style={{
+                                                width: pNetWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                              }}
+                                            >
                                               <Text
                                                 style={{
-                                                  fontSize: 9,
-                                                  color: "#f59e0b",
-                                                }}
-                                              >
-                                                Pts:{t.stableford}
-                                              </Text>
-                                            ) : (
-                                              <Text
-                                                style={{
-                                                  fontSize: 9,
-                                                  color: "#84cc16",
+                                                  fontSize: 13,
+                                                  fontWeight: "700",
+                                                  color: "#8BC34A",
                                                 }}
                                               >
                                                 {t.net}
                                               </Text>
-                                            )} */}
-                                          </VStack>
-                                        );
-                                      })}
+                                            </VStack>
+                                          );
+                                        })}
+
+                                      {/* Back 9 Stableford Totals (RHS) */}
+                                      {isStableford &&
+                                        partners.map((p: any) => {
+                                          const t = getPlayerTotals(
+                                            processedBack9,
+                                            p,
+                                          );
+                                          return (
+                                            <VStack
+                                              key={`pts-back-${p.playerId}`}
+                                              style={{
+                                                width: pPtsWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                              }}
+                                            >
+                                              <Text
+                                                style={{
+                                                  fontSize: 13,
+                                                  fontWeight: "700",
+                                                  color: "#f59e0b",
+                                                }}
+                                              >
+                                                {t.stableford}
+                                              </Text>
+                                            </VStack>
+                                          );
+                                        })}
                                       {isSplit6 &&
                                         partners.length >= 3 &&
                                         (() => {
@@ -3219,12 +3470,17 @@ export default function ScoreCardUserPage() {
                               >
                                 {grandTotals.par}
                               </ThemedText>
+                              {/* Grand Gross Totals (LHS) */}
                               {partners.map((p: any) => {
                                 const t = getPlayerTotals(processedHoles, p);
                                 return (
                                   <VStack
-                                    key={p.playerId}
-                                    style={{ width: 95, alignItems: "center" }}
+                                    key={`gross-grand-${p.playerId}`}
+                                    style={{
+                                      width: pScoreWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
                                   >
                                     <Text
                                       style={{
@@ -3235,30 +3491,61 @@ export default function ScoreCardUserPage() {
                                     >
                                       {t.gross}
                                     </Text>
-                                    {/* {isStableford ? (
-                                      <Text
-                                        style={{
-                                          fontSize: 9,
-                                          color: "#fff",
-                                          fontWeight: "600",
-                                        }}
-                                      >
-                                        Pts:{t.stableford}
-                                      </Text>
-                                    ) : (
-                                      <Text
-                                        style={{
-                                          fontSize: 9,
-                                          color: "#fff",
-                                          fontWeight: "600",
-                                        }}
-                                      >
-                                        Net:{t.net}
-                                      </Text>
-                                    )} */}
                                   </VStack>
                                 );
                               })}
+
+                              {/* Grand Net Totals (RHS) */}
+                              {!isGross &&
+                                partners.map((p: any) => {
+                                  const t = getPlayerTotals(processedHoles, p);
+                                  return (
+                                    <VStack
+                                      key={`net-grand-${p.playerId}`}
+                                      style={{
+                                        width: pNetWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 13,
+                                          fontWeight: "800",
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        {t.net}
+                                      </Text>
+                                    </VStack>
+                                  );
+                                })}
+
+                              {/* Grand Stableford Totals (RHS) */}
+                              {isStableford &&
+                                partners.map((p: any) => {
+                                  const t = getPlayerTotals(processedHoles, p);
+                                  return (
+                                    <VStack
+                                      key={`pts-grand-${p.playerId}`}
+                                      style={{
+                                        width: pPtsWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 13,
+                                          fontWeight: "800",
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        {t.stableford}
+                                      </Text>
+                                    </VStack>
+                                  );
+                                })}
                               {isSplit6 &&
                                 partners.length >= 3 &&
                                 (() => {
