@@ -1031,7 +1031,7 @@ const ScoreCard: React.FC = () => {
           </View>
 
           {/* Handicap Badge */}
-          <View
+          {/* <View
             className="px-3 py-2 rounded-full"
             style={{
               backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
@@ -1043,7 +1043,7 @@ const ScoreCard: React.FC = () => {
             >
               HCP {displayHandicap}
             </Text>
-          </View>
+          </View> */}
 
           {/* Toggle Button */}
           <Pressable
@@ -1544,6 +1544,10 @@ const ScoreCard: React.FC = () => {
                       if (isHighLow) {
                         badgeText = idx < 2 ? "Team A" : "Team B";
                         badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                      } else if (isNassau) {
+                        const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
+                        badgeText = isTeamA ? "Team A" : "Team B";
+                        badgeColor = isTeamA ? "#0284c7" : "#e11d48";
                       }
                       return (
                         <VStack
@@ -2129,15 +2133,14 @@ const ScoreCard: React.FC = () => {
                                   key={p.playerId}
                                   style={{ width: 95, alignItems: "center" }}
                                 >
-                                  <Text
+                                  <ThemedText
                                     style={{
-                                      fontSize: 13,
                                       fontWeight: "700",
                                       color: isDark ? "#fff" : "#000",
                                     }}
                                   >
                                     {t.gross}
-                                  </Text>
+                                  </ThemedText>
                                   {/* {isStableford ? (
                                     <Text
                                       style={{ fontSize: 9, color: "#f59e0b" }}
@@ -2209,15 +2212,14 @@ const ScoreCard: React.FC = () => {
                                       justifyContent: "center",
                                     }}
                                   >
-                                    <Text
+                                    <ThemedText
                                       style={{
-                                        fontSize: 10,
                                         fontWeight: "700",
                                         color: isDark ? "#fff" : "#000",
                                       }}
                                     >
                                       {hasAnyF9 ? f9Pts[idx] : "-"}
-                                    </Text>
+                                    </ThemedText>
                                   </VStack>
                                 ));
                               })()}
@@ -2257,15 +2259,14 @@ const ScoreCard: React.FC = () => {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 10,
                                           fontWeight: "700",
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
                                         {hasAnyF9 ? f9PtsA : "-"}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                     <VStack
                                       style={{
@@ -2274,15 +2275,14 @@ const ScoreCard: React.FC = () => {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 10,
                                           fontWeight: "700",
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
                                         {hasAnyF9 ? f9PtsB : "-"}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                   </>
                                 );
@@ -2297,11 +2297,10 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                <Text
+                                <ThemedText
                                   style={{
                                     color: isDark ? "#fff" : "#000",
                                     fontWeight: "bold",
-                                    fontSize: 11,
                                   }}
                                 >
                                   {formatNassauHouses(
@@ -2309,7 +2308,7 @@ const ScoreCard: React.FC = () => {
                                       ? ns.back9Houses
                                       : ns.front9Houses,
                                   )}
-                                </Text>
+                                </ThemedText>
                               </VStack>
                             )}
                           </HStack>
@@ -2362,15 +2361,14 @@ const ScoreCard: React.FC = () => {
                                   key={p.playerId}
                                   style={{ width: 95, alignItems: "center" }}
                                 >
-                                  <Text
+                                  <ThemedText
                                     style={{
-                                      fontSize: 13,
                                       fontWeight: "700",
                                       color: isDark ? "#fff" : "#000",
                                     }}
                                   >
                                     {t.gross}
-                                  </Text>
+                                  </ThemedText>
                                   {/* {isStableford ? (
                                     <Text
                                       style={{ fontSize: 9, color: "#f59e0b" }}
@@ -2442,15 +2440,14 @@ const ScoreCard: React.FC = () => {
                                       justifyContent: "center",
                                     }}
                                   >
-                                    <Text
+                                    <ThemedText
                                       style={{
-                                        fontSize: 10,
                                         fontWeight: "700",
                                         color: isDark ? "#fff" : "#000",
                                       }}
                                     >
                                       {hasAnyB9 ? b9Pts[idx] : "-"}
-                                    </Text>
+                                    </ThemedText>
                                   </VStack>
                                 ));
                               })()}
@@ -2490,15 +2487,14 @@ const ScoreCard: React.FC = () => {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 10,
                                           fontWeight: "700",
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
                                         {hasAnyB9 ? b9PtsA : "-"}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                     <VStack
                                       style={{
@@ -2507,15 +2503,14 @@ const ScoreCard: React.FC = () => {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 10,
                                           fontWeight: "700",
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
                                         {hasAnyB9 ? b9PtsB : "-"}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                   </>
                                 );
@@ -2530,11 +2525,10 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                <Text
+                                <ThemedText
                                   style={{
                                     color: isDark ? "#fff" : "#000",
                                     fontWeight: "bold",
-                                    fontSize: 11,
                                   }}
                                 >
                                   {formatNassauHouses(
@@ -2542,7 +2536,7 @@ const ScoreCard: React.FC = () => {
                                       ? ns.front9Houses
                                       : ns.back9Houses,
                                   )}
-                                </Text>
+                                </ThemedText>
                               </VStack>
                             )}
                           </HStack>
@@ -2598,7 +2592,7 @@ const ScoreCard: React.FC = () => {
                           key={p.playerId}
                           style={{ width: 95, alignItems: "center" }}
                         >
-                          <Text
+                          <ThemedText
                             style={{
                               width: 50,
                               textAlign: "center",
@@ -2606,7 +2600,7 @@ const ScoreCard: React.FC = () => {
                             }}
                           >
                             {t.gross}
-                          </Text>
+                          </ThemedText>
                           {/* {isStableford ? (
                             <Text
                               style={{
@@ -2660,15 +2654,14 @@ const ScoreCard: React.FC = () => {
                               justifyContent: "center",
                             }}
                           >
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 10,
                                 fontWeight: "800",
                                 color: "#fff",
                               }}
                             >
                               {hasAnyTotal ? totalPts[idx] : "-"}
-                            </Text>
+                            </ThemedText>
                           </VStack>
                         ));
                       })()}
@@ -2708,15 +2701,14 @@ const ScoreCard: React.FC = () => {
                                 justifyContent: "center",
                               }}
                             >
-                              <Text
+                              <ThemedText
                                 style={{
-                                  fontSize: 10,
                                   fontWeight: "800",
                                   color: "#fff",
                                 }}
                               >
                                 {hasAnyTotal ? totalPtsA : "-"}
-                              </Text>
+                              </ThemedText>
                             </VStack>
                             <VStack
                               style={{
@@ -2725,15 +2717,14 @@ const ScoreCard: React.FC = () => {
                                 justifyContent: "center",
                               }}
                             >
-                              <Text
+                              <ThemedText
                                 style={{
-                                  fontSize: 10,
                                   fontWeight: "800",
                                   color: "#fff",
                                 }}
                               >
                                 {hasAnyTotal ? totalPtsB : "-"}
-                              </Text>
+                              </ThemedText>
                             </VStack>
                           </>
                         );
@@ -2748,15 +2739,14 @@ const ScoreCard: React.FC = () => {
                           flexWrap: "wrap",
                         }}
                       >
-                        <Text
+                        <ThemedText
                           style={{
                             color: "#fff",
                             fontWeight: "800",
-                            fontSize: 11,
                           }}
                         >
                           {formatNassauHouses(ns.overallHouses)}
-                        </Text>
+                        </ThemedText>
                       </VStack>
                     )}
                   </HStack>
@@ -3373,12 +3363,7 @@ const ScoreCard: React.FC = () => {
                                 fontWeight: "800",
                               }}
                             >
-                              {[
-                                ns.front9Halfs.team1,
-                                ns.front9Halfs.team2,
-                                ns.back9Halfs.team1,
-                                ns.back9Halfs.team2,
-                              ].join(" ")}
+                              {formatNassauHousesSpaced(ns.front9Houses)}
                             </ThemedText>
                           </HStack>
                         </HStack>
