@@ -203,6 +203,12 @@ export default function ScoreCardUserPage() {
     return "";
   };
 
+  const showNetColumns =
+    getScoringLabel() === "Net Score • Include Par 3" ||
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    getScoringLabel() === "Stableford" ||
+    getScoringLabel() === "Stableford • Exclude Par 3";
+
   const fetchScoreCard = async () => {
     try {
       setLoading(true);
@@ -1669,7 +1675,7 @@ export default function ScoreCardUserPage() {
                           isDetailsVisible && "Yards",
                           "Par",
                           "Score",
-                          !isGross && "Net",
+                          showNetColumns && "Net",
                           isStableford && "Pts",
                         ]
                           .filter(Boolean)
@@ -1783,7 +1789,7 @@ export default function ScoreCardUserPage() {
                               />
                             </View>
 
-                            {!isGross && (
+                            {showNetColumns && (
                               <ThemedText
                                 style={{
                                   flex: 1,
@@ -1856,7 +1862,7 @@ export default function ScoreCardUserPage() {
                                 {Number(frontTotals.score)}
                               </ThemedText>
 
-                              {!isGross && (
+                              {showNetColumns && (
                                 <ThemedText
                                   style={{
                                     flex: 1,
@@ -1929,7 +1935,7 @@ export default function ScoreCardUserPage() {
                                 {backTotals.score}
                               </ThemedText>
 
-                              {!isGross && (
+                              {showNetColumns && (
                                 <ThemedText
                                   style={{
                                     flex: 1,
@@ -2003,7 +2009,7 @@ export default function ScoreCardUserPage() {
                       let partnerColsWidth = 0;
                       partners.forEach(() => {
                         partnerColsWidth += pScoreWidth;
-                        if (!isGross) partnerColsWidth += pNetWidth;
+                        if (showNetColumns) partnerColsWidth += pNetWidth;
                         if (isStableford) partnerColsWidth += pPtsWidth;
                       });
 
@@ -2137,7 +2143,7 @@ export default function ScoreCardUserPage() {
                               })}
 
                               {/* Calculated Net Points Headers (RHS) */}
-                              {!isGross &&
+                              {showNetColumns &&
                                 partners.map((p: any) => {
                                   const pName = p.isPrimary ? "You" : p.name;
                                   return (
@@ -2552,7 +2558,7 @@ export default function ScoreCardUserPage() {
                                     })}
 
                                     {/* Net Score Columns (RHS) */}
-                                    {!isGross &&
+                                    {showNetColumns &&
                                       partners.map((p: any, pIndex: number) => {
                                         const info = getPlayerHoleInfo(h, p);
 
@@ -2912,7 +2918,7 @@ export default function ScoreCardUserPage() {
                                       })}
 
                                       {/* Front 9 Net Totals (RHS) */}
-                                      {!isGross &&
+                                      {showNetColumns &&
                                         partners.map((p: any) => {
                                           const t = getPlayerTotals(
                                             processedFront9,
@@ -3209,7 +3215,7 @@ export default function ScoreCardUserPage() {
                                       })}
 
                                       {/* Back 9 Net Totals (RHS) */}
-                                      {!isGross &&
+                                      {showNetColumns &&
                                         partners.map((p: any) => {
                                           const t = getPlayerTotals(
                                             processedBack9,
@@ -3496,7 +3502,7 @@ export default function ScoreCardUserPage() {
                               })}
 
                               {/* Grand Net Totals (RHS) */}
-                              {!isGross &&
+                              {showNetColumns &&
                                 partners.map((p: any) => {
                                   const t = getPlayerTotals(processedHoles, p);
                                   return (
@@ -3760,7 +3766,7 @@ export default function ScoreCardUserPage() {
                       >
                         {grandTotals.score}
                       </ThemedText>
-                      {!isGross && (
+                      {showNetColumns && (
                         <ThemedText
                           style={{
                             flex: 1,

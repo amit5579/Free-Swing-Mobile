@@ -1455,12 +1455,25 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                           }}
                           selectedTextStyle={{ color: textColor, fontSize: 14 }}
                           itemTextStyle={{ color: textColor, fontSize: 14 }}
+                          search={true}
+                          searchPlaceholder="Search player..."
+                          inputSearchStyle={{
+                            color: textColor,
+                            backgroundColor: isDark ? "#1e293b" : "#fff",
+                            borderColor: borderColor,
+                            borderRadius: 8,
+                            fontSize: 14,
+                            height: 40,
+                          }}
+                          maxHeight={400}
                           containerStyle={{
                             backgroundColor: isDark ? "#333" : "#eee",
-                            borderRadius: 8,
+                            borderRadius: 12,
                             overflow: "hidden",
                             borderWidth: 1,
                             borderColor: borderColor,
+                            width: 320,
+                            alignSelf: "center",
                           }}
                           itemContainerStyle={{
                             backgroundColor: isDark ? "#333" : "#eee",
@@ -1546,12 +1559,25 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                               fontSize: 14,
                             }}
                             itemTextStyle={{ color: textColor, fontSize: 14 }}
+                            search={true}
+                            searchPlaceholder="Search player..."
+                            inputSearchStyle={{
+                              color: textColor,
+                              backgroundColor: isDark ? "#1e293b" : "#fff",
+                              borderColor: borderColor,
+                              borderRadius: 8,
+                              fontSize: 14,
+                              height: 40,
+                            }}
+                            maxHeight={400}
                             containerStyle={{
                               backgroundColor: isDark ? "#333" : "#eee",
-                              borderRadius: 8,
+                              borderRadius: 12,
                               overflow: "hidden",
                               borderWidth: 1,
                               borderColor: borderColor,
+                              width: 320,
+                              alignSelf: "center",
                             }}
                             itemContainerStyle={{
                               backgroundColor: isDark ? "#333" : "#eee",
@@ -1638,12 +1664,25 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                                   color: textColor,
                                   fontSize: 14,
                                 }}
+                                search={true}
+                                searchPlaceholder="Search player..."
+                                inputSearchStyle={{
+                                  color: textColor,
+                                  backgroundColor: isDark ? "#1e293b" : "#fff",
+                                  borderColor: borderColor,
+                                  borderRadius: 8,
+                                  fontSize: 14,
+                                  height: 40,
+                                }}
+                                maxHeight={400}
                                 containerStyle={{
                                   backgroundColor: isDark ? "#333" : "#eee",
-                                  borderRadius: 8,
+                                  borderRadius: 12,
                                   overflow: "hidden",
                                   borderWidth: 1,
                                   borderColor: borderColor,
+                                  width: 320,
+                                  alignSelf: "center",
                                 }}
                                 itemContainerStyle={{
                                   backgroundColor: isDark ? "#333" : "#eee",
