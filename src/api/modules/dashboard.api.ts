@@ -308,3 +308,18 @@ export const updateHoleScoresApi = async (scorecardId: string | number, holes: a
     throw error;
   }
 };
+
+
+export const postParadise = async (formData: any) => {
+  try {
+    const response = await client.post(`paradise`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Posting paradise error:", error);
+    throw error;
+  }
+};
