@@ -24,6 +24,8 @@ import { Button, ButtonText } from "@/components/button";
 import * as ImagePicker from "expo-image-picker";
 import https from "@/api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { postParadise } from "@/api/modules/dashboard.api";
+import { ThemedText } from "@/components/themed-text";
 
 export interface ParadisePost {
   id: number;
@@ -194,13 +196,37 @@ export default function GolferParadise({
     }
   };
 
-  const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+  const handlePickImage = () => {
+    Alert.alert(
+      "Image Selection",
+      "Would you like to crop the image or use the original?",
+      [
+        {
+          text: "Crop (4:3)",
+          onPress: () => pickImage(true),
+        },
+        {
+          text: "Original (No Crop)",
+          onPress: () => pickImage(false),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+    );
+  };
+
+  const pickImage = async (allowsEditing: boolean) => {
+    const options: any = {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing,
       quality: 0.8,
-    });
+    };
+    if (allowsEditing) {
+      options.aspect = [4, 3];
+    }
+    const result = await ImagePicker.launchImageLibraryAsync(options);
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0]);
@@ -216,7 +242,6 @@ export default function GolferParadise({
     try {
       setPosting(true);
       const formData = new FormData();
-      formData.append("caption", caption);
 
       if (selectedImage) {
         const uri = selectedImage.uri;
@@ -225,19 +250,23 @@ export default function GolferParadise({
         const type = selectedImage.mimeType || "image/jpeg";
         formData.append("Images", { uri, name: filename, type } as any);
       }
+      formData.append("Caption", caption);
 
-      await https.post("paradise", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+      console.log("fff",formData);
+      
+      await postParadise(formData);
+      // await https.post("paradise", formData, {
+      //           headers: {
+      //               "Content-Type": "multipart/form-data",
+      //           },
+      //       });
 
       setCaption("");
       setSelectedImage(null);
       fetchPosts();
     } catch (error: any) {
       console.error("Post error:", error.response?.data || error.message);
-      Alert.alert("Error", "Failed to create post.");
+      Alert.alert("Error", "Failed to create post.\n" + error.response.data);
     } finally {
       setPosting(false);
     }
@@ -435,7 +464,7 @@ export default function GolferParadise({
             {posting ? (
               <ActivityIndicator color="white" size="small" />
             ) : (
-              <ButtonText className="font-bold">Post</ButtonText>
+              <ThemedText className="font-bold">Post</ThemedText>
             )}
           </Button>
         </HStack>
