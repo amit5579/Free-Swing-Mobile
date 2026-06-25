@@ -2096,6 +2096,10 @@ export default function ScoreCardUserPage() {
                                 if (isHighLow) {
                                   badgeText = idx < 2 ? "Team A" : "Team B";
                                   badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                                } else if (isNassau) {
+                                  const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
+                                  badgeText = isTeamA ? "Team A" : "Team B";
+                                  badgeColor = isTeamA ? "#0284c7" : "#e11d48";
                                 }
                                 const pName = p.isPrimary ? "You" : p.name;
                                 return (
@@ -2904,15 +2908,14 @@ export default function ScoreCardUserPage() {
                                               justifyContent: "center",
                                             }}
                                           >
-                                            <Text
+                                            <ThemedText
                                               style={{
-                                                fontSize: 13,
                                                 fontWeight: "800",
                                                 color: isDark ? "#fff" : "#000",
                                               }}
                                             >
                                               {t.gross}
-                                            </Text>
+                                            </ThemedText>
                                           </VStack>
                                         );
                                       })}
@@ -2933,15 +2936,14 @@ export default function ScoreCardUserPage() {
                                                 justifyContent: "center",
                                               }}
                                             >
-                                              <Text
+                                              <ThemedText
                                                 style={{
-                                                  fontSize: 13,
                                                   fontWeight: "800",
                                                   color: "#8BC34A",
                                                 }}
                                               >
                                                 {t.net}
-                                              </Text>
+                                              </ThemedText>
                                             </VStack>
                                           );
                                         })}
@@ -2962,15 +2964,14 @@ export default function ScoreCardUserPage() {
                                                 justifyContent: "center",
                                               }}
                                             >
-                                              <Text
+                                              <ThemedText
                                                 style={{
-                                                  fontSize: 13,
                                                   fontWeight: "800",
                                                   color: "#f59e0b",
                                                 }}
                                               >
                                                 {t.stableford}
-                                              </Text>
+                                              </ThemedText>
                                             </VStack>
                                           );
                                         })}
@@ -3032,9 +3033,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3042,7 +3042,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAnyF9 ? f9Pts[idx] : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                             ));
                                         })()}
@@ -3069,9 +3069,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3079,7 +3078,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAny ? f9A : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                               <VStack
                                                 style={{
@@ -3088,9 +3087,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3098,7 +3096,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAny ? f9B : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                             </>
                                           );
@@ -3115,11 +3113,10 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            <Text
+                                            <ThemedText
                                               style={{
                                                 color: isDark ? "#fff" : "#000",
                                                 fontWeight: "bold",
-                                                fontSize: 11,
                                               }}
                                             >
                                               {formatNassauHouses(
@@ -3127,7 +3124,7 @@ export default function ScoreCardUserPage() {
                                                   ? ns.back9Houses
                                                   : ns.front9Houses,
                                               )}
-                                            </Text>
+                                            </ThemedText>
                                           </VStack>
                                         )}
                                     </HStack>
@@ -3201,15 +3198,14 @@ export default function ScoreCardUserPage() {
                                               justifyContent: "center",
                                             }}
                                           >
-                                            <Text
+                                            <ThemedText
                                               style={{
-                                                fontSize: 13,
                                                 fontWeight: "700",
                                                 color: isDark ? "#fff" : "#000",
                                               }}
                                             >
                                               {t.gross}
-                                            </Text>
+                                            </ThemedText>
                                           </VStack>
                                         );
                                       })}
@@ -3230,15 +3226,14 @@ export default function ScoreCardUserPage() {
                                                 justifyContent: "center",
                                               }}
                                             >
-                                              <Text
+                                              <ThemedText
                                                 style={{
-                                                  fontSize: 13,
                                                   fontWeight: "700",
                                                   color: "#8BC34A",
                                                 }}
                                               >
                                                 {t.net}
-                                              </Text>
+                                              </ThemedText>
                                             </VStack>
                                           );
                                         })}
@@ -3259,15 +3254,14 @@ export default function ScoreCardUserPage() {
                                                 justifyContent: "center",
                                               }}
                                             >
-                                              <Text
+                                              <ThemedText
                                                 style={{
-                                                  fontSize: 13,
                                                   fontWeight: "700",
                                                   color: "#f59e0b",
                                                 }}
                                               >
                                                 {t.stableford}
-                                              </Text>
+                                              </ThemedText>
                                             </VStack>
                                           );
                                         })}
@@ -3329,9 +3323,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3339,7 +3332,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAnyB9 ? b9Pts[idx] : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                             ));
                                         })()}
@@ -3366,9 +3359,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3376,7 +3368,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAny ? b9A : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                               <VStack
                                                 style={{
@@ -3385,9 +3377,8 @@ export default function ScoreCardUserPage() {
                                                   justifyContent: "center",
                                                 }}
                                               >
-                                                <Text
+                                                <ThemedText
                                                   style={{
-                                                    fontSize: 10,
                                                     fontWeight: "700",
                                                     color: isDark
                                                       ? "#fff"
@@ -3395,7 +3386,7 @@ export default function ScoreCardUserPage() {
                                                   }}
                                                 >
                                                   {hasAny ? b9B : "-"}
-                                                </Text>
+                                                </ThemedText>
                                               </VStack>
                                             </>
                                           );
@@ -3412,11 +3403,10 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            <Text
+                                            <ThemedText
                                               style={{
                                                 color: isDark ? "#fff" : "#000",
                                                 fontWeight: "bold",
-                                                fontSize: 11,
                                               }}
                                             >
                                               {formatNassauHouses(
@@ -3424,7 +3414,7 @@ export default function ScoreCardUserPage() {
                                                   ? ns.front9Houses
                                                   : ns.back9Houses,
                                               )}
-                                            </Text>
+                                            </ThemedText>
                                           </VStack>
                                         )}
                                     </HStack>
@@ -3488,15 +3478,14 @@ export default function ScoreCardUserPage() {
                                       justifyContent: "center",
                                     }}
                                   >
-                                    <Text
+                                    <ThemedText
                                       style={{
-                                        fontSize: 13,
                                         fontWeight: "800",
                                         color: "#fff",
                                       }}
                                     >
                                       {t.gross}
-                                    </Text>
+                                    </ThemedText>
                                   </VStack>
                                 );
                               })}
@@ -3514,15 +3503,14 @@ export default function ScoreCardUserPage() {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 13,
                                           fontWeight: "800",
                                           color: "#fff",
                                         }}
                                       >
                                         {t.net}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                   );
                                 })}
@@ -3540,15 +3528,14 @@ export default function ScoreCardUserPage() {
                                         justifyContent: "center",
                                       }}
                                     >
-                                      <Text
+                                      <ThemedText
                                         style={{
-                                          fontSize: 13,
                                           fontWeight: "800",
                                           color: "#fff",
                                         }}
                                       >
                                         {t.stableford}
-                                      </Text>
+                                      </ThemedText>
                                     </VStack>
                                   );
                                 })}
@@ -3609,15 +3596,14 @@ export default function ScoreCardUserPage() {
                                           justifyContent: "center",
                                         }}
                                       >
-                                        <Text
+                                        <ThemedText
                                           style={{
-                                            fontSize: 10,
                                             fontWeight: "800",
                                             color: "#fff",
                                           }}
                                         >
                                           {hasAnyTotal ? totalPts[idx] : "-"}
-                                        </Text>
+                                        </ThemedText>
                                       </VStack>
                                     ));
                                 })()}
@@ -3644,15 +3630,14 @@ export default function ScoreCardUserPage() {
                                           justifyContent: "center",
                                         }}
                                       >
-                                        <Text
+                                        <ThemedText
                                           style={{
-                                            fontSize: 10,
                                             fontWeight: "800",
                                             color: "#fff",
                                           }}
                                         >
                                           {hasAny ? totalA : "-"}
-                                        </Text>
+                                        </ThemedText>
                                       </VStack>
                                       <VStack
                                         style={{
@@ -3661,15 +3646,14 @@ export default function ScoreCardUserPage() {
                                           justifyContent: "center",
                                         }}
                                       >
-                                        <Text
+                                        <ThemedText
                                           style={{
-                                            fontSize: 10,
                                             fontWeight: "800",
                                             color: "#fff",
                                           }}
                                         >
                                           {hasAny ? totalB : "-"}
-                                        </Text>
+                                        </ThemedText>
                                       </VStack>
                                     </>
                                   );
@@ -3684,15 +3668,14 @@ export default function ScoreCardUserPage() {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  <Text
+                                  <ThemedText
                                     style={{
                                       color: "#fff",
                                       fontWeight: "800",
-                                      fontSize: 11,
                                     }}
                                   >
                                     {formatNassauHouses(ns.overallHouses)}
-                                  </Text>
+                                  </ThemedText>
                                 </VStack>
                               )}
                             </HStack>
@@ -3871,7 +3854,11 @@ export default function ScoreCardUserPage() {
                                       fontWeight: bold ? "700" : "500",
                                       width: 60,
                                       textAlign: "center",
-                                      color: bold ? "#84cc16" : undefined,
+                                      color: bold
+                                        ? "#84cc16"
+                                        : isDark
+                                        ? "#fff"
+                                        : "#000",
                                     }}
                                   >
                                     {v}
@@ -4449,12 +4436,9 @@ export default function ScoreCardUserPage() {
                                         fontWeight: "800",
                                       }}
                                     >
-                                      {[
-                                        ns.front9Halfs.team1,
-                                        ns.front9Halfs.team2,
-                                        ns.back9Halfs.team1,
-                                        ns.back9Halfs.team2,
-                                      ].join(" ")}
+                                      {formatNassauHousesSpaced(
+                                        ns.front9Houses,
+                                      )}
                                     </ThemedText>
                                   </HStack>
                                   <ThemedText

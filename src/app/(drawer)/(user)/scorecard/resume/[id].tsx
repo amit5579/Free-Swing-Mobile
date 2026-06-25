@@ -2283,6 +2283,10 @@ export default function ResumeScorecard() {
                   if (isHighLow) {
                     badgeText = idx < 2 ? "Team A" : "Team B";
                     badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                  } else if (isNassau) {
+                    const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
+                    badgeText = isTeamA ? "Team A" : "Team B";
+                    badgeColor = isTeamA ? "#0284c7" : "#e11d48";
                   }
                   return (
                     <VStack
@@ -2616,6 +2620,38 @@ export default function ResumeScorecard() {
                                         S
                                       </Text>
                                     </TouchableOpacity>
+
+                                    {info.score !== null &&
+                                      getScoringLabel() !==
+                                        "Net Score • Include Par 3" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Exclude Par 3" &&
+                                      getScoringLabel() !==
+                                        "Stableford" &&
+                                      getScoringLabel() !==
+                                        "Stableford • Exclude Par 3" &&
+                                      (() => {
+                                        const badgeVal =
+                                          getBadgeMultiplier(
+                                            info.score,
+                                            h.par,
+                                            info.sandy,
+                                          );
+                                        if (badgeVal > 0) {
+                                          return (
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                color: "#f59e0b",
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              {badgeVal}x
+                                            </Text>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
                                   </HStack>
                                 </View>
                               );
@@ -2811,15 +2847,14 @@ export default function ResumeScorecard() {
                             key={p.playerId}
                             style={{ width: 95, alignItems: "center" }}
                           >
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 10,
                                 fontWeight: "700",
                                 color: isDark ? "#fff" : "#000",
                               }}
                             >
                               {t.gross}
-                            </Text>
+                            </ThemedText>
                           </VStack>
                         );
                       })}
@@ -2866,15 +2901,14 @@ export default function ResumeScorecard() {
                                 justifyContent: "center",
                               }}
                             >
-                              <Text
+                              <ThemedText
                                 style={{
-                                  fontSize: 10,
                                   fontWeight: "700",
                                   color: isDark ? "#fff" : "#000",
                                 }}
                               >
                                 {hasAnyF9 ? f9Pts[idx] : "-"}
-                              </Text>
+                              </ThemedText>
                             </VStack>
                           ));
                         })()}
@@ -2901,15 +2935,14 @@ export default function ResumeScorecard() {
                                   justifyContent: "center",
                                 }}
                               >
-                                <Text
+                                <ThemedText
                                   style={{
-                                    fontSize: 10,
                                     fontWeight: "700",
                                     color: isDark ? "#fff" : "#000",
                                   }}
                                 >
                                   {hasAny ? f9A : "-"}
-                                </Text>
+                                </ThemedText>
                               </VStack>
                               <VStack
                                 style={{
@@ -2918,15 +2951,14 @@ export default function ResumeScorecard() {
                                   justifyContent: "center",
                                 }}
                               >
-                                <Text
+                                <ThemedText
                                   style={{
-                                    fontSize: 10,
                                     fontWeight: "700",
                                     color: isDark ? "#fff" : "#000",
                                   }}
                                 >
                                   {hasAny ? f9B : "-"}
-                                </Text>
+                                </ThemedText>
                               </VStack>
                             </>
                           );
@@ -2941,11 +2973,10 @@ export default function ResumeScorecard() {
                             flexWrap: "wrap",
                           }}
                         >
-                          <Text
+                          <ThemedText
                             style={{
                               color: isDark ? "#fff" : "#000",
                               fontWeight: "bold",
-                              fontSize: 11,
                             }}
                           >
                             {formatNassauHouses(
@@ -2953,7 +2984,7 @@ export default function ResumeScorecard() {
                                 ? ns.back9Houses
                                 : ns.front9Houses,
                             )}
-                          </Text>
+                          </ThemedText>
                         </VStack>
                       )}
                     </HStack>
@@ -3104,6 +3135,78 @@ export default function ResumeScorecard() {
                                       }}
                                     />
                                   </View>
+
+                                  <HStack
+                                    style={{
+                                      alignItems: "center",
+                                      gap: 4,
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    <TouchableOpacity
+                                      onPress={() =>
+                                        handleSandyToggle(h.holeId, p.playerId)
+                                      }
+                                      style={{
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: 9,
+                                        backgroundColor: info.sandy
+                                          ? "#2e7d32"
+                                          : isDark
+                                            ? "#333"
+                                            : "#e5e5e5",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text
+                                        style={{
+                                          fontSize: 9,
+                                          fontWeight: "bold",
+                                          color: info.sandy
+                                            ? "#fff"
+                                            : isDark
+                                              ? "#aaa"
+                                              : "#666",
+                                        }}
+                                      >
+                                        S
+                                      </Text>
+                                    </TouchableOpacity>
+
+                                    {info.score !== null &&
+                                      getScoringLabel() !==
+                                        "Net Score • Include Par 3" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Exclude Par 3" &&
+                                      getScoringLabel() !==
+                                        "Stableford" &&
+                                      getScoringLabel() !==
+                                        "Stableford • Exclude Par 3" &&
+                                      (() => {
+                                        const badgeVal =
+                                          getBadgeMultiplier(
+                                            info.score,
+                                            h.par,
+                                            info.sandy,
+                                          );
+                                        if (badgeVal > 0) {
+                                          return (
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                color: "#f59e0b",
+                                                fontWeight: "bold",
+                                              }}
+                                            >
+                                              {badgeVal}x
+                                            </Text>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+                                  </HStack>
                                 </View>
                               );
                             })}
@@ -3224,18 +3327,129 @@ export default function ResumeScorecard() {
                             key={p.playerId}
                             style={{ width: 95, alignItems: "center" }}
                           >
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 10,
                                 fontWeight: "700",
                                 color: isDark ? "#fff" : "#000",
                               }}
                             >
                               {t.gross}
-                            </Text>
+                            </ThemedText>
                           </VStack>
                         );
                       })}
+                      {isSplit6 &&
+                        partners.length >= 3 &&
+                        (() => {
+                          let b9Pts = [0, 0, 0];
+                          let hasAnyB9 = false;
+                          back9Holes.forEach((bh) => {
+                            const raw1 = getPlayerHoleInfo(bh, partners[0]).score;
+                            const raw2 = getPlayerHoleInfo(bh, partners[1]).score;
+                            const raw3 = getPlayerHoleInfo(bh, partners[2]).score;
+                            if (raw1 !== null && raw2 !== null && raw3 !== null) {
+                              const pts = calculateSplitSixPoints(raw1, raw2, raw3);
+                              b9Pts[0] += pts[0];
+                              b9Pts[1] += pts[1];
+                              b9Pts[2] += pts[2];
+                              hasAnyB9 = true;
+                            }
+                          });
+                          return partners.slice(0, 3).map((p, idx) => (
+                            <VStack
+                              key={`b9-pts-${p.playerId}`}
+                              style={{
+                                width: 95,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  fontWeight: "700",
+                                  color: isDark ? "#fff" : "#000",
+                                }}
+                              >
+                                {hasAnyB9 ? b9Pts[idx] : "-"}
+                              </ThemedText>
+                            </VStack>
+                          ));
+                        })()}
+                      {isHighLow &&
+                        partners.length >= 4 &&
+                        (() => {
+                          let b9A = 0,
+                            b9B = 0;
+                          let hasAny = false;
+                          back9Holes.forEach((bh: any) => {
+                            const st = getHighLowHoleStats(bh);
+                            if (st.isComplete) {
+                              b9A += st.teamAMatchPts;
+                              b9B += st.teamBMatchPts;
+                              hasAny = true;
+                            }
+                          });
+                          return (
+                            <>
+                              <VStack
+                                style={{
+                                  width: 80,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontWeight: "700",
+                                    color: isDark ? "#fff" : "#000",
+                                  }}
+                                >
+                                  {hasAny ? b9A : "-"}
+                                </ThemedText>
+                              </VStack>
+                              <VStack
+                                style={{
+                                  width: 80,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontWeight: "700",
+                                    color: isDark ? "#fff" : "#000",
+                                  }}
+                                >
+                                  {hasAny ? b9B : "-"}
+                                </ThemedText>
+                              </VStack>
+                            </>
+                          );
+                        })()}
+                      {isNassau && partners.length >= 2 && ns && (
+                        <VStack
+                          style={{
+                            width: 100,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              color: isDark ? "#fff" : "#000",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {formatNassauHouses(
+                              nassauStartingNine === "back"
+                                ? ns.front9Houses
+                                : ns.back9Houses,
+                            )}
+                          </ThemedText>
+                        </VStack>
+                      )}
                     </HStack>
                   )}
 
@@ -3291,15 +3505,14 @@ export default function ResumeScorecard() {
                           key={p.playerId}
                           style={{ width: 95, alignItems: "center" }}
                         >
-                          <Text
+                          <ThemedText
                             style={{
-                              fontSize: 10,
                               fontWeight: "800",
                               color: "#fff",
                             }}
                           >
                             {t.gross}
-                          </Text>
+                          </ThemedText>
                           {/* {isStableford ? (
                             <Text
                               style={{
@@ -3353,15 +3566,14 @@ export default function ResumeScorecard() {
                               justifyContent: "center",
                             }}
                           >
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 10,
                                 fontWeight: "800",
                                 color: "#fff",
                               }}
                             >
                               {hasAnyTotal ? totalPts[idx] : "-"}
-                            </Text>
+                            </ThemedText>
                           </VStack>
                         ));
                       })()}
@@ -3388,15 +3600,14 @@ export default function ResumeScorecard() {
                                 justifyContent: "center",
                               }}
                             >
-                              <Text
+                              <ThemedText
                                 style={{
-                                  fontSize: 10,
                                   fontWeight: "800",
                                   color: "#fff",
                                 }}
                               >
                                 {hasAny ? totalA : "-"}
-                              </Text>
+                              </ThemedText>
                             </VStack>
                             <VStack
                               style={{
@@ -3405,15 +3616,14 @@ export default function ResumeScorecard() {
                                 justifyContent: "center",
                               }}
                             >
-                              <Text
+                              <ThemedText
                                 style={{
-                                  fontSize: 10,
                                   fontWeight: "800",
                                   color: "#fff",
                                 }}
                               >
                                 {hasAny ? totalB : "-"}
-                              </Text>
+                              </ThemedText>
                             </VStack>
                           </>
                         );
@@ -3428,15 +3638,14 @@ export default function ResumeScorecard() {
                           flexWrap: "wrap",
                         }}
                       >
-                        <Text
+                        <ThemedText
                           style={{
                             color: "#fff",
                             fontWeight: "800",
-                            fontSize: 11,
                           }}
                         >
                           {formatNassauHouses(ns.overallHouses)}
-                        </Text>
+                        </ThemedText>
                       </VStack>
                     )}
                   </HStack>
@@ -4050,12 +4259,9 @@ export default function ResumeScorecard() {
                                     fontWeight: "800",
                                   }}
                                 >
-                                  {[
-                                    ns.front9Halfs.team1,
-                                    ns.front9Halfs.team2,
-                                    ns.back9Halfs.team1,
-                                    ns.back9Halfs.team2,
-                                  ].join(" ")}
+                                  {formatNassauHousesSpaced(
+                                    ns.front9Houses,
+                                  )}
                                 </ThemedText>
                               </HStack>
                             </HStack>
