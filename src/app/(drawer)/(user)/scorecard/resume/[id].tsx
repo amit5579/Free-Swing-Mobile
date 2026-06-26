@@ -3241,29 +3241,6 @@ export default function ResumeScorecard() {
                                   if (!hRes)
                                     return <View style={{ width: 100 }} />;
 
-                                  const renderHouse = (
-                                    val: number,
-                                    idx: number,
-                                    arr: number[],
-                                  ) => {
-                                    let color = isDark ? "#fff" : "#000";
-                                    if (val > 0) color = "#22c55e";
-                                    if (val < 0) color = "#3b82f6";
-                                    return (
-                                      <Text
-                                        key={idx}
-                                        style={{
-                                          color,
-                                          fontWeight: "bold",
-                                          fontSize: 11,
-                                        }}
-                                      >
-                                        {Math.abs(val)}
-                                        {idx < arr.length - 1 ? " " : ""}
-                                      </Text>
-                                    );
-                                  };
-
                                   return (
                                     <View
                                       style={{
@@ -3274,20 +3251,28 @@ export default function ResumeScorecard() {
                                         flexWrap: "wrap",
                                       }}
                                     >
-                                      {((
-                                        nassauStartingNine === "back"
-                                          ? h.holeNumber >= 10
-                                          : h.holeNumber <= 9
-                                      )
-                                        ? hRes.housesDisplay
-                                        : hRes.overallHousesDisplay || []
-                                      ).map(
-                                        (
-                                          val: number,
-                                          i: number,
-                                          arr: number[],
-                                        ) => renderHouse(val, i, arr),
+                                      {renderNassauHouses(
+                                        hRes.overallHousesDisplay,
                                       )}
+                                      {(nassauStartingNine === "back"
+                                        ? h.holeNumber <= 9
+                                        : h.holeNumber >= 10) &&
+                                        hRes.housesDisplay.length > 0 && (
+                                          <Text
+                                            style={{
+                                              color: isDark
+                                                ? "#94a3b8"
+                                                : "#64748b",
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {" & "}
+                                          </Text>
+                                        )}
+                                      {(nassauStartingNine === "back"
+                                        ? h.holeNumber <= 9
+                                        : h.holeNumber >= 10) &&
+                                        renderNassauHouses(hRes.housesDisplay)}
                                     </View>
                                   );
                                 })()}
