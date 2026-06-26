@@ -54,8 +54,33 @@ const ScoreCard: React.FC = () => {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const teamAColor = isDark ? "#38bdf8" : "#0284c7";
-  const teamBColor = isDark ? "#fb7185" : "#e11d48";
+  const teamAColor = isDark ? "#4ade80" : "#198754";
+  const teamBColor = isDark ? "#60a5fa" : "#0d6efd";
+  const renderNassauHouses = (houses: number[], isTotalRow?: boolean) => {
+    return (houses || []).map((val: number, idx: number, arr: number[]) => {
+      let color = isDark ? "#fff" : "#000";
+      if (isTotalRow) {
+        if (val > 0) color = "#1b4332"; // dark green for Team A
+        if (val < 0) color = "#1e3a8a"; // dark blue for Team B
+      } else {
+        if (val > 0) color = "#198754"; // green for Team A (web color)
+        if (val < 0) color = "#0d6efd"; // blue for Team B (web color)
+      }
+      return (
+        <Text
+          key={idx}
+          style={{
+            color,
+            fontWeight: "bold",
+            fontSize: 11,
+          }}
+        >
+          {Math.abs(val)}
+          {idx < arr.length - 1 ? " " : ""}
+        </Text>
+      );
+    });
+  };
   const insets = useSafeAreaInsets();
   const displayHandicap = parseInt(paramHandicap || "0");
 
@@ -459,18 +484,30 @@ const ScoreCard: React.FC = () => {
   const getBadgeMultiplier = (
     score: number | null,
     par: number,
-    sandy: boolean,
+    isSandy: boolean,
   ) => {
-    if (score === null || score <= 0) return sandy ? 1 : 0;
-    let base = 0;
-    if (score === 1) base = 25;
-    else {
-      const diff = score - par;
-      if (diff <= -2) base = 5;
-      else if (diff === -1) base = 2;
+    if (score === null || score < 0) return 0;
+    const diff = score - par;
+    let basePoints = 0;
+    if (score === 1) {
+      basePoints = 25;
+    } else if (diff <= -3) {
+      basePoints = 15;
+    } else if (diff === -2) {
+      basePoints = 5;
+    } else if (diff === -1) {
+      basePoints = 2;
+    } else {
+      basePoints = 0;
     }
-    return base + (sandy ? 1 : 0);
+
+    let sandyBonus = 0;
+    if (isSandy && diff <= 0) {
+      sandyBonus = 1;
+    }
+    return basePoints + sandyBonus;
   };
+
 
   const getPlayerTotals = (holesList: any[], partner: any) => {
     let gross = 0;
@@ -1543,11 +1580,11 @@ const ScoreCard: React.FC = () => {
                       let badgeColor = "";
                       if (isHighLow) {
                         badgeText = idx < 2 ? "Team A" : "Team B";
-                        badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                        badgeColor = idx < 2 ? teamAColor : teamBColor;
                       } else if (isNassau) {
                         const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
                         badgeText = isTeamA ? "Team A" : "Team B";
-                        badgeColor = isTeamA ? "#0284c7" : "#e11d48";
+                        badgeColor = isTeamA ? teamAColor : teamBColor;
                       }
                       return (
                         <VStack
@@ -1626,7 +1663,7 @@ const ScoreCard: React.FC = () => {
                               textAlign: "center",
                               fontWeight: "700",
                               fontSize: 12,
-                              color: "#0284c7",
+                              color: teamAColor,
                             }}
                           >
                             Team A Pts
@@ -1645,7 +1682,7 @@ const ScoreCard: React.FC = () => {
                               textAlign: "center",
                               fontWeight: "700",
                               fontSize: 12,
-                              color: "#e11d48",
+                              color: teamBColor,
                             }}
                           >
                             Team B Pts
@@ -1866,7 +1903,7 @@ const ScoreCard: React.FC = () => {
                                           style={{
                                             fontSize: 9,
                                             color:
-                                              pIndex < 2 ? "#38bdf8" : "#f43f5e",
+                                              pIndex < 2 ? teamAColor : teamBColor,
                                             fontWeight: "bold",
                                           }}
                                         >
@@ -1990,7 +2027,7 @@ const ScoreCard: React.FC = () => {
                                     <ThemedText
                                       style={{
                                         fontWeight: "bold",
-                                        color: "#0284c7",
+                                        color: teamAColor,
                                         fontSize: 13,
                                       }}
                                     >
@@ -2008,7 +2045,7 @@ const ScoreCard: React.FC = () => {
                                     <ThemedText
                                       style={{
                                         fontWeight: "bold",
-                                        color: "#e11d48",
+                                        color: teamBColor,
                                         fontSize: 13,
                                       }}
                                     >
@@ -2024,29 +2061,6 @@ const ScoreCard: React.FC = () => {
                               const hRes = ns?.holeResults[h.holeNumber];
                               if (!hRes) return <View style={{ width: 100 }} />;
 
-                              const renderHouse = (
-                                val: number,
-                                idx: number,
-                                arr: number[],
-                              ) => {
-                                let color = isDark ? "#fff" : "#000";
-                                if (val > 0) color = "#22c55e"; // green
-                                if (val < 0) color = "#3b82f6"; // blue
-                                return (
-                                  <Text
-                                    key={idx}
-                                    style={{
-                                      color,
-                                      fontWeight: "bold",
-                                      fontSize: 11,
-                                    }}
-                                  >
-                                    {Math.abs(val)}
-                                    {idx < arr.length - 1 ? " " : ""}
-                                  </Text>
-                                );
-                              };
-
                               return (
                                 <View
                                   style={{
@@ -2057,10 +2071,7 @@ const ScoreCard: React.FC = () => {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  {hRes.overallHousesDisplay.map(
-                                    (val: number, i: number, arr: number[]) =>
-                                      renderHouse(val, i, arr),
-                                  )}
+                                  {renderNassauHouses(hRes.overallHousesDisplay)}
                                   {(nassauStartingNine === "back"
                                     ? h.holeNumber <= 9
                                     : h.holeNumber >= 10) &&
@@ -2077,10 +2088,7 @@ const ScoreCard: React.FC = () => {
                                   {(nassauStartingNine === "back"
                                     ? h.holeNumber <= 9
                                     : h.holeNumber >= 10) &&
-                                    hRes.housesDisplay.map(
-                                      (val: number, i: number, arr: number[]) =>
-                                        renderHouse(val, i, arr),
-                                    )}
+                                    renderNassauHouses(hRes.housesDisplay)}
                                 </View>
                               );
                             })()}
@@ -2297,18 +2305,11 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                <ThemedText
-                                  style={{
-                                    color: isDark ? "#fff" : "#000",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {formatNassauHouses(
-                                    nassauStartingNine === "back"
-                                      ? ns.back9Houses
-                                      : ns.front9Houses,
-                                  )}
-                                </ThemedText>
+                                {renderNassauHouses(
+                                  nassauStartingNine === "back"
+                                    ? ns.back9Houses
+                                    : ns.front9Houses,
+                                )}
                               </VStack>
                             )}
                           </HStack>
@@ -2525,18 +2526,11 @@ const ScoreCard: React.FC = () => {
                                   flexWrap: "wrap",
                                 }}
                               >
-                                <ThemedText
-                                  style={{
-                                    color: isDark ? "#fff" : "#000",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {formatNassauHouses(
-                                    nassauStartingNine === "back"
-                                      ? ns.front9Houses
-                                      : ns.back9Houses,
-                                  )}
-                                </ThemedText>
+                                {renderNassauHouses(
+                                  nassauStartingNine === "back"
+                                    ? ns.front9Houses
+                                    : ns.back9Houses,
+                                )}
                               </VStack>
                             )}
                           </HStack>
@@ -2739,14 +2733,7 @@ const ScoreCard: React.FC = () => {
                           flexWrap: "wrap",
                         }}
                       >
-                        <ThemedText
-                          style={{
-                            color: "#fff",
-                            fontWeight: "800",
-                          }}
-                        >
-                          {formatNassauHouses(ns.overallHouses)}
-                        </ThemedText>
+                        {renderNassauHouses(ns.overallHouses, true)}
                       </VStack>
                     )}
                   </HStack>
@@ -3287,13 +3274,13 @@ const ScoreCard: React.FC = () => {
                       />
                       <Row
                         label="Patiala X"
-                        a={`${ns.patialaX.teamA}`}
-                        b={`${ns.patialaX.teamB}`}
+                        a={`${ns.patialaX.teamA}x`}
+                        b={`${ns.patialaX.teamB}x`}
                       />
                       <Row
                         label="Final X Points"
-                        a={`${ns.finalXPoints.teamA}`}
-                        b={`${ns.finalXPoints.teamB}`}
+                        a={`${ns.finalXPoints.teamA}x`}
+                        b={`${ns.finalXPoints.teamB}x`}
                       />
                       <View
                         style={{
@@ -3338,33 +3325,18 @@ const ScoreCard: React.FC = () => {
                             >
                               Match -{" "}
                             </ThemedText>
-                            <ThemedText
-                              style={{
-                                color: "#059669",
-                                fontSize: 12,
-                                fontWeight: "800",
-                              }}
-                            >
-                              {formatNassauHousesSpaced(ns.overallHouses)}
-                            </ThemedText>
+                            {renderNassauHouses(ns.overallHouses)}
                             <ThemedText
                               style={{
                                 color: isDark ? "#e2e8f0" : "#334155",
                                 fontSize: 12,
                                 fontWeight: "700",
+                                marginHorizontal: 6,
                               }}
                             >
-                              {"  &  Half - "}
+                              {" & Half - "}
                             </ThemedText>
-                            <ThemedText
-                              style={{
-                                color: "#059669",
-                                fontSize: 12,
-                                fontWeight: "800",
-                              }}
-                            >
-                              {formatNassauHousesSpaced(ns.front9Houses)}
-                            </ThemedText>
+                            {renderNassauHouses(ns.front9Houses)}
                           </HStack>
                         </HStack>
                         <ThemedText
