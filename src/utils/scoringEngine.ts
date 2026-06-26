@@ -203,7 +203,7 @@ export function computePlayerXPoints(
 ): number {
   let total = 0;
   holes.forEach((h) => {
-    if (h.score === null || h.score <= 0) return;
+    if (h.score === null || h.score < 0) return;
     const diff = h.score - h.par;
     if (h.score === 1) {
       total += 25; // Hole-in-One

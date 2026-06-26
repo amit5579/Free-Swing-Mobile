@@ -96,6 +96,33 @@ export default function ScoreCardUserPage() {
   const navigation = useNavigation();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
+  const teamAColor = isDark ? "#4ade80" : "#198754";
+  const teamBColor = isDark ? "#60a5fa" : "#0d6efd";
+  const renderNassauHouses = (houses: number[], isTotalRow?: boolean) => {
+    return (houses || []).map((val: number, idx: number, arr: number[]) => {
+      let color = isDark ? "#fff" : "#000";
+      if (isTotalRow) {
+        if (val > 0) color = "#1b4332"; // dark green for Team A
+        if (val < 0) color = "#1e3a8a"; // dark blue for Team B
+      } else {
+        if (val > 0) color = "#198754"; // green for Team A (web color)
+        if (val < 0) color = "#0d6efd"; // blue for Team B (web color)
+      }
+      return (
+        <Text
+          key={idx}
+          style={{
+            color,
+            fontWeight: "bold",
+            fontSize: 11,
+          }}
+        >
+          {Math.abs(val)}
+          {idx < arr.length - 1 ? " " : ""}
+        </Text>
+      );
+    });
+  };
 
   const [visible, setVisible] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
@@ -1157,7 +1184,7 @@ export default function ScoreCardUserPage() {
     par: number,
     isSandy: boolean,
   ) => {
-    if (score === null || score <= 0) return 0;
+    if (score === null || score < 0) return 0;
     const diff = score - par;
     let basePoints = 0;
     if (score === 1) {
@@ -2095,11 +2122,11 @@ export default function ScoreCardUserPage() {
                                 let badgeColor = "";
                                 if (isHighLow) {
                                   badgeText = idx < 2 ? "Team A" : "Team B";
-                                  badgeColor = idx < 2 ? "#0284c7" : "#e11d48";
+                                  badgeColor = idx < 2 ? teamAColor : teamBColor;
                                 } else if (isNassau) {
                                   const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
                                   badgeText = isTeamA ? "Team A" : "Team B";
-                                  badgeColor = isTeamA ? "#0284c7" : "#e11d48";
+                                  badgeColor = isTeamA ? teamAColor : teamBColor;
                                 }
                                 const pName = p.isPrimary ? "You" : p.name;
                                 return (
@@ -2238,7 +2265,7 @@ export default function ScoreCardUserPage() {
                                         textAlign: "center",
                                         fontWeight: "700",
                                         fontSize: 11,
-                                        color: "#38bdf8",
+                                        color: teamAColor,
                                       }}
                                     >
                                       Team A
@@ -2256,7 +2283,7 @@ export default function ScoreCardUserPage() {
                                         textAlign: "center",
                                         fontWeight: "700",
                                         fontSize: 11,
-                                        color: "#f43f5e",
+                                        color: teamBColor,
                                       }}
                                     >
                                       Team B
@@ -2729,7 +2756,7 @@ export default function ScoreCardUserPage() {
                                               <ThemedText
                                                 style={{
                                                   fontWeight: "bold",
-                                                  color: "#38bdf8",
+                                                  color: teamAColor,
                                                   fontSize: 13,
                                                 }}
                                               >
@@ -2748,7 +2775,7 @@ export default function ScoreCardUserPage() {
                                               <ThemedText
                                                 style={{
                                                   fontWeight: "bold",
-                                                  color: "#f43f5e",
+                                                  color: teamBColor,
                                                   fontSize: 13,
                                                 }}
                                               >
@@ -2770,29 +2797,6 @@ export default function ScoreCardUserPage() {
                                             <View style={{ width: 100 }} />
                                           );
 
-                                        const renderHouse = (
-                                          val: number,
-                                          idx: number,
-                                          arr: number[],
-                                        ) => {
-                                          let color = isDark ? "#fff" : "#000";
-                                          if (val > 0) color = "#22c55e"; // green
-                                          if (val < 0) color = "#3b82f6"; // blue
-                                          return (
-                                            <Text
-                                              key={idx}
-                                              style={{
-                                                color,
-                                                fontWeight: "bold",
-                                                fontSize: 11,
-                                              }}
-                                            >
-                                              {Math.abs(val)}
-                                              {idx < arr.length - 1 ? " " : ""}
-                                            </Text>
-                                          );
-                                        };
-
                                         return (
                                           <View
                                             style={{
@@ -2803,13 +2807,7 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            {hRes.overallHousesDisplay.map(
-                                              (
-                                                val: number,
-                                                i: number,
-                                                arr: number[],
-                                              ) => renderHouse(val, i, arr),
-                                            )}
+                                            {renderNassauHouses(hRes.overallHousesDisplay)}
                                             {(nassauStartingNine === "back"
                                               ? h.holeNumber <= 9
                                               : h.holeNumber >= 10) &&
@@ -2828,13 +2826,7 @@ export default function ScoreCardUserPage() {
                                             {(nassauStartingNine === "back"
                                               ? h.holeNumber <= 9
                                               : h.holeNumber >= 10) &&
-                                              hRes.housesDisplay.map(
-                                                (
-                                                  val: number,
-                                                  i: number,
-                                                  arr: number[],
-                                                ) => renderHouse(val, i, arr),
-                                              )}
+                                              renderNassauHouses(hRes.housesDisplay)}
                                           </View>
                                         );
                                       })()}
@@ -3113,18 +3105,11 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            <ThemedText
-                                              style={{
-                                                color: isDark ? "#fff" : "#000",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              {formatNassauHouses(
-                                                nassauStartingNine === "back"
-                                                  ? ns.back9Houses
-                                                  : ns.front9Houses,
-                                              )}
-                                            </ThemedText>
+                                            {renderNassauHouses(
+                                              nassauStartingNine === "back"
+                                                ? ns.back9Houses
+                                                : ns.front9Houses,
+                                            )}
                                           </VStack>
                                         )}
                                     </HStack>
@@ -3403,18 +3388,11 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            <ThemedText
-                                              style={{
-                                                color: isDark ? "#fff" : "#000",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              {formatNassauHouses(
-                                                nassauStartingNine === "back"
-                                                  ? ns.front9Houses
-                                                  : ns.back9Houses,
-                                              )}
-                                            </ThemedText>
+                                            {renderNassauHouses(
+                                              nassauStartingNine === "back"
+                                                ? ns.front9Houses
+                                                : ns.back9Houses,
+                                            )}
                                           </VStack>
                                         )}
                                     </HStack>
@@ -3668,14 +3646,7 @@ export default function ScoreCardUserPage() {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  <ThemedText
-                                    style={{
-                                      color: "#fff",
-                                      fontWeight: "800",
-                                    }}
-                                  >
-                                    {formatNassauHouses(ns.overallHouses)}
-                                  </ThemedText>
+                                  {renderNassauHouses(ns.overallHouses, true)}
                                 </VStack>
                               )}
                             </HStack>
@@ -4010,7 +3981,7 @@ export default function ScoreCardUserPage() {
                                     fontWeight: bold ? "700" : "500",
                                     width: 70,
                                     textAlign: "center",
-                                    color: bold ? "#84cc16" : "#38bdf8",
+                                    color: bold ? "#84cc16" : teamAColor,
                                   }}
                                 >
                                   {a}
@@ -4021,7 +3992,7 @@ export default function ScoreCardUserPage() {
                                     fontWeight: bold ? "700" : "500",
                                     width: 70,
                                     textAlign: "center",
-                                    color: bold ? "#84cc16" : "#f43f5e",
+                                    color: bold ? "#84cc16" : teamBColor,
                                   }}
                                 >
                                   {b}
@@ -4063,7 +4034,7 @@ export default function ScoreCardUserPage() {
                                       fontSize: 11,
                                       width: 70,
                                       textAlign: "center",
-                                      color: "#38bdf8",
+                                      color: teamAColor,
                                     }}
                                   >
                                     Team A
@@ -4074,22 +4045,12 @@ export default function ScoreCardUserPage() {
                                       fontSize: 11,
                                       width: 70,
                                       textAlign: "center",
-                                      color: "#f43f5e",
+                                      color: teamBColor,
                                     }}
                                   >
                                     Team B
                                   </ThemedText>
                                 </HStack>
-                                {/* <Row
-                                  label="Front 9"
-                                  a={s.front9MatchPts.teamA}
-                                  b={s.front9MatchPts.teamB}
-                                />
-                                <Row
-                                  label="Back 9"
-                                  a={s.back9MatchPts.teamA}
-                                  b={s.back9MatchPts.teamB}
-                                /> */}
                                 <Row
                                   label="Overall Match Pts"
                                   a={s.overallMatchPts.teamA}
@@ -4114,8 +4075,6 @@ export default function ScoreCardUserPage() {
                                 />
                                 <View
                                   style={{
-                                    // borderTopWidth: 0.5,
-                                    // borderColor: isDark ? "#444" : "#ddd",
                                     paddingTop: 10,
                                     alignItems: "center",
                                     marginTop: 6,
@@ -4135,10 +4094,10 @@ export default function ScoreCardUserPage() {
                                       fontWeight: "bold",
                                       color:
                                         s.finalScore.teamA > s.finalScore.teamB
-                                          ? "#38bdf8"
+                                          ? teamAColor
                                           : s.finalScore.teamB >
                                               s.finalScore.teamA
-                                            ? "#f43f5e"
+                                            ? teamBColor
                                             : "#84cc16",
                                       fontSize: 13,
                                     }}
@@ -4247,7 +4206,7 @@ export default function ScoreCardUserPage() {
                                     fontWeight: bold ? "700" : "500",
                                     width: 70,
                                     textAlign: "center",
-                                    color: "#38bdf8",
+                                    color: teamAColor,
                                   }}
                                 >
                                   {a}
@@ -4258,29 +4217,11 @@ export default function ScoreCardUserPage() {
                                     fontWeight: bold ? "700" : "500",
                                     width: 70,
                                     textAlign: "center",
-                                    color: "#f43f5e",
+                                    color: teamBColor,
                                   }}
                                 >
                                   {b}
                                 </ThemedText>
-                                {/* <ThemedText
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: bold ? "700" : "500",
-                                    width: 40,
-                                    textAlign: "center",
-                                    color: "#a855f7",
-                                  }}
-                                >
-                                  {typeof a === "number" &&
-                                  typeof b === "number"
-                                    ? a - b > 0
-                                      ? `A+${a - b}`
-                                      : b - a > 0
-                                        ? `B+${b - a}`
-                                        : "0"
-                                    : "-"}
-                                </ThemedText> */}
                               </HStack>
                             );
                             return (
@@ -4319,7 +4260,7 @@ export default function ScoreCardUserPage() {
                                       fontSize: 11,
                                       width: 70,
                                       textAlign: "center",
-                                      color: "#38bdf8",
+                                      color: teamAColor,
                                     }}
                                   >
                                     Team A
@@ -4330,22 +4271,11 @@ export default function ScoreCardUserPage() {
                                       fontSize: 11,
                                       width: 70,
                                       textAlign: "center",
-                                      color: "#f43f5e",
+                                      color: teamBColor,
                                     }}
                                   >
                                     Team B
                                   </ThemedText>
-                                  {/* <ThemedText
-                                    style={{
-                                      fontWeight: "700",
-                                      fontSize: 11,
-                                      width: 40,
-                                      textAlign: "center",
-                                      color: "#a855f7",
-                                    }}
-                                  >
-                                    Pts
-                                  </ThemedText> */}
                                 </HStack>
                                 <Row
                                   label="Front 9 Halfs"
@@ -4374,8 +4304,6 @@ export default function ScoreCardUserPage() {
                                 />
                                 <View
                                   style={{
-                                    // borderTopWidth: 0.5,
-                                    // borderColor: isDark ? "#444" : "#ddd",
                                     paddingTop: 10,
                                     alignItems: "center",
                                     marginTop: 3,
@@ -4409,37 +4337,18 @@ export default function ScoreCardUserPage() {
                                     >
                                       Match -{" "}
                                     </ThemedText>
-                                    <ThemedText
-                                      style={{
-                                        color: "#059669",
-                                        fontSize: 12,
-                                        fontWeight: "800",
-                                      }}
-                                    >
-                                      {formatNassauHousesSpaced(
-                                        ns.overallHouses,
-                                      )}
-                                    </ThemedText>
+                                    {renderNassauHouses(ns.overallHouses)}
                                     <ThemedText
                                       style={{
                                         color: isDark ? "#e2e8f0" : "#334155",
                                         fontSize: 12,
                                         fontWeight: "700",
+                                        marginHorizontal: 6,
                                       }}
                                     >
-                                      {"  &  Half - "}
+                                      {" & Half - "}
                                     </ThemedText>
-                                    <ThemedText
-                                      style={{
-                                        color: "#059669",
-                                        fontSize: 12,
-                                        fontWeight: "800",
-                                      }}
-                                    >
-                                      {formatNassauHousesSpaced(
-                                        ns.front9Houses,
-                                      )}
-                                    </ThemedText>
+                                    {renderNassauHouses(ns.front9Houses)}
                                   </HStack>
                                   <ThemedText
                                     style={{
@@ -4455,9 +4364,9 @@ export default function ScoreCardUserPage() {
                                       fontWeight: "bold",
                                       color:
                                         ns.finalResult > 0
-                                          ? "#38bdf8"
+                                          ? teamAColor
                                           : ns.finalResult < 0
-                                            ? "#f43f5e"
+                                            ? teamBColor
                                             : "#84cc16",
                                       fontSize: 14,
                                     }}
@@ -4469,8 +4378,6 @@ export default function ScoreCardUserPage() {
                                         : "Tie"}
                                   </ThemedText>
                                 </View>
-
-                                {/* Nassau Hole-by-Hole Table */}
                                 {/* <ThemedText
                                   style={{
                                     fontSize: 14,
