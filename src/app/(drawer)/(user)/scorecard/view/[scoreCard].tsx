@@ -1500,14 +1500,23 @@ const ScoreCard: React.FC = () => {
               ns = computeNassauState(mode as "best" | "combined", allData);
             }
 
+            const colHoleWidth = 40;
+            const colParWidth = 40;
+            const colSIWidth = 40;
+            const colYardsWidth = 45;
+            const colPartnerWidth = 65;
+            const colSplit6Width = 70;
+            const colHighLowWidth = 65;
+            const colNassauWidth = 80;
+
             const totalWidth =
-              50 +
-              50 + // Par is always visible
-              (isDetailsVisible ? 55 + 60 : 0) +
-              partners.length * 95 +
-              (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
-              (isHighLow && partners.length >= 4 ? 2 * 95 : 0) +
-              (isNassau && partners.length >= 2 ? 100 : 0);
+              colHoleWidth +
+              colParWidth + // Par is always visible
+              (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
+              partners.length * colPartnerWidth +
+              (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
+              (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
+              (isNassau && partners.length >= 2 ? colNassauWidth : 0);
             return (
               <ScrollView
                 horizontal={true}
@@ -1533,7 +1542,7 @@ const ScoreCard: React.FC = () => {
                   >
                     <ThemedText
                       style={{
-                        width: 50,
+                        width: colHoleWidth,
                         textAlign: "center",
                         fontWeight: "700",
                         fontSize: 12,
@@ -1545,7 +1554,7 @@ const ScoreCard: React.FC = () => {
                       <>
                         <ThemedText
                           style={{
-                            width: 55,
+                            width: colSIWidth,
                             textAlign: "center",
                             fontWeight: "700",
                             fontSize: 12,
@@ -1555,7 +1564,7 @@ const ScoreCard: React.FC = () => {
                         </ThemedText>
                         <ThemedText
                           style={{
-                            width: 60,
+                            width: colYardsWidth,
                             textAlign: "center",
                             fontWeight: "700",
                             fontSize: 12,
@@ -1567,7 +1576,7 @@ const ScoreCard: React.FC = () => {
                     )}
                     <ThemedText
                       style={{
-                        width: 50,
+                        width: colParWidth,
                         textAlign: "center",
                         fontWeight: "700",
                         fontSize: 12,
@@ -1589,7 +1598,7 @@ const ScoreCard: React.FC = () => {
                       return (
                         <VStack
                           key={p.playerId}
-                          style={{ width: 95, alignItems: "center" }}
+                          style={{ width: colPartnerWidth, alignItems: "center" }}
                         >
                           <ThemedText
                             numberOfLines={1}
@@ -1631,7 +1640,7 @@ const ScoreCard: React.FC = () => {
                         <VStack
                           key={`pts-hdr-${p.playerId}`}
                           style={{
-                            width: 95,
+                            width: colSplit6Width,
                             alignItems: "center",
                             justifyContent: "center",
                           }}
@@ -1652,7 +1661,7 @@ const ScoreCard: React.FC = () => {
                       <>
                         <VStack
                           style={{
-                            width: 95,
+                            width: colHighLowWidth,
                             alignItems: "center",
                             justifyContent: "center",
                           }}
@@ -1671,7 +1680,7 @@ const ScoreCard: React.FC = () => {
                         </VStack>
                         <VStack
                           style={{
-                            width: 95,
+                            width: colHighLowWidth,
                             alignItems: "center",
                             justifyContent: "center",
                           }}
@@ -1693,7 +1702,7 @@ const ScoreCard: React.FC = () => {
                     {isNassau && partners.length >= 2 && (
                       <VStack
                         style={{
-                          width: 100,
+                          width: colNassauWidth,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
@@ -1735,20 +1744,20 @@ const ScoreCard: React.FC = () => {
                           }}
                         >
                           <ThemedText
-                            style={{ width: 50, textAlign: "center" }}
+                            style={{ width: colHoleWidth, textAlign: "center" }}
                           >
                             {h.holeNumber}
                           </ThemedText>
                           {isDetailsVisible && (
                             <>
                               <ThemedText
-                                style={{ width: 55, textAlign: "center" }}
+                                style={{ width: colSIWidth, textAlign: "center" }}
                               >
                                 {h.strokeIndex}
                               </ThemedText>
                               <ThemedText
                                 style={{
-                                  width: 60,
+                                  width: colYardsWidth,
                                   textAlign: "center",
                                   color: "#888",
                                 }}
@@ -1758,7 +1767,7 @@ const ScoreCard: React.FC = () => {
                             </>
                           )}
                           <ThemedText
-                            style={{ width: 50, textAlign: "center" }}
+                            style={{ width: colParWidth, textAlign: "center" }}
                           >
                             {h.par}
                           </ThemedText>
@@ -1786,7 +1795,7 @@ const ScoreCard: React.FC = () => {
                               <View
                                 key={p.playerId}
                                 style={{
-                                  width: 95,
+                                  width: colPartnerWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                   backgroundColor: bgColor,
@@ -1977,7 +1986,7 @@ const ScoreCard: React.FC = () => {
                                 <View
                                   key={`pts-${h.holeId}-${p.playerId}`}
                                   style={{
-                                    width: 95,
+                                    width: colSplit6Width,
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
@@ -2019,7 +2028,7 @@ const ScoreCard: React.FC = () => {
                                   <View
                                     key={`hl-a-${h.holeId}`}
                                     style={{
-                                      width: 95,
+                                      width: colHighLowWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2037,7 +2046,7 @@ const ScoreCard: React.FC = () => {
                                   <View
                                     key={`hl-b-${h.holeId}`}
                                     style={{
-                                      width: 95,
+                                      width: colHighLowWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2059,12 +2068,12 @@ const ScoreCard: React.FC = () => {
                             partners.length >= 2 &&
                             (() => {
                               const hRes = ns?.holeResults[h.holeNumber];
-                              if (!hRes) return <View style={{ width: 100 }} />;
+                              if (!hRes) return <View style={{ width: colNassauWidth }} />;
 
                               return (
                                 <View
                                   style={{
-                                    width: 100,
+                                    width: colNassauWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     flexDirection: "row",
@@ -2110,7 +2119,7 @@ const ScoreCard: React.FC = () => {
                           >
                             <ThemedText
                               style={{
-                                width: 50,
+                                width: colHoleWidth,
                                 fontWeight: "700",
                                 textAlign: "center",
                               }}
@@ -2120,17 +2129,17 @@ const ScoreCard: React.FC = () => {
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: 55, textAlign: "center" }}
+                                  style={{ width: colSIWidth, textAlign: "center" }}
                                 />
                                 <ThemedText
-                                  style={{ width: 60, textAlign: "center" }}
+                                  style={{ width: colYardsWidth, textAlign: "center" }}
                                 >
                                   {sumYardage(front9)}
                                 </ThemedText>
                               </>
                             )}
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colParWidth, textAlign: "center" }}
                             >
                               {sumPar(front9)}
                             </ThemedText>
@@ -2139,7 +2148,7 @@ const ScoreCard: React.FC = () => {
                               return (
                                 <VStack
                                   key={p.playerId}
-                                  style={{ width: 95, alignItems: "center" }}
+                                  style={{ width: colPartnerWidth, alignItems: "center" }}
                                 >
                                   <ThemedText
                                     style={{
@@ -2215,7 +2224,7 @@ const ScoreCard: React.FC = () => {
                                   <VStack
                                     key={`f9-pts-${p.playerId}`}
                                     style={{
-                                      width: 95,
+                                      width: colSplit6Width,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2262,7 +2271,7 @@ const ScoreCard: React.FC = () => {
                                   <>
                                     <VStack
                                       style={{
-                                        width: 95,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2278,7 +2287,7 @@ const ScoreCard: React.FC = () => {
                                     </VStack>
                                     <VStack
                                       style={{
-                                        width: 95,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2298,7 +2307,7 @@ const ScoreCard: React.FC = () => {
                             {isNassau && partners.length >= 2 && ns && (
                               <VStack
                                 style={{
-                                  width: 100,
+                                  width: colNassauWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flexDirection: "row",
@@ -2331,7 +2340,7 @@ const ScoreCard: React.FC = () => {
                           >
                             <ThemedText
                               style={{
-                                width: 50,
+                                width: colHoleWidth,
                                 fontWeight: "700",
                                 textAlign: "center",
                               }}
@@ -2341,17 +2350,17 @@ const ScoreCard: React.FC = () => {
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: 55, textAlign: "center" }}
+                                  style={{ width: colSIWidth, textAlign: "center" }}
                                 />
                                 <ThemedText
-                                  style={{ width: 60, textAlign: "center" }}
+                                  style={{ width: colYardsWidth, textAlign: "center" }}
                                 >
                                   {sumYardage(back9)}
                                 </ThemedText>
                               </>
                             )}
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colParWidth, textAlign: "center" }}
                             >
                               {sumPar(back9)}
                             </ThemedText>
@@ -2360,7 +2369,7 @@ const ScoreCard: React.FC = () => {
                               return (
                                 <VStack
                                   key={p.playerId}
-                                  style={{ width: 95, alignItems: "center" }}
+                                  style={{ width: colPartnerWidth, alignItems: "center" }}
                                 >
                                   <ThemedText
                                     style={{
@@ -2436,7 +2445,7 @@ const ScoreCard: React.FC = () => {
                                   <VStack
                                     key={`b9-pts-${p.playerId}`}
                                     style={{
-                                      width: 95,
+                                      width: colSplit6Width,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2483,7 +2492,7 @@ const ScoreCard: React.FC = () => {
                                   <>
                                     <VStack
                                       style={{
-                                        width: 95,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2499,7 +2508,7 @@ const ScoreCard: React.FC = () => {
                                     </VStack>
                                     <VStack
                                       style={{
-                                        width: 95,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2519,7 +2528,7 @@ const ScoreCard: React.FC = () => {
                             {isNassau && partners.length >= 2 && ns && (
                               <VStack
                                 style={{
-                                  width: 100,
+                                  width: colNassauWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flexDirection: "row",
@@ -2550,7 +2559,7 @@ const ScoreCard: React.FC = () => {
                   >
                     <ThemedText
                       style={{
-                        width: 50,
+                        width: colHoleWidth,
                         textAlign: "center",
                         color: "#fff",
                         fontWeight: "700",
@@ -2561,11 +2570,11 @@ const ScoreCard: React.FC = () => {
                     {isDetailsVisible && (
                       <>
                         <ThemedText
-                          style={{ width: 55, textAlign: "center" }}
+                          style={{ width: colSIWidth, textAlign: "center" }}
                         />
                         <ThemedText
                           style={{
-                            width: 60,
+                            width: colYardsWidth,
                             textAlign: "center",
                             color: "#fff",
                           }}
@@ -2575,7 +2584,7 @@ const ScoreCard: React.FC = () => {
                       </>
                     )}
                     <ThemedText
-                      style={{ width: 50, textAlign: "center", color: "#fff" }}
+                      style={{ width: colParWidth, textAlign: "center", color: "#fff" }}
                     >
                       {sumPar(holes)}
                     </ThemedText>
@@ -2584,13 +2593,13 @@ const ScoreCard: React.FC = () => {
                       return (
                         <VStack
                           key={p.playerId}
-                          style={{ width: 95, alignItems: "center" }}
+                          style={{ width: colPartnerWidth, alignItems: "center" }}
                         >
                           <ThemedText
                             style={{
-                              width: 50,
                               textAlign: "center",
                               color: "#fff",
+                              fontWeight: "700",
                             }}
                           >
                             {t.gross}
@@ -2643,7 +2652,7 @@ const ScoreCard: React.FC = () => {
                           <VStack
                             key={`total-pts-${p.playerId}`}
                             style={{
-                              width: 95,
+                              width: colSplit6Width,
                               alignItems: "center",
                               justifyContent: "center",
                             }}
@@ -2690,7 +2699,7 @@ const ScoreCard: React.FC = () => {
                           <>
                             <VStack
                               style={{
-                                width: 95,
+                                width: colHighLowWidth,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -2706,7 +2715,7 @@ const ScoreCard: React.FC = () => {
                             </VStack>
                             <VStack
                               style={{
-                                width: 95,
+                                width: colHighLowWidth,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -2726,7 +2735,7 @@ const ScoreCard: React.FC = () => {
                     {isNassau && partners.length >= 2 && ns && (
                       <VStack
                         style={{
-                          width: 100,
+                          width: colNassauWidth,
                           alignItems: "center",
                           justifyContent: "center",
                           flexDirection: "row",

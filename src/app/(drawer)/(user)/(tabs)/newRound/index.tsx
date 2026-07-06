@@ -1012,19 +1012,59 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
               )}
 
               {handicapView && (
-                <HStack
-                  className={`justify-between items-center rounded-md p-3 border ${isDark ? "border-gray-700" : "border-gray-300"}`}
+                <View
+                  className={`rounded-xl border p-4 ${
+                    isDark
+                      ? "border-gray-700 bg-gray-900"
+                      : "border-gray-300 bg-white"
+                  }`}
                 >
-                  <VStack>
-                    <ThemedText>Your Handicap</ThemedText>
-                    <ThemedText>
-                      Based on Index: {handicapDetails.handicapIndex}
-                    </ThemedText>
+                  <VStack className="gap-4">
+                    {/* Heading */}
+
+                    {/* Handicap Details */}
+                    <HStack className="items-center justify-between">
+                      {/* Left Side */}
+                      <VStack className="flex-1 gap-2">
+                        <ThemedText className="font-semibold text-base">
+                          Your Handicap
+                        </ThemedText>
+
+                        <ThemedText className="text-sm opacity-70">
+                          Based on Index: {handicapDetails.handicapIndex}
+                        </ThemedText>
+                      </VStack>
+
+                      {/* Right Side */}
+                      <View className="justify-center items-center px-2 self-stretch">
+                        <ThemedText
+                          style={{
+                            fontSize: 34,
+                            fontWeight: "700",
+                            lineHeight: 38,
+                            color:"#8bc34a"
+                          }}
+                        >
+                          {handicapDetails.handicap}
+                        </ThemedText>
+                      </View>
+                    </HStack>
+
+                    {/* Info */}
+                    <HStack className="items-start gap-3">
+                      <Ionicons
+                        name="alert-circle"
+                        size={25}
+                        color="#8bc34a"
+                      />
+
+                      <Text className="flex-1 text-md leading-5 text-[#8bc34a] font-semibold">
+                        Net scores are calculated using the WHS 95% playing
+                        handicap allowance.
+                      </Text>
+                    </HStack>
                   </VStack>
-                  <ThemedText style={{ fontSize: 20, fontWeight: 700 }}>
-                    {handicapDetails.handicap}
-                  </ThemedText>
-                </HStack>
+                </View>
               )}
 
               <View style={styles.container}>
@@ -1133,8 +1173,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                     // scoreType === "net_including" ||
                     // scoreType === "net_excluding" ||
                     // scoreType === "stableford" ||
-                    scoreType === "split_six" ||
-                    scoreType === "high_low"
+                    scoreType === "split_six" || scoreType === "high_low"
                   }
                   style={[
                     styles.dropdown,
@@ -1143,8 +1182,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                         // scoreType === "net_including" ||
                         // scoreType === "net_excluding" ||
                         // scoreType === "stableford" ||
-                        scoreType === "split_six" ||
-                        scoreType === "high_low"
+                        scoreType === "split_six" || scoreType === "high_low"
                           ? isDark
                             ? "#222"
                             : "#f1f5f9"
@@ -1156,8 +1194,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                         // scoreType === "net_including" ||
                         // scoreType === "net_excluding" ||
                         // scoreType === "stableford" ||
-                        scoreType === "split_six" ||
-                        scoreType === "high_low"
+                        scoreType === "split_six" || scoreType === "high_low"
                           ? 0.7
                           : 1,
                     },
@@ -1192,13 +1229,23 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                       Alert.alert(
                         "Invalid Player Count",
                         "Split Six requires exactly 3 players.",
-                        [{ text: "OK", onPress: () => setNumberOfPlayers("3") }]
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => setNumberOfPlayers("3"),
+                          },
+                        ],
                       );
                     } else if (scoreType === "high_low" && item.value !== "4") {
                       Alert.alert(
                         "Invalid Player Count",
                         "High-Low requires exactly 4 players.",
-                        [{ text: "OK", onPress: () => setNumberOfPlayers("4") }]
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => setNumberOfPlayers("4"),
+                          },
+                        ],
                       );
                     } else if (
                       (scoreType === "nassau_best" ||
@@ -1907,16 +1954,23 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                   }
 
                   // Validate player count for specific modes on submit
-                  if (data.scoreType === "split_six" && numberOfPlayers !== "3") {
+                  if (
+                    data.scoreType === "split_six" &&
+                    numberOfPlayers !== "3"
+                  ) {
                     Alert.alert("Split Six requires exactly 3 players.");
                     return;
                   }
-                  if (data.scoreType === "high_low" && numberOfPlayers !== "4") {
+                  if (
+                    data.scoreType === "high_low" &&
+                    numberOfPlayers !== "4"
+                  ) {
                     Alert.alert("High-Low requires exactly 4 players.");
                     return;
                   }
                   if (
-                    (data.scoreType === "nassau_best" || data.scoreType === "nassau_combined") &&
+                    (data.scoreType === "nassau_best" ||
+                      data.scoreType === "nassau_combined") &&
                     numberOfPlayers !== "2" &&
                     numberOfPlayers !== "4"
                   ) {

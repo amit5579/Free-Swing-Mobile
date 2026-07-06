@@ -450,7 +450,15 @@ export default function TournamentsScreen() {
                     </ThemedText>
                   </VStack>
                 ) : (
-                  tournaments.map((tournament: any) => (
+                  tournaments.map((tournament: any) => {
+                    let isEnded = false;
+                    if (tournament && tournament.endDate) {
+                      const end = new Date(tournament.endDate);
+                      end.setHours(23, 59, 59, 999);
+                      isEnded = new Date() > end;
+                    }
+                    
+                    return (
                     <React.Fragment key={tournament.tournamentId}>
                       <Box
                         key={tournament.tournamentId}
@@ -657,30 +665,46 @@ export default function TournamentsScreen() {
 
                             {/* Play Button */}
                             {!tournament.isPlayed && (
-                              <Pressable
-                                onPress={() => {
-                                  if (tournament.creatorId == null) {
-                                    setSelectedTournament(tournament);
-                                    setModalVisible(true);
-                                  } else {
-                                    routePage.push(
-                                      `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
-                                    );
-                                  }
-                                }}
-                                className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl"
-                              >
-                                <Ionicons name="play" size={18} color="white" />
-                                <ThemedText
-                                  style={{
-                                    color: "white",
-                                    fontWeight: "700",
-                                    fontSize: 14,
-                                  }}
+                              isEnded ? (
+                                <View
+                                  className="flex-1 flex-row justify-center items-center gap-2 bg-gray-400 py-2.5 rounded-xl"
                                 >
-                                  Play Now
-                                </ThemedText>
-                              </Pressable>
+                                  <ThemedText
+                                    style={{
+                                      color: "white",
+                                      fontWeight: "700",
+                                      fontSize: 14,
+                                    }}
+                                  >
+                                    Ended
+                                  </ThemedText>
+                                </View>
+                              ) : (
+                                <Pressable
+                                  onPress={() => {
+                                    if (tournament.creatorId == null) {
+                                      setSelectedTournament(tournament);
+                                      setModalVisible(true);
+                                    } else {
+                                      routePage.push(
+                                        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
+                                      );
+                                    }
+                                  }}
+                                  className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl"
+                                >
+                                  <Ionicons name="play" size={18} color="white" />
+                                  <ThemedText
+                                    style={{
+                                      color: "white",
+                                      fontWeight: "700",
+                                      fontSize: 14,
+                                    }}
+                                  >
+                                    Play Now
+                                  </ThemedText>
+                                </Pressable>
+                              )
                             )}
                           </HStack>
                         </VStack>
@@ -1269,7 +1293,8 @@ export default function TournamentsScreen() {
                         </Modal>
                       )}
                     </React.Fragment>
-                  ))
+                  );
+                })
                 )}
               </>
             )}

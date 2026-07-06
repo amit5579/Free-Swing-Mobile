@@ -440,7 +440,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             userId: Number(userId),
           }));
-        console.log("finishPayload", finishPayload);
+        // console.log("finishPayload", finishPayload);
 
         await updateHoleScoresApi(
           tournamentId

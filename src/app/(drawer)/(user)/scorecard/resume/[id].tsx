@@ -2242,14 +2242,23 @@ export default function ResumeScorecard() {
               ns = computeNassauState(mode as "best" | "combined", allData);
             }
 
+            const colHoleWidth = 40;
+            const colParWidth = 40;
+            const colSIWidth = 40;
+            const colYardsWidth = 45;
+            const colPartnerWidth = 65;
+            const colSplit6Width = 70;
+            const colHighLowWidth = 65;
+            const colNassauWidth = 80;
+
             const totalWidth =
-              50 +
-              50 +
-              (isDetailsVisible ? 55 + 60 : 0) +
-              partners.length * 95 +
-              (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
-              (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
-              (isNassau && partners.length >= 2 ? 100 : 0);
+              colHoleWidth +
+              colParWidth + // Par is always visible
+              (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
+              partners.length * colPartnerWidth +
+              (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
+              (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
+              (isNassau && partners.length >= 2 ? colNassauWidth : 0);
 
             const renderMultiplayerHeaders = () => (
               <HStack
@@ -2262,7 +2271,7 @@ export default function ResumeScorecard() {
               >
                 <ThemedText
                   style={{
-                    width: 50,
+                    width: colHoleWidth,
                     textAlign: "center",
                     fontWeight: "700",
                     fontSize: 12,
@@ -2274,7 +2283,7 @@ export default function ResumeScorecard() {
                   <>
                     <ThemedText
                       style={{
-                        width: 55,
+                        width: colSIWidth,
                         textAlign: "center",
                         fontWeight: "700",
                         fontSize: 12,
@@ -2284,7 +2293,7 @@ export default function ResumeScorecard() {
                     </ThemedText>
                     <ThemedText
                       style={{
-                        width: 60,
+                        width: colYardsWidth,
                         textAlign: "center",
                         fontWeight: "700",
                         fontSize: 12,
@@ -2296,7 +2305,7 @@ export default function ResumeScorecard() {
                 )}
                 <ThemedText
                   style={{
-                    width: 50,
+                    width: colParWidth,
                     textAlign: "center",
                     fontWeight: "700",
                     fontSize: 12,
@@ -2318,7 +2327,7 @@ export default function ResumeScorecard() {
                   return (
                     <VStack
                       key={p.playerId}
-                      style={{ width: 95, alignItems: "center" }}
+                      style={{ width: colPartnerWidth, alignItems: "center" }}
                     >
                       <ThemedText
                         numberOfLines={1}
@@ -2360,7 +2369,7 @@ export default function ResumeScorecard() {
                     <VStack
                       key={`pts-hdr-${p.playerId}`}
                       style={{
-                        width: 95,
+                        width: colSplit6Width,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -2381,7 +2390,7 @@ export default function ResumeScorecard() {
                   <>
                     <VStack
                       style={{
-                        width: 80,
+                        width: colHighLowWidth,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -2399,7 +2408,7 @@ export default function ResumeScorecard() {
                     </VStack>
                     <VStack
                       style={{
-                        width: 80,
+                        width: colHighLowWidth,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -2420,7 +2429,7 @@ export default function ResumeScorecard() {
                 {isNassau && partners.length >= 2 && (
                   <VStack
                     style={{
-                      width: 100,
+                      width: colNassauWidth,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -2478,20 +2487,20 @@ export default function ResumeScorecard() {
                             }}
                           >
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colHoleWidth, textAlign: "center" }}
                             >
                               {h.holeNumber}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: 55, textAlign: "center" }}
+                                  style={{ width: colSIWidth, textAlign: "center" }}
                                 >
                                   {h.strokeIndex}
                                 </ThemedText>
                                 <ThemedText
                                   style={{
-                                    width: 60,
+                                    width: colYardsWidth,
                                     textAlign: "center",
                                     color: "#888",
                                   }}
@@ -2501,7 +2510,7 @@ export default function ResumeScorecard() {
                               </>
                             )}
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colParWidth, textAlign: "center" }}
                             >
                               {h.par}
                             </ThemedText>
@@ -2556,7 +2565,7 @@ export default function ResumeScorecard() {
                                 <View
                                   key={p.playerId}
                                   style={{
-                                    width: 95,
+                                    width: colPartnerWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: bgColor,
@@ -2706,7 +2715,7 @@ export default function ResumeScorecard() {
                                   <View
                                     key={`pts-${h.holeId}-${p.playerId}`}
                                     style={{
-                                      width: 95,
+                                      width: colSplit6Width,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2732,7 +2741,7 @@ export default function ResumeScorecard() {
                                   <>
                                     <View
                                       style={{
-                                        width: 80,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2749,7 +2758,7 @@ export default function ResumeScorecard() {
                                     </View>
                                     <View
                                       style={{
-                                        width: 80,
+                                        width: colHighLowWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                       }}
@@ -2834,7 +2843,7 @@ export default function ResumeScorecard() {
                     >
                       <ThemedText
                         style={{
-                          width: 50,
+                          width: colHoleWidth,
                           fontWeight: "700",
                           textAlign: "center",
                         }}
@@ -2844,10 +2853,10 @@ export default function ResumeScorecard() {
                       {isDetailsVisible && (
                         <>
                           <ThemedText
-                            style={{ width: 55, textAlign: "center" }}
+                            style={{ width: colSIWidth, textAlign: "center" }}
                           />
                           <ThemedText
-                            style={{ width: 60, textAlign: "center" }}
+                            style={{ width: colYardsWidth, textAlign: "center" }}
                           >
                             {sumYardage(front9Holes)}
                           </ThemedText>
@@ -2855,7 +2864,7 @@ export default function ResumeScorecard() {
                       )}
                       <ThemedText
                         style={{
-                          width: 50,
+                          width: colParWidth,
                           textAlign: "center",
                           fontWeight: "700",
                         }}
@@ -2867,7 +2876,7 @@ export default function ResumeScorecard() {
                         return (
                           <VStack
                             key={p.playerId}
-                            style={{ width: 95, alignItems: "center" }}
+                            style={{ width: colPartnerWidth, alignItems: "center" }}
                           >
                             <ThemedText
                               style={{
@@ -2918,7 +2927,7 @@ export default function ResumeScorecard() {
                             <VStack
                               key={`f9-pts-${p.playerId}`}
                               style={{
-                                width: 95,
+                                width: colSplit6Width,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -2952,7 +2961,7 @@ export default function ResumeScorecard() {
                             <>
                               <VStack
                                 style={{
-                                  width: 80,
+                                  width: colHighLowWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
@@ -2968,7 +2977,7 @@ export default function ResumeScorecard() {
                               </VStack>
                               <VStack
                                 style={{
-                                  width: 80,
+                                  width: colHighLowWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
@@ -2988,7 +2997,7 @@ export default function ResumeScorecard() {
                       {isNassau && partners.length >= 2 && ns && (
                         <VStack
                           style={{
-                            width: 100,
+                            width: colNassauWidth,
                             alignItems: "center",
                             justifyContent: "center",
                             flexDirection: "row",
@@ -3020,20 +3029,20 @@ export default function ResumeScorecard() {
                             }}
                           >
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colHoleWidth, textAlign: "center" }}
                             >
                               {h.holeNumber}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: 55, textAlign: "center" }}
+                                  style={{ width: colSIWidth, textAlign: "center" }}
                                 >
                                   {h.strokeIndex}
                                 </ThemedText>
                                 <ThemedText
                                   style={{
-                                    width: 60,
+                                    width: colYardsWidth,
                                     textAlign: "center",
                                     color: "#888",
                                   }}
@@ -3043,7 +3052,7 @@ export default function ResumeScorecard() {
                               </>
                             )}
                             <ThemedText
-                              style={{ width: 50, textAlign: "center" }}
+                              style={{ width: colParWidth, textAlign: "center" }}
                             >
                               {h.par}
                             </ThemedText>
@@ -3098,7 +3107,7 @@ export default function ResumeScorecard() {
                                 <View
                                   key={p.playerId}
                                   style={{
-                                    width: 95,
+                                    width: colPartnerWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: bgColor,
@@ -3228,10 +3237,92 @@ export default function ResumeScorecard() {
                                 </View>
                               );
                             })}
+
+                            {isSplit6 &&
+                              partners.length >= 3 &&
+                              (() => {
+                                const pts = calculateSplitSixPoints(
+                                  getPlayerHoleInfo(h, partners[0]).score,
+                                  getPlayerHoleInfo(h, partners[1]).score,
+                                  getPlayerHoleInfo(h, partners[2]).score,
+                                );
+                                const hasScore =
+                                  getPlayerHoleInfo(h, partners[0]).score !==
+                                    null &&
+                                  getPlayerHoleInfo(h, partners[1]).score !==
+                                    null &&
+                                  getPlayerHoleInfo(h, partners[2]).score !==
+                                    null;
+
+                                return partners.slice(0, 3).map((p, idx) => (
+                                  <View
+                                    key={`pts-${h.holeId}-${p.playerId}`}
+                                    style={{
+                                      width: colSplit6Width,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "bold",
+                                        color: "#84cc16",
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      {hasScore ? pts[idx] : "-"}
+                                    </ThemedText>
+                                  </View>
+                                ));
+                              })()}
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                const stats = getHighLowHoleStats(h);
+                                const allFilled = stats.isComplete;
+                                return (
+                                  <>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamAColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {allFilled ? stats.teamAMatchPts : "-"}
+                                      </ThemedText>
+                                    </View>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamBColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {allFilled ? stats.teamBMatchPts : "-"}
+                                      </ThemedText>
+                                    </View>
+                                  </>
+                                );
+                              })()}
                             {isNassau && partners.length >= 2 && (
                               <VStack
                                 style={{
-                                  width: 100,
+                                  width: colNassauWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
@@ -3239,12 +3330,12 @@ export default function ResumeScorecard() {
                                 {(() => {
                                   const hRes = ns?.holeResults[h.holeNumber];
                                   if (!hRes)
-                                    return <View style={{ width: 100 }} />;
+                                    return <View style={{ width: colNassauWidth }} />;
 
                                   return (
                                     <View
                                       style={{
-                                        width: 100,
+                                        width: colNassauWidth,
                                         alignItems: "center",
                                         justifyContent: "center",
                                         flexDirection: "row",
@@ -3295,7 +3386,7 @@ export default function ResumeScorecard() {
                     >
                       <ThemedText
                         style={{
-                          width: 50,
+                          width: colHoleWidth,
                           fontWeight: "700",
                           textAlign: "center",
                         }}
@@ -3305,10 +3396,10 @@ export default function ResumeScorecard() {
                       {isDetailsVisible && (
                         <>
                           <ThemedText
-                            style={{ width: 55, textAlign: "center" }}
+                            style={{ width: colSIWidth, textAlign: "center" }}
                           />
                           <ThemedText
-                            style={{ width: 60, textAlign: "center" }}
+                            style={{ width: colYardsWidth, textAlign: "center" }}
                           >
                             {sumYardage(back9Holes)}
                           </ThemedText>
@@ -3316,7 +3407,7 @@ export default function ResumeScorecard() {
                       )}
                       <ThemedText
                         style={{
-                          width: 50,
+                          width: colParWidth,
                           textAlign: "center",
                           fontWeight: "700",
                         }}
@@ -3328,7 +3419,7 @@ export default function ResumeScorecard() {
                         return (
                           <VStack
                             key={p.playerId}
-                            style={{ width: 95, alignItems: "center" }}
+                            style={{ width: colPartnerWidth, alignItems: "center" }}
                           >
                             <ThemedText
                               style={{
@@ -3362,7 +3453,7 @@ export default function ResumeScorecard() {
                             <VStack
                               key={`b9-pts-${p.playerId}`}
                               style={{
-                                width: 95,
+                                width: colSplit6Width,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -3396,7 +3487,7 @@ export default function ResumeScorecard() {
                             <>
                               <VStack
                                 style={{
-                                  width: 80,
+                                  width: colHighLowWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
@@ -3412,7 +3503,7 @@ export default function ResumeScorecard() {
                               </VStack>
                               <VStack
                                 style={{
-                                  width: 80,
+                                  width: colHighLowWidth,
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
@@ -3432,7 +3523,7 @@ export default function ResumeScorecard() {
                       {isNassau && partners.length >= 2 && ns && (
                         <VStack
                           style={{
-                            width: 100,
+                            width: colNassauWidth,
                             alignItems: "center",
                             justifyContent: "center",
                             flexDirection: "row",
@@ -3460,7 +3551,7 @@ export default function ResumeScorecard() {
                   >
                     <ThemedText
                       style={{
-                        width: 50,
+                        width: colHoleWidth,
                         textAlign: "center",
                         color: "#fff",
                         fontWeight: "700",
@@ -3471,11 +3562,11 @@ export default function ResumeScorecard() {
                     {isDetailsVisible && (
                       <>
                         <ThemedText
-                          style={{ width: 55, textAlign: "center" }}
+                          style={{ width: colSIWidth, textAlign: "center" }}
                         />
                         <ThemedText
                           style={{
-                            width: 60,
+                            width: colYardsWidth,
                             textAlign: "center",
                             color: "#fff",
                           }}
@@ -3486,7 +3577,7 @@ export default function ResumeScorecard() {
                     )}
                     <ThemedText
                       style={{
-                        width: 50,
+                        width: colParWidth,
                         textAlign: "center",
                         color: "#fff",
                         fontWeight: "700",
@@ -3499,7 +3590,7 @@ export default function ResumeScorecard() {
                       return (
                         <VStack
                           key={p.playerId}
-                          style={{ width: 95, alignItems: "center" }}
+                          style={{ width: colPartnerWidth, alignItems: "center" }}
                         >
                           <ThemedText
                             style={{
@@ -3557,7 +3648,7 @@ export default function ResumeScorecard() {
                           <VStack
                             key={`total-pts-${p.playerId}`}
                             style={{
-                              width: 95,
+                              width: colSplit6Width,
                               alignItems: "center",
                               justifyContent: "center",
                             }}
@@ -3591,7 +3682,7 @@ export default function ResumeScorecard() {
                           <>
                             <VStack
                               style={{
-                                width: 80,
+                                width: colHighLowWidth,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -3607,7 +3698,7 @@ export default function ResumeScorecard() {
                             </VStack>
                             <VStack
                               style={{
-                                width: 80,
+                                width: colHighLowWidth,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
@@ -3627,7 +3718,7 @@ export default function ResumeScorecard() {
                     {isNassau && partners.length >= 2 && ns && (
                       <VStack
                         style={{
-                          width: 100,
+                          width: colNassauWidth,
                           alignItems: "center",
                           justifyContent: "center",
                           flexDirection: "row",
