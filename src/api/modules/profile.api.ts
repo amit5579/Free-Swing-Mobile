@@ -59,3 +59,19 @@ export const getCertificateByUserId = async () => {
     throw error;
   }
 };
+
+export const updateProfile = async (profileData: any) => {
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) {
+      throw new Error("User ID not found in storage");
+    }
+
+    const response = await client.put(`User/profile/${userId}`, profileData);
+    // console.log('updateUserProfile response lag', response);
+    return response.data;
+  } catch (error) {
+    console.error("Updating user profile Error:", error);
+    throw error;
+  }
+};

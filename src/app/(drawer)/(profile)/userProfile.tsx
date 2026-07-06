@@ -36,6 +36,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
+import EditProfileModal from "@/components/EditProfileModal";
 
 export default function UserProfile() {
   const colorScheme = useColorScheme();
@@ -63,8 +64,9 @@ export default function UserProfile() {
   const [uploading, setUploading] = useState(false);
   // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
+  const [editProfileModal, setEditProfileModal] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -91,7 +93,10 @@ export default function UserProfile() {
 
   const handleCertificateClick = () => {
     // completedHolesCount >= 180
-    if (userCertificate?.completedHolesCount >= 180 && userCertificate?.certificate) {
+    if (
+      userCertificate?.completedHolesCount >= 180 &&
+      userCertificate?.certificate
+    ) {
       router.push("/(drawer)/(profile)/certificate");
     } else {
       Toast.show({
@@ -412,7 +417,14 @@ export default function UserProfile() {
                 </Box>
 
                 <HStack className="justify-between mb-6">
-                  <Box className="flex-1 mr-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
+                  <Box
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                    }}
+                    className="flex-1 mr-2 p-4 rounded-xl border border-[#8bc34a]"
+                  >
                     <VStack className="items-center">
                       <ChartBar size={22} color="#8bc34a" />
                       <ThemedText
@@ -429,7 +441,14 @@ export default function UserProfile() {
                       </ThemedText>
                     </VStack>
                   </Box>
-                  <Box className="flex-1 ml-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]">
+                  <Box
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                    }}
+                    className="flex-1 ml-2 p-4 rounded-xl bg-white/10 border border-[#8bc34a]"
+                  >
                     <VStack className="items-center">
                       <Flag size={22} color="#8bc34a" />
                       <ThemedText
@@ -448,7 +467,14 @@ export default function UserProfile() {
                   </Box>
                 </HStack>
 
-                <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
+                <Box
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                  }}
+                  className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10"
+                >
                   <VStack space="lg">
                     <HStack className="items-center gap-3">
                       <Mail size={20} color="#8bc34a" />
@@ -486,21 +512,7 @@ export default function UserProfile() {
 
                 <VStack space="md" className="mt-6">
                   <Pressable
-                    onPress={() => setPasswordModal(true)}
-                    style={{
-                      backgroundColor: "#8BC34A",
-                      padding: 14,
-                      borderRadius: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                      Change Password
-                    </ThemedText>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => handleCertificateClick()}
+                    onPress={() => setEditProfileModal(true)}
                     style={{
                       borderWidth: 1,
                       borderColor: "#8BC34A",
@@ -509,7 +521,36 @@ export default function UserProfile() {
                       alignItems: "center",
                     }}
                   >
-                    <ThemedText style={{ fontWeight: "600", color: "#8BC34A" }}>
+                    <ThemedText style={{ color: "#8BC34A", fontWeight: "600" }}>
+                      Edit Profile
+                    </ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setPasswordModal(true)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: "#8BC34A",
+                      padding: 14,
+                      borderRadius: 12,
+                      alignItems: "center",
+                    }}
+                  >
+                    <ThemedText style={{ color: "#8BC34A", fontWeight: "600" }}>
+                      Change Password
+                    </ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => handleCertificateClick()}
+                    style={{
+                      backgroundColor: "#8BC34A",
+                      padding: 14,
+                      borderRadius: 12,
+                      alignItems: "center",
+                    }}
+                  >
+                    <ThemedText style={{ fontWeight: "600", color: "#fff" }}>
                       Handicap Certificate
                     </ThemedText>
                   </Pressable>
@@ -592,9 +633,17 @@ export default function UserProfile() {
                           color: isDark ? "#fff" : "#000",
                         }}
                       />
-                      <Pressable onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                      <Pressable
+                        onPress={() =>
+                          setShowCurrentPassword(!showCurrentPassword)
+                        }
+                      >
                         <Ionicons
-                          name={showCurrentPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showCurrentPassword
+                              ? "eye-outline"
+                              : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#9ca3af"}
                         />
@@ -637,9 +686,13 @@ export default function UserProfile() {
                           color: isDark ? "#fff" : "#000",
                         }}
                       />
-                      <Pressable onPress={() => setShowNewPassword(!showNewPassword)}>
+                      <Pressable
+                        onPress={() => setShowNewPassword(!showNewPassword)}
+                      >
                         <Ionicons
-                          name={showNewPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showNewPassword ? "eye-outline" : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#9ca3af"}
                         />
@@ -682,9 +735,17 @@ export default function UserProfile() {
                           color: isDark ? "#fff" : "#000",
                         }}
                       />
-                      <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      <Pressable
+                        onPress={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
                         <Ionicons
-                          name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showConfirmPassword
+                              ? "eye-outline"
+                              : "eye-off-outline"
+                          }
                           size={20}
                           color={isDark ? "#888" : "#9ca3af"}
                         />
@@ -733,6 +794,13 @@ export default function UserProfile() {
           </View>
         </View>
       </Modal>
+
+      <EditProfileModal
+        visible={editProfileModal}
+        onClose={() => setEditProfileModal(false)}
+        profile={userProfile}
+        onUpdateSuccess={() => fetchUserProfile(false)}
+      />
     </>
   );
 }

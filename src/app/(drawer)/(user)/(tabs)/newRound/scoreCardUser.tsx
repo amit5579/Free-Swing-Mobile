@@ -2029,9 +2029,16 @@ export default function ScoreCardUserPage() {
                         );
                       }
 
-                      const pScoreWidth = 75;
-                      const pNetWidth = 80;
-                      const pPtsWidth = 80;
+                      const pScoreWidth = 65;
+                      const pNetWidth = 60;
+                      const pPtsWidth = 60;
+                      const colHoleWidth = 40;
+                      const colParWidth = 40;
+                      const colSIWidth = 40;
+                      const colYardsWidth = 45;
+                      const colSplit6Width = 70;
+                      const colHighLowWidth = 65;
+                      const colNassauWidth = 80;
 
                       let partnerColsWidth = 0;
                       partners.forEach(() => {
@@ -2041,13 +2048,13 @@ export default function ScoreCardUserPage() {
                       });
 
                       const totalWidth =
-                        50 +
-                        50 + // par is always visible
-                        (isDetailsVisible ? 55 + 60 : 0) +
+                        colHoleWidth +
+                        colParWidth + // par is always visible
+                        (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
                         partnerColsWidth +
-                        (isSplit6 && partners.length >= 3 ? 3 * 95 : 0) +
-                        (isHighLow && partners.length >= 4 ? 2 * 80 : 0) +
-                        (isNassau && partners.length >= 2 ? 100 : 0);
+                        (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
+                        (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
+                        (isNassau && partners.length >= 2 ? colNassauWidth : 0);
                       return (
                         <ScrollView
                           horizontal={true}
@@ -2074,7 +2081,7 @@ export default function ScoreCardUserPage() {
                             >
                               <ThemedText
                                 style={{
-                                  width: 50,
+                                  width: colHoleWidth,
                                   textAlign: "center",
                                   fontWeight: "700",
                                   fontSize: 12,
@@ -2086,7 +2093,7 @@ export default function ScoreCardUserPage() {
                                 <>
                                   <ThemedText
                                     style={{
-                                      width: 55,
+                                      width: colSIWidth,
                                       textAlign: "center",
                                       fontWeight: "700",
                                       fontSize: 12,
@@ -2096,7 +2103,7 @@ export default function ScoreCardUserPage() {
                                   </ThemedText>
                                   <ThemedText
                                     style={{
-                                      width: 60,
+                                      width: colYardsWidth,
                                       textAlign: "center",
                                       fontWeight: "700",
                                       fontSize: 12,
@@ -2108,7 +2115,7 @@ export default function ScoreCardUserPage() {
                               )}
                               <ThemedText
                                 style={{
-                                  width: 50,
+                                  width: colParWidth,
                                   textAlign: "center",
                                   fontWeight: "700",
                                   fontSize: 12,
@@ -2234,7 +2241,7 @@ export default function ScoreCardUserPage() {
                                   <VStack
                                     key={`pts-hdr-${p.playerId}`}
                                     style={{
-                                      width: 95,
+                                      width: colSplit6Width,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2255,7 +2262,7 @@ export default function ScoreCardUserPage() {
                                 <>
                                   <VStack
                                     style={{
-                                      width: 80,
+                                      width: colHighLowWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2273,7 +2280,7 @@ export default function ScoreCardUserPage() {
                                   </VStack>
                                   <VStack
                                     style={{
-                                      width: 80,
+                                      width: colHighLowWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
@@ -2294,7 +2301,7 @@ export default function ScoreCardUserPage() {
                               {isNassau && partners.length >= 2 && (
                                 <VStack
                                   style={{
-                                    width: 100,
+                                    width: colNassauWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
@@ -2352,7 +2359,7 @@ export default function ScoreCardUserPage() {
                                     }}
                                   >
                                     <ThemedText
-                                      style={{ width: 50, textAlign: "center" }}
+                                      style={{ width: colHoleWidth, textAlign: "center" }}
                                     >
                                       {h.holeNumber}
                                     </ThemedText>
@@ -2360,7 +2367,7 @@ export default function ScoreCardUserPage() {
                                       <>
                                         <ThemedText
                                           style={{
-                                            width: 55,
+                                            width: colSIWidth,
                                             textAlign: "center",
                                           }}
                                         >
@@ -2368,7 +2375,7 @@ export default function ScoreCardUserPage() {
                                         </ThemedText>
                                         <ThemedText
                                           style={{
-                                            width: 60,
+                                            width: colYardsWidth,
                                             textAlign: "center",
                                             color: "#888",
                                           }}
@@ -2379,7 +2386,7 @@ export default function ScoreCardUserPage() {
                                     )}
                                     <ThemedText
                                       style={{
-                                        width: 50,
+                                        width: colParWidth,
                                         textAlign: "center",
                                       }}
                                     >
@@ -2722,7 +2729,7 @@ export default function ScoreCardUserPage() {
                                             <View
                                               key={`pts-${h.holeId}-${p.playerId}`}
                                               style={{
-                                                width: 95,
+                                                width: colSplit6Width,
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                               }}
@@ -2748,7 +2755,7 @@ export default function ScoreCardUserPage() {
                                           <>
                                             <View
                                               style={{
-                                                width: 80,
+                                                width: colHighLowWidth,
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                               }}
@@ -2767,7 +2774,7 @@ export default function ScoreCardUserPage() {
                                             </View>
                                             <View
                                               style={{
-                                                width: 80,
+                                                width: colHighLowWidth,
                                                 alignItems: "center",
                                                 justifyContent: "center",
                                               }}
@@ -2794,13 +2801,13 @@ export default function ScoreCardUserPage() {
                                           ns?.holeResults[h.holeNumber];
                                         if (!hRes)
                                           return (
-                                            <View style={{ width: 100 }} />
+                                            <View style={{ width: colNassauWidth }} />
                                           );
 
                                         return (
                                           <View
                                             style={{
-                                              width: 100,
+                                              width: colNassauWidth,
                                               alignItems: "center",
                                               justifyContent: "center",
                                               flexDirection: "row",
@@ -2850,7 +2857,7 @@ export default function ScoreCardUserPage() {
                                     >
                                       <ThemedText
                                         style={{
-                                          width: 50,
+                                          width: colHoleWidth,
                                           fontWeight: "700",
                                           textAlign: "center",
                                         }}
@@ -2863,13 +2870,13 @@ export default function ScoreCardUserPage() {
                                         <>
                                           <ThemedText
                                             style={{
-                                              width: 55,
+                                              width: colSIWidth,
                                               textAlign: "center",
                                             }}
                                           />
                                           <ThemedText
                                             style={{
-                                              width: 60,
+                                              width: colYardsWidth,
                                               textAlign: "center",
                                             }}
                                           >
@@ -2879,7 +2886,7 @@ export default function ScoreCardUserPage() {
                                       )}
                                       <ThemedText
                                         style={{
-                                          width: 50,
+                                          width: colParWidth,
                                           textAlign: "center",
                                         }}
                                       >
@@ -3020,7 +3027,7 @@ export default function ScoreCardUserPage() {
                                               <VStack
                                                 key={`f9-pts-${p.playerId}`}
                                                 style={{
-                                                  width: 95,
+                                                  width: colSplit6Width,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3056,7 +3063,7 @@ export default function ScoreCardUserPage() {
                                             <>
                                               <VStack
                                                 style={{
-                                                  width: 80,
+                                                  width: colHighLowWidth,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3074,7 +3081,7 @@ export default function ScoreCardUserPage() {
                                               </VStack>
                                               <VStack
                                                 style={{
-                                                  width: 80,
+                                                  width: colHighLowWidth,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3098,7 +3105,7 @@ export default function ScoreCardUserPage() {
                                         ns && (
                                           <VStack
                                             style={{
-                                              width: 100,
+                                              width: colNassauWidth,
                                               alignItems: "center",
                                               justifyContent: "center",
                                               flexDirection: "row",
@@ -3133,7 +3140,7 @@ export default function ScoreCardUserPage() {
                                     >
                                       <ThemedText
                                         style={{
-                                          width: 50,
+                                          width: colHoleWidth,
                                           fontWeight: "700",
                                           textAlign: "center",
                                         }}
@@ -3146,13 +3153,13 @@ export default function ScoreCardUserPage() {
                                         <>
                                           <ThemedText
                                             style={{
-                                              width: 55,
+                                              width: colSIWidth,
                                               textAlign: "center",
                                             }}
                                           />
                                           <ThemedText
                                             style={{
-                                              width: 60,
+                                              width: colYardsWidth,
                                               textAlign: "center",
                                             }}
                                           >
@@ -3162,7 +3169,7 @@ export default function ScoreCardUserPage() {
                                       )}
                                       <ThemedText
                                         style={{
-                                          width: 50,
+                                          width: colParWidth,
                                           textAlign: "center",
                                         }}
                                       >
@@ -3303,7 +3310,7 @@ export default function ScoreCardUserPage() {
                                               <VStack
                                                 key={`b9-pts-${p.playerId}`}
                                                 style={{
-                                                  width: 95,
+                                                  width: colSplit6Width,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3339,7 +3346,7 @@ export default function ScoreCardUserPage() {
                                             <>
                                               <VStack
                                                 style={{
-                                                  width: 80,
+                                                  width: colHighLowWidth,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3357,7 +3364,7 @@ export default function ScoreCardUserPage() {
                                               </VStack>
                                               <VStack
                                                 style={{
-                                                  width: 80,
+                                                  width: colHighLowWidth,
                                                   alignItems: "center",
                                                   justifyContent: "center",
                                                 }}
@@ -3381,7 +3388,7 @@ export default function ScoreCardUserPage() {
                                         ns && (
                                           <VStack
                                             style={{
-                                              width: 100,
+                                              width: colNassauWidth,
                                               alignItems: "center",
                                               justifyContent: "center",
                                               flexDirection: "row",
@@ -3411,7 +3418,7 @@ export default function ScoreCardUserPage() {
                             >
                               <ThemedText
                                 style={{
-                                  width: 50,
+                                  width: colHoleWidth,
                                   textAlign: "center",
                                   color: "#fff",
                                   fontWeight: "700",
@@ -3422,11 +3429,11 @@ export default function ScoreCardUserPage() {
                               {isDetailsVisible && (
                                 <>
                                   <ThemedText
-                                    style={{ width: 55, textAlign: "center" }}
+                                    style={{ width: colSIWidth, textAlign: "center" }}
                                   />
                                   <ThemedText
                                     style={{
-                                      width: 60,
+                                      width: colYardsWidth,
                                       textAlign: "center",
                                       color: "#fff",
                                     }}
@@ -3437,7 +3444,7 @@ export default function ScoreCardUserPage() {
                               )}
                               <ThemedText
                                 style={{
-                                  width: 50,
+                                  width: colParWidth,
                                   textAlign: "center",
                                   color: "#fff",
                                 }}
@@ -3569,7 +3576,7 @@ export default function ScoreCardUserPage() {
                                       <VStack
                                         key={`total-pts-${p.playerId}`}
                                         style={{
-                                          width: 95,
+                                          width: colSplit6Width,
                                           alignItems: "center",
                                           justifyContent: "center",
                                         }}
@@ -3603,7 +3610,7 @@ export default function ScoreCardUserPage() {
                                     <>
                                       <VStack
                                         style={{
-                                          width: 80,
+                                          width: colHighLowWidth,
                                           alignItems: "center",
                                           justifyContent: "center",
                                         }}
@@ -3619,7 +3626,7 @@ export default function ScoreCardUserPage() {
                                       </VStack>
                                       <VStack
                                         style={{
-                                          width: 80,
+                                          width: colHighLowWidth,
                                           alignItems: "center",
                                           justifyContent: "center",
                                         }}
@@ -3639,7 +3646,7 @@ export default function ScoreCardUserPage() {
                               {isNassau && partners.length >= 2 && ns && (
                                 <VStack
                                   style={{
-                                    width: 100,
+                                    width: colNassauWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     flexDirection: "row",

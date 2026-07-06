@@ -32,6 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema } from "@/schema/adminSchemas";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
+import EditProfileModal from "@/components/EditProfileModal";
 
 export default function AdminProfile() {
   const colorScheme = useColorScheme();
@@ -75,6 +76,7 @@ export default function AdminProfile() {
   const [adminProfile, setAdminProfile] = useState<any>(null);
   // const [image, setImage] = useState<string | null>(null);
   const [passwordModal, setPasswordModal] = useState(false);
+  const [editProfileModal, setEditProfileModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -365,7 +367,13 @@ export default function AdminProfile() {
                   </VStack>
                 </Box>
 
-                <Box className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
+                <Box 
+                style={{
+                      backgroundColor: isDark
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
+                    }}
+                className="rounded-2xl border border-[#8bc34a] p-5 bg-white/10">
                   <VStack space="lg">
                     <HStack className="items-center gap-3">
                       <Mail size={20} color="#8bc34a" />
@@ -383,7 +391,7 @@ export default function AdminProfile() {
                 </Box>
                 <VStack space="md" className="mt-6">
                   <Pressable
-                    onPress={() => setPasswordModal(true)}
+                    onPress={() => setEditProfileModal(true)}
                     style={{
                       backgroundColor: "#8BC34A",
                       padding: 14,
@@ -392,6 +400,21 @@ export default function AdminProfile() {
                     }}
                   >
                     <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+                      Edit Profile
+                    </ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setPasswordModal(true)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: "#8BC34A",
+                      padding: 14,
+                      borderRadius: 12,
+                      alignItems: "center",
+                    }}
+                  >
+                    <ThemedText style={{ color: "#8BC34A", fontWeight: "600" }}>
                       Change Password
                     </ThemedText>
                   </Pressable>
@@ -638,6 +661,13 @@ export default function AdminProfile() {
             </View>
           </View>
         </Modal>
+
+        <EditProfileModal
+          visible={editProfileModal}
+          onClose={() => setEditProfileModal(false)}
+          profile={adminProfile}
+          onUpdateSuccess={() => fetchAdminProfile(false)}
+        />
       </SafeAreaView>
     </>
   );
