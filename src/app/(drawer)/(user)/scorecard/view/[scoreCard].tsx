@@ -215,7 +215,12 @@ const ScoreCard: React.FC = () => {
                 typeof (firstHole as any).playingPartnersJson === "string"
                   ? JSON.parse((firstHole as any).playingPartnersJson)
                   : (firstHole as any).playingPartnersJson;
-              setPartners(parsedPartners || []);
+              const sortedPartners = (parsedPartners || []).slice().sort((a: any, b: any) => {
+                const teamA = a.team ?? 1;
+                const teamB = b.team ?? 1;
+                return teamA - teamB;
+              });
+              setPartners(sortedPartners);
             } catch (e) {
               console.error("Error parsing playingPartnersJson:", e);
             }
@@ -1601,7 +1606,6 @@ const ScoreCard: React.FC = () => {
                           style={{ width: colPartnerWidth, alignItems: "center" }}
                         >
                           <ThemedText
-                            numberOfLines={1}
                             style={{
                               textAlign: "center",
                               fontWeight: "700",
@@ -1646,7 +1650,6 @@ const ScoreCard: React.FC = () => {
                           }}
                         >
                           <ThemedText
-                            numberOfLines={1}
                             style={{
                               textAlign: "center",
                               fontWeight: "700",

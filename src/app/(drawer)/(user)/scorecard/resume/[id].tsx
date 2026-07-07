@@ -445,7 +445,12 @@ export default function ResumeScorecard() {
               typeof firstHole.playingPartnersJson === "string"
                 ? JSON.parse(firstHole.playingPartnersJson)
                 : firstHole.playingPartnersJson;
-            setPartners(parsedPartners || []);
+            const sortedPartners = (parsedPartners || []).slice().sort((a: any, b: any) => {
+              const teamA = a.team ?? 1;
+              const teamB = b.team ?? 1;
+              return teamA - teamB;
+            });
+            setPartners(sortedPartners);
           } catch (e) {
             console.error("Error parsing playingPartnersJson:", e);
           }
@@ -2330,7 +2335,6 @@ export default function ResumeScorecard() {
                       style={{ width: colPartnerWidth, alignItems: "center" }}
                     >
                       <ThemedText
-                        numberOfLines={1}
                         style={{
                           textAlign: "center",
                           fontWeight: "700",
@@ -2375,7 +2379,6 @@ export default function ResumeScorecard() {
                       }}
                     >
                       <ThemedText
-                        numberOfLines={1}
                         style={{
                           textAlign: "center",
                           fontWeight: "700",

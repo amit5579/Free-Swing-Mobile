@@ -130,7 +130,11 @@ export default function ScoreCardUserPage() {
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
   >({});
-  const partners = pendingRoundContext?.players || [];
+  const partners = (pendingRoundContext?.players || []).slice().sort((a: any, b: any) => {
+    const teamA = a.team ?? 1;
+    const teamB = b.team ?? 1;
+    return teamA - teamB;
+  });
 
   useEffect(() => {
     if (pendingRoundContext && pendingRoundContext.players && teeBoxId) {
@@ -2146,7 +2150,6 @@ export default function ScoreCardUserPage() {
                                     }}
                                   >
                                     <ThemedText
-                                      numberOfLines={1}
                                       style={{
                                         textAlign: "center",
                                         fontWeight: "700",
@@ -2194,7 +2197,6 @@ export default function ScoreCardUserPage() {
                                       }}
                                     >
                                       <ThemedText
-                                        numberOfLines={1}
                                         style={{
                                           textAlign: "center",
                                           fontWeight: "700",
@@ -2222,7 +2224,6 @@ export default function ScoreCardUserPage() {
                                       }}
                                     >
                                       <ThemedText
-                                        numberOfLines={1}
                                         style={{
                                           textAlign: "center",
                                           fontWeight: "700",
@@ -2247,7 +2248,6 @@ export default function ScoreCardUserPage() {
                                     }}
                                   >
                                     <ThemedText
-                                      numberOfLines={1}
                                       style={{
                                         textAlign: "center",
                                         fontWeight: "700",
