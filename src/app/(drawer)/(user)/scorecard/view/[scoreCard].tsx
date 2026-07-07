@@ -204,6 +204,8 @@ const ScoreCard: React.FC = () => {
               ? h.stablefordPoints
               : h.StablefordPoints,
         }));
+        // console.log("dd",data);
+        
 
         // Parse partners
         let parsedPartners: any[] = [];
@@ -315,6 +317,12 @@ const ScoreCard: React.FC = () => {
         });
         setTextScores(initialText);
 
+        const isGr =
+          mode.includes("gross_score") ||
+          mode.includes("gross") ||
+          mode === "gross";
+        setIsGross(isGr);
+
         const pLength = parsedPartners.length;
         const isNB =
           mode.includes("nassau_best") || mode.includes("nassau-best");
@@ -323,23 +331,18 @@ const ScoreCard: React.FC = () => {
         const isHL =
           (mode.includes("high_low") ||
             mode.includes("high-low") ||
-            pLength === 4) &&
+            (pLength === 4 && !isGr)) &&
           !(isNB || isNC);
         const isS6 =
           (mode.includes("split_six") ||
             mode.includes("split-six") ||
-            pLength === 3) &&
+            (pLength === 3 && !isGr)) &&
           !(isNB || isNC);
 
         setIsHighLow(isHL);
         setIsSplit6(isS6);
         setIsNassauBest(isNB);
         setIsNassauCombined(isNC);
-        const isGr =
-          mode.includes("gross_score") ||
-          mode.includes("gross") ||
-          mode === "gross";
-        setIsGross(isGr);
 
         const teeBoxId = (firstHole as any).teeBoxId;
         if (parsedPartners.length > 0 && teeBoxId) {
@@ -587,6 +590,17 @@ const ScoreCard: React.FC = () => {
       setSaving(true);
       const payload = holes.map((h) => ({
         ...h,
+        matchScoringType: isSplit6
+          ? "split-six"
+          : isHighLow
+            ? "high-low"
+            : isNassauBest
+              ? "nassau-best"
+              : isNassauCombined
+                ? "nassau-combined"
+                : isGross
+                  ? "gross"
+                  : h.matchScoringType || null,
         score: h.score !== null && h.score >= 0 ? h.score : 0,
       }));
       await updateHoleScoresApi(scoreCard!, payload);
@@ -607,6 +621,17 @@ const ScoreCard: React.FC = () => {
             setSaving(true);
             const payload = holes.map((h) => ({
               ...h,
+              matchScoringType: isSplit6
+                ? "split-six"
+                : isHighLow
+                  ? "high-low"
+                  : isNassauBest
+                    ? "nassau-best"
+                    : isNassauCombined
+                      ? "nassau-combined"
+                      : isGross
+                        ? "gross"
+                        : h.matchScoringType || null,
               isCompleted: true,
               score: h.score !== null && h.score >= 0 ? h.score : 0,
             }));
@@ -664,7 +689,7 @@ const ScoreCard: React.FC = () => {
     courseHalfStr === "Front9" || courseHalfStr === "Front 9";
   const isBack9Only = courseHalfStr === "Back9" || courseHalfStr === "Back 9";
   useEffect(() => {
-    console.log("inside useEffect   courseHalfStr", courseHalfStr);
+    // console.log("inside useEffect   courseHalfStr", courseHalfStr);
   }, [courseHalfStr]);
   const nassauStartingNine =
     holes[0]?.nassauStartingNine || holes[0]?.NassauStartingNine || null;

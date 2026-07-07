@@ -587,7 +587,9 @@ export default function ScoreCardUserPage() {
                   ? "nassau-best"
                   : isNassauCombined
                     ? "nassau-combined"
-                    : null,
+                    : isGross
+                      ? "gross"
+                      : null,
             roundNumber: h.roundNumber || 1,
             score:
               h.score === undefined || h.score === null || h.score === ""
@@ -677,7 +679,9 @@ export default function ScoreCardUserPage() {
             ? "nassau-best"
             : isNassauCombined
               ? "nassau-combined"
-              : null,
+              : isGross
+                ? "gross"
+                : null,
       roundNumber: h.roundNumber || 1,
       score:
         h.score === undefined || h.score === null || h.score === ""
@@ -920,7 +924,9 @@ export default function ScoreCardUserPage() {
                 ? "nassau-best"
                 : isNassauCombined
                   ? "nassau-combined"
-                  : null,
+                  : isGross
+                    ? "gross"
+                    : null,
           roundNumber: h.roundNumber || 1,
           score:
             h.score === undefined || h.score === null || h.score === ""
@@ -1005,7 +1011,9 @@ export default function ScoreCardUserPage() {
               ? "nassau-best"
               : isNassauCombined
                 ? "nassau-combined"
-                : null,
+                : isGross
+                  ? "gross"
+                  : null,
         roundNumber: h.roundNumber || 1,
         score:
           h.score === undefined || h.score === null || h.score === ""
