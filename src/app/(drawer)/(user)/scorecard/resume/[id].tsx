@@ -238,7 +238,9 @@ export default function ResumeScorecard() {
                 ? "nassau-best"
                 : isNassauCombined
                   ? "nassau-combined"
-                  : h.matchScoringType || null,
+                  : isGross
+                    ? "gross"
+                    : h.matchScoringType || null,
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
           nassauStartingNine: nassauStartingNine,
@@ -603,7 +605,9 @@ export default function ResumeScorecard() {
             ? "nassau-best"
             : isNassauCombined
               ? "nassau-combined"
-              : h.matchScoringType || null,
+              : isGross
+                ? "gross"
+                : h.matchScoringType || null,
       companionScoresJson: h.companionScoresJson || null,
       companionSandysJson: h.companionSandysJson || null,
       nassauStartingNine: nassauStartingNine,
@@ -1308,7 +1312,9 @@ export default function ResumeScorecard() {
                     ? "nassau-best"
                     : isNassauCombined
                       ? "nassau-combined"
-                      : h.matchScoringType || "",
+                      : isGross
+                        ? "gross"
+                        : h.matchScoringType || "",
               nassauStartingNine: nassauStartingNine,
               companionScoresJson: h.companionScoresJson || null,
               companionSandysJson: h.companionSandysJson || null,
