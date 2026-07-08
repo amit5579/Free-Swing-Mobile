@@ -3969,8 +3969,8 @@ export default function ScoreCardUserPage() {
                               bold = false,
                             }: {
                               label: string;
-                              a: number | string;
-                              b: number | string;
+                              a: number | string | React.ReactNode;
+                              b: number | string | React.ReactNode;
                               bold?: boolean;
                             }) => (
                               <HStack
@@ -4194,8 +4194,8 @@ export default function ScoreCardUserPage() {
                               bold = false,
                             }: {
                               label: string;
-                              a: number | string;
-                              b: number | string;
+                              a: number | string | React.ReactNode;
+                              b: number | string | React.ReactNode;
                               bold?: boolean;
                             }) => (
                               <HStack
@@ -4324,47 +4324,26 @@ export default function ScoreCardUserPage() {
                                     marginTop: 3,
                                   }}
                                 >
-                                  <HStack
-                                    style={{
-                                      alignItems: "center",
-                                      borderBottomWidth: 0.5,
-                                      borderColor: isDark ? "#333" : "#e5e5e5",
-                                      paddingVertical: 8,
-                                    }}
-                                  >
-                                    <ThemedText
-                                      style={{
-                                        color: isDark ? "#e2e8f0" : "#334155",
-                                        flex: 1,
-                                        fontSize: 12,
-                                        fontWeight: "700",
-                                        textAlign: "center",
-                                      }}
-                                    >
-                                      Final Result
-                                    </ThemedText>
-                                    <ThemedText
-                                      style={{
-                                        color: isDark ? "#e2e8f0" : "#334155",
-                                        fontSize: 12,
-                                        fontWeight: "700",
-                                      }}
-                                    >
-                                      Match -{" "}
-                                    </ThemedText>
-                                    {renderNassauHouses(ns.overallHouses)}
-                                    <ThemedText
-                                      style={{
-                                        color: isDark ? "#e2e8f0" : "#334155",
-                                        fontSize: 12,
-                                        fontWeight: "700",
-                                        marginHorizontal: 6,
-                                      }}
-                                    >
-                                      {" & Half - "}
-                                    </ThemedText>
-                                    {renderNassauHouses(ns.front9Houses)}
-                                  </HStack>
+                                  <Row
+                                    label="Final Result"
+                                    a={
+                                      <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamAColor }}>
+                                        Match - {ns?.overallMatches?.team1 || 0}{" "}
+                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
+                                        {" "}
+                                        Half - {(ns?.front9Halfs?.team1 || 0) + (ns?.back9Halfs?.team1 || 0)}
+                                      </ThemedText>
+                                    }
+                                    b={
+                                      <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamBColor }}>
+                                        Match - {ns?.overallMatches?.team2 || 0}{" "}
+                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
+                                        {" "}
+                                        Half - {(ns?.front9Halfs?.team2 || 0) + (ns?.back9Halfs?.team2 || 0)}
+                                      </ThemedText>
+                                    }
+                                    bold
+                                  />
                                   <ThemedText
                                     style={{
                                       fontSize: 11,
