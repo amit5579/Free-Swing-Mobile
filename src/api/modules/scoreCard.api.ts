@@ -79,3 +79,24 @@ export const getScorecardDetails = async (scorecardId: number) => {
     throw error;
   }
 };
+
+// export const updateAdminScores = async (scorecardId: number, holeScores: Record<number, number>) => {
+//   try {
+//     console.log("ssdd",scorecardId);
+    
+//     const response = await client.put(`scorecard/admin-edit/${scorecardId}`, { scores: holeScores });
+//     return response.data;
+//   } catch (error) {
+//     console.error("Updating admin scores Error:", error);
+//     throw error;
+//   }
+// };
+export const updateAdminScores = async (tournamentId: number, userId:number, holeScores: Record<number, number>) => {
+  try {  
+    const response = await client.put(`scorecard/admin-edit/${tournamentId}/${userId}`, { scores: holeScores });
+    return response.data;
+  } catch (error) {
+    console.error("Updating admin scores Error:", error);
+    throw error;
+  }
+};

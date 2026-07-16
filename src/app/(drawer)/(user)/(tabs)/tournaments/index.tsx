@@ -668,7 +668,7 @@ export default function TournamentsScreen() {
                               )}
 
                               {/* Play Button */}
-                              {!tournament.isPlayed &&
+                              {!tournament.isPlayed && !tournament.isGroupedAsNonScorer &&
                                 (isEnded ? (
                                   <View className="flex-1 flex-row justify-center items-center gap-2 bg-gray-400 py-2.5 rounded-xl">
                                     <Ionicons
@@ -1647,6 +1647,7 @@ export default function TournamentsScreen() {
                         label: "DP Stableford",
                         value: "double-peoria-stableford",
                       },
+                      { label: "System 36", value: "system-36" },
                     ]}
                     labelField="label"
                     valueField="value"

@@ -57,21 +57,66 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   const timeoutRef = useRef<any>(null);
   const focusTimeoutRef = useRef<any>(null);
 
+  const [roundPlayers, setRoundPlayers] = useState<any[]>([]);
+  const [playingGroupRoundKey, setPlayingGroupRoundKey] = useState<string | null>(null);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+
 
   useEffect(() => {
     if (scorecardData) {
-      setScoreCard(scorecardData);
-      // console.log("scorecard data", scorecardData);
+      // parse playingPartnersJson if it exists
+      const firstWithPlayers = scorecardData.find((item: any) => item.playingPartnersJson || item.PlayingPartnersJson);
+      let players = [];
+      if (firstWithPlayers) {
+        try {
+          const jsonStr = firstWithPlayers.playingPartnersJson || firstWithPlayers.PlayingPartnersJson;
+          players = JSON.parse(jsonStr);
+        } catch (e) {
+          console.error("Error parsing playingPartnersJson:", e);
+        }
+      }
+      
+      if (players.length === 0) {
+        players = [{
+          playerId: 'p1',
+          userId: userId,
+          name: 'You',
+          isPrimary: true
+        }];
+      }
+      setRoundPlayers(players);
+
+      const firstWithRoundKey = scorecardData.find((item: any) => item.playingGroupRoundKey || item.PlayingGroupRoundKey);
+      if (firstWithRoundKey) {
+        setPlayingGroupRoundKey(firstWithRoundKey.playingGroupRoundKey || firstWithRoundKey.PlayingGroupRoundKey);
+      }
+
+      const parsedScoreCard = scorecardData.map((hole: any) => {
+        let companionScores = {};
+        if (hole.companionScoresJson || hole.CompanionScoresJson) {
+          try {
+            companionScores = JSON.parse(hole.companionScoresJson || hole.CompanionScoresJson);
+          } catch (e) {}
+        }
+        return {
+          ...hole,
+          companionScores
+        };
+      });
+
+      setScoreCard(parsedScoreCard);
     }
-  }, [scorecardData]);
+  }, [scorecardData, userId]);
 
   const renderScoringType =
     scorecardData && scorecardData.length > 0
-      ? scorecardData[0].stablefordPoints == null
-        ? scorecardData[0].isExcluded
-          ? "Net Score Exclude Par 3"
-          : "Net Score Include Par 3"
-        : "Stableford"
+      ? scorecardData[0].isSystem36
+        ? "System 36"
+        : scorecardData[0].stablefordPoints == null
+          ? scorecardData[0].isExcluded
+            ? "Net Score Exclude Par 3"
+            : "Net Score Include Par 3"
+          : "Stableford"
       : "";
  
   useEffect(() => {
@@ -90,46 +135,11 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
 
   const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
-  // const renderScoringType =
-  //   scoringType === "stableford" || scoringType === "Stableford"
-  //     ? "Stableford"
-  //     : scoringType === "double-peoria" ||
-  //         scoringType === "Double-Peoria" ||
-  //         scoringType === "double-peoria-stableford" ||
-  //         scoringType === "Double-Peoria-Stableford" ||
-  //         scoringType === "double-peoria-net" ||
-  //         scoringType === "Double-Peoria-Net"
-  //       ? "Net Score Include Par 3"
-  //       : scoringType === "excluded" || scoringType === "Excluded"
-  //         ? "Net Score Excluded Par 3"
-  //         : scoringType === "standard" || scoringType === "Standard"
-  //           ? "Standard"
-  //           : "Net Score Include Par 3";
+  const isSystem36 =
+    scoringType === "system-36" ||
+    scoringType === "System-36" ||
+    (scoreCard && scoreCard.length > 0 && (scoreCard[0].isSystem36 === true || scoreCard[0].IsSystem36 === true));
 
-  // const fetchScoreCard = async () => {
-  //   try {
-  //     // setLoading(true);
-
-  //     const response = await getScoreCardOpen(Number(tournamentId));
-
-  //     const hcDetails = await getScorecardHandicap(Number(teeBoxId));
-
-  //     // console.log("hcDetails", hcDetails);
-  //     // console.log("scorecard details", response);
-
-  //     const clearedScores = response.map((h: any) => ({
-  //       ...h,
-  //       score: null,
-  //       netScore: null,
-  //       stablefordPoints: null,
-  //     }));
-  //     setScoreCard(clearedScores);
-  //   } catch (error) {
-  //     console.error("Fetching scorecard Error:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   useEffect(() => {
     const getUserId = async () => {
@@ -195,12 +205,17 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       strokesReceived = 0;
     }
 
-    const netScore = score - strokesReceived;
+    const netScore = isSystem36 ? hole.netScore : score - strokesReceived;
 
     let stablefordPoints = null;
     if (isStableford) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
+    } else if (isSystem36 && score > 0) {
+      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
+      if (score <= hole.par) stablefordPoints = 2;
+      else if (score === hole.par + 1) stablefordPoints = 1;
+      else stablefordPoints = 0;
     }
 
     return {
@@ -215,12 +230,24 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
     holeId: number,
     value: string,
     index: number,
+    playerId: string,
+    isPrimary: boolean
   ) => {
     if (value === "") {
       setScoreCard((prev: any[]) =>
-        prev.map((hole) =>
-          hole.holeId === holeId ? { ...hole, score: "" } : hole,
-        ),
+        prev.map((hole) => {
+          if (hole.holeId === holeId) {
+            if (isPrimary) return { ...hole, score: "" };
+            return {
+              ...hole,
+              companionScores: {
+                ...(hole.companionScores || {}),
+                [playerId]: ""
+              }
+            };
+          }
+          return hole;
+        })
       );
       return;
     }
@@ -239,14 +266,25 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       }
     }
 
-    const updatedScoreCard = scoreCard.map((hole: any) =>
-      hole.holeId === holeId
-        ? {
+    const updatedScoreCard = scoreCard.map((hole: any) => {
+      if (hole.holeId === holeId) {
+        if (isPrimary) {
+          return {
             ...hole,
             score: currentScoreText === "" ? null : Number(currentScoreText),
-          }
-        : hole,
-    );
+          };
+        } else {
+          return {
+            ...hole,
+            companionScores: {
+              ...(hole.companionScores || {}),
+              [playerId]: currentScoreText === "" ? null : Number(currentScoreText)
+            }
+          };
+        }
+      }
+      return hole;
+    });
 
     setScoreCard(updatedScoreCard);
 
@@ -263,6 +301,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
           h.score === undefined || h.score === null || h.score === ""
             ? null
             : Number(h.score),
+        companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
+        companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+        playingGroupRoundKey: playingGroupRoundKey || null,
+        playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
         teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
         tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
         userId: Number(userId),
@@ -271,7 +313,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       //   "Triggering debounced save for new round tournamentId:",
       //   tournamentId,
       // );
-      console.log("Payload is ", payload);
+      // console.log("Payload is ", payload);
 
       updateHoleScoresApi(
         tournamentId
@@ -402,6 +444,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         h.score === undefined || h.score === null || h.score === ""
           ? null
           : Number(h.score),
+      companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
+      companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+      playingGroupRoundKey: playingGroupRoundKey || null,
+      playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
       teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
       tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
       userId: Number(userId),
@@ -436,6 +482,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
               h.score === undefined || h.score === null || h.score === ""
                 ? null
                 : Number(h.score),
+            companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
+            companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+            playingGroupRoundKey: playingGroupRoundKey || null,
+            playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
             teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             userId: Number(userId),
@@ -615,11 +665,11 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         <View style={{ paddingTop: 10 }}>
           <HStack
             className="px-3 items-center"
-            style={{ height: 30, justifyContent: "center" }}
+            style={{ height: 40, justifyContent: "space-between" }}
           >
             <Pressable
               onPress={handleGoBack}
-              style={{ position: "absolute", left: 16, zIndex: 10, padding: 8 }}
+              style={{ padding: 8 }}
             >
               <Ionicons
                 name="arrow-back-outline"
@@ -637,27 +687,95 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
             >
               Scorecard
             </ThemedText>
+
+            {/* ⚖️ TOGGLE */}
+            <Pressable
+              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+              style={{ padding: 8 }}
+            >
+              <Ionicons
+                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                size={24}
+                color={isDark ? "#ffffff" : "#020617"}
+              />
+            </Pressable>
           </HStack>
 
           <HStack className="justify-between m-3">
             <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
               ({renderScoringType})
             </ThemedText>
-            <Box
-              style={{
-                padding: 8,
-                backgroundColor: "#8bc34a",
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: 700 }}>
-                Handicap: {handicapData?.handicap}
-              </Text>
-            </Box>
+            <HStack style={{ gap: 8 }}>
+              <Box
+                style={{
+                  padding: 8,
+                  backgroundColor: "#8bc34a",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: 700 }}>
+                  Handicap: {handicapData?.handicap}
+                </Text>
+              </Box>
+              {isSystem36 && (
+                <Box
+                  style={{
+                    padding: 8,
+                    backgroundColor: "#0ea5e9",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: 700 }}>
+                    Sys36 HC:{" "}
+                    {scoreCard.some((h: any) => h.score !== null && h.score > 0)
+                      ? 36 - Number(grandTotals.stableford)
+                      : "N/A"}
+                  </Text>
+                </Box>
+              )}
+            </HStack>
           </HStack>
         </View>
       </>
     );
+  };
+
+  const isGroup = roundPlayers && roundPlayers.length > 1;
+  const colStyle = isGroup ? { width: 70, textAlign: "center" as const } : { flex: 1, textAlign: "center" as const };
+  const headerStyle = { ...colStyle, fontWeight: "600" as const, fontSize: 13 };
+
+  const getPlayerScore = (h: any, p: any) => {
+    if (p.isPrimary) return h.score;
+    return h.companionScores?.[p.playerId];
+  };
+
+  const getPlayerNetScore = (h: any, p: any) => {
+    if (p.isPrimary) return h.netScore;
+    return getPlayerScore(h, p); 
+  };
+
+  const getPlayerStablefordPoints = (h: any, p: any) => {
+    if (p.isPrimary) return h.stablefordPoints;
+    const score = getPlayerScore(h, p);
+    if (!score) return null;
+    if (isSystem36) {
+      if (score <= h.par) return 2;
+      if (score === h.par + 1) return 1;
+      return 0;
+    }
+    return "-"; 
+  };
+
+  const getPlayerTotals = (holes: any[], playerId: string, isPrimary: boolean, type: "score" | "net" | "pts") => {
+    return holes.reduce((sum, h) => {
+      let s;
+      if (type === "score") s = getPlayerScore(h, { playerId, isPrimary });
+      else if (type === "net") s = getPlayerNetScore(h, { playerId, isPrimary });
+      else s = getPlayerStablefordPoints(h, { playerId, isPrimary });
+      
+      const num = Number(s);
+      return sum + (isNaN(num) ? 0 : num);
+    }, 0);
   };
 
   return (
@@ -673,359 +791,321 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                 <ThemedText>Loading...</ThemedText>
               ) : (
                 <>
-                  <VStack
-                    style={{
-                      backgroundColor: isDark
-                        ? "rgba(15, 23, 42, 0.7)"
-                        : "rgba(255, 255, 255, 0.7)",
-                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.12,
-                      shadowRadius: 6,
-                    }}
-                  >
-                    <HStack
-                      style={{
-                        paddingVertical: 10,
-                        backgroundColor: isDark
-                          ? "rgba(38, 38, 38, 0.8)"
-                          : "rgba(243, 244, 246, 0.8)",
-                        borderBottomWidth: 1,
-                        borderColor: isDark ? "#444" : "#ddd",
-                      }}
-                    >
-                      {[
-                        "Hole",
-                        "Stroke\nIndex",
-                        "Yards",
-                        "Par",
-                        "Score",
-                        "Net",
-                        isStableford && "Pts",
-                      ]
-                        .filter(Boolean)
-                        .map((item, i) => (
-                          <ThemedText
-                            key={i}
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              fontWeight: "600",
-                              fontSize: 13,
-                            }}
-                          >
-                            {item}
-                          </ThemedText>
-                        ))}
-                    </HStack>
-
-                    {processedScoreCard.map((h: any, index: number) => (
-                      <View key={h.holeId}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+                    <VStack style={{ minWidth: "100%" }}>
+                      <VStack
+                        style={{
+                          backgroundColor: isDark
+                            ? "rgba(15, 23, 42, 0.7)"
+                            : "rgba(255, 255, 255, 0.7)",
+                          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                          borderRadius: 14,
+                          overflow: "hidden",
+                          shadowColor: "#000",
+                          shadowOpacity: 0.12,
+                          shadowRadius: 6,
+                        }}
+                      >
                         <HStack
                           style={{
-                            paddingVertical: 12,
-                            alignItems: "center",
-                            borderBottomWidth: 0.5,
-                            borderColor: isDark ? "#333" : "#eee",
+                            paddingVertical: 10,
+                            backgroundColor: isDark
+                              ? "rgba(38, 38, 38, 0.8)"
+                              : "rgba(243, 244, 246, 0.8)",
+                            borderBottomWidth: 1,
+                            borderColor: isDark ? "#444" : "#ddd",
                           }}
                         >
-                          <ThemedText style={{ flex: 1, textAlign: "center" }}>
-                            {h.holeNumber}
-                          </ThemedText>
-
-                          <ThemedText
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              color: "#888",
-                            }}
-                          >
-                            {h.strokeIndex}
-                          </ThemedText>
-                          <ThemedText
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              color: "#888",
-                            }}
-                          >
-                            {h.yardage}
-                          </ThemedText>
-
-                          <ThemedText style={{ flex: 1, textAlign: "center" }}>
-                            {h.par}
-                          </ThemedText>
-
-                          <View
-                            style={{
-                              flex: 1,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            {renderScoreIndicator(h.score, h.par, isDark)}
-                            <TextInput
-                              value={
-                                h.score !== null && h.score !== undefined
-                                  ? String(h.score)
-                                  : ""
-                              }
-                              onChangeText={(val) =>
-                                handleScoreChange(h.holeId, val, index)
-                              }
-                              onBlur={() => {
-                                 if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-                                 saveRound(false, false);
-                               }}
-                              onSubmitEditing={() => {
-                                if (index < 17) {
-                                  inputRefs.current[index + 1]?.focus();
-                                }
-                              }}
-                              returnKeyType={index === 17 ? "done" : "next"}
-                              ref={(el: any) => (inputRefs.current[index] = el)}
-                              keyboardType="numeric"
-                              style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: 5,
-                                borderColor: "#b9b9b9ff",
-                                borderWidth: 1,
-                                backgroundColor: "transparent",
-                                textAlign: "center",
-                                color: isDark ? "#fff" : "#000",
-                                fontWeight: "600",
-                              }}
-                            />
-                          </View>
-
-                          <ThemedText
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              fontWeight: "600",
-                              color: "#8BC34A",
-                            }}
-                          >
-                            {h.netScore ?? "-"}
-                          </ThemedText>
-
-                          {isStableford && (
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {h.stablefordPoints ?? "-"}
-                            </ThemedText>
+                          <ThemedText style={headerStyle}>Hole</ThemedText>
+                          {isDetailsVisible && <ThemedText style={headerStyle}>Stroke{"\n"}Index</ThemedText>}
+                          {isDetailsVisible && <ThemedText style={headerStyle}>Yards</ThemedText>}
+                          <ThemedText style={headerStyle}>Par</ThemedText>
+                          
+                          {roundPlayers && roundPlayers.length > 0 ? (
+                            roundPlayers.map(p => (
+                              <React.Fragment key={p.playerId}>
+                                <ThemedText style={headerStyle} numberOfLines={1}>{isGroup ? p.name : "Score"}</ThemedText>
+                                {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
+                                {isStableford && <ThemedText style={headerStyle}>Pts</ThemedText>}
+                                {isSystem36 && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                              </React.Fragment>
+                            ))
+                          ) : (
+                            <React.Fragment>
+                              <ThemedText style={headerStyle}>Score</ThemedText>
+                              {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
+                              {isStableford && <ThemedText style={headerStyle}>Pts</ThemedText>}
+                              {isSystem36 && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                            </React.Fragment>
                           )}
                         </HStack>
 
-                        {/* FRONT 9 SUMMARY */}
-                        {index === 8 && (
-                          <HStack
-                            style={{
-                              backgroundColor: isDark
-                                ? "rgba(38, 38, 38, 0.8)"
-                                : "rgba(243, 244, 246, 0.8)",
-                              paddingVertical: 10,
-                              borderTopWidth: 1,
-                              borderColor: isDark ? "#444" : "#ddd",
-                            }}
-                          >
-                            <ThemedText
+                        {processedScoreCard.map((h: any, index: number) => (
+                          <View key={h.holeId}>
+                            <HStack
                               style={{
-                                flex: 1,
-                                fontWeight: "700",
-                                textAlign: "center",
+                                paddingVertical: 12,
+                                alignItems: "center",
+                                borderBottomWidth: 0.5,
+                                borderColor: isDark ? "#333" : "#eee",
                               }}
                             >
-                              Front 9
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                              }}
-                            >
-                              {frontTotals.strokeIndex}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {frontTotals.yards}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {frontTotals.par}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                fontWeight: "700",
-                              }}
-                            >
-                              {frontTotals.score}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                fontWeight: "700",
-                              }}
-                            >
-                              {frontTotals.net}
-                            </ThemedText>
-                            {isStableford && (
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
+                              <ThemedText style={colStyle}>{h.holeNumber}</ThemedText>
+                              {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#888" }}>{h.strokeIndex}</ThemedText>}
+                              {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#888" }}>{h.yardage}</ThemedText>}
+                              <ThemedText style={colStyle}>{h.par}</ThemedText>
+
+                              {roundPlayers && roundPlayers.length > 0 ? (
+                                roundPlayers.map((p, pIndex) => (
+                                  <React.Fragment key={p.playerId}>
+                                    <View style={{ ...colStyle, alignItems: "center", justifyContent: "center" } as any}>
+                                      {p.isPrimary && renderScoreIndicator(h.score, h.par, isDark)}
+                                      <TextInput
+                                        value={
+                                          getPlayerScore(h, p) !== null && getPlayerScore(h, p) !== undefined
+                                            ? String(getPlayerScore(h, p))
+                                            : ""
+                                        }
+                                        onChangeText={(val) =>
+                                          handleScoreChange(h.holeId, val, index, p.playerId, p.isPrimary)
+                                        }
+                                        onBlur={() => {
+                                          if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                          saveRound(false, false);
+                                        }}
+                                        onSubmitEditing={() => {
+                                          if (index < 17) {
+                                            inputRefs.current[index + 1]?.focus();
+                                          }
+                                        }}
+                                        returnKeyType={index === 17 ? "done" : "next"}
+                                        ref={(el: any) => p.isPrimary && (inputRefs.current[index] = el)}
+                                        keyboardType="numeric"
+                                        style={{
+                                          width: 42,
+                                          height: 42,
+                                          borderRadius: 5,
+                                          borderColor: "#b9b9b9ff",
+                                          borderWidth: 1,
+                                          backgroundColor: "transparent",
+                                          textAlign: "center",
+                                          color: isDark ? "#fff" : "#000",
+                                          fontWeight: "600",
+                                        }}
+                                      />
+                                    </View>
+
+                                    {!isSystem36 && (
+                                      <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#8BC34A" }}>
+                                        {getPlayerNetScore(h, p) ?? "-"}
+                                      </ThemedText>
+                                    )}
+
+                                    {isStableford && (
+                                      <ThemedText style={colStyle}>
+                                        {getPlayerStablefordPoints(h, p) ?? "-"}
+                                      </ThemedText>
+                                    )}
+
+                                    {isSystem36 && (
+                                      <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
+                                        {getPlayerStablefordPoints(h, p) ?? "-"}
+                                      </ThemedText>
+                                    )}
+                                  </React.Fragment>
+                                ))
+                              ) : (
+                                <React.Fragment>
+                                  <View style={{ ...colStyle, alignItems: "center", justifyContent: "center" } as any}>
+                                    {renderScoreIndicator(h.score, h.par, isDark)}
+                                    <TextInput
+                                      value={
+                                        h.score !== null && h.score !== undefined
+                                          ? String(h.score)
+                                          : ""
+                                      }
+                                      onChangeText={(val) =>
+                                        handleScoreChange(h.holeId, val, index, "", true)
+                                      }
+                                      onBlur={() => {
+                                        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                        saveRound(false, false);
+                                      }}
+                                      onSubmitEditing={() => {
+                                        if (index < 17) {
+                                          inputRefs.current[index + 1]?.focus();
+                                        }
+                                      }}
+                                      returnKeyType={index === 17 ? "done" : "next"}
+                                      ref={(el: any) => (inputRefs.current[index] = el)}
+                                      keyboardType="numeric"
+                                      style={{
+                                        width: 42,
+                                        height: 42,
+                                        borderRadius: 5,
+                                        borderColor: "#b9b9b9ff",
+                                        borderWidth: 1,
+                                        backgroundColor: "transparent",
+                                        textAlign: "center",
+                                        color: isDark ? "#fff" : "#000",
+                                        fontWeight: "600",
+                                      }}
+                                    />
+                                  </View>
+
+                                  {!isSystem36 && (
+                                    <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#8BC34A" }}>
+                                      {h.netScore ?? "-"}
+                                    </ThemedText>
+                                  )}
+
+                                  {isStableford && (
+                                    <ThemedText style={colStyle}>
+                                      {h.stablefordPoints ?? "-"}
+                                    </ThemedText>
+                                  )}
+
+                                  {isSystem36 && (
+                                    <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
+                                      {h.stablefordPoints ?? "-"}
+                                    </ThemedText>
+                                  )}
+                                </React.Fragment>
+                              )}
+                            </HStack>
+
+                            {/* FRONT 9 SUMMARY */}
+                            {index === 8 && (
+                              <HStack
+                                style={{
+                                  backgroundColor: isDark
+                                    ? "rgba(38, 38, 38, 0.8)"
+                                    : "rgba(243, 244, 246, 0.8)",
+                                  paddingVertical: 10,
+                                  borderTopWidth: 1,
+                                  borderColor: isDark ? "#444" : "#ddd",
+                                }}
                               >
-                                {frontTotals.stableford}
-                              </ThemedText>
-                            )}
-                          </HStack>
-                        )}
+                                <ThemedText style={{ ...colStyle, fontWeight: "700" }}>Front 9</ThemedText>
+                                {isDetailsVisible && <ThemedText style={colStyle}>{frontTotals.strokeIndex}</ThemedText>}
+                                {isDetailsVisible && <ThemedText style={colStyle}>{frontTotals.yards}</ThemedText>}
+                                <ThemedText style={colStyle}>{frontTotals.par}</ThemedText>
 
-                        {/* BACK 9 SUMMARY */}
-                        {index === 17 && (
-                          <HStack
-                            style={{
-                              backgroundColor: isDark
-                                ? "rgba(38, 38, 38, 0.8)"
-                                : "rgba(243, 244, 246, 0.8)",
-                              paddingVertical: 10,
-                              borderTopWidth: 1,
-                              borderColor: isDark ? "#444" : "#ddd",
-                            }}
-                          >
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                fontWeight: "700",
-                                textAlign: "center",
-                              }}
-                            >
-                              Back 9
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                              }}
-                            >
-                              {backTotals.strokeIndex}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {backTotals.yards}
-                            </ThemedText>
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
-                            >
-                              {backTotals.par}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                fontWeight: "700",
-                              }}
-                            >
-                              {backTotals.score}
-                            </ThemedText>
-                            <ThemedText
-                              style={{
-                                flex: 1,
-                                textAlign: "center",
-                                fontWeight: "700",
-                              }}
-                            >
-                              {backTotals.net}
-                            </ThemedText>
-                            {isStableford && (
-                              <ThemedText
-                                style={{ flex: 1, textAlign: "center" }}
+                                {roundPlayers && roundPlayers.length > 0 ? (
+                                  roundPlayers.map(p => {
+                                    const s = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "score");
+                                    const n = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "net");
+                                    const pt = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "pts");
+                                    return (
+                                      <React.Fragment key={p.playerId}>
+                                        <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
+                                        {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
+                                        {isStableford && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                      </React.Fragment>
+                                    );
+                                  })
+                                ) : (
+                                  <React.Fragment>
+                                    <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.score}</ThemedText>
+                                    {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.net}</ThemedText>}
+                                    {isStableford && <ThemedText style={colStyle}>{frontTotals.stableford}</ThemedText>}
+                                    {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{frontTotals.stableford}</ThemedText>}
+                                  </React.Fragment>
+                                )}
+                              </HStack>
+                            )}
+
+                            {/* BACK 9 SUMMARY */}
+                            {index === 17 && (
+                              <HStack
+                                style={{
+                                  backgroundColor: isDark
+                                    ? "rgba(38, 38, 38, 0.8)"
+                                    : "rgba(243, 244, 246, 0.8)",
+                                  paddingVertical: 10,
+                                  borderTopWidth: 1,
+                                  borderColor: isDark ? "#444" : "#ddd",
+                                }}
                               >
-                                {backTotals.stableford}
-                              </ThemedText>
+                                <ThemedText style={{ ...colStyle, fontWeight: "700" }}>Back 9</ThemedText>
+                                {isDetailsVisible && <ThemedText style={colStyle}>{backTotals.strokeIndex}</ThemedText>}
+                                {isDetailsVisible && <ThemedText style={colStyle}>{backTotals.yards}</ThemedText>}
+                                <ThemedText style={colStyle}>{backTotals.par}</ThemedText>
+
+                                {roundPlayers && roundPlayers.length > 0 ? (
+                                  roundPlayers.map(p => {
+                                    const s = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "score");
+                                    const n = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "net");
+                                    const pt = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "pts");
+                                    return (
+                                      <React.Fragment key={p.playerId}>
+                                        <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
+                                        {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
+                                        {isStableford && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                      </React.Fragment>
+                                    );
+                                  })
+                                ) : (
+                                  <React.Fragment>
+                                    <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.score}</ThemedText>
+                                    {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.net}</ThemedText>}
+                                    {isStableford && <ThemedText style={colStyle}>{backTotals.stableford}</ThemedText>}
+                                    {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{backTotals.stableford}</ThemedText>}
+                                  </React.Fragment>
+                                )}
+                              </HStack>
                             )}
-                          </HStack>
+                          </View>
+                        ))}
+
+                        {scorecardData && scorecardData.length == 0  && (
+                          <ThemedText style={{ textAlign: "center" }}>
+                            No games played in this tournament yet.
+                          </ThemedText>
                         )}
-                      </View>
-                    ))}
+                      </VStack>
 
-                    {scorecardData && scorecardData.length == 0  && (
-                      <ThemedText style={{ textAlign: "center" }}>
-                        No games played in this tournament yet.
-                      </ThemedText>
-                    )}
-                  </VStack>
-
-                  {/* GRAND TOTAL */}
-                  <HStack
-                    style={{
-                      marginTop: 10,
-                      paddingVertical: 14,
-                      backgroundColor: "#8BC34A",
-                      borderRadius: 12,
-                    }}
-                  >
-                    <ThemedText
-                      style={{
-                        flex: 1,
-                        textAlign: "center",
-                        color: "#fff",
-                        fontWeight: "700",
-                      }}
-                    >
-                      Total
-                    </ThemedText>
-                    <ThemedText
-                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                    >
-                      {grandTotals.strokeIndex}
-                    </ThemedText>
-                    <ThemedText
-                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                    >
-                      {grandTotals.yards}
-                    </ThemedText>
-                    <ThemedText
-                      style={{ flex: 1, textAlign: "center", color: "#fff" }}
-                    >
-                      {grandTotals.par}
-                    </ThemedText>
-                    <ThemedText
-                      style={{
-                        flex: 1,
-                        textAlign: "center",
-                        color: "#fff",
-                        fontWeight: "700",
-                      }}
-                    >
-                      {grandTotals.score}
-                    </ThemedText>
-                    <ThemedText
-                      style={{
-                        flex: 1,
-                        textAlign: "center",
-                        color: "#fff",
-                        fontWeight: "700",
-                      }}
-                    >
-                      {grandTotals.net}
-                    </ThemedText>
-                    {isStableford && (
-                      <ThemedText
-                        style={{ flex: 1, textAlign: "center", color: "#fff" }}
+                      {/* GRAND TOTAL */}
+                      <HStack
+                        style={{
+                          marginTop: 10,
+                          paddingVertical: 14,
+                          backgroundColor: "#8BC34A",
+                          borderRadius: 12,
+                        }}
                       >
-                        {grandTotals.stableford}
-                      </ThemedText>
-                    )}
-                  </HStack>
+                        <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>Total</ThemedText>
+                        {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.strokeIndex}</ThemedText>}
+                        {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.yards}</ThemedText>}
+                        <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.par}</ThemedText>
+                        
+                        {roundPlayers && roundPlayers.length > 0 ? (
+                          roundPlayers.map(p => {
+                            const s = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "score");
+                            const n = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "net");
+                            const pt = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "pts");
+                            return (
+                              <React.Fragment key={p.playerId}>
+                                <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
+                                {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
+                                {isStableford && <ThemedText style={{ ...colStyle, color: "#fff" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                {isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                              </React.Fragment>
+                            );
+                          })
+                        ) : (
+                          <React.Fragment>
+                            <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.score}</ThemedText>
+                            {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.net}</ThemedText>}
+                            {isStableford && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.stableford}</ThemedText>}
+                            {isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.stableford}</ThemedText>}
+                          </React.Fragment>
+                        )}
+                      </HStack>
+                    </VStack>
+                  </ScrollView>
 
                   {/* FINISH ROUND BUTTON */}
                   <Pressable

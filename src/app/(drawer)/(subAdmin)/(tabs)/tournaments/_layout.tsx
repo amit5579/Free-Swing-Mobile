@@ -8,6 +8,7 @@ export default function subTournamentLayout() {
       <Stack.Screen name="tournamentHistory" options={{ headerShown: false }} />
       <Stack.Screen name="playerScorecard" options={{ headerShown: false }} />
       <Stack.Screen name="leaderboard" options={{ headerShown: false }} />
+      <Stack.Screen name="manageGroups" options={{ headerShown: false }} />
     </Stack>
   );
 }

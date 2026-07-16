@@ -360,3 +360,23 @@ export const authenticateScores = async (scoreCardId: number) => {
         throw error;
     }
 };
+
+export const getGroups = async (tournamentId: number) => {
+    try {
+        const response = await client.get(`Tournament/${tournamentId}/groups`);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching tournament groups Error:", error);
+        throw error;
+    }
+};
+
+export const saveGroups = async (tournamentId: number, groups: any[]) => {
+    try {
+        const response = await client.post(`Tournament/${tournamentId}/groups`, groups);
+        return response.data;
+    } catch (error) {
+        console.error("Saving tournament groups Error:", error);
+        throw error;
+    }
+};

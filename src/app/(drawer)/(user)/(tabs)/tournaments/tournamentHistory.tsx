@@ -45,19 +45,6 @@ export default function TournamentHistory() {
   const { tournamentId, tournamentName, teeBoxId, scoringType, scorecardId, handicap: paramHandicap } =
     useLocalSearchParams();
 
-  // const formatScoringType =
-  //   scoringType == "double-peoria"
-  //     ? "Net Score Include Par 3"
-  //     : scoringType == "stableford"
-  //       ? "Stableford"
-  //       : scoringType == "excluded"
-  //         ? "Net Score Exclude Par 3"
-  //         : scoringType == "standard"
-  //           ? "Standard"
-  //           : scoringType == "double-peoria-net"
-  //             ? "Double Peoria Net"
-  //             : "Net Score Include Par 3";
-
   // Net Score Include Par 3
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,11 +57,13 @@ export default function TournamentHistory() {
 
   const renderScoringType =
     scorecardDetails.length > 0
-      ? scorecardDetails[0].stablefordPoints == null
-        ? scorecardDetails[0].isExcluded
-          ? "Net Score Exclude Par 3"
-          : "Net Score Include Par 3"
-        : "Stableford"
+      ? scorecardDetails[0].isSystem36
+        ? "System 36"
+        : scorecardDetails[0].stablefordPoints == null
+          ? scorecardDetails[0].isExcluded
+            ? "Net Score Exclude Par 3"
+            : "Net Score Include Par 3"
+          : "Stableford"
       : "";
   // ── Helper Functions (Defined early to avoid hoisting issues) ──
 
@@ -305,6 +294,15 @@ export default function TournamentHistory() {
       if (finalScorecardId) {
         const scd = await getScorecardDetails(finalScorecardId);
         // console.log("Scorecard Details:", scd);
+        if (scd && scd.length > 0 && scd[0].isSystem36) {
+          scd.forEach((h: any) => {
+            if (h.score != null && h.score > 0) {
+              if (h.score <= h.par) h.stablefordPoints = 2;
+              else if (h.score === h.par + 1) h.stablefordPoints = 1;
+              else h.stablefordPoints = 0;
+            }
+          });
+        }
         setScorecardDetails(scd);
       } else {
         console.warn("No scorecardId found in history results");
@@ -598,6 +596,16 @@ export default function TournamentHistory() {
             {handicap?.handicap ?? "N/A"}
           </ThemedText>
         </ThemedText>
+        {scorecardDetails.length > 0 && scorecardDetails[0].isSystem36 && (
+          <ThemedText style={{ fontSize: 12 }}>
+            Sys36 HC:{" "}
+            <ThemedText style={{ fontWeight: "600" }}>
+              {scorecardDetails.some((h: any) => h.score !== null && h.score > 0)
+                ? 36 - Number(getTotals(scorecardDetails).stableford)
+                : "N/A"}
+            </ThemedText>
+          </ThemedText>
+        )}
         {getTotals(scorecardDetails).sumDoublePieora > 0 && (
           <ThemedText style={{ fontSize: 12 }}>
             DP HC:{" "}

@@ -180,6 +180,11 @@ export default function ScoreCardUserPage() {
   const isNassauBest = parsedScore.nassau_best === true;
   const isNassauCombined = parsedScore.nassau_combined === true;
   const isNassau = isNassauBest || isNassauCombined;
+  const isSystem36 = 
+    parsedScore.scoring_type === "system-36" || 
+    parsedScore.scoringType === "system-36" ||
+    parsedScore.isSystem36 === true ||
+    (scoreCardDetails && scoreCardDetails.some((h: any) => h.isSystem36 === true || h.IsSystem36 === true));
   const isDoublePeoria =
     parsedScore.double_peoria === true ||
     parsedScore.scoring_type === "double-peoria" ||
@@ -212,7 +217,8 @@ export default function ScoreCardUserPage() {
       !isSplit6 &&
       !isHighLow &&
       !isGross &&
-      !isNassau
+      !isNassau &&
+      !isSystem36
     )
       return "Net Score • Include Par 3";
     if (isExcluded && isStableford) return "Stableford • Exclude Par 3";
@@ -222,7 +228,8 @@ export default function ScoreCardUserPage() {
       !isStableford &&
       !isSplit6 &&
       !isHighLow &&
-      !isNassau
+      !isNassau &&
+      !isSystem36
     )
       return "Gross Score";
     if (!isExcluded && !isStableford && isSplit6 && !isHighLow)
@@ -231,6 +238,7 @@ export default function ScoreCardUserPage() {
       return "High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
+    if (isSystem36) return "System 36";
     return "";
   };
 
@@ -239,6 +247,8 @@ export default function ScoreCardUserPage() {
     getScoringLabel() === "Net Score • Exclude Par 3" ||
     getScoringLabel() === "Stableford" ||
     getScoringLabel() === "Stableford • Exclude Par 3";
+
+  const showPtsColumns = isStableford || isSystem36;
 
   const fetchScoreCard = async () => {
     try {
@@ -313,14 +323,19 @@ export default function ScoreCardUserPage() {
     }
 
     const isDP = isDoublePeoria || hole.isDoublePeoria === true;
-    const netScore = isDP ? score : score - strokesReceived;
+    const netScore = isSystem36 ? hole.netScore : (isDP ? score : score - strokesReceived);
 
-    // Stableford
+    // Stableford / System 36 Points
     let stablefordPoints = null;
 
     if (isStableford && hole.score !== null) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
+    } else if (isSystem36 && hole.score !== null && score > 0) {
+      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
+      if (score <= hole.par) stablefordPoints = 2;
+      else if (score === hole.par + 1) stablefordPoints = 1;
+      else stablefordPoints = 0;
     }
 
     return {
@@ -400,12 +415,17 @@ export default function ScoreCardUserPage() {
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
-    const netScore = isDP ? rawScore : rawScore - strokesReceived;
+    const netScore = isSystem36 ? hole.netScore : (isDP ? rawScore : rawScore - strokesReceived);
 
     let stablefordPoints = null;
     if (isStableford) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
+    } else if (isSystem36 && rawScore !== null && rawScore > 0) {
+      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
+      if (rawScore <= hole.par) stablefordPoints = 2;
+      else if (rawScore === hole.par + 1) stablefordPoints = 1;
+      else stablefordPoints = 0;
     }
 
     return {
@@ -1571,6 +1591,23 @@ export default function ScoreCardUserPage() {
               >
                 Handicap: {handicap ?? "N/A"}
               </Text>
+              {isSystem36 && (
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 12,
+                    fontWeight: "600",
+                    color: isDark ? "#38bdf8" : "#0284c7",
+                    backgroundColor: isDark ? "rgba(56, 189, 248, 0.2)" : "rgba(2, 132, 199, 0.1)",
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                    overflow: "hidden",
+                  }}
+                >
+                  Sys36 HC: {Number(grandTotals.score) > 0 ? 36 - Number(grandTotals.stableford) : "N/A"}
+                </Text>
+              )}
             </HStack>
 
             {/* 🟢 HANDICAP BADGE */}
@@ -1715,7 +1752,7 @@ export default function ScoreCardUserPage() {
                           "Par",
                           "Score",
                           showNetColumns && "Net",
-                          isStableford && "Pts",
+                          showPtsColumns && "Pts",
                         ]
                           .filter(Boolean)
                           .map((item, i) => (
@@ -1841,7 +1878,7 @@ export default function ScoreCardUserPage() {
                               </ThemedText>
                             )}
 
-                            {isStableford && (
+                            {showPtsColumns && (
                               <ThemedText
                                 style={{ flex: 1, textAlign: "center" }}
                               >
@@ -1913,7 +1950,7 @@ export default function ScoreCardUserPage() {
                                 </ThemedText>
                               )}
 
-                              {isStableford && (
+                              {showPtsColumns && (
                                 <ThemedText
                                   style={{ flex: 1, textAlign: "center" }}
                                 >
@@ -1986,7 +2023,7 @@ export default function ScoreCardUserPage() {
                                 </ThemedText>
                               )}
 
-                              {isStableford && (
+                              {showPtsColumns && (
                                 <ThemedText
                                   style={{ flex: 1, textAlign: "center" }}
                                 >
@@ -2056,7 +2093,7 @@ export default function ScoreCardUserPage() {
                       partners.forEach(() => {
                         partnerColsWidth += pScoreWidth;
                         if (showNetColumns) partnerColsWidth += pNetWidth;
-                        if (isStableford) partnerColsWidth += pPtsWidth;
+                        if (showPtsColumns) partnerColsWidth += pPtsWidth;
                       });
 
                       const totalWidth =
@@ -2219,7 +2256,7 @@ export default function ScoreCardUserPage() {
                                 })}
 
                               {/* Stableford Points Headers (RHS) */}
-                              {isStableford &&
+                              {showPtsColumns &&
                                 partners.map((p: any) => {
                                   const pName = p.isPrimary ? "You" : p.name;
                                   return (
@@ -2650,7 +2687,7 @@ export default function ScoreCardUserPage() {
                                       })}
 
                                     {/* Stableford Points Columns (RHS) */}
-                                    {isStableford &&
+                                    {showPtsColumns &&
                                       partners.map((p: any, pIndex: number) => {
                                         const info = getPlayerHoleInfo(h, p);
 
@@ -2956,7 +2993,7 @@ export default function ScoreCardUserPage() {
                                         })}
 
                                       {/* Front 9 Stableford Totals (RHS) */}
-                                      {isStableford &&
+                                      {showPtsColumns &&
                                         partners.map((p: any) => {
                                           const t = getPlayerTotals(
                                             processedFront9,
@@ -3239,7 +3276,7 @@ export default function ScoreCardUserPage() {
                                         })}
 
                                       {/* Back 9 Stableford Totals (RHS) */}
-                                      {isStableford &&
+                                      {showPtsColumns &&
                                         partners.map((p: any) => {
                                           const t = getPlayerTotals(
                                             processedBack9,
@@ -3509,7 +3546,7 @@ export default function ScoreCardUserPage() {
                                 })}
 
                               {/* Grand Stableford Totals (RHS) */}
-                              {isStableford &&
+                              {showPtsColumns &&
                                 partners.map((p: any) => {
                                   const t = getPlayerTotals(processedHoles, p);
                                   return (
@@ -3748,7 +3785,7 @@ export default function ScoreCardUserPage() {
                         </ThemedText>
                       )}
 
-                      {isStableford && (
+                      {showPtsColumns && (
                         <ThemedText
                           style={{
                             flex: 1,

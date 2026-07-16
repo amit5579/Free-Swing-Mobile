@@ -120,18 +120,47 @@ export default function TeeTimeBookingPage() {
 
     if (loadingSeats[key]) return;
 
-    // Validation: Check if user already has a booking for this day
-    const hasBookingToday = teeData?.slots?.some((slot: any) =>
+    const parseTimeToMinutes = (timeStr: string) => {
+      const parts = timeStr.trim().split(" ");
+      const timePart = parts[0];
+      const modifier = parts[1];
+      
+      let [hours, minutes] = timePart.split(":").map(Number);
+      
+      if (modifier) {
+        if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
+        if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
+      }
+      return hours * 60 + (minutes || 0);
+    };
+
+    // Validation: Check if user already has a booking within 7 hours
+    const userBookedSlots = teeData?.slots?.filter((slot: any) =>
       slot.seats?.some((seat: any) => seat.isBooked && seat.userId === userId),
     );
 
-    if (hasBookingToday) {
-      Toast.show({
-        type: "error",
-        text1: "Booking Limit",
-        text2: "You can book only one seat for one day.",
-      });
-      return;
+    if (userBookedSlots && userBookedSlots.length > 0) {
+      const newBookingMinutes = parseTimeToMinutes(timeSlot);
+      let isWithin7Hours = false;
+
+      for (const bookedSlot of userBookedSlots) {
+        const existingBookingMinutes = parseTimeToMinutes(bookedSlot.time);
+        const diffHours = Math.abs(newBookingMinutes - existingBookingMinutes) / 60;
+        
+        if (diffHours < 7) {
+          isWithin7Hours = true;
+          break;
+        }
+      }
+
+      if (isWithin7Hours) {
+        Toast.show({
+          type: "error",
+          text1: "Booking Limit",
+          text2: "You can book next seat after 7 hours of previous booking.",
+        });
+        return;
+      }
     }
 
     setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
@@ -202,13 +231,6 @@ export default function TeeTimeBookingPage() {
     return date.toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
-  const formatDateString = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   useEffect(() => {
     const today = new Date();

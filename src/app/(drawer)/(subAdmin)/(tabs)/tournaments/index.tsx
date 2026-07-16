@@ -111,6 +111,7 @@ export default function SubAdminTournamentsPage() {
     4: "double-peoria",
     5: "double-peoria-net",
     6: "double-peoria-stableford",
+    7: "system-36",
   };
 
   const reverseScoringMap = (type: string) => {
@@ -673,6 +674,7 @@ export default function SubAdminTournamentsPage() {
                           { label: "Stableford", value: 3 },
                           { label: "Double Peoria Gross / Net", value: 4 },
                           { label: "Double Peoria Stableford", value: 5 },
+                          { label: "System 36", value: 7 },
                         ]}
                         labelField="label"
                         valueField="value"
@@ -1023,6 +1025,23 @@ function TournamentCard({
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
+                  `/tournaments/manageGroups?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
+                );
+              }}
+            >
+              <Ionicons name="people" size={20} color="#8bc34a" />
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
+                Groups
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                routePage.push(
                   `/(drawer)/(subAdmin)/(tabs)/tournaments/tournamentHistory?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
                 );
               }}
@@ -1040,7 +1059,7 @@ function TournamentCard({
               onPress={() => {
                 setMenuVisible(false);
                 routePage.push(
-                  `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}&secretHoles=${tournament?.secretHoles}`,
+                  `/(drawer)/(subAdmin)/(tabs)/tournaments/leaderboard?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}&teeboxId=${tournament?.teeBox?.teeBoxId || tournament?.teeBoxId}&scoringType=${tournament?.scoringType}&secretHoles=${tournament?.secretHoles}&creatorId=${tournament?.creatorId}`,
                 );
               }}
             >

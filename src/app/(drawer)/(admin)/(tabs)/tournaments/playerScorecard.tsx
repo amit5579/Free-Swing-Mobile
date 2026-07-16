@@ -33,8 +33,10 @@ const PlayerScorecard = () => {
 
   const renderScoring =
     scorecard && scorecard.length > 0
-      ? scorecard[0].stablefordPoints == null &&
-        scorecard[0].isExcluded == false
+      ? scorecard[0].isSystem36
+        ? "System 36"
+        : scorecard[0].stablefordPoints == null &&
+          scorecard[0].isExcluded == false
         ? "Net Score Include Par 3"
         : scorecard[0].stablefordPoints == null &&
             scorecard[0].isExcluded == true
@@ -49,6 +51,17 @@ const PlayerScorecard = () => {
       
       const rsc = await getSubScorecardHandicap(data[0].userId, data[0].teeBoxId);
       // const hcp = await getScorecardHandicap(Number(teeBoxId));
+
+      // Calculate System 36 points if missing
+      if (data && data.length > 0 && data[0].isSystem36) {
+        data.forEach((h: any) => {
+          if (h.score != null && h.score > 0) {
+            if (h.score <= h.par) h.stablefordPoints = 2;
+            else if (h.score === h.par + 1) h.stablefordPoints = 1;
+            else h.stablefordPoints = 0;
+          }
+        });
+      }
 
       setScorecard(data);
       setHandicap(rsc);
@@ -414,6 +427,16 @@ const PlayerScorecard = () => {
             {handicap?.handicap ?? "N/A"}
           </ThemedText>
         </ThemedText>
+        {scorecard && scorecard.length > 0 && scorecard[0].isSystem36 && (
+          <ThemedText style={{ fontSize: 12 }}>
+            Sys36 HC:{" "}
+            <ThemedText style={{ fontWeight: "600" }}>
+              {scorecard.some((h: any) => h.score !== null && h.score > 0)
+                ? 36 - Number(sumPts(scorecard))
+                : "N/A"}
+            </ThemedText>
+          </ThemedText>
+        )}
         {sumDoublePieora > 0 && (
           <ThemedText style={{ fontSize: 12 }}>
             DP HC:{" "}
@@ -480,7 +503,9 @@ const PlayerScorecard = () => {
               "Par",
               "Score",
               "Net",
-              "Pts",
+              scorecard && scorecard.length > 0 && scorecard[0].isSystem36
+                ? "Sys36\nPts"
+                : "Pts",
             ].map((h) => (
               <Text
                 key={h}

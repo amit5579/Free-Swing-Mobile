@@ -121,9 +121,18 @@ const ScoreCard: React.FC = () => {
     );
   };
 
+  const isExcluded = holes.length > 0 && holes.some((h: any) => h.isExcluded);
+  const isSystem36 = holes.length > 0 && holes.some(
+    (h: any) =>
+      h.matchScoringType === "system-36" ||
+      h.scoringType === "system-36" ||
+      h.scoring_type === "system-36" ||
+      h.isSystem36 === true ||
+      h.IsSystem36 === true
+  );
+
   const getScoringLabel = () => {
     if (holes.length === 0) return "";
-    const isExcluded = holes.some((h: any) => h.isExcluded);
 
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
     if (!isExcluded && isStableford) return "Stableford";
@@ -152,8 +161,17 @@ const ScoreCard: React.FC = () => {
       return "High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
+    if (isSystem36) return "System 36";
     return "";
   };
+
+  const showNetColumns =
+    getScoringLabel() === "Net Score • Include Par 3" ||
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    getScoringLabel() === "Stableford" ||
+    getScoringLabel() === "Stableford • Exclude Par 3";
+
+  const showPtsColumns = isStableford || isSystem36;
 
   useEffect(() => {
     const fetchScorecard = async () => {
@@ -288,10 +306,14 @@ const ScoreCard: React.FC = () => {
                 ? score
                 : score - strokes
               : null;
-          const stablefordPoints =
-            score !== null && score > 0 && netScore !== null
-              ? Math.max(0, h.par - netScore + 2)
-              : null;
+          let stablefordPoints = null;
+          if (score !== null && score > 0) {
+            if (isSystem36) {
+              stablefordPoints = score <= h.par ? 2 : score === h.par + 1 ? 1 : 0;
+            } else if (netScore !== null) {
+              stablefordPoints = Math.max(0, h.par - netScore + 2);
+            }
+          }
 
           return {
             ...h,
@@ -479,6 +501,11 @@ const ScoreCard: React.FC = () => {
     if (isStableford) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
+    } else if (isSystem36 && rawScore !== null && rawScore > 0) {
+      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
+      if (rawScore <= hole.par) stablefordPoints = 2;
+      else if (rawScore === hole.par + 1) stablefordPoints = 1;
+      else stablefordPoints = 0;
     }
 
     return {
@@ -672,7 +699,7 @@ const ScoreCard: React.FC = () => {
   const sumPar = (arr: ScorecardHole[]) =>
     arr.reduce((t, h) => t + (h.par || 0), 0);
   const sumPts = (arr: ScorecardHole[]) => {
-    if (!isStableford) return 0;
+    if (!showPtsColumns) return 0;
     const total = arr.reduce(
       (t, h) =>
         t + (h.score !== null && h.score >= 0 ? h.stablefordPoints || 0 : 0),
@@ -894,10 +921,8 @@ const ScoreCard: React.FC = () => {
               "Yards",
               "Par",
               "Score",
-              !isGross && "Net",
-            ]
-              .filter(Boolean)
-              .map((_, i) => (
+              ...(showNetColumns ? ["Net"] : []),
+            ].map((_, i) => (
                 <View key={i} className="flex-1 items-center">
                   <Skeleton
                     isDark={isDark}
@@ -907,7 +932,7 @@ const ScoreCard: React.FC = () => {
                   />
                 </View>
               ))}
-            {isStableford && (
+            {showPtsColumns && (
               <View className="flex-1 items-center">
                 <Skeleton
                   isDark={isDark}
@@ -985,7 +1010,7 @@ const ScoreCard: React.FC = () => {
                     />
                   </View>
                 )}
-                {isStableford && (
+                {showPtsColumns && (
                   <View className="flex-1 items-center">
                     <Skeleton
                       isDark={isDark}
@@ -1075,6 +1100,17 @@ const ScoreCard: React.FC = () => {
                   }`}
                 >
                   {getScoringLabel()}
+                </Text>
+              )}
+              {isSystem36 && (
+                <Text
+                  className={`text-xs font-bold px-2 py-0.5 rounded ${
+                    isDark
+                      ? "text-sky-400 bg-sky-400/20"
+                      : "text-sky-600 bg-sky-600/10"
+                  }`}
+                >
+                  Sys36 HC: {holes.some((h: any) => h.score !== null && h.score > 0) ? 36 - Number(sumPts(holes)) : "N/A"}
                 </Text>
               )}
 
@@ -1174,8 +1210,8 @@ const ScoreCard: React.FC = () => {
                   isDetailsVisible && "Yards",
                   "Par",
                   "Score",
-                  !isGross && "Net",
-                  ...(isStableford ? ["Pts"] : []),
+                  !isGross && showNetColumns && "Net",
+                  showPtsColumns && (isSystem36 ? "Sys36\nPts" : "Pts"),
                 ]
                   .filter(Boolean)
                   .map((h) => (
@@ -1261,7 +1297,7 @@ const ScoreCard: React.FC = () => {
                         : "-"}
                     </Text>
                   )}
-                  {isStableford && (
+                  {showPtsColumns && (
                     <Text
                       className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                     >
@@ -1316,7 +1352,7 @@ const ScoreCard: React.FC = () => {
                     {sumNet(front9)}
                   </Text>
                 )}
-                {isStableford && (
+                {showPtsColumns && (
                   <Text
                     className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                   >
@@ -1397,7 +1433,7 @@ const ScoreCard: React.FC = () => {
                         : "-"}
                     </Text>
                   )}
-                  {isStableford && (
+                  {showPtsColumns && (
                     <Text
                       className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                     >
@@ -1452,7 +1488,7 @@ const ScoreCard: React.FC = () => {
                     {sumNet(back9)}
                   </Text>
                 )}
-                {isStableford && (
+                {showPtsColumns && (
                   <Text
                     className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                   >
@@ -1488,7 +1524,7 @@ const ScoreCard: React.FC = () => {
                   {sumNet(displayHoles)}
                 </Text>
               )}
-              {isStableford && (
+              {showPtsColumns && (
                 <Text className="flex-1 text-center font-black text-l text-white">
                   {sumPts(displayHoles)}
                 </Text>

@@ -15,6 +15,7 @@ import { ThemedText } from "@/components/themed-text";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import Watermark from "@/components/watermark";
+import { Alert } from "react-native";
 
 import {
   getLeaderboard,
@@ -55,6 +56,8 @@ export default function LeaderboardUser() {
         return "Stableford";
       case "excluded":
         return "Practice Round";
+      case "system-36":
+        return "System 36";
       default:
         return "Gross / Net";
     }
@@ -483,14 +486,19 @@ export default function LeaderboardUser() {
   const STAT_WIDTH = 55;
   const ACTIONS_WIDTH = 190;
 
-  const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH;
+  const isSystem36 = scoringType === "system-36";
+  const SHCP_WIDTH = isSystem36 ? 50 : 0;
+
+  const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH + HCP_WIDTH + SHCP_WIDTH;
+
+  const showNetColumn = !isSystem36;
 
   const rightContentWidth = useMemo(() => {
     const holeCols = HOLE_WIDTH * 18;
     const totals = TOTAL_WIDTH * 2;
-    const stats = STAT_WIDTH * 6; // GROSS, NET, PTS, EGL, BRD, PAR
+    const stats = STAT_WIDTH * (showNetColumn ? 6 : 5); // GROSS, [NET], PTS, EGL, BRD, PAR
     return holeCols + totals + stats + ACTIONS_WIDTH;
-  }, []);
+  }, [showNetColumn]);
 
   const TableHeaderLeft = () => (
     <HStack
@@ -513,9 +521,29 @@ export default function LeaderboardUser() {
       >
         PLAYER
       </ThemedText>
-      <ThemedText style={[styles.headerText, { width: HCP_WIDTH }]}>
-        HCP
-      </ThemedText>
+      <HStack style={{ width: HCP_WIDTH, alignItems: "center", justifyContent: "center" }}>
+        <ThemedText style={[styles.headerText, { width: "auto" }]}>
+          HCP
+        </ThemedText>
+        {isSystem36 && (
+          <Pressable
+            onPress={() =>
+              Alert.alert(
+                "System 36 Handicap",
+                "This handicap is generated specifically for this round based on your performance."
+              )
+            }
+            style={{ marginLeft: 4 }}
+          >
+            <Ionicons name="information-circle-outline" size={14} color={isDark ? "#94a3b8" : "#64748b"} />
+          </Pressable>
+        )}
+      </HStack>
+      {isSystem36 && (
+        <ThemedText style={[styles.headerText, { width: SHCP_WIDTH }]}>
+          SHCP
+        </ThemedText>
+      )}
     </HStack>
   );
 
@@ -555,11 +583,13 @@ export default function LeaderboardUser() {
       >
         GROSS
       </ThemedText>
-      <ThemedText
-        style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
-      >
-        NET
-      </ThemedText>
+      {showNetColumn && (
+        <ThemedText
+          style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
+        >
+          NET
+        </ThemedText>
+      )}
       <ThemedText
         style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800" }]}
       >
@@ -650,7 +680,7 @@ export default function LeaderboardUser() {
       >
         {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
       </ThemedText>
-      <View style={{ width: STAT_WIDTH * 5 + ACTIONS_WIDTH }} />
+      <View style={{ width: STAT_WIDTH * (showNetColumn ? 5 : 4) + ACTIONS_WIDTH }} />
     </HStack>
   );
 
@@ -697,6 +727,11 @@ export default function LeaderboardUser() {
         <ThemedText style={[styles.cellText, { width: HCP_WIDTH }]}>
           {player.handicap}
         </ThemedText>
+        {isSystem36 && (
+          <ThemedText style={[styles.cellText, { width: SHCP_WIDTH, color: "#f59e0b" }]}>
+            {player.dpHandicap != null ? player.dpHandicap : "-"}
+          </ThemedText>
+        )}
       </HStack>
     );
   };
@@ -768,14 +803,16 @@ export default function LeaderboardUser() {
         >
           {player.gross}
         </ThemedText>
-        <ThemedText
-          style={[
-            styles.cellText,
-            { width: STAT_WIDTH, fontWeight: "800", color: "#3b82f6" },
-          ]}
-        >
-          {player.net}
-        </ThemedText>
+        {showNetColumn && (
+          <ThemedText
+            style={[
+              styles.cellText,
+              { width: STAT_WIDTH, fontWeight: "800", color: "#3b82f6" },
+            ]}
+          >
+            {player.net}
+          </ThemedText>
+        )}
         <ThemedText
           style={[
             styles.cellText,
@@ -908,6 +945,152 @@ export default function LeaderboardUser() {
             </Pressable>
           )}
         </HStack>
+      </HStack>
+    );
+  };
+
+  // Multi-row sub-rows for System 36 (Net scores row + Points row)
+  const PlayerSubRowRight = ({
+    player,
+    index,
+    type,
+  }: {
+    player: any;
+    index: number;
+    type: "net" | "points";
+  }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    const dataMap = type === "net" ? player.holeNetScores : player.holeStablefordPoints;
+    const front9Total = type === "net" ? player.front9Net : player.front9Points;
+    const back9Total = type === "net" ? player.back9Net : player.back9Points;
+    const labelColor = type === "net" ? "#3b82f6" : "#16a34a";
+
+    return (
+      <HStack
+        style={{
+          height: 36,
+          width: rightContentWidth,
+          backgroundColor: rowBg,
+          borderBottomWidth: type === "points" ? 1.5 : 0.5,
+          borderColor: type === "points"
+            ? isDark ? "#475569" : "#cbd5e1"
+            : isDark ? "#333" : "#eee",
+        }}
+      >
+        {Array.from({ length: 9 }).map((_, i) => {
+          const val = dataMap?.[i + 1];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+              <ThemedText style={{ fontSize: 12, fontWeight: "500", color: labelColor }}>
+                {val != null ? val : "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.subCellText,
+            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
+          ]}
+        >
+          {front9Total != null ? front9Total : 0}
+        </ThemedText>
+        {Array.from({ length: 9 }).map((_, i) => {
+          const val = dataMap?.[i + 10];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+              <ThemedText style={{ fontSize: 12, fontWeight: "500", color: labelColor }}>
+                {val != null ? val : "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.subCellText,
+            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
+          ]}
+        >
+          {back9Total != null ? back9Total : 0}
+        </ThemedText>
+        {/* Gross / Net / Pts cells */}
+        <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
+          -
+        </ThemedText>
+        {showNetColumn && (
+          <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
+            {type === "net" ? (
+              <ThemedText style={{ color: "#3b82f6", fontWeight: "800", fontSize: 12 }}>
+                {player.net}
+              </ThemedText>
+            ) : "-"}
+          </ThemedText>
+        )}
+        <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
+          {type === "points" ? (
+            <ThemedText style={{ color: "#16a34a", fontWeight: "800", fontSize: 12 }}>
+              {player.points != null ? player.points : 0}
+            </ThemedText>
+          ) : "-"}
+        </ThemedText>
+        {/* Empty stats + actions cells */}
+        <View style={{ width: STAT_WIDTH * 3 + ACTIONS_WIDTH }} />
+      </HStack>
+    );
+  };
+
+  const PlayerSubRowLeft = ({
+    index,
+    label,
+  }: {
+    index: number;
+    label: string;
+  }) => {
+    const isEven = index % 2 === 0;
+    const rowBg = isEven
+      ? isDark
+        ? "#0f172a"
+        : "#fff"
+      : isDark
+        ? "#1e293b"
+        : "#f8fafc";
+
+    return (
+      <HStack
+        style={{
+          height: 36,
+          width: LEFT_FIXED_WIDTH,
+          backgroundColor: rowBg,
+          borderBottomWidth: label === "Pts" ? 1.5 : 0.5,
+          borderColor: label === "Pts"
+            ? isDark ? "#475569" : "#cbd5e1"
+            : isDark ? "#333" : "#eee",
+          borderRightWidth: 1,
+        }}
+      >
+        <View style={{ width: RANK_WIDTH }} />
+        <ThemedText
+          style={{
+            width: PLAYER_WIDTH,
+            textAlign: "left",
+            paddingLeft: 10,
+            fontSize: 10,
+            fontWeight: "600",
+            lineHeight: 36,
+            color: label === "Net" ? "#3b82f6" : "#16a34a",
+          }}
+        >
+          {label}
+        </ThemedText>
+        <View style={{ width: HCP_WIDTH + SHCP_WIDTH }} />
       </HStack>
     );
   };
@@ -1062,11 +1245,18 @@ export default function LeaderboardUser() {
                   </>
                 )}
                 {leaderboard.map((player, idx) => (
-                  <PlayerRowLeft
-                    key={player.userId}
-                    player={player}
-                    index={idx}
-                  />
+                  <React.Fragment key={player.userId}>
+                    <PlayerRowLeft
+                      player={player}
+                      index={idx}
+                    />
+                    {isSystem36 && player.rank > 0 && (
+                      <>
+                        <PlayerSubRowLeft index={idx} label="Net" />
+                        <PlayerSubRowLeft index={idx} label="Pts" />
+                      </>
+                    )}
+                  </React.Fragment>
                 ))}
               </VStack>
 
@@ -1081,11 +1271,18 @@ export default function LeaderboardUser() {
                     </>
                   )}
                   {leaderboard.map((player, idx) => (
-                    <PlayerRowRight
-                      key={player.userId}
-                      player={player}
-                      index={idx}
-                    />
+                    <React.Fragment key={player.userId}>
+                      <PlayerRowRight
+                        player={player}
+                        index={idx}
+                      />
+                      {isSystem36 && player.rank > 0 && (
+                        <>
+                          <PlayerSubRowRight player={player} index={idx} type="net" />
+                          <PlayerSubRowRight player={player} index={idx} type="points" />
+                        </>
+                      )}
+                    </React.Fragment>
                   ))}
                 </VStack>
               </ScrollView>
@@ -1114,6 +1311,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     lineHeight: 50,
+  },
+  subCellText: {
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 36,
   },
   infoCellText: {
     fontSize: 13,

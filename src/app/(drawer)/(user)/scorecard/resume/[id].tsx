@@ -734,6 +734,11 @@ export default function ResumeScorecard() {
     if (isStableford) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
+    } else if (isSystem36 && rawScore !== null && rawScore > 0) {
+      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
+      if (rawScore <= hole.par) stablefordPoints = 2;
+      else if (rawScore === hole.par + 1) stablefordPoints = 1;
+      else stablefordPoints = 0;
     }
 
     return {
@@ -804,6 +809,14 @@ export default function ResumeScorecard() {
   };
 
   const isExcluded = holes.length > 0 ? holes[0].isExcluded : false;
+  const isSystem36 = holes.length > 0 && holes.some(
+    (h: any) =>
+      h.matchScoringType === "system-36" ||
+      h.scoringType === "system-36" ||
+      h.scoring_type === "system-36" ||
+      h.isSystem36 === true ||
+      h.IsSystem36 === true
+  );
 
   const getScoringLabel = () => {
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
@@ -833,8 +846,17 @@ export default function ResumeScorecard() {
       return "Net Score • High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
+    if (isSystem36) return "System 36";
     return "";
   };
+
+  const showNetColumns =
+    getScoringLabel() === "Net Score • Include Par 3" ||
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    getScoringLabel() === "Stableford" ||
+    getScoringLabel() === "Stableford • Exclude Par 3";
+
+  const showPtsColumns = isStableford || isSystem36;
 
   const getHighLowHoleStats = (h: any) => {
     const empty = {
@@ -1390,7 +1412,7 @@ export default function ResumeScorecard() {
     arr.reduce((t, h) => t + (h.yardage || 0), 0);
 
   const sumPts = (arr: ScorecardHole[]) => {
-    if (!isStableford) return 0;
+    if (!showPtsColumns) return 0;
     const total = arr.reduce(
       (t, h) =>
         t + (h.score !== null && h.score >= 0 ? (h.stablefordPoints ?? 0) : 0),
@@ -1454,8 +1476,14 @@ export default function ResumeScorecard() {
           <View
             className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
           >
-            {["Hole", "Stroke\nIndex", "Yards", "Par", "Scor", "Net"].map(
-              (_, i) => (
+            {[
+              "Hole",
+              "Stroke\nIndex",
+              "Yards",
+              "Par",
+              "Scor",
+              ...(showNetColumns ? ["Net"] : []),
+            ].map((_, i) => (
                 <View key={i} className="flex-1 items-center">
                   <Skeleton
                     isDark={isDark}
@@ -1466,7 +1494,7 @@ export default function ResumeScorecard() {
                 </View>
               ),
             )}
-            {isStableford && (
+            {showPtsColumns && (
               <View className="flex-1 items-center">
                 <Skeleton
                   isDark={isDark}
@@ -1541,7 +1569,7 @@ export default function ResumeScorecard() {
                     borderRadius={4}
                   />
                 </View>
-                {isStableford && (
+                {showPtsColumns && (
                   <View className="flex-1 items-center">
                     <Skeleton
                       isDark={isDark}
@@ -1713,6 +1741,23 @@ export default function ResumeScorecard() {
             >
               Handicap: {handicap}
             </Text>
+            {isSystem36 && (
+              <Text
+                style={{
+                  marginLeft: 8,
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: isDark ? "#38bdf8" : "#0284c7",
+                  backgroundColor: isDark ? "rgba(56, 189, 248, 0.2)" : "rgba(2, 132, 199, 0.1)",
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                }}
+              >
+                Sys36 HC: {holes.some(h => h.score !== null && h.score > 0) ? 36 - Number(sumPts(holes)) : "N/A"}
+              </Text>
+            )}
           </HStack>
 
           {/* Scoring */}
@@ -1792,8 +1837,8 @@ export default function ResumeScorecard() {
                   isDetailsVisible && "Yards",
                   "Par",
                   "Score",
-                  "Net",
-                  ...(isStableford ? ["Pts"] : []),
+                  showNetColumns && "Net",
+                  showPtsColumns && "Pts",
                 ]
                   .filter(Boolean)
                   .map((h) => (
@@ -1920,7 +1965,7 @@ export default function ResumeScorecard() {
                             ? h.score.toString()
                             : "-"}
                       </Text>
-                      {isStableford && (
+                      {showPtsColumns && (
                         <Text
                           className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                         >
@@ -1973,7 +2018,7 @@ export default function ResumeScorecard() {
                     >
                       {sumNet(front9Holes)}
                     </Text>
-                    {isStableford && (
+                    {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                       >
@@ -2082,7 +2127,7 @@ export default function ResumeScorecard() {
                           ? h.netScore
                           : "-"}
                       </Text>
-                      {isStableford && (
+                      {showPtsColumns && (
                         <Text
                           className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
                         >
@@ -2134,7 +2179,7 @@ export default function ResumeScorecard() {
                     >
                       {sumNet(back9Holes)}
                     </Text>
-                    {isStableford && (
+                    {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
                       >
@@ -2204,7 +2249,7 @@ export default function ResumeScorecard() {
                     ),
                   )}
                 </Text>
-                {isStableford && (
+                {showPtsColumns && (
                   <Text className="flex-1 text-center font-bold text-white">
                     {sumPts(
                       holes.filter(

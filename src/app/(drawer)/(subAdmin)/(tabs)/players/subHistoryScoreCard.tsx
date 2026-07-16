@@ -38,8 +38,10 @@ export default function SubAdminGameHistoryScoreCard() {
   }, [handicap]);
   const renderScoring =
     scorecard && scorecard.length > 0
-      ? scorecard[0].stablefordPoints == null &&
-        scorecard[0].isExcluded == false
+      ? scorecard[0].isSystem36
+        ? "System 36"
+        : scorecard[0].stablefordPoints == null &&
+          scorecard[0].isExcluded == false
         ? "Net Score Include Par 3"
         : scorecard[0].stablefordPoints == null &&
             scorecard[0].isExcluded == true
@@ -178,8 +180,17 @@ export default function SubAdminGameHistoryScoreCard() {
     try {
       const response = await getPlayerScorecard(Number(scorecardId));
       const rsc = await getSubScorecardHandicap(response[0].userId, response[0].teeBoxId);
-      // {handicap: 8, handicapIndex: 9.5, slope: 102, rating: 71.6, par: 72}
-      // console.log("rsc",rsc);
+      
+      // Calculate System 36 points if missing
+      if (response && response.length > 0 && response[0].isSystem36) {
+        response.forEach((h: any) => {
+          if (h.score != null && h.score > 0) {
+            if (h.score <= h.par) h.stablefordPoints = 2;
+            else if (h.score === h.par + 1) h.stablefordPoints = 1;
+            else h.stablefordPoints = 0;
+          }
+        });
+      }
 
       setScorecard(response);
       setHandicap(rsc);
@@ -481,6 +492,30 @@ export default function SubAdminGameHistoryScoreCard() {
       {/* ─── Header ─── */}
       {renderHeader()}
 
+      {/* 📊 STATS ROW for System 36 */}
+      {(scorecard && scorecard.length > 0 && scorecard[0].isSystem36) ? (
+        <HStack
+          style={{
+            marginTop: 8,
+            marginHorizontal: 16,
+            paddingVertical: 8,
+            paddingHorizontal: 10,
+            borderRadius: 10,
+            justifyContent: "space-between",
+            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+          }}
+        >
+          <ThemedText style={{ fontSize: 12 }}>
+            Sys36 HC:{" "}
+            <ThemedText style={{ fontWeight: "600" }}>
+              {scorecard.some((h: any) => h.score !== null && h.score > 0)
+                ? 36 - Number(sumPts(scorecard))
+                : "N/A"}
+            </ThemedText>
+          </ThemedText>
+        </HStack>
+      ) : null}
+
       {loading ? (
         <View className="px-4">
           <ScorecardSkeleton />
@@ -497,7 +532,17 @@ export default function SubAdminGameHistoryScoreCard() {
             className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
             style={{ borderWidth: 1, borderColor: isDark ? "#444" : "#ddd" }}
           >
-            {["Hole", "SI", "Yards", "Par", "Score", "Net", "Pts"].map((h) => (
+            {[
+              "Hole",
+              "SI",
+              "Yards",
+              "Par",
+              "Score",
+              "Net",
+              scorecard && scorecard.length > 0 && scorecard[0].isSystem36
+                ? "Sys36\nPts"
+                : "Pts",
+            ].map((h) => (
               <Text
                 key={h}
                 className={`flex-1 text-center font-bold text-[10px] ${isDark ? "text-white" : "text-black"}`}
