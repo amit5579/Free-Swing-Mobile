@@ -34,7 +34,7 @@ import {
 } from "@/components/radio";
 import {
   getCourseBySearch,
-  getHandicapDetails,
+  getUserHandicapDetails,
   saveExternalCourse,
 } from "@/api/modules/newRound.api";
 import { useForm, Controller } from "react-hook-form";
@@ -786,7 +786,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
   const fetchHandiCap = async () => {
     try {
-      const response = await getHandicapDetails(selectedTeeBoxId);
+      const response = await getUserHandicapDetails(selectedTeeBoxId);
       setHandicapDetails(response);
     } catch (error) {
       console.error("Fetching handicap scorecard Error:", error);

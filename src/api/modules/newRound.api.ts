@@ -4,13 +4,24 @@ import client from "../client";
 
 // get handicap scorecard/handicap/2/26
 
-export const getHandicapDetails = async (teeBoxId: number) => {
+export const getHandicapDetails = async (userId: number, teeBoxId: number) => {
+    try {
+        const response = await client.get(`scorecard/handicap/${userId}/${teeBoxId}`);
+        // console.log("handicap response", response.data);
+
+        return response.data;
+    } catch (error) {
+        console.error("Fetching handicap scorecard Error:", error);
+        throw error;
+    }
+};
+export const getUserHandicapDetails = async (teeBoxId: number) => {
     try {
         const userId = await AsyncStorage.getItem("userId");
         if (!userId) {
             throw new Error("User ID not found in storage");
         }
-        const response = await client.get(`scorecard/handicap/${userId}/${teeBoxId}`);
+         const response = await client.get(`scorecard/handicap/${userId}/${teeBoxId}`);
         // console.log("handicap response", response.data);
 
         return response.data;
@@ -57,11 +68,11 @@ export const getCourseBySearch = async (courseName: string) => {
 //  save searched course - CourseAdmin/external/import
 
 export const saveExternalCourse = async (data: any) => {
-            console.log("dataaaa",data);
+    console.log("dataaaa", data);
 
     try {
-        
-        const response = await client.post(`CourseAdmin/external/import`,data);
+
+        const response = await client.post(`CourseAdmin/external/import`, data);
         console.log("save searched course response", response.data);
 
         return response.data;

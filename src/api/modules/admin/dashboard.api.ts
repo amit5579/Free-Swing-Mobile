@@ -266,7 +266,8 @@ export type ScorecardHoleApi = {
   "tournamentId": number | null,
   "isDoublePeoria": boolean,
   "courseHalf": string,
-  "isExcluded": boolean
+  "isExcluded": boolean,
+  "userId":number
 };
 
 export type ScorecardHole = {

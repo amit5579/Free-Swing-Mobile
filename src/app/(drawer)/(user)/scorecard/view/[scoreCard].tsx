@@ -1856,139 +1856,105 @@ const ScoreCard: React.FC = () => {
                             }
 
                             return (
-                              <View
-                                key={p.playerId}
-                                style={{
-                                  width: colPartnerWidth,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  backgroundColor: bgColor,
-                                }}
-                              >
+                              <View key={p.playerId} style={{ flexDirection: "row" }}>
                                 <View
                                   style={{
-                                    position: "relative",
+                                    width: showPtsColumns ? 50 : colPartnerWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    width: 36,
-                                    height: 36,
+                                    backgroundColor: bgColor,
                                   }}
                                 >
-                                  {renderScoreIndicator(
-                                    info.score,
-                                    h.par,
-                                    isDark,
-                                    info.score !== null
-                                      ? String(info.score)
-                                      : "",
-                                  )}
-                                  <Text
+                                  <View
                                     style={{
-                                      color: isDark ? "#fff" : "#000",
-                                      fontWeight: "700",
-                                      fontSize: 13,
-                                      textAlign: "center",
-                                      zIndex: 10,
+                                      position: "relative",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      width: 36,
+                                      height: 36,
                                     }}
                                   >
-                                    {info.score !== null ? info.score : "-"}
-                                  </Text>
-                                </View>
-
-                                <HStack
-                                  style={{
-                                    alignItems: "center",
-                                    gap: 4,
-                                    marginTop: 4,
-                                  }}
-                                >
-                                  {info.sandy && (
-                                    <View
+                                    {renderScoreIndicator(
+                                      info.score,
+                                      h.par,
+                                      isDark,
+                                      info.score !== null
+                                        ? String(info.score)
+                                        : "",
+                                    )}
+                                    <Text
                                       style={{
-                                        width: 18,
-                                        height: 18,
-                                        borderRadius: 9,
-                                        backgroundColor: "#2e7d32",
-                                        alignItems: "center",
-                                        justifyContent: "center",
+                                        color: isDark ? "#fff" : "#000",
+                                        fontWeight: "700",
+                                        fontSize: 13,
+                                        textAlign: "center",
+                                        zIndex: 10,
                                       }}
                                     >
-                                      <Text
+                                      {info.score !== null ? info.score : "-"}
+                                    </Text>
+                                  </View>
+
+                                  <HStack
+                                    style={{
+                                      alignItems: "center",
+                                      gap: 4,
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    {info.sandy && (
+                                      <View
                                         style={{
-                                          fontSize: 9,
-                                          fontWeight: "bold",
-                                          color: "#fff",
+                                          width: 18,
+                                          height: 18,
+                                          borderRadius: 9,
+                                          backgroundColor: "#2e7d32",
+                                          alignItems: "center",
+                                          justifyContent: "center",
                                         }}
                                       >
-                                        S
-                                      </Text>
-                                    </View>
-                                  )}
+                                        <Text
+                                          style={{
+                                            fontSize: 9,
+                                            fontWeight: "bold",
+                                            color: "#fff",
+                                          }}
+                                        >
+                                          S
+                                        </Text>
+                                      </View>
+                                    )}
 
-                                  {/* {isSplit6 &&
-                                    s6Pts.length > 0 &&
-                                    info.score !== null && (
-                                      <Text
-                                        style={{
-                                          fontSize: 9,
-                                          color: "#84cc16",
-                                          fontWeight: "bold",
-                                        }}
-                                      >
-                                        P:{s6Pts[pIndex]}
-                                      </Text>
-                                    )} */}
-
-                                  {info.score !== null &&
-                                    getScoringLabel() !==
-                                      "Net Score • Include Par 3" &&
-                                    getScoringLabel() !==
-                                      "Net Score • Exclude Par 3" &&
-                                    getScoringLabel() !== "Stableford" &&
-                                    getScoringLabel() !==
-                                      "Stableford • Exclude Par 3" &&
-                                    (() => {
-                                      const badgeVal = getBadgeMultiplier(
-                                        info.score,
-                                        h.par,
-                                        info.sandy,
-                                      );
-                                      if (badgeVal > 0) {
-                                        return (
-                                          <Text
-                                            style={{
-                                              fontSize: 9,
-                                              color: "#f59e0b",
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            {badgeVal}x
-                                          </Text>
-                                        );
-                                      }
-                                      return null;
-                                    })()}
-
-                                  {/* {isHighLow &&
-                                      partners.length >= 4 &&
+                                    {/* {isSplit6 &&
+                                      s6Pts.length > 0 &&
                                       info.score !== null && (
                                         <Text
                                           style={{
                                             fontSize: 9,
-                                            color:
-                                              pIndex < 2 ? teamAColor : teamBColor,
+                                            color: "#84cc16",
                                             fontWeight: "bold",
                                           }}
                                         >
-                                          N:{info.netScore}
+                                          P:{s6Pts[pIndex]}
                                         </Text>
-                                      )}
-  
-                                    {!isSplit6 &&
-                                      !isHighLow &&
-                                      info.score !== null && (
-                                        <>
-                                          {isStableford ? (
+                                      )} */}
+
+                                    {info.score !== null &&
+                                      getScoringLabel() !==
+                                        "Net Score • Include Par 3" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Exclude Par 3" &&
+                                      getScoringLabel() !== "Stableford" &&
+                                      getScoringLabel() !==
+                                        "Stableford • Exclude Par 3" &&
+                                      (() => {
+                                        const badgeVal = getBadgeMultiplier(
+                                          info.score,
+                                          h.par,
+                                          info.sandy,
+                                        );
+                                        if (badgeVal > 0) {
+                                          return (
                                             <Text
                                               style={{
                                                 fontSize: 9,
@@ -1996,22 +1962,71 @@ const ScoreCard: React.FC = () => {
                                                 fontWeight: "bold",
                                               }}
                                             >
-                                              P:{info.stablefordPoints ?? 0}
+                                              {badgeVal}x
                                             </Text>
-                                          ) : (
-                                            <Text
-                                              style={{
-                                                fontSize: 9,
-                                                color: "#84cc16",
-                                                fontWeight: "bold",
-                                              }}
-                                            >
-                                              N:{info.netScore}
-                                            </Text>
-                                          )}
-                                        </>
-                                      )} */}
-                                </HStack>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+
+                                    {/* {isHighLow &&
+                                        partners.length >= 4 &&
+                                        info.score !== null && (
+                                          <Text
+                                            style={{
+                                              fontSize: 9,
+                                              color:
+                                                pIndex < 2 ? teamAColor : teamBColor,
+                                              fontWeight: "bold",
+                                            }}
+                                          >
+                                            N:{info.netScore}
+                                          </Text>
+                                        )}
+    
+                                      {!isSplit6 &&
+                                        !isHighLow &&
+                                        info.score !== null && (
+                                          <>
+                                            {isStableford ? (
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  color: "#f59e0b",
+                                                  fontWeight: "bold",
+                                                }}
+                                              >
+                                                P:{info.stablefordPoints ?? 0}
+                                              </Text>
+                                            ) : (
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  color: "#84cc16",
+                                                  fontWeight: "bold",
+                                                }}
+                                              >
+                                                N:{info.netScore}
+                                              </Text>
+                                            )}
+                                          </>
+                                        )} */}
+                                  </HStack>
+                                </View>
+                                {showPtsColumns && (
+                                  <View style={{ width: 45, alignItems: "center", justifyContent: "center" }}>
+                                    <Text
+                                      style={{
+                                        color: isDark ? "#fff" : "#000",
+                                        fontWeight: "700",
+                                        fontSize: 12,
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {info.score !== null && info.score >= 0 ? info.stablefordPoints ?? 0 : "-"}
+                                    </Text>
+                                  </View>
+                                )}
                               </View>
                             );
                           })}
@@ -2210,32 +2225,45 @@ const ScoreCard: React.FC = () => {
                             {partners.map((p) => {
                               const t = getPlayerTotals(front9, p);
                               return (
-                                <VStack
-                                  key={p.playerId}
-                                  style={{ width: colPartnerWidth, alignItems: "center" }}
-                                >
-                                  <ThemedText
-                                    style={{
-                                      fontWeight: "700",
-                                      color: isDark ? "#fff" : "#000",
-                                    }}
+                                <View key={p.playerId} style={{ flexDirection: "row" }}>
+                                  <VStack
+                                    style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
                                   >
-                                    {t.gross}
-                                  </ThemedText>
-                                  {/* {isStableford ? (
-                                    <Text
-                                      style={{ fontSize: 9, color: "#f59e0b" }}
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "700",
+                                        color: isDark ? "#fff" : "#000",
+                                      }}
                                     >
-                                      Pts:{t.stableford}
-                                    </Text>
-                                  ) : (
-                                    <Text
-                                      style={{ fontSize: 9, color: "#84cc16" }}
-                                    >
-                                      Net:{t.net}
-                                    </Text>
-                                  )} */}
-                                </VStack>
+                                      {t.gross}
+                                    </ThemedText>
+                                    {/* {isStableford ? (
+                                      <Text
+                                        style={{ fontSize: 9, color: "#f59e0b" }}
+                                      >
+                                        Pts:{t.stableford}
+                                      </Text>
+                                    ) : (
+                                      <Text
+                                        style={{ fontSize: 9, color: "#84cc16" }}
+                                      >
+                                        Net:{t.net}
+                                      </Text>
+                                    )} */}
+                                  </VStack>
+                                  {showPtsColumns && (
+                                    <VStack style={{ width: 45, alignItems: "center" }}>
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
+                                        {t.stableford}
+                                      </ThemedText>
+                                    </VStack>
+                                  )}
+                                </View>
                               );
                             })}
                             {isSplit6 &&
@@ -2431,32 +2459,45 @@ const ScoreCard: React.FC = () => {
                             {partners.map((p) => {
                               const t = getPlayerTotals(back9, p);
                               return (
-                                <VStack
-                                  key={p.playerId}
-                                  style={{ width: colPartnerWidth, alignItems: "center" }}
-                                >
-                                  <ThemedText
-                                    style={{
-                                      fontWeight: "700",
-                                      color: isDark ? "#fff" : "#000",
-                                    }}
+                                <View key={p.playerId} style={{ flexDirection: "row" }}>
+                                  <VStack
+                                    style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
                                   >
-                                    {t.gross}
-                                  </ThemedText>
-                                  {/* {isStableford ? (
-                                    <Text
-                                      style={{ fontSize: 9, color: "#f59e0b" }}
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "700",
+                                        color: isDark ? "#fff" : "#000",
+                                      }}
                                     >
-                                      Pts:{t.stableford}
-                                    </Text>
-                                  ) : (
-                                    <Text
-                                      style={{ fontSize: 9, color: "#84cc16" }}
-                                    >
-                                      Net:{t.net}
-                                    </Text>
-                                  )} */}
-                                </VStack>
+                                      {t.gross}
+                                    </ThemedText>
+                                    {/* {isStableford ? (
+                                      <Text
+                                        style={{ fontSize: 9, color: "#f59e0b" }}
+                                      >
+                                        Pts:{t.stableford}
+                                      </Text>
+                                    ) : (
+                                      <Text
+                                        style={{ fontSize: 9, color: "#84cc16" }}
+                                      >
+                                        Net:{t.net}
+                                      </Text>
+                                    )} */}
+                                  </VStack>
+                                  {showPtsColumns && (
+                                    <VStack style={{ width: 45, alignItems: "center" }}>
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "700",
+                                          color: isDark ? "#fff" : "#000",
+                                        }}
+                                      >
+                                        {t.stableford}
+                                      </ThemedText>
+                                    </VStack>
+                                  )}
+                                </View>
                               );
                             })}
                             {isSplit6 &&
@@ -2655,41 +2696,55 @@ const ScoreCard: React.FC = () => {
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (
-                        <VStack
-                          key={p.playerId}
-                          style={{ width: colPartnerWidth, alignItems: "center" }}
-                        >
-                          <ThemedText
-                            style={{
-                              textAlign: "center",
-                              color: "#fff",
-                              fontWeight: "700",
-                            }}
+                        <View key={p.playerId} style={{ flexDirection: "row" }}>
+                          <VStack
+                            style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
                           >
-                            {t.gross}
-                          </ThemedText>
-                          {/* {isStableford ? (
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 9,
+                                textAlign: "center",
                                 color: "#fff",
-                                fontWeight: "600",
+                                fontWeight: "700",
                               }}
                             >
-                              Pts:{t.stableford}
-                            </Text>
-                          ) : (
-                            <Text
-                              style={{
-                                fontSize: 9,
-                                color: "#fff",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Net:{t.net}
-                            </Text>
-                          )} */}
-                        </VStack>
+                              {t.gross}
+                            </ThemedText>
+                            {/* {isStableford ? (
+                              <Text
+                                style={{
+                                  fontSize: 9,
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Pts:{t.stableford}
+                              </Text>
+                            ) : (
+                              <Text
+                                style={{
+                                  fontSize: 9,
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Net:{t.net}
+                              </Text>
+                            )} */}
+                          </VStack>
+                          {showPtsColumns && (
+                            <VStack style={{ width: 45, alignItems: "center" }}>
+                              <ThemedText
+                                style={{
+                                  textAlign: "center",
+                                  color: "#fff",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {t.stableford}
+                              </ThemedText>
+                            </VStack>
+                          )}
+                        </View>
                       );
                     })}
                     {isSplit6 &&
