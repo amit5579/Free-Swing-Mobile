@@ -3409,7 +3409,158 @@ const ScoreCard: React.FC = () => {
                               ? `Team B Wins by ${Math.abs(ns.finalResult)}`
                               : "Tie"}
                         </ThemedText>
-                      </View>                     
+                      </View>
+
+                      {/* Nassau Hole-by-Hole Table */}
+                      {/* <ThemedText
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        marginTop: 18,
+                        marginBottom: 8,
+                      }}
+                    >
+                      Hole-by-Hole
+                    </ThemedText>
+                    <HStack
+                      style={{
+                        paddingVertical: 6,
+                        borderBottomWidth: 1,
+                        borderColor: isDark ? "#444" : "#ddd",
+                      }}
+                    >
+                      <ThemedText
+                        style={{
+                          width: 40,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                        }}
+                      >
+                        Hole
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: teamAColor,
+                        }}
+                      >
+                        Team A
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          flex: 1,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: teamBColor,
+                        }}
+                      >
+                        Team B
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          width: 60,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#84cc16",
+                        }}
+                      >
+                        Winner
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          width: 50,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          textAlign: "center",
+                          color: "#a855f7",
+                        }}
+                      >
+                        Houses
+                      </ThemedText>
+                    </HStack>
+                    {displayHoles.map((h: any) => {
+                      const r = ns.holeResults[h.holeNumber];
+                      if (!r) return null;
+                      return (
+                        <HStack
+                          key={`ns-sum-${h.holeNumber}`}
+                          style={{
+                            paddingVertical: 4,
+                            borderBottomWidth: 0.5,
+                            borderColor: isDark ? "#333" : "#e5e5e5",
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              width: 40,
+                              textAlign: "center",
+                              fontSize: 11,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {h.holeNumber}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontSize: 11,
+                            }}
+                          >
+                            {r.teamAScore !== Infinity ? r.teamAScore : "-"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              fontSize: 11,
+                            }}
+                          >
+                            {r.teamBScore !== Infinity ? r.teamBScore : "-"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              width: 60,
+                              textAlign: "center",
+                              fontSize: 11,
+                              color:
+                                r.winner === "teamA"
+                                  ? teamAColor
+                                  : r.winner === "teamB"
+                                    ? teamBColor
+                                    : "#64748b",
+                              fontWeight: "700",
+                            }}
+                          >
+                            {r.winner === "teamA"
+                              ? "A"
+                              : r.winner === "teamB"
+                                ? "B"
+                                : "Tie"}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              width: 50,
+                              textAlign: "center",
+                              fontSize: 11,
+                              color: "#a855f7",
+                            }}
+                          >
+                            {r.housesDisplay.length > 0
+                              ? r.housesDisplay
+                                  .map((v: number) => Math.abs(v))
+                                  .join(" ")
+                              : "-"}
+                          </ThemedText>
+                        </HStack>
+                      );
+                    })} */}
                     </>
                   );
                 })()}

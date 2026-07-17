@@ -1130,10 +1130,7 @@ export default function LeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 1];
           return (
-            <View
-              key={i}
-              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
-            >
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >
@@ -1153,10 +1150,7 @@ export default function LeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 10];
           return (
-            <View
-              key={i}
-              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
-            >
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >

@@ -1031,6 +1031,23 @@ function TournamentCard({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
+                routePage.push(
+                  `/tournaments/manageGroups?tournamentId=${tournament?.tournamentId}&tournamentName=${tournament?.name}`,
+                );
+              }}
+            >
+              <Ionicons name="people" size={20} color="#8bc34a" />
+              <ThemedText
+                style={[styles.menuText, { color: isDark ? "white" : "#000" }]}
+              >
+                Groups
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
                 routeTournamentHistory(
                   tournament?.tournamentId,
                   tournament?.name,
