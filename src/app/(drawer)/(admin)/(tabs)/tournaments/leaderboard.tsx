@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Pressable,
   ScrollView,
@@ -10,7 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -80,6 +80,36 @@ export default function LeaderboardPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
 
+  const fetchData = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+
+      const lb = await getLeaderboard(Number(tournamentId));
+      const teebox = await getTeeboxDetails(Number(teeboxId));
+
+      setLeaderboard(lb);
+      setHoles(teebox);
+    } catch (error) {
+      console.error("Error fetching leaderboard data", error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(true);
+
+      const intervalId = setInterval(() => {
+        fetchData(false);
+      }, 3000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }, [tournamentId, teeboxId])
+  );
+
   useEffect(() => {
     const loadData = async () => {
       const saved = await AsyncStorage.getItem("selectedHoles");
@@ -97,7 +127,6 @@ export default function LeaderboardPage() {
     };
 
     loadData();
-    fetchData();
   }, []);
 
   const onSubmit = async () => {
@@ -120,22 +149,6 @@ export default function LeaderboardPage() {
         type: "error",
         text1: "Error calculating Double Peoria Handicap",
       });
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      const lb = await getLeaderboard(Number(tournamentId));
-      const teebox = await getTeeboxDetails(Number(teeboxId));
-
-      setLeaderboard(lb);
-      setHoles(teebox);
-    } catch (error) {
-      console.error("Error fetching leaderboard data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -1130,7 +1143,10 @@ export default function LeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 1];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >
@@ -1150,7 +1166,10 @@ export default function LeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 10];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >

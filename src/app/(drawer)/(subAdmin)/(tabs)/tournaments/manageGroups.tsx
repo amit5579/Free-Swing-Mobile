@@ -8,6 +8,7 @@ import {
   Modal,
   TouchableOpacity,
   Text,
+  TextInput,
 } from "react-native";
 
 import { VStack } from "@/components/vstack";
@@ -39,7 +40,7 @@ export default function manageGroups() {
   
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
   const [tournamentGroups, setTournamentGroups] = useState<
-    { scorerId: number | null; members: any[] }[]
+    { scorerId: number | null; groupName: string; members: any[] }[]
   >([]);
   
   const [modalVisible, setModalVisible] = useState(false);
@@ -53,8 +54,9 @@ export default function manageGroups() {
 
       const groupsData = await getGroups(Number(tournamentId));
       if (groupsData && Array.isArray(groupsData)) {
-        const mappedGroups = groupsData.map((g: any) => ({
+        const mappedGroups = groupsData.map((g: any, index: number) => ({
           scorerId: g.scorerId,
+          groupName: `Group ${index + 1} - g.groupName`,
           members: g.memberIds
             ? g.memberIds
                 .map((mId: number) => players.find((p: any) => (p.userId || p.id) === mId))
@@ -80,7 +82,7 @@ export default function manageGroups() {
   }, [tournamentId]);
 
   const addGroup = () => {
-    setTournamentGroups([...tournamentGroups, { scorerId: null, members: [] }]);
+    setTournamentGroups([...tournamentGroups, { scorerId: null, groupName: `Group ${tournamentGroups.length + 1}`, members: [] }]);
   };
 
   const removeGroup = (index: number) => {
@@ -127,6 +129,7 @@ export default function manageGroups() {
         }
         payload.push({
           scorerId: g.scorerId,
+          groupName: g.groupName,
           memberIds: g.members.map((m: any) => m.userId || m.id),
         });
       }
@@ -226,7 +229,7 @@ export default function manageGroups() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <VStack className="p-4 gap-4">
           <ThemedText style={{ fontSize: 14, color: isDark ? "#94a3b8" : "#64748b" }}>
-            Organize players into groups and designate a scorer for each group for: {tournamentName}
+            Organize players into groups and designate a scorer for each group for the tournament: {tournamentName}
           </ThemedText>
           
           {loading ? (
@@ -243,7 +246,7 @@ export default function manageGroups() {
                   padding: 16,
                 }}
               >
-                <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <ThemedText style={{ fontSize: 16, fontWeight: "700", color: "#8bc34a" }}>
                     Group {groupIndex + 1}
                   </ThemedText>
@@ -251,6 +254,25 @@ export default function manageGroups() {
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
                   </Pressable>
                 </HStack>
+
+                <TextInput
+                  value={group.groupName}
+                  onChangeText={(text) => {
+                    const nextGroups = [...tournamentGroups];
+                    nextGroups[groupIndex].groupName = text;
+                    setTournamentGroups(nextGroups);
+                  }}
+                  placeholder="Enter Group Name"
+                  placeholderTextColor={isDark ? "#64748b" : "#94a3b8"}
+                  style={{
+                    color: isDark ? "#fff" : "#000",
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? "#334155" : "#e2e8f0",
+                    paddingVertical: 8,
+                    marginBottom: 12,
+                    fontSize: 14,
+                  }}
+                />
                 <Divider style={{ backgroundColor: isDark ? "#334155" : "#e2e8f0", marginBottom: 12 }} />
 
                 {group.members.map((member, memberIndex) => (

@@ -160,6 +160,7 @@ export const deleteUpdate = async (id: number): Promise<any> => {
 export type FeedApi = {
   roundRefId: number;
   playerName: string;
+  groupName?: string;
   playerAvatar: string | null;
   courseName: string;
   teeBoxName: string;
@@ -182,6 +183,7 @@ export type FeedApi = {
 export type FeedItem = {
   id: number;
   player: string;
+  groupName?: string;
   avatar: string | null;
   course: string;
   teeBox: string;
@@ -268,6 +270,7 @@ export type ScorecardHoleApi = {
   "courseHalf": string,
   "isExcluded": boolean,
   "userId":number,
+  "groupName"?: string,
   "nassauStartingNine": string
 };
 
@@ -285,6 +288,7 @@ export type ScorecardHole = {
   tournamentId: number | null;
   isDoublePeoria: boolean;
   toPar: number;
+  groupName?: string;
 };
 
 export const getScorecardDetails = async (

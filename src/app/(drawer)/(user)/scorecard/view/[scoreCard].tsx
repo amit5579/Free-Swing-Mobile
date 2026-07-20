@@ -1060,6 +1060,7 @@ const ScoreCard: React.FC = () => {
   }
 
   const renderHeader = () => {
+    const groupName = holes.length > 0 ? (holes[0] as any).groupName : null;
     return (
       <View
         className="px-4 pb-4"
@@ -1089,7 +1090,7 @@ const ScoreCard: React.FC = () => {
                 isDark ? "text-white" : "text-black"
               }`}
             >
-              {courseName || "Scorecard"}
+              {courseName || "Scorecard"} {groupName ? `- ${groupName}` : ""}
             </Text>
 
             <View className="flex-row items-center mt-1 flex-wrap">

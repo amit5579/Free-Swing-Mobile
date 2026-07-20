@@ -34,7 +34,7 @@ export default function RootLayout() {
         text2NumberOfLines={3}
         style={{
           borderLeftColor: "#22c55e",
-          height: 90,
+          height: 70,
           width: "92%",
           backgroundColor: isDark ? "#1e293b" : "#ffffff",
         }}

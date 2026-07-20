@@ -283,7 +283,7 @@ const ScoreCard: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              Scorecard
+              Scorecard {holes && holes.length > 0 && (holes[0] as any).groupName ? `- ${(holes[0] as any).groupName}` : ""}
             </ThemedText>
           </HStack>
 

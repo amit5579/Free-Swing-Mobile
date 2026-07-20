@@ -345,7 +345,7 @@ export default function SubAdminPlayerScorecard() {
             textAlign: "center",
           }}
         >
-          Player Scorecard
+          Player Scorecard {scorecard && scorecard.length > 0 && scorecard[0].groupName ? `- ${scorecard[0].groupName}` : ""}
         </ThemedText>
 
         <View style={{ width: 40 }} />

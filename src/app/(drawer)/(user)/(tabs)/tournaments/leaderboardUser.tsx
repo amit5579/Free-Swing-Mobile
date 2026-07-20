@@ -8,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -41,7 +41,8 @@ export default function LeaderboardUser() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchData(true);
+    // fetchData(true);
+      fetchData(true);
   }, []);
 
   const getScoringLabel = (scoringType: string) => {
@@ -78,7 +79,7 @@ export default function LeaderboardUser() {
   const fetchData = async (showSkeleton = true) => {
     try {
       if (showSkeleton) setLoading(true);
-      // getHolesByTeeBox
+      
       const lb = await getLeaderboard(Number(tournamentId));
       const teebox = await getTeeboxDetails(Number(teeboxId));
 
@@ -90,6 +91,20 @@ export default function LeaderboardUser() {
       if (showSkeleton) setLoading(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(true);
+
+      const intervalId = setInterval(() => {
+        fetchData(false);        
+      }, 3000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }, [tournamentId, teeboxId])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

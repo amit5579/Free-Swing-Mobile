@@ -685,7 +685,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                 textAlign: "center",
               }}
             >
-              Scorecard
+              Scorecard {scoreCard && scoreCard.length > 0 && scoreCard[0].groupName ? `- ${scoreCard[0].groupName}` : ""}
             </ThemedText>
 
             {/* ⚖️ TOGGLE */}

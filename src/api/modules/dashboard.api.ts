@@ -5,6 +5,7 @@ import client from "../client";
 export interface FeedItem {
   roundRefId: number;
   playerName: string;
+  groupName?: string;
   playerAvatar: string | null;
   courseName: string;
   teeBoxName: string;
@@ -230,6 +231,7 @@ export type ScorecardHole = {
   isExcluded: boolean;
   scoringType?: string;
   isTournament?: boolean;
+  groupName?: string;
   userId?: number;
   handicap?: number;
   companionScoresJson?: string | null;

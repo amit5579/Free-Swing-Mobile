@@ -35,6 +35,7 @@ import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers/index";
 export type Scorecard = {
   id: string;
   playerName: string;
+  groupName?: string;
   date: string;
   courseName: string;
   teeBoxName: string;
@@ -181,7 +182,7 @@ const FeedCard = ({
                 style={{ color: isDark ? "#fff" : "#111", fontSize: 18 }}
                 numberOfLines={1}
               >
-                {card.playerName}
+                {card.playerName} {card.groupName ? `- ${card.groupName}` : ""}
               </Text>
               <HStack space="xs" className="items-center">
                 <Ionicons
@@ -626,6 +627,7 @@ export function GameFeedContent({
         const mappedCards: Scorecard[] = data.map((item: FeedApi) => ({
           id: item.roundRefId?.toString() || Math.random().toString(),
           playerName: item.playerName || "Unknown",
+          groupName: item.groupName,
           date: item.date
             ? new Date(item.date).toLocaleDateString()
             : "Unknown",

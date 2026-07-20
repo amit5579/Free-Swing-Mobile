@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -101,7 +101,6 @@ export default function SubAdminLeaderboardPage() {
     };
 
     loadData();
-    fetchData();
   }, []);
 
   // ── Colors ──
@@ -213,7 +212,6 @@ export default function SubAdminLeaderboardPage() {
       "selectedHoles",
       JSON.stringify({ front: selectedFront, back: selectedBack }),
     );
-    fetchData();
   }, []);
 
   const onSubmit = async () => {
@@ -240,21 +238,34 @@ export default function SubAdminLeaderboardPage() {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
 
       const lb = await getLeaderboard(Number(tournamentId));
       const teebox = await getTeeboxDetails(Number(teeboxId));
-
       setLeaderboard(lb);
       setHoles(teebox);
     } catch (err) {
       console.error("Error fetching leaderboard data", err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(true);
+
+      const intervalId = setInterval(() => {
+        fetchData(false);
+      }, 3000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }, [tournamentId, teeboxId])
+  );
 
   const canEditScores = (player: any) => {
     if (
@@ -942,7 +953,10 @@ export default function SubAdminLeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 1];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >
@@ -962,7 +976,10 @@ export default function SubAdminLeaderboardPage() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 10];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
               <ThemedText
                 style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
               >
@@ -1620,9 +1637,9 @@ export default function SubAdminLeaderboardPage() {
                         numericScores[Number(k)] = Number(val);
                       }
                     });
-                    
+
                     await updateAdminScores(
-                     Number(tournamentId),
+                      Number(tournamentId),
                       editingPlayer.userId,
                       numericScores,
                     );

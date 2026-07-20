@@ -30,6 +30,7 @@ import { useFocusEffect } from "expo-router";
 export type Scorecard = {
   id: string;
   playerName: string;
+  groupName?: string;
   date: string;
   course: string;
   tee: string;
@@ -62,12 +63,13 @@ const FeedCard = ({
   onActivity,
 }: {
   card: Scorecard;
+  groupName?: string;
   isDark: boolean;
   isExpanded: boolean;
   onToggle: () => void;
   handleLike: (id: string) => void;
   handleVerify?: (id: string, playerName: string) => void;
-  onActivity: (id: string) => void;
+  onActivity: (id: string) => void | Promise<void>;
 }) => {
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
@@ -179,7 +181,7 @@ const FeedCard = ({
                 style={{ color: isDark ? "#fff" : "#111", fontSize: 18 }}
                 numberOfLines={1}
               >
-                {card.playerName}
+                {card.playerName} {card.groupName ? `- ${card.groupName}` : ""}
               </Text>
               <HStack space="xs" className="items-center">
                 <Ionicons
@@ -730,6 +732,7 @@ export function OverviewTab({
               <FeedCard
                 key={card.id}
                 card={card}
+                groupName={card.groupName}
                 isDark={isDark}
                 isExpanded={expandedId === card.id}
                 onToggle={() => toggleCard(card.id)}

@@ -189,7 +189,7 @@ const ScoreCard: React.FC = () => {
     const fetchScorecard = async () => {
       try {
         setLoading(true);
-        const data = await getScorecardDetails(scoreCard!);        
+        const data = await getScorecardDetails(scoreCard!);
         if (data.length > 0) {
           try {
             const hc = await getHandicapDetails(
@@ -252,11 +252,13 @@ const ScoreCard: React.FC = () => {
                 typeof (firstHole as any).playingPartnersJson === "string"
                   ? JSON.parse((firstHole as any).playingPartnersJson)
                   : (firstHole as any).playingPartnersJson;
-              const sortedPartners = (parsedPartners || []).slice().sort((a: any, b: any) => {
-                const teamA = a.team ?? 1;
-                const teamB = b.team ?? 1;
-                return teamA - teamB;
-              });
+              const sortedPartners = (parsedPartners || [])
+                .slice()
+                .sort((a: any, b: any) => {
+                  const teamA = a.team ?? 1;
+                  const teamB = b.team ?? 1;
+                  return teamA - teamB;
+                });
               setPartners(sortedPartners);
             } catch (e) {
               console.error("Error parsing playingPartnersJson:", e);
@@ -341,12 +343,16 @@ const ScoreCard: React.FC = () => {
 
   useEffect(() => {
     if (holes.length > 0) {
-      const courseHalfStr = holes.length > 0 ? (holes[0] as any).courseHalf : null;
+      const courseHalfStr =
+        holes.length > 0 ? (holes[0] as any).courseHalf : null;
       const isFront9Only =
         courseHalfStr === "Front9" || courseHalfStr === "Front 9";
-      const isBack9Only = courseHalfStr === "Back9" || courseHalfStr === "Back 9";
+      const isBack9Only =
+        courseHalfStr === "Back9" || courseHalfStr === "Back 9";
       const nassauStartingNine =
-        holes[0]?.nassauStartingNine || (holes[0] as any)?.NassauStartingNine || null;
+        holes[0]?.nassauStartingNine ||
+        (holes[0] as any)?.NassauStartingNine ||
+        null;
       const rawDisplayHoles = holes.filter((h: any) => {
         if (isFront9Only) return h.holeNumber <= 9;
         if (isBack9Only) return h.holeNumber > 9;
@@ -373,10 +379,18 @@ const ScoreCard: React.FC = () => {
           ? displayHoles.filter((h: any) => h.holeNumber <= 9)
           : displayHoles.filter((h: any) => h.holeNumber > 9);
 
-      const f9HasScore = f9.some((h: any) => h.score !== null && h.score !== undefined);
-      const b9HasScore = b9.some((h: any) => h.score !== null && h.score !== undefined);
-      const f9Sum = f9HasScore ? f9.reduce((t: number, h: any) => t + (h.score || 0), 0) : "-";
-      const b9Sum = b9HasScore ? b9.reduce((t: number, h: any) => t + (h.score || 0), 0) : "-";
+      const f9HasScore = f9.some(
+        (h: any) => h.score !== null && h.score !== undefined,
+      );
+      const b9HasScore = b9.some(
+        (h: any) => h.score !== null && h.score !== undefined,
+      );
+      const f9Sum = f9HasScore
+        ? f9.reduce((t: number, h: any) => t + (h.score || 0), 0)
+        : "-";
+      const b9Sum = b9HasScore
+        ? b9.reduce((t: number, h: any) => t + (h.score || 0), 0)
+        : "-";
 
       setDisplayFront9(f9Sum !== "-" && f9Sum > 0);
       setDisplayBack9(b9Sum !== "-" && b9Sum > 0);
@@ -885,7 +899,9 @@ const ScoreCard: React.FC = () => {
     courseHalfStr === "Front9" || courseHalfStr === "Front 9";
   const isBack9Only = courseHalfStr === "Back9" || courseHalfStr === "Back 9";
   const nassauStartingNine =
-    holes[0]?.nassauStartingNine || (holes[0] as any)?.NassauStartingNine || null;
+    holes[0]?.nassauStartingNine ||
+    (holes[0] as any)?.NassauStartingNine ||
+    null;
 
   const rawDisplayHoles = holes.filter((h: any) => {
     if (isFront9Only) return h.holeNumber <= 9;
@@ -1213,6 +1229,7 @@ const ScoreCard: React.FC = () => {
     );
   }
   const renderHeader = () => {
+    const groupName = holes.length > 0 ? (holes[0] as any).groupName : null;
     return (
       <View style={{ paddingTop: 10, paddingBottom: 5 }}>
         <HStack
@@ -1242,79 +1259,91 @@ const ScoreCard: React.FC = () => {
                 </ThemedText>
               </ThemedText>
             </View>
-            <HStack style={{ alignItems: "center", gap: 8 }}>
-              {isSystem36 && (
-                <Box
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    backgroundColor: isDark
-                      ? "rgba(14, 165, 233, 0.2)"
-                      : "rgba(2, 132, 199, 0.1)",
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: isDark ? "#38bdf8" : "#0284c7",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isDark ? "#38bdf8" : "#0284c7",
-                      fontWeight: "700",
-                      fontSize: 12,
-                    }}
-                  >
-                    Sys36 HC:{" "}
-                    {holes.some((h: any) => h.score !== null && h.score > 0)
-                      ? 36 -
-                        holes.reduce(
-                          (t, h) =>
-                            t +
-                            (h.score !== null && h.score >= 0
-                              ? h.stablefordPoints || 0
-                              : 0),
-                          0,
-                        )
-                      : "N/A"}
-                  </Text>
-                </Box>
-              )}
+          </View>
+        </HStack>
+        <ThemedText style={{ padding: 10 }}>
+          {groupName ? `${groupName}` : ""}
+        </ThemedText>
+
+        <HStack
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 10,
+          }}
+        >
+          <HStack className="gap-5">
+            {isSystem36 && (
               <Box
                 style={{
                   paddingHorizontal: 8,
                   paddingVertical: 4,
-                  backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
+                  backgroundColor: isDark
+                    ? "rgba(14, 165, 233, 0.2)"
+                    : "rgba(2, 132, 199, 0.1)",
                   borderRadius: 6,
                   borderWidth: 1,
-                  borderColor: "#8bc34a",
+                  borderColor: isDark ? "#38bdf8" : "#0284c7",
                 }}
               >
                 <Text
-                  style={{ color: "#8bc34a", fontWeight: "700", fontSize: 12 }}
+                  style={{
+                    color: isDark ? "#38bdf8" : "#0284c7",
+                    fontWeight: "700",
+                    fontSize: 12,
+                  }}
                 >
-                  Handicap: {getDisplayHandicap(handicap)}
+                  Sys36 HC:{" "}
+                  {holes.some((h: any) => h.score !== null && h.score > 0)
+                    ? 36 -
+                      holes.reduce(
+                        (t, h) =>
+                          t +
+                          (h.score !== null && h.score >= 0
+                            ? h.stablefordPoints || 0
+                            : 0),
+                        0,
+                      )
+                    : "N/A"}
                 </Text>
               </Box>
-
-              <Pressable
-                onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-                }}
-                android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            )}
+            <Box
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: "#8bc34a",
+              }}
+            >
+              <Text
+                style={{ color: "#8bc34a", fontWeight: "700", fontSize: 12 }}
               >
-                <Ionicons
-                  name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-                  size={20}
-                  color={isDark ? "#fff" : "#020617"}
-                />
-              </Pressable>
-            </HStack>
-          </View>
+                Handicap: {getDisplayHandicap(handicap)}
+              </Text>
+            </Box>
+          </HStack>
+
+          <Pressable
+            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            }}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+          >
+            <Ionicons
+              name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color={isDark ? "#fff" : "#020617"}
+            />
+          </Pressable>
         </HStack>
       </View>
     );
@@ -1740,30 +1769,35 @@ const ScoreCard: React.FC = () => {
               50 +
               partners.length * 95 +
               (isNassau && partners.length >= 2 ? colNassauWidth : 0);
-            const renderNassauHouses = (houses: number[], isTotalRow?: boolean) => {
-              return (houses || []).map((val: number, idx: number, arr: number[]) => {
-                let color = isDark ? "#fff" : "#000";
-                if (isTotalRow) {
-                  if (val > 0) color = "#1b4332"; // dark green for Team A
-                  if (val < 0) color = "#1e3a8a"; // dark blue for Team B
-                } else {
-                  if (val > 0) color = "#198754"; // green for Team A (web color)
-                  if (val < 0) color = "#0d6efd"; // blue for Team B (web color)
-                }
-                return (
-                  <Text
-                    key={idx}
-                    style={{
-                      color,
-                      fontWeight: "bold",
-                      fontSize: 11,
-                    }}
-                  >
-                    {Math.abs(val)}
-                    {idx < arr.length - 1 ? " " : ""}
-                  </Text>
-                );
-              });
+            const renderNassauHouses = (
+              houses: number[],
+              isTotalRow?: boolean,
+            ) => {
+              return (houses || []).map(
+                (val: number, idx: number, arr: number[]) => {
+                  let color = isDark ? "#fff" : "#000";
+                  if (isTotalRow) {
+                    if (val > 0) color = "#1b4332"; // dark green for Team A
+                    if (val < 0) color = "#1e3a8a"; // dark blue for Team B
+                  } else {
+                    if (val > 0) color = "#198754"; // green for Team A (web color)
+                    if (val < 0) color = "#0d6efd"; // blue for Team B (web color)
+                  }
+                  return (
+                    <Text
+                      key={idx}
+                      style={{
+                        color,
+                        fontWeight: "bold",
+                        fontSize: 11,
+                      }}
+                    >
+                      {Math.abs(val)}
+                      {idx < arr.length - 1 ? " " : ""}
+                    </Text>
+                  );
+                },
+              );
             };
 
             return (
@@ -3017,7 +3051,8 @@ const ScoreCard: React.FC = () => {
                                       marginBottom: 8,
                                     }}
                                   >
-                                    Nassau {isNassauBest ? "Best Score" : "Combined"}{" "}
+                                    Nassau{" "}
+                                    {isNassauBest ? "Best Score" : "Combined"}{" "}
                                     Summary
                                   </ThemedText>
                                   <HStack
@@ -3095,17 +3130,33 @@ const ScoreCard: React.FC = () => {
                                     <Row
                                       label="Final Result"
                                       a={
-                                        <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamAColor }}>
-                                          Match - {ns?.overallMatches?.team1 || 0}{" "}
-                                          {" "}
-                                          Half - {(ns?.front9Halfs?.team1 || 0) + (ns?.back9Halfs?.team1 || 0)}
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 11,
+                                            fontWeight: "700",
+                                            color: teamAColor,
+                                          }}
+                                        >
+                                          Match -{" "}
+                                          {ns?.overallMatches?.team1 || 0} Half
+                                          -{" "}
+                                          {(ns?.front9Halfs?.team1 || 0) +
+                                            (ns?.back9Halfs?.team1 || 0)}
                                         </ThemedText>
                                       }
                                       b={
-                                        <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamBColor }}>
-                                          Match - {ns?.overallMatches?.team2 || 0}{" "}
-                                          {" "}
-                                          Half - {(ns?.front9Halfs?.team2 || 0) + (ns?.back9Halfs?.team2 || 0)}
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 11,
+                                            fontWeight: "700",
+                                            color: teamBColor,
+                                          }}
+                                        >
+                                          Match -{" "}
+                                          {ns?.overallMatches?.team2 || 0} Half
+                                          -{" "}
+                                          {(ns?.front9Halfs?.team2 || 0) +
+                                            (ns?.back9Halfs?.team2 || 0)}
                                         </ThemedText>
                                       }
                                       bold

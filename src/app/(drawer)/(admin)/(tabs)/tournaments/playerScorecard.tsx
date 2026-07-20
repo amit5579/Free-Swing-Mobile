@@ -389,7 +389,7 @@ const PlayerScorecard = () => {
               marginTop: 2,
             }}
           >
-            Scorecard
+            Scorecard {scorecard && scorecard.length > 0 && scorecard[0].groupName ? `- ${scorecard[0].groupName}` : ""}
           </ThemedText>
         </VStack>
 

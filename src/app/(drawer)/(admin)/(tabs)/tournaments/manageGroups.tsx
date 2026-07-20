@@ -8,6 +8,7 @@ import {
   Modal,
   TouchableOpacity,
   Text,
+  TextInput,
 } from "react-native";
 
 import { VStack } from "@/components/vstack";
@@ -39,7 +40,7 @@ export default function manageGroups() {
 
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
   const [tournamentGroups, setTournamentGroups] = useState<
-    { scorerId: number | null; members: any[] }[]
+    { scorerId: number | null; groupName: string; members: any[] }[]
   >([]);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -54,8 +55,9 @@ export default function manageGroups() {
 
       const groupsData = await getGroups(Number(tournamentId));
       if (groupsData && Array.isArray(groupsData)) {
-        const mappedGroups = groupsData.map((g: any) => ({
+        const mappedGroups = groupsData.map((g: any, index: number) => ({
           scorerId: g.scorerId,
+          groupName: g.groupName ? g.groupName.replace(/^Group \d+(?:\s*-\s*)?/, "") : "",
           members: g.memberIds
             ? g.memberIds
                 .map((mId: number) =>
@@ -71,7 +73,7 @@ export default function manageGroups() {
                   )
                   .filter(Boolean)
               : [],
-        }));
+        }));        
         setTournamentGroups(mappedGroups);
       } else {
         setTournamentGroups([]);
@@ -89,7 +91,7 @@ export default function manageGroups() {
   }, [tournamentId]);
 
   const addGroup = () => {
-    setTournamentGroups([...tournamentGroups, { scorerId: null, members: [] }]);
+    setTournamentGroups([...tournamentGroups, { scorerId: null, groupName: "", members: [] }]);
   };
 
   const removeGroup = (index: number) => {
@@ -142,8 +144,11 @@ export default function manageGroups() {
           });
           return;
         }
+        console.log("ppp", payload);
+        
         payload.push({
           scorerId: g.scorerId,
+          groupName: g.groupName ? `Group ${i + 1} - ${g.groupName}` : `Group ${i + 1}`,
           memberIds: g.members.map((m: any) => m.userId || m.id),
         });
       }
@@ -252,8 +257,7 @@ export default function manageGroups() {
           <ThemedText
             style={{ fontSize: 14, color: isDark ? "#94a3b8" : "#64748b" }}
           >
-            Organize players into groups and designate a scorer for each group
-            for: {tournamentName}
+          Organize players into groups and designate a scorer for each group for the tournament: {tournamentName}
           </ThemedText>
 
           {loading ? (
@@ -281,7 +285,7 @@ export default function manageGroups() {
                   style={{
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: 12,
+                    marginBottom: 4,
                   }}
                 >
                   <ThemedText
@@ -297,6 +301,25 @@ export default function manageGroups() {
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
                   </Pressable>
                 </HStack>
+                
+                <TextInput
+                  value={group.groupName}
+                  onChangeText={(text) => {
+                    const nextGroups = [...tournamentGroups];
+                    nextGroups[groupIndex].groupName = text;
+                    setTournamentGroups(nextGroups);
+                  }}
+                  placeholder="Heading / Info"
+                  placeholderTextColor={isDark ? "#64748b" : "#94a3b8"}
+                  style={{
+                    color: isDark ? "#fff" : "#000",
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? "#334155" : "#e2e8f0",
+                    paddingVertical: 8,
+                    marginBottom: 12,
+                    fontSize: 14,
+                  }}
+                />
                 <Divider
                   style={{
                     backgroundColor: isDark ? "#334155" : "#e2e8f0",
