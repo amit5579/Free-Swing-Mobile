@@ -145,6 +145,8 @@ const ScoreCard: React.FC = () => {
   const isSystem36 =
     holes.length > 0 && holes.some((h: any) => isSystem36Hole(h));
   const showPtsColumns = isStableford || isSystem36;
+  const showNetColumns = !isGross && !isStableford && !isSystem36;
+  const hasSubColumn = showPtsColumns || showNetColumns;
 
   const getScoringLabel = () => {
     if (holes.length === 0) return "";
@@ -288,12 +290,12 @@ const ScoreCard: React.FC = () => {
           const isHL =
             (mode.includes("high_low") ||
               mode.includes("high-low") ||
-              (pLength === 4 && !isGr)) &&
+              (pLength === 4 && !isGr && !dataIsSystem36)) &&
             !(isNB || isNC);
           const isS6 =
             (mode.includes("split_six") ||
               mode.includes("split-six") ||
-              (pLength === 3 && !isGr)) &&
+              (pLength === 3 && !isGr && !dataIsSystem36)) &&
             !(isNB || isNC);
 
           setIsHighLow(isHL);
@@ -1882,7 +1884,7 @@ const ScoreCard: React.FC = () => {
                         <View key={p.playerId} style={{ flexDirection: "row" }}>
                           <VStack
                             style={{
-                              width: showPtsColumns ? 50 : 95,
+                              width: hasSubColumn ? 50 : 95,
                               alignItems: "center",
                             }}
                           >
@@ -1918,7 +1920,7 @@ const ScoreCard: React.FC = () => {
                               </View>
                             )}
                           </VStack>
-                          {showPtsColumns && (
+                          {hasSubColumn && (
                             <VStack
                               style={{
                                 width: 45,
@@ -1934,7 +1936,7 @@ const ScoreCard: React.FC = () => {
                                   fontSize: 10,
                                 }}
                               >
-                                {p.name} Pts
+                                {showPtsColumns ? `${p.name} Pts` : `Net`}
                               </ThemedText>
                             </VStack>
                           )}
@@ -2021,7 +2023,7 @@ const ScoreCard: React.FC = () => {
                               >
                                 <View
                                   style={{
-                                    width: showPtsColumns ? 50 : 95,
+                                    width: hasSubColumn ? 50 : 95,
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
@@ -2124,7 +2126,7 @@ const ScoreCard: React.FC = () => {
                                     </HStack>
                                   )}
                                 </View>
-                                {showPtsColumns && (
+                                {hasSubColumn && (
                                   <View
                                     style={{
                                       width: 45,
@@ -2141,7 +2143,7 @@ const ScoreCard: React.FC = () => {
                                       }}
                                     >
                                       {info.score !== null && info.score >= 0
-                                        ? (info.stablefordPoints ?? 0)
+                                        ? (showPtsColumns ? (info.stablefordPoints ?? 0) : info.netScore)
                                         : "-"}
                                     </Text>
                                   </View>
