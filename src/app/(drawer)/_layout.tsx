@@ -307,6 +307,31 @@ function CustomDrawerContent({ navigation }: any) {
                   style={styles.chevron}
                 />
               </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(drivingRangeBooking)");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={22}
+                    color="#8bc34a"
+                  />
+                </View>
+                <Text style={styles.drawerText}>Driving Range</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
               <View
                 style={[
                   styles.divider,
