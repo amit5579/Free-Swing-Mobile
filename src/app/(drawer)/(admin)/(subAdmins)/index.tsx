@@ -82,6 +82,8 @@ export default function subAdminsPage() {
       password: "",
       mobileNumber: "",
       courseIds: [] as number[],
+      upiId: "",
+      upiPayeeName: "",
     },
   });
 
@@ -93,6 +95,8 @@ export default function subAdminsPage() {
         password: data.password,
         mobileNumber: data.mobileNumber,
         courseIds: data.courseIds,
+        upiId: data.upiId,
+        upiPayeeName: data.upiPayeeName,
       };
       if (isEditMode) {
         await updateSubAdmin(editingAdmin.id, payload);
@@ -156,6 +160,8 @@ export default function subAdminsPage() {
         password: "",
         mobileNumber: editingAdmin.mobileNumber,
         courseIds: editingAdmin.courses.map((c: any) => c.courseId),
+        upiId: editingAdmin.upiId || "",
+        upiPayeeName: editingAdmin.upiPayeeName || "",
       });
     }
   }, [editingAdmin, isEditMode]);
@@ -569,6 +575,68 @@ export default function subAdminsPage() {
                       {errors.password && (
                         <Text style={styles.errorText}>
                           *{errors.password.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </VStack>
+
+              <VStack>
+                <Controller
+                  control={control}
+                  name="upiId"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                      <TextInput
+                        placeholder="UPI ID (e.g. user@bank)"
+                        placeholderTextColor={isDark ? "#777" : "#999"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                      {errors.upiId && (
+                        <Text style={styles.errorText}>
+                          *{errors.upiId.message}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                />
+              </VStack>
+
+              <VStack>
+                <Controller
+                  control={control}
+                  name="upiPayeeName"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                      <TextInput
+                        placeholder="UPI Payee Name"
+                        placeholderTextColor={isDark ? "#777" : "#999"}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#d1d5db",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                      {errors.upiPayeeName && (
+                        <Text style={styles.errorText}>
+                          *{errors.upiPayeeName.message}
                         </Text>
                       )}
                     </>

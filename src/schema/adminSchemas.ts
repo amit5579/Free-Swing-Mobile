@@ -18,6 +18,8 @@ export const subAdminSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   mobileNumber: z.string().min(10, "Invalid Phone Number"),
   courseIds: z.array(z.number()).min(1, "Select at least one course"),
+  upiId: z.string().optional(),
+  upiPayeeName: z.string().optional(),
 });
 
 

@@ -19,3 +19,24 @@ export const bookDrivingRangeSlot = async (payload: any) => {
         throw error;
     }
 };
+
+export const uploadScreenshot = async (bookingId: number, fileUri: string, fileType: string, fileName: string) => {
+    try {
+        const formData = new FormData();
+        formData.append("file", {
+            uri: fileUri,
+            type: fileType,
+            name: fileName,
+        } as any);
+
+        const response = await client.post(`DrivingRange/${bookingId}/upload-screenshot`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Upload Screenshot Error:", error);
+        throw error;
+    }
+};

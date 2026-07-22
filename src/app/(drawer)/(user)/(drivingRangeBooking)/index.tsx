@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { StyleSheet, Text, ScrollView, RefreshControl } from "react-native";
+import { StyleSheet, Text, ScrollView, RefreshControl, Linking, Image } from "react-native";
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,8 +16,9 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
-import { getDrivingRangeSlots, bookDrivingRangeSlot } from "@/api/modules/drivingRange.api";
+import { getDrivingRangeSlots, bookDrivingRangeSlot, uploadScreenshot } from "@/api/modules/drivingRange.api";
 import { getProfile } from "@/api/modules/profile.api";
+import * as ImagePicker from "expo-image-picker";
 
 export default function DrivingRangeBookingPage() {
   const colorScheme = useColorScheme();
@@ -39,6 +40,12 @@ export default function DrivingRangeBookingPage() {
   const [numberOfSlots, setNumberOfSlots] = useState<number>(1);
   const [bookingLoading, setBookingLoading] = useState(false);
 
+  const [paymentPending, setPaymentPending] = useState(false);
+  const [paymentPendingBookingId, setPaymentPendingBookingId] = useState<number | null>(null);
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string | null>(null);
+  const [upiIntentUrl, setUpiIntentUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchSlots();
@@ -52,10 +59,11 @@ export default function DrivingRangeBookingPage() {
       const rangesResponse = await getSubAdminList();
       
       const formattedRanges = rangesResponse.map((r: any) => ({
-        label: r.courses && r.courses.length > 0 
-               ? `${r.courses[0].name} Range` 
-               : `${r.username} Range`,
+        label: `${r.username} Range`,
         value: r.id,
+        username: r.username,
+        upiId: r.upiId,
+        upiPayeeName: r.upiPayeeName,
       }));
 
       setRanges(formattedRanges);
@@ -137,26 +145,78 @@ export default function DrivingRangeBookingPage() {
     try {
       const pricePerSlot = calculatePricePerSlot(currentUser, selectedRange);
       const totalAmount = pricePerSlot * numberOfSlots;
+      const refId = `DRB-${Date.now()}`;
       
       const payload = {
         date: availableDates[selectedDateIndex],
         numberOfSlots,
-        paymentReferenceId: `DRB-${Date.now()}`,
+        paymentReferenceId: refId,
         subAdminId: selectedRange,
         time: selectedSlot.time,
         totalAmount
       };
       
-      await bookDrivingRangeSlot(payload);
-      Toast.show({ type: "success", text1: "Booking Successful", text2: "Your slots have been booked." });
-      setSelectedSlot(null);
-      setNumberOfSlots(1);
+      const subAdmin = ranges.find(s => s.value === selectedRange);
+      const username = subAdmin?.username || "test";
+      const upiId = subAdmin?.upiId || `${username.replace(/\s+/g, '').toLowerCase()}@upi`;
+      const payeeName = subAdmin?.upiPayeeName || username;
+      const intentUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&tr=${refId}&am=${totalAmount}&cu=INR`;
+      setUpiIntentUrl(intentUrl);
+      
+      const response = await bookDrivingRangeSlot(payload);
+      
+      setPaymentPendingBookingId(response.bookingId || response.id);
+      setPaymentPending(true);
+      
+      Toast.show({ type: "info", text1: "Please complete payment via UPI." });
+      
+      setTimeout(async () => {
+        try {
+          const supported = await Linking.canOpenURL(intentUrl);
+          if (supported) {
+            await Linking.openURL(intentUrl);
+          } else {
+            Toast.show({ type: "error", text1: "UPI App Not Found", text2: "Please scan the QR code instead." });
+          }
+        } catch (error) {
+          Toast.show({ type: "error", text1: "Error opening UPI app" });
+        }
+      }, 1500);
+
       fetchSlots(false);
     } catch (err) {
       console.error(err);
       Toast.show({ type: "error", text1: "Booking Failed", text2: "An error occurred while booking." });
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const handlePickAndUploadScreenshot = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setIsUploading(true);
+        const asset = result.assets[0];
+        const fileName = asset.uri.split("/").pop() || "screenshot.jpg";
+        const fileType = asset.mimeType || "image/jpeg";
+        
+        if (paymentPendingBookingId) {
+          const res = await uploadScreenshot(paymentPendingBookingId, asset.uri, fileType, fileName);
+          setPaymentScreenshotUrl(res.url || "uploaded");
+          Toast.show({ type: "success", text1: "Screenshot uploaded successfully. Awaiting verification." });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -461,7 +521,7 @@ export default function DrivingRangeBookingPage() {
                   mode="modal"
                   placeholder="Select Range"
                   value={selectedRange}
-                  onChange={(item) => {
+                  onChange={(item) => {                    
                     setSelectedRange(item.value);
                   }}
                 />
@@ -652,28 +712,86 @@ export default function DrivingRangeBookingPage() {
               </VStack>
             </HStack>
 
-            <Pressable
-              onPress={handleBookSlot}
-              disabled={bookingLoading}
-              style={{
-                backgroundColor: bookingLoading ? "#a3e635" : "#8BC34A",
-                paddingVertical: 14,
-                borderRadius: 12,
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              {bookingLoading ? (
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Processing...</Text>
-              ) : (
-                <>
-                  <Ionicons name="flash" size={18} color="#fff" />
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Pay via UPI & Book</Text>
-                </>
-              )}
-            </Pressable>
+            {!paymentPending ? (
+              <Pressable
+                onPress={handleBookSlot}
+                disabled={bookingLoading}
+                style={{
+                  backgroundColor: bookingLoading ? "#a3e635" : "#8BC34A",
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {bookingLoading ? (
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Processing...</Text>
+                ) : (
+                  <>
+                    <Ionicons name="flash" size={18} color="#fff" />
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Pay via UPI & Book</Text>
+                  </>
+                )}
+              </Pressable>
+            ) : (
+              <VStack style={{ alignItems: "center", marginTop: 10 }}>
+                {upiIntentUrl ? (
+                  <Image
+                    source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiIntentUrl)}` }}
+                    style={{ width: 200, height: 200, marginBottom: 12, borderRadius: 8 }}
+                  />
+                ) : null}
+                <ThemedText style={{ fontSize: 14, fontWeight: "700", marginBottom: 4 }}>Scan with any UPI app</ThemedText>
+                <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 12, marginBottom: 16, textAlign: "center" }}>
+                  Awaiting admin confirmation after payment.
+                </Text>
+
+                <Pressable
+                  onPress={() => Linking.openURL(upiIntentUrl).catch(() => {})}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#8BC34A",
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    width: "100%",
+                    alignItems: "center"
+                  }}
+                >
+                  <Text style={{ color: "#8BC34A", fontWeight: "600" }}>Open UPI App</Text>
+                </Pressable>
+
+                {!paymentScreenshotUrl ? (
+                  <VStack style={{ width: "100%", borderTopWidth: 1, borderTopColor: isDark ? "#334155" : "#e2e8f0", paddingVertical: 16 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 8 }}>
+                      Upload Payment Screenshot
+                    </Text>
+                    <Pressable
+                      onPress={handlePickAndUploadScreenshot}
+                      disabled={isUploading}
+                      style={{
+                        backgroundColor: isUploading ? "#a3e635" : "#8BC34A",
+                        paddingVertical: 12,
+                        borderRadius: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "600" }}>
+                        {isUploading ? "Uploading..." : "Upload Screenshot"}
+                      </Text>
+                    </Pressable>
+                  </VStack>
+                ) : (
+                  <HStack style={{ width: "100%", borderTopWidth: 1, borderTopColor: isDark ? "#334155" : "#e2e8f0", paddingTop: 16, alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
+                    <Text style={{ fontSize: 13, color: "#22c55e", fontWeight: "600" }}>Screenshot uploaded</Text>
+                  </HStack>
+                )}
+              </VStack>
+            )}
           </Box>
         )}
       </SafeAreaView>
