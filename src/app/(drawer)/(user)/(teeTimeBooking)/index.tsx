@@ -236,7 +236,7 @@ export default function TeeTimeBookingPage() {
     const today = new Date();
     const arr = [];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const newDate = new Date(today);
       newDate.setDate(today.getDate() + i);
       arr.push(formatDate(newDate));

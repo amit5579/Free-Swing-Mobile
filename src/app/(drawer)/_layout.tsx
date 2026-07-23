@@ -168,6 +168,37 @@ function CustomDrawerContent({ navigation }: any) {
                   },
                 ]}
               />
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(admin)/billing");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="receipt-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Billing</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
             </>
           )}
 
@@ -191,6 +222,37 @@ function CustomDrawerContent({ navigation }: any) {
                   />
                 </View>
                 <Text style={styles.drawerText}>Profile</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(subAdmin)/billing");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="receipt-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>Billing</Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
@@ -360,6 +422,37 @@ function CustomDrawerContent({ navigation }: any) {
                   <Ionicons name="diamond-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Subscription</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/billing");
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="receipt-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>My Bills</Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
