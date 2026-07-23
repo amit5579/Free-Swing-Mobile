@@ -169,7 +169,7 @@ function CustomDrawerContent({ navigation }: any) {
                 ]}
               />
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.closeDrawer();
@@ -198,7 +198,7 @@ function CustomDrawerContent({ navigation }: any) {
                     opacity: isDark ? 0.2 : 0.08,
                   },
                 ]}
-              />
+              /> */}
             </>
           )}
 
@@ -380,11 +380,7 @@ function CustomDrawerContent({ navigation }: any) {
                 style={styles.drawerItem}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={22}
-                    color="#8bc34a"
-                  />
+                  <Ionicons name="calendar-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Driving Range</Text>
                 <Ionicons
@@ -444,7 +440,7 @@ function CustomDrawerContent({ navigation }: any) {
                 onPress={() => {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
-                    router.push("/(drawer)/(user)/billing");
+                    router.push("/(drawer)/(user)/(billing)" as any);
                   });
                 }}
                 style={styles.drawerItem}
@@ -798,7 +794,6 @@ const styles = StyleSheet.create({
   topSection: {
     padding: 16,
     marginTop: 10,
-    
   },
   headerCard: {
     padding: 20,
