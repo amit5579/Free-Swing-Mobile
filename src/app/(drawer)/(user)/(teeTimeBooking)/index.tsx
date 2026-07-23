@@ -236,7 +236,7 @@ export default function TeeTimeBookingPage() {
     const today = new Date();
     const arr = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 7; i++) {
       const newDate = new Date(today);
       newDate.setDate(today.getDate() + i);
       arr.push(formatDate(newDate));
@@ -649,12 +649,7 @@ export default function TeeTimeBookingPage() {
                 Select Date
               </ThemedText>
 
-              <HStack
-                style={{
-                  justifyContent: "space-between",
-                  gap: 10,
-                }}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
                 {availableDates.map((date: string, index: number) => {
                   const dateObj = new Date(date);
                   const dayName = dateObj.toLocaleDateString("en-US", {
@@ -671,8 +666,9 @@ export default function TeeTimeBookingPage() {
                       key={index}
                       onPress={() => setSelectedDateIndex(index)}
                       style={{
-                        flex: 1,
+                        minWidth: 70,
                         paddingVertical: 12,
+                        paddingHorizontal: 16,
                         borderRadius: 15,
                         alignItems: "center",
                         backgroundColor: active
@@ -737,7 +733,7 @@ export default function TeeTimeBookingPage() {
                     </Pressable>
                   );
                 })}
-              </HStack>
+              </ScrollView>
 
               <HStack
                 style={{
