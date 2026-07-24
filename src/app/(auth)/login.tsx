@@ -105,15 +105,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1 }}
+    <ImageBackground
+      source={bgImage}
+      style={{ flex: 1, width: "100%", height: "100%" }}
+      resizeMode="cover"
+      blurRadius={showResetModal ? 10 : 0}
     >
-      <ImageBackground
-        source={bgImage}
-        style={{ flex: 1, width: "100%", height: "100%" }}
-        resizeMode="cover"
-        blurRadius={showResetModal ? 10 : 0}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
         <ScrollView
           contentContainerStyle={{
@@ -129,17 +129,6 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           style={{ opacity: showResetModal ? 0.3 : 1 }}
         >
-          <View style={{ alignItems: "center", marginBottom: 40 }}>
-            <Text
-              style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}
-            >
-              Login
-            </Text>
-            <Text style={{ color: "#8bc34a", fontSize: 16, marginTop: 6 }}>
-              Enter your account details
-            </Text>
-          </View>
-
           <View
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.6)",
@@ -154,6 +143,28 @@ export default function LoginScreen() {
               shadowRadius: 12,
             }}
           >
+            <View style={{ alignItems: "center", marginBottom: 30 }}>
+              <Text
+                style={{
+                  color: "#2e7d32",
+                  fontSize: 32,
+                  fontWeight: "bold",
+                }}
+              >
+                Login
+              </Text>
+              <Text
+                style={{
+                  color: "#4caf50",
+                  fontSize: 16,
+                  marginTop: 6,
+                  fontWeight: "500",
+                }}
+              >
+                Enter your account details
+              </Text>
+            </View>
+
             <Text
               style={{ fontWeight: "600", marginBottom: 6, color: "#374151" }}
             >
@@ -308,7 +319,6 @@ export default function LoginScreen() {
             </Text>
           </View>
         </ScrollView>
-      </ImageBackground>
 
       <Modal
         visible={showResetModal}
@@ -778,5 +788,6 @@ export default function LoginScreen() {
         </View>
       )}
     </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }

@@ -468,7 +468,7 @@ export default function SubAdminBillingPage() {
                 </Pressable>
               </HStack>
 
-              <HStack style={{ alignItems: "flex-start", gap: 16 }}>
+              <VStack style={{ alignItems: "stretch", gap: 16 }}>
                 {/* LEFT SIDE: Member Selection based on mode */}
                 <VStack style={{ flex: 1, gap: 12, backgroundColor: isDark ? "rgba(30, 41, 59, 0.5)" : "rgba(241, 245, 249, 0.6)", padding: 12, borderRadius: 12 }}>
                   {generateMode === "batch" ? (
@@ -611,7 +611,7 @@ export default function SubAdminBillingPage() {
                   </Box>
                   <HStack style={{ gap: 8 }}>
                     <Box style={{ flex: 1 }}>
-                      <ThemedText style={{ marginBottom: 4, fontWeight: "600", fontSize: 12 }}>Affiliation</ThemedText>
+                      <ThemedText style={{ marginBottom: 4, fontWeight: "600", fontSize: 12 }}>Affiliation Fee</ThemedText>
                       <TextInput
                         value={iguAffiliationAmount}
                         onChangeText={setIguAffiliationAmount}
@@ -627,7 +627,7 @@ export default function SubAdminBillingPage() {
                       />
                     </Box>
                     <Box style={{ flex: 1 }}>
-                      <ThemedText style={{ marginBottom: 4, fontWeight: "600", fontSize: 12 }}>Software</ThemedText>
+                      <ThemedText style={{ marginBottom: 4, fontWeight: "600", fontSize: 12 }}>Software Automation Fee</ThemedText>
                       <TextInput
                         value={softwareAutomationAmount}
                         onChangeText={setSoftwareAutomationAmount}
@@ -644,7 +644,7 @@ export default function SubAdminBillingPage() {
                     </Box>
                   </HStack>
                 </VStack>
-              </HStack>
+              </VStack>
 
               {/* Custom Charges */}
               <Box style={{ padding: 12, backgroundColor: isDark ? "rgba(30, 41, 59, 0.5)" : "rgba(241, 245, 249, 0.6)", borderRadius: 12 }}>
