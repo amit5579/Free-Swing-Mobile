@@ -87,12 +87,27 @@ export const createMember = async (payload: any): Promise<any> => {
 
 // approve request - post - User/81/approve-subscription 
 
-export const approveSubscription = async (userId: number): Promise<any> => {
+export const approveSubscription = async (userId: number, months: number): Promise<any> => {
   try {
-    const response = await client.post(`User/${userId}/approve-subscription`);
+    const response = await client.post(`User/${userId}/approve-subscription`, {
+      SubscriptionPlanMonths: months
+    });
     return response.data;
   } catch (error) {
     console.error("Approve Subscription API Error:", error);
+    throw error;
+  }
+};
+
+// update plan (override subscription)
+export const updateSubscription = async (userId: number, months: number): Promise<any> => {
+  try {
+    const response = await client.post(`User/${userId}/override-subscription`, {
+      SubscriptionPlanMonths: months
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Update Subscription API Error:", error);
     throw error;
   }
 };

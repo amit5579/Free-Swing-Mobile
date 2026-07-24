@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Modal,
   StyleSheet,
   TextInput,
   RefreshControl,
@@ -29,6 +30,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import {
   approveSubscription,
+  updateSubscription,
   approveUser,
   blockUser,
   createMember,
@@ -45,6 +47,202 @@ import { getCourse } from "@/api/modules/admin/courses.api";
 import { Dropdown } from "react-native-element-dropdown";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Text } from "react-native";
+
+const ApprovePlanModal = ({ visible, member, isDark, onClose, onSubmit }: any) => {
+  const [months, setMonths] = useState("3");
+
+  useEffect(() => {
+    if (visible && member) {
+      setMonths(member.subscriptionPlanMonths?.toString() || "3");
+    }
+  }, [visible, member]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
+        <View style={{ width: "90%", backgroundColor: isDark ? "#1e293b" : "#fff", borderRadius: 12, padding: 20 }}>
+          <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: isDark ? "#fff" : "#000" }}>Confirm Action</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={isDark ? "#94a3b8" : "#64748b"} />
+            </Pressable>
+          </HStack>
+          
+          <Text style={{ fontSize: 14, color: isDark ? "#fff" : "#000", marginBottom: 12 }}>
+            Are you sure you want to Approve Plan for this member?
+          </Text>
+          
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>User: <Text style={{ color: isDark ? "#fff" : "#000", fontWeight: "600" }}>{member?.username}</Text></Text>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>Email: <Text style={{ color: isDark ? "#fff" : "#000", fontWeight: "600" }}>{member?.email}</Text></Text>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>Status: <Text style={{ color: "#eab308", fontWeight: "600" }}>Pending Approval</Text></Text>
+          </View>
+
+          <View style={{ backgroundColor: isDark ? "#334155" : "#f8fafc", padding: 12, borderRadius: 8, marginBottom: 20 }}>
+            <HStack style={{ justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: isDark ? "#fff" : "#000" }}>Approved Duration</Text>
+              <Text style={{ fontSize: 12, color: isDark ? "#94a3b8" : "#64748b" }}>Requested: {member?.subscriptionPlanMonths || "3"} Months</Text>
+            </HStack>
+            <HStack style={{ alignItems: "center", marginBottom: 12 }}>
+              <TextInput
+                value={months}
+                onChangeText={setMonths}
+                readOnly
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: isDark ? "#475569" : "#e2e8f0",
+                  borderRightWidth: 0,
+                  borderTopLeftRadius: 6,
+                  borderBottomLeftRadius: 6,
+                  padding: 8,
+                  color: isDark ? "#fff" : "#000",
+                  backgroundColor: isDark ? "#1e293b" : "#fff",
+                }}
+              />
+              <View style={{ borderWidth: 1, borderColor: isDark ? "#475569" : "#e2e8f0", borderTopRightRadius: 6, borderBottomRightRadius: 6, padding: 8, paddingHorizontal: 12, backgroundColor: isDark ? "#334155" : "#f1f5f9", justifyContent: "center" }}>
+                <Text style={{ color: isDark ? "#94a3b8" : "#64748b" }}>months</Text>
+              </View>
+            </HStack>
+            <HStack style={{ gap: 8, flexWrap: "wrap" }}>
+              {["1", "3", "6", "12"].map(m => (
+                <Pressable
+                  key={m}
+                  onPress={() => setMonths(m)}
+                  style={{
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: months === m ? "#8bc34a" : (isDark ? "#475569" : "#cbd5e1"),
+                    backgroundColor: months === m ? "#8bc34a" : "transparent"
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: months === m ? "#fff" : (isDark ? "#cbd5e1" : "#475569") }}>
+                    {m} Month{m !== "1" ? "s" : ""}
+                  </Text>
+                </Pressable>
+              ))}
+            </HStack>
+          </View>
+
+          <HStack style={{ justifyContent: "flex-end", gap: 12 }}>
+            <Pressable
+              onPress={onClose}
+              style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: isDark ? "#475569" : "#64748b" }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onSubmit(months)}
+              style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: "#8bc34a" }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Approve Plan</Text>
+            </Pressable>
+          </HStack>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const UpdatePlanModal = ({ visible, member, isDark, onClose, onSubmit }: any) => {
+  const [months, setMonths] = useState("3");
+
+  useEffect(() => {
+    if (visible && member) {
+      setMonths(member.subscriptionPlanMonths?.toString() || "3");
+    }
+  }, [visible, member]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
+        <View style={{ width: "90%", backgroundColor: isDark ? "#1e293b" : "#fff", borderRadius: 12, padding: 20 }}>
+          <HStack style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: isDark ? "#fff" : "#000" }}>Confirm Action</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={isDark ? "#94a3b8" : "#64748b"} />
+            </Pressable>
+          </HStack>
+          
+          <Text style={{ fontSize: 14, color: isDark ? "#fff" : "#000", marginBottom: 12 }}>
+            Are you sure you want to Update Plan for this member?
+          </Text>
+          
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>User: <Text style={{ color: isDark ? "#fff" : "#000", fontWeight: "600" }}>{member?.username}</Text></Text>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>Email: <Text style={{ color: isDark ? "#fff" : "#000", fontWeight: "600" }}>{member?.email}</Text></Text>
+            <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569" }}>Status: <Text style={{ color: "#3b82f6", fontWeight: "600" }}>Active</Text></Text>
+          </View>
+
+          <View style={{ backgroundColor: isDark ? "#334155" : "#f8fafc", padding: 12, borderRadius: 8, marginBottom: 20 }}>
+            <HStack style={{ justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: isDark ? "#fff" : "#000" }}>New Plan Duration</Text>
+              <Text style={{ fontSize: 12, color: isDark ? "#94a3b8" : "#64748b" }}>Current: {member?.subscriptionPlanMonths || "3"} Months</Text>
+            </HStack>
+            <HStack style={{ alignItems: "center", marginBottom: 12 }}>
+              <TextInput
+                value={months}
+                onChangeText={setMonths}
+                readOnly
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: isDark ? "#475569" : "#e2e8f0",
+                  borderRightWidth: 0,
+                  borderTopLeftRadius: 6,
+                  borderBottomLeftRadius: 6,
+                  padding: 8,
+                  color: isDark ? "#fff" : "#000",
+                  backgroundColor: isDark ? "#1e293b" : "#fff",
+                }}
+              />
+              <View style={{ borderWidth: 1, borderColor: isDark ? "#475569" : "#e2e8f0", borderTopRightRadius: 6, borderBottomRightRadius: 6, padding: 8, paddingHorizontal: 12, backgroundColor: isDark ? "#334155" : "#f1f5f9", justifyContent: "center" }}>
+                <Text style={{ color: isDark ? "#94a3b8" : "#64748b" }}>months</Text>
+              </View>
+            </HStack>
+            <HStack style={{ gap: 8, flexWrap: "wrap" }}>
+              {["1", "3", "6", "12"].map(m => (
+                <Pressable
+                  key={m}
+                  onPress={() => setMonths(m)}
+                  style={{
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: months === m ? "#8bc34a" : (isDark ? "#475569" : "#cbd5e1"),
+                    backgroundColor: months === m ? "#8bc34a" : "transparent"
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: months === m ? "#fff" : (isDark ? "#cbd5e1" : "#475569") }}>
+                    {m} Month{m !== "1" ? "s" : ""}
+                  </Text>
+                </Pressable>
+              ))}
+            </HStack>
+          </View>
+
+          <HStack style={{ justifyContent: "flex-end", gap: 12 }}>
+            <Pressable
+              onPress={onClose}
+              style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: isDark ? "#475569" : "#64748b" }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onSubmit(months)}
+              style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: "#8bc34a" }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Update Plan</Text>
+            </Pressable>
+          </HStack>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 export default function AllMembersScreen({
   hideAdminControls = false,
@@ -72,6 +270,10 @@ export default function AllMembersScreen({
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("All"); // All, Pending, Active, Blocked
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [selectedMemberForApprove, setSelectedMemberForApprove] = useState<UserListApi | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedMemberForUpdate, setSelectedMemberForUpdate] = useState<UserListApi | null>(null);
 
   useEffect(() => {
     setSearchQuery(initialSearchQuery);
@@ -213,36 +415,58 @@ export default function AllMembersScreen({
     }
   };
 
-  const handlePlanApprove = async (id: number) => {
-    Alert.alert("Approve Plan", "Are you sure you want to approve this plan?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Approve",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setLoading(true);
-            // console.log("id is ", id, "type is ", typeof id);
+  const handlePlanApprove = (member: UserListApi) => {
+    setSelectedMemberForApprove(member);
+    setShowApproveModal(true);
+  };
 
-            await approveSubscription(id);
-            fetchUsers();
-            Toast.show({
-              type: "success",
-              text1: "Member approved successfully",
-            });
-          } catch (error) {
-            console.log("Failed to approve member", error);
+  const submitPlanApprove = async (months: string) => {
+    if (!selectedMemberForApprove) return;
+    try {
+      setLoading(true);
+      await approveSubscription(selectedMemberForApprove.id, Number(months));
+      fetchUsers();
+      Toast.show({
+        type: "success",
+        text1: "Member approved successfully",
+      });
+      setShowApproveModal(false);
+    } catch (error) {
+      console.log("Failed to approve member", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to approve member",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            Toast.show({
-              type: "error",
-              text1: "Failed to approve member",
-            });
-          } finally {
-            setLoading(false);
-          }
-        },
-      },
-    ]);
+  const handlePlanUpdate = (member: UserListApi) => {
+    setSelectedMemberForUpdate(member);
+    setShowUpdateModal(true);
+  };
+
+  const submitPlanUpdate = async (months: string) => {
+    if (!selectedMemberForUpdate) return;
+    try {
+      setLoading(true);
+      await updateSubscription(selectedMemberForUpdate.id, Number(months));
+      fetchUsers();
+      Toast.show({
+        type: "success",
+        text1: "Member plan updated successfully",
+      });
+      setShowUpdateModal(false);
+    } catch (error) {
+      console.log("Failed to update member plan", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to update member plan",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePlanDenay = async (id: number) => {
@@ -1500,7 +1724,7 @@ export default function AllMembersScreen({
                               {member?.hasPendingSubscriptionRequest ? (
                                 <>
                                   <Pressable
-                                    onPress={() => handlePlanApprove(member.id)}
+                                    onPress={() => handlePlanApprove(member)}
                                     style={{
                                       flexDirection: "row",
                                       alignItems: "center",
@@ -1592,8 +1816,26 @@ export default function AllMembersScreen({
                                       </ThemedText>
                                     </Pressable>
                                   ) : (
-                                    <Pressable
-                                      onPress={() => handleBlock(member.id)}
+                                    <>
+                                      <Pressable
+                                        onPress={() => handlePlanUpdate(member)}
+                                        style={{
+                                          flexDirection: "row",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          backgroundColor: "#8bc34a",
+                                          paddingVertical: 8,
+                                          paddingHorizontal: 14,
+                                          borderRadius: 14,
+                                        }}
+                                      >
+                                        <Ionicons name="refresh" size={14} color="#fff" />
+                                        <ThemedText style={{ color: "#fff", fontWeight: "700", fontSize: 12, marginLeft: 6 }}>
+                                          Update Plan
+                                        </ThemedText>
+                                      </Pressable>
+                                      <Pressable
+                                        onPress={() => handleBlock(member.id)}
                                       style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -1624,6 +1866,7 @@ export default function AllMembersScreen({
                                         Block
                                       </ThemedText>
                                     </Pressable>
+                                  </>
                                   )}
                                 </>
                               )}
@@ -1681,6 +1924,23 @@ export default function AllMembersScreen({
           </VStack>
         </ScrollView>
       )}
+
+
+      <ApprovePlanModal 
+        visible={showApproveModal}
+        member={selectedMemberForApprove}
+        isDark={isDark}
+        onClose={() => setShowApproveModal(false)}
+        onSubmit={submitPlanApprove}
+      />
+      
+      <UpdatePlanModal 
+        visible={showUpdateModal}
+        member={selectedMemberForUpdate}
+        isDark={isDark}
+        onClose={() => setShowUpdateModal(false)}
+        onSubmit={submitPlanUpdate}
+      />
     </SafeAreaView>
   );
 }
