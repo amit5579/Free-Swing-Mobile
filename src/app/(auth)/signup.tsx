@@ -169,28 +169,15 @@ export default function SignupScreen() {
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ImageBackground source={bgImage} style={{ flex: 1 }} resizeMode="cover">
+    <ImageBackground source={bgImage} style={{ flex: 1 }} resizeMode="cover">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View
-            style={{ alignItems: "center", marginTop: 40, marginBottom: 40 }}
-          >
-            <Text
-              style={{ color: "#8bc34a", fontSize: 32, fontWeight: "bold" }}
-            >
-              Sign Up
-            </Text>
-            <Text style={{ color: "#8bc34a", fontSize: 16, marginTop: 6 }}>
-              Create your golf account
-            </Text>
-          </View>
-
           <View
             style={{
               backgroundColor: "rgba(255,255,255,0.65)",
@@ -205,6 +192,30 @@ export default function SignupScreen() {
               height: keyboardVisible ? undefined : 550,
             }}
           >
+            <View
+              style={{ alignItems: "center", marginBottom: 30 }}
+            >
+              <Text
+                style={{
+                  color: "#2e7d32",
+                  fontSize: 32,
+                  fontWeight: "bold",
+                }}
+              >
+                Sign Up
+              </Text>
+              <Text
+                style={{
+                  color: "#4caf50",
+                  fontSize: 16,
+                  marginTop: 6,
+                  fontWeight: "500",
+                }}
+              >
+                Create your golf account
+              </Text>
+            </View>
+
             <Text
               style={{
                 fontWeight: "600",
@@ -668,7 +679,6 @@ export default function SignupScreen() {
             </Text>
           </View>
         </ScrollView>
-      </ImageBackground>
 
       <Modal visible={courseModal} transparent animationType="slide">
         <View
@@ -806,6 +816,7 @@ export default function SignupScreen() {
         </View>
       </Modal>
     </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
