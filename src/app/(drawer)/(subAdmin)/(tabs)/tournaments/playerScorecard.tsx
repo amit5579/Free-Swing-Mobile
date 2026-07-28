@@ -259,11 +259,13 @@ export default function SubAdminPlayerScorecard() {
       >
         {h.netScore ?? "-"}
       </Text>
-      <Text
-        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-blue-500" : "text-blue-700"}`}
-      >
-        {h.stablefordPoints ?? "0"}
-      </Text>
+      {scorecard?.[0]?.stablefordPoints != null && (
+        <Text
+          className={`flex-1 text-center text-xs font-bold ${isDark ? "text-blue-500" : "text-blue-700"}`}
+        >
+          {h.stablefordPoints ?? "0"}
+        </Text>
+      )}
     </View>
   );
 
@@ -314,11 +316,13 @@ export default function SubAdminPlayerScorecard() {
       >
         {sumNet(data)}
       </Text>
-      <Text
-        className={`flex-1 text-center font-black text-[10px] ${isGrand ? "text-white" : isDark ? "text-blue-500" : "text-blue-700"}`}
-      >
-        {sumPts(data)}
-      </Text>
+      {scorecard?.[0]?.stablefordPoints != null && (
+        <Text
+          className={`flex-1 text-center font-black text-[10px] ${isGrand ? "text-white" : isDark ? "text-blue-500" : "text-blue-700"}`}
+        >
+          {sumPts(data)}
+        </Text>
+      )}
     </View>
   );
 
@@ -436,9 +440,9 @@ export default function SubAdminPlayerScorecard() {
               "Par",
               "Score",
               "Net",
-              scorecard && scorecard.length > 0 && scorecard[0].isSystem36
-                ? "Sys36\nPts"
-                : "Pts",
+              ...(scorecard?.[0]?.stablefordPoints != null 
+                 ? [scorecard[0].isSystem36 ? "Sys36\nPts" : "Pts"]
+                 : [])
             ].map((h) => (
               <Text
                 key={h}

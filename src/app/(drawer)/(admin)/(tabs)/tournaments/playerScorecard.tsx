@@ -49,6 +49,13 @@ const PlayerScorecard = () => {
       setLoading(true);
       const data = await getScorecardById(Number(scorecardId));
       
+      if (!data || data.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      console.log("dddd",data[0].appliedHandicap);
+      
       const rsc = await getSubScorecardHandicap(data[0].userId, data[0].teeBoxId);
       // const hcp = await getScorecardHandicap(Number(teeBoxId));
 
@@ -273,11 +280,13 @@ const PlayerScorecard = () => {
       >
         {h.netScore ?? "-"}
       </Text>
-      <Text
-        className={`flex-1 text-center text-xs font-bold ${isDark ? "text-blue-500" : "text-blue-700"}`}
-      >
-        {h.stablefordPoints ?? "0"}
-      </Text>
+      {scorecard?.[0]?.stablefordPoints != null && (
+        <Text
+          className={`flex-1 text-center text-xs font-bold ${isDark ? "text-blue-500" : "text-blue-700"}`}
+        >
+          {h.stablefordPoints ?? "0"}
+        </Text>
+      )}
     </View>
   );
 
@@ -328,11 +337,13 @@ const PlayerScorecard = () => {
       >
         {sumNet(data)}
       </Text>
-      <Text
-        className={`flex-1 text-center font-black text-[10px] ${isGrand ? "text-white" : isDark ? "text-blue-500" : "text-blue-700"}`}
-      >
-        {sumPts(data)}
-      </Text>
+      {scorecard?.[0]?.stablefordPoints != null && (
+        <Text
+          className={`flex-1 text-center font-black text-[10px] ${isGrand ? "text-white" : isDark ? "text-blue-500" : "text-blue-700"}`}
+        >
+          {sumPts(data)}
+        </Text>
+      )}
     </View>
   );
 
@@ -424,7 +435,7 @@ const PlayerScorecard = () => {
         <ThemedText style={{ fontSize: 12 }}>
           Handicap:{" "}
           <ThemedText style={{ fontWeight: "600" }}>
-            {handicap?.handicap ?? "N/A"}
+            {scorecard?.[0]?.appliedHandicap ?? "N/A"}
           </ThemedText>
         </ThemedText>
         {scorecard && scorecard.length > 0 && scorecard[0].isSystem36 && (
@@ -503,9 +514,9 @@ const PlayerScorecard = () => {
               "Par",
               "Score",
               "Net",
-              scorecard && scorecard.length > 0 && scorecard[0].isSystem36
-                ? "Sys36\nPts"
-                : "Pts",
+              ...(scorecard?.[0]?.stablefordPoints != null 
+                 ? [scorecard[0].isSystem36 ? "Sys36\nPts" : "Pts"]
+                 : [])
             ].map((h) => (
               <Text
                 key={h}

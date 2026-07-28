@@ -714,7 +714,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                 }}
               >
                 <Text style={{ color: "#fff", fontWeight: 700 }}>
-                  Handicap: {handicapData?.handicap}
+                  Handicap: {scoreCard?.[0]?.appliedHandicap}
                 </Text>
               </Box>
               {isSystem36 && (
@@ -826,16 +826,16 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                               <React.Fragment key={p.playerId}>
                                 <ThemedText style={headerStyle} numberOfLines={1}>{isGroup ? p.name : "Score"}</ThemedText>
                                 {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
-                                {isStableford && <ThemedText style={headerStyle}>Pts</ThemedText>}
-                                {isSystem36 && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                                {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Pts</ThemedText>}
+                                {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
                               </React.Fragment>
                             ))
                           ) : (
                             <React.Fragment>
                               <ThemedText style={headerStyle}>Score</ThemedText>
                               {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
-                              {isStableford && <ThemedText style={headerStyle}>Pts</ThemedText>}
-                              {isSystem36 && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                              {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Pts</ThemedText>}
+                              {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
                             </React.Fragment>
                           )}
                         </HStack>
@@ -901,13 +901,13 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                       </ThemedText>
                                     )}
 
-                                    {isStableford && (
+                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && (
                                       <ThemedText style={colStyle}>
                                         {getPlayerStablefordPoints(h, p) ?? "-"}
                                       </ThemedText>
                                     )}
 
-                                    {isSystem36 && (
+                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && (
                                       <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
                                         {getPlayerStablefordPoints(h, p) ?? "-"}
                                       </ThemedText>
@@ -959,13 +959,13 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                     </ThemedText>
                                   )}
 
-                                  {isStableford && (
+                                  {isStableford && scoreCard?.[0]?.stablefordPoints != null && (
                                     <ThemedText style={colStyle}>
                                       {h.stablefordPoints ?? "-"}
                                     </ThemedText>
                                   )}
 
-                                  {isSystem36 && (
+                                  {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && (
                                     <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
                                       {h.stablefordPoints ?? "-"}
                                     </ThemedText>
@@ -1000,8 +1000,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                       <React.Fragment key={p.playerId}>
                                         <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
                                         {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                        {isStableford && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                        {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
                                       </React.Fragment>
                                     );
                                   })
@@ -1009,8 +1009,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                   <React.Fragment>
                                     <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.score}</ThemedText>
                                     {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.net}</ThemedText>}
-                                    {isStableford && <ThemedText style={colStyle}>{frontTotals.stableford}</ThemedText>}
-                                    {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{frontTotals.stableford}</ThemedText>}
+                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{frontTotals.stableford}</ThemedText>}
+                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{frontTotals.stableford}</ThemedText>}
                                   </React.Fragment>
                                 )}
                               </HStack>
@@ -1042,8 +1042,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                       <React.Fragment key={p.playerId}>
                                         <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
                                         {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                        {isStableford && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                        {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
                                       </React.Fragment>
                                     );
                                   })
@@ -1051,8 +1051,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                   <React.Fragment>
                                     <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.score}</ThemedText>
                                     {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.net}</ThemedText>}
-                                    {isStableford && <ThemedText style={colStyle}>{backTotals.stableford}</ThemedText>}
-                                    {isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{backTotals.stableford}</ThemedText>}
+                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{backTotals.stableford}</ThemedText>}
+                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{backTotals.stableford}</ThemedText>}
                                   </React.Fragment>
                                 )}
                               </HStack>
@@ -1090,8 +1090,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                               <React.Fragment key={p.playerId}>
                                 <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
                                 {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                {isStableford && <ThemedText style={{ ...colStyle, color: "#fff" }}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                {isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{pt > 0 ? pt : "-"}</ThemedText>}
                               </React.Fragment>
                             );
                           })
@@ -1099,8 +1099,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                           <React.Fragment>
                             <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.score}</ThemedText>
                             {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.net}</ThemedText>}
-                            {isStableford && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.stableford}</ThemedText>}
-                            {isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.stableford}</ThemedText>}
+                            {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.stableford}</ThemedText>}
+                            {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.stableford}</ThemedText>}
                           </React.Fragment>
                         )}
                       </HStack>

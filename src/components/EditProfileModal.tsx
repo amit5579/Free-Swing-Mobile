@@ -48,8 +48,8 @@ export default function EditProfileModal({
     email: z.string().email("Invalid email address"),
     mobileNumber: z.string().min(1, "Mobile Number is required"),
     homeCourse: z.string().min(1, "Home Course is required"),
-    rating: isSubAdmin ? z.number({ coerce: true }).min(0) : z.number().optional(),
-    slope: isSubAdmin ? z.number({ coerce: true }).min(0) : z.number().optional(),
+    rating: isSubAdmin ? z.preprocess((val) => Number(val), z.number().min(0)) : z.number().optional(),
+    slope: isSubAdmin ? z.preprocess((val) => Number(val), z.number().min(0)) : z.number().optional(),
   });
 
   const {

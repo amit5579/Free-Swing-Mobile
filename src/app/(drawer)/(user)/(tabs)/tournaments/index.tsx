@@ -176,6 +176,7 @@ export default function TournamentsScreen() {
         startDate: formatDate(data.startDate),
         teeBoxId: data.teeBox,
         courseId: data.courseId,
+        handicapAllowancePercent: data.handicapAllowancePercent,
       };
       // console.log("FINAL PAYLOAD:", tournamentData);
       await createMiniTournament(
@@ -187,6 +188,7 @@ export default function TournamentsScreen() {
         tournamentData.scoringType,
         tournamentData.startDate,
         tournamentData.teeBoxId,
+        tournamentData.handicapAllowancePercent
       );
 
       Toast.show({
@@ -1696,6 +1698,34 @@ export default function TournamentsScreen() {
               {errors.maxPlayers && (
                 <Text style={{ color: "red" }}>
                   *{errors.maxPlayers.message}
+                </Text>
+              )}
+
+              <Controller
+                control={control}
+                name="handicapAllowancePercent"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    placeholder="Enter Handicap Allowance %"
+                    placeholderTextColor={isDark ? "#fff" : "#999"}
+                    keyboardType="numeric"
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                        borderColor: isDark ? "#333" : "#ddd",
+                        color: isDark ? "#fff" : "#000",
+                        marginTop: 10,
+                      },
+                    ]}
+                    value={value ? String(value) : ""}
+                    onChangeText={(val) => onChange(val ? Number(val) : 0)}
+                  />
+                )}
+              />
+              {errors.handicapAllowancePercent && (
+                <Text style={{ color: "red" }}>
+                  *{errors.handicapAllowancePercent.message}
                 </Text>
               )}
             </ScrollView>
