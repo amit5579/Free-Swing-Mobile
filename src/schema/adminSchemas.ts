@@ -50,6 +50,9 @@ export const tournamentSchema = z
     courseId: z.array(z.number()).min(1, "Select a course"),
     teeColor: z.array(z.number()).min(1, "Select a tee color"),
     scoringType: z.array(z.number()).min(1, "Select a scoring type"),
+    handicapAllowancePercent: z.number({ message: "Must be a number" })
+      .min(0, "Percentage must be at least 0")
+      .max(100, "Percentage cannot exceed 100"),
     description: z.string().optional(),
     startDate: z.date().nullable().refine((val) => val !== null, {
       message: "Start Date is required",
@@ -108,6 +111,9 @@ export const miniTournamentSchema = z.object({
   teeBox: z.number({ message: "Select a tee box" }).min(1, "Select a tee box"),
   scoringType: z.string().min(1, "Select a scoring type"),
   maxPlayers: z.number().min(1, "Select max players"),
+  handicapAllowancePercent: z.number({ message: "Must be a number" })
+    .min(0, "Percentage must be at least 0")
+    .max(100, "Percentage cannot exceed 100"),
   startDate: z.date({ message: "Start Date is required" }),
   endDate: z.date({ message: "End Date is required" }),
 }).refine((data) => data.endDate >= data.startDate, {

@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, useColorScheme, Modal, Pressable, View, ScrollView, RefreshControl } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  Modal,
+  Pressable,
+  View,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { Skeleton } from "@/components/Skeleton";
 
 import { VStack } from "@/components/vstack";
@@ -78,7 +87,9 @@ export default function CombinedLeaderboardsPage() {
     setRefreshing(true);
     await Promise.all([
       fetchTournaments(),
-      selectedIds.length > 0 && hasGenerated ? generateLeaderboard() : Promise.resolve(),
+      selectedIds.length > 0 && hasGenerated
+        ? generateLeaderboard()
+        : Promise.resolve(),
     ]);
     setRefreshing(false);
   }, [fetchTournaments, selectedIds, hasGenerated]);

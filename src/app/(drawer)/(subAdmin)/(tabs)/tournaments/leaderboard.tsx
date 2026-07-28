@@ -1483,17 +1483,21 @@ export default function SubAdminLeaderboardPage() {
                 <TableHeaderLeft />
                 <InfoRowLeft label="PAR" />
                 <InfoRowLeft label="SI" />
-                {leaderboard.map((player, idx) => (
-                  <React.Fragment key={player.userId}>
-                    <PlayerRowLeft player={player} index={idx} />
-                    {isSystem36 && player.rank > 0 && (
-                      <>
+                {leaderboard.map((player, idx) => {
+                  const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
+                  const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
+                  return (
+                    <React.Fragment key={player.userId}>
+                      <PlayerRowLeft player={player} index={idx} />
+                      {hasNetScores && (
                         <PlayerSubRowLeft index={idx} label="Net" />
+                      )}
+                      {hasStablefordPoints && (
                         <PlayerSubRowLeft index={idx} label="Pts" />
-                      </>
-                    )}
-                  </React.Fragment>
-                ))}
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </VStack>
 
               {/* RIGHT SCROLLABLE */}
@@ -1502,25 +1506,29 @@ export default function SubAdminLeaderboardPage() {
                   <TableHeaderRight />
                   <InfoRowRight data={holes} type="par" />
                   <InfoRowRight data={holes} type="si" />
-                  {leaderboard.map((player, idx) => (
-                    <React.Fragment key={player.userId}>
-                      <PlayerRowRight player={player} index={idx} />
-                      {isSystem36 && player.rank > 0 && (
-                        <>
+                  {leaderboard.map((player, idx) => {
+                    const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
+                    const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
+                    return (
+                      <React.Fragment key={player.userId}>
+                        <PlayerRowRight player={player} index={idx} />
+                        {hasNetScores && (
                           <PlayerSubRowRight
                             player={player}
                             index={idx}
                             type="net"
                           />
+                        )}
+                        {hasStablefordPoints && (
                           <PlayerSubRowRight
                             player={player}
                             index={idx}
                             type="points"
                           />
-                        </>
-                      )}
-                    </React.Fragment>
-                  ))}
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </VStack>
               </ScrollView>
             </HStack>

@@ -46,7 +46,7 @@ export const createTournament = async (tournamentData: any) => {
 
 // Create Tournament Tournament courseId: 10 creatorId: 2 description: "" endDate: "2026-03-26" maxPlayers: 16 name: "New hem test" scoringType: "double-peoria-net" startDate: "2026-03-25" teeBoxId: 26
 
-export const createMiniTournament = async (courseId: number, description: string, endDate: string, maxPlayers: number, name: string, scoringType: string, startDate: string, teeBoxId: number) => {
+export const createMiniTournament = async (courseId: number, description: string, endDate: string, maxPlayers: number, name: string, scoringType: string, startDate: string, teeBoxId: number, handicapAllowancePercent?: number) => {
     try {
 
         const creatorId = await AsyncStorage.getItem("userId");
@@ -54,7 +54,7 @@ export const createMiniTournament = async (courseId: number, description: string
             throw new Error("creatorId not found in storage");
         }
 
-        const response = await client.post(`Tournament`, { courseId, creatorId, description, endDate, maxPlayers, name, scoringType, startDate, teeBoxId });
+        const response = await client.post(`Tournament`, { courseId, creatorId, description, endDate, maxPlayers, name, scoringType, startDate, teeBoxId, handicapAllowancePercent });
         // console.log("Created Tournament:", response.data);
         return response.data;
     } catch (error) {

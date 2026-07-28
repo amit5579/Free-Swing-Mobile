@@ -79,6 +79,7 @@ export default function adminTournamentsPage() {
       courseId: [],
       teeColor: [],
       scoringType: [],
+      handicapAllowancePercent: 100,
       startDate: null,
       endDate: null,
       description: "",
@@ -123,6 +124,7 @@ export default function adminTournamentsPage() {
         scoringType: scoringMap[data.scoringType[0]] || "include",
         startDate: formatDate(data.startDate),
         teeBoxId: data.teeColor[0],
+        handicapAllowancePercent: Number(data.handicapAllowancePercent),
       };
 
       if (isEditMode) {
@@ -133,6 +135,7 @@ export default function adminTournamentsPage() {
           scoringType: scoringMap[data.scoringType[0]] || "standard",
           startDate: formatDate(data.startDate),
           teeBoxId: data.teeColor[0],
+          handicapAllowancePercent: Number(data.handicapAllowancePercent),
           tournamentId: editingCourse.tournamentId,
           description: data.description || "",
         };
@@ -223,6 +226,7 @@ export default function adminTournamentsPage() {
       teeColor: [Number(editingCourse.teeColor)],
 
       scoringType: [Number(editingCourse.scoringType)],
+      handicapAllowancePercent: editingCourse.handicapAllowancePercent != null ? Number(editingCourse.handicapAllowancePercent) : 100,
 
       startDate: editingCourse.startDate
         ? new Date(editingCourse.startDate)
@@ -671,6 +675,35 @@ export default function adminTournamentsPage() {
                       {errors.scoringType.message ||
                         (errors.scoringType as any)?.[0]?.message ||
                         "Invalid input"}
+                    </Text>
+                  )}
+                </VStack>
+
+                <VStack className="gap-1">
+                  <Controller
+                    control={control}
+                    name="handicapAllowancePercent"
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Handicap Allowance Percent (0-100)"
+                        placeholderTextColor={isDark ? "#777" : "#9ca3af"}
+                        keyboardType="numeric"
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                            borderColor: isDark ? "#333" : "#9ca3af",
+                            color: isDark ? "white" : "black",
+                          },
+                        ]}
+                        value={value ? String(value) : ""}
+                        onChangeText={(val) => onChange(val ? Number(val) : 0)}
+                      />
+                    )}
+                  />
+                  {errors.handicapAllowancePercent && (
+                    <Text style={{ color: "red" }}>
+                      *{errors.handicapAllowancePercent.message}
                     </Text>
                   )}
                 </VStack>

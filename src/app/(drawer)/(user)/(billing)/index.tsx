@@ -7,6 +7,7 @@ import {
   ScrollView,
   RefreshControl,
   Text,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Box } from "@/components/box";
@@ -19,6 +20,7 @@ import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
+import QRCode from "react-native-qrcode-svg";
 
 import { getMyBills, uploadBillScreenshot } from "@/api/modules/billing.api";
 
@@ -34,7 +36,7 @@ export default function UserBillingPage() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchBills(false);
+    await fetchBills(true);
     setRefreshing(false);
   }, []);
 
@@ -135,6 +137,27 @@ export default function UserBillingPage() {
     const hasScreenshot = item.paymentScreenshotUrl && item.paymentScreenshotUrl.trim() !== "";
     const isUploading = uploadingId === item.id;
     
+    const upiUri = item.subAdmin?.upiId
+      ? `upi://pay?pa=${item.subAdmin.upiId}&pn=${encodeURIComponent(item.subAdmin.upiPayeeName || "SubAdmin")}&am=${item.totalAmount}&cu=INR`
+      : "";
+
+    const handlePayViaApp = async () => {
+      if (!upiUri) {
+        Toast.show({ type: "error", text1: "UPI ID not available for this admin." });
+        return;
+      }
+      try {
+        const supported = await Linking.canOpenURL(upiUri);
+        if (supported) {
+          await Linking.openURL(upiUri);
+        } else {
+          Toast.show({ type: "error", text1: "No UPI app found on your device." });
+        }
+      } catch (error) {
+        Toast.show({ type: "error", text1: "Failed to open UPI app." });
+      }
+    };
+    
     return (
       <Box
         className="p-4 rounded-2xl mb-4"
@@ -179,26 +202,61 @@ export default function UserBillingPage() {
         </VStack>
 
         {!isPaid && (
-          <VStack style={{ borderTopWidth: 1, borderTopColor: isDark ? "#334155" : "#e2e8f0", paddingTop: 12 }}>
-            <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 8 }}>
-              {hasScreenshot ? "Awaiting admin approval" : "Upload Payment Screenshot"}
-            </Text>
-            <Pressable
-              onPress={() => handleUploadScreenshot(item.id)}
-              disabled={isUploading}
-              style={{
-                backgroundColor: isUploading ? "#a3e635" : (hasScreenshot ? "transparent" : "#84cc16"),
-                borderWidth: hasScreenshot ? 1 : 0,
-                borderColor: "#84cc16",
-                paddingVertical: 10,
-                borderRadius: 8,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: hasScreenshot ? "#84cc16" : "#fff", fontWeight: "600" }}>
-                {isUploading ? "Uploading..." : (hasScreenshot ? "Re-upload Screenshot" : "Upload Screenshot")}
+          <VStack style={{ borderTopWidth: 1, borderTopColor: isDark ? "#334155" : "#e2e8f0", paddingTop: 12, gap: 12 }}>
+            {!!upiUri && (
+              <VStack style={{ alignItems: "center", gap: 12, paddingVertical: 8 }}>
+                <ThemedText style={{ fontSize: 14, fontWeight: "600" }}>Scan & Pay</ThemedText>
+                <View style={{ padding: 12, backgroundColor: "#fff", borderRadius: 12 }}>
+                  <QRCode value={upiUri} size={150} />
+                </View>
+                <ThemedText style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#64748b" }}>
+                  UPI ID: {item.subAdmin?.upiId}
+                </ThemedText>
+                <Pressable
+                  onPress={handlePayViaApp}
+                  style={{
+                    backgroundColor: "rgba(132, 204, 22, 0.1)",
+                    borderWidth: 1,
+                    borderColor: "#84cc16",
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 8,
+                  }}
+                >
+                  <Ionicons name="phone-portrait-outline" size={18} color="#84cc16" />
+                  <Text style={{ color: "#84cc16", fontWeight: "600" }}>Pay via UPI App</Text>
+                </Pressable>
+              </VStack>
+            )}
+
+            <VStack style={{ borderTopWidth: upiUri ? 1 : 0, borderTopColor: isDark ? "#334155" : "#e2e8f0", paddingTop: upiUri ? 12 : 0 }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 8, textAlign: "center" }}>
+                {hasScreenshot ? "Awaiting admin approval" : "Upload Payment Screenshot"}
               </Text>
-            </Pressable>
+              <Pressable
+                onPress={() => handleUploadScreenshot(item.id)}
+                disabled={isUploading || hasScreenshot}
+                style={{
+                  backgroundColor: isUploading ? "#a3e635" : (hasScreenshot ? "transparent" : "#84cc16"),
+                  borderWidth: hasScreenshot ? 1 : 0,
+                  borderColor: "#84cc16",
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {!isUploading && !hasScreenshot && <Ionicons name="cloud-upload-outline" size={18} color="#fff" />}
+                <Text style={{ color: hasScreenshot ? "#84cc16" : "#fff", fontWeight: "600" }}>
+                  {isUploading ? "Uploading..." : (hasScreenshot ? "Payment Screenshot Uploaded" : "Upload Screenshot")}
+                </Text>
+              </Pressable>
+            </VStack>
           </VStack>
         )}
       </Box>
