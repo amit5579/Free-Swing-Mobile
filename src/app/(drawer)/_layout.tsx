@@ -369,6 +369,16 @@ function CustomDrawerContent({ navigation }: any) {
                   style={styles.chevron}
                 />
               </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+              
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
