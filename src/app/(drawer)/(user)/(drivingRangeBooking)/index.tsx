@@ -108,7 +108,7 @@ export default function DrivingRangeBookingPage() {
     const today = new Date();
     const arr = [];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const newDate = new Date(today);
       newDate.setDate(today.getDate() + i);
       arr.push(formatDate(newDate));
@@ -571,25 +571,28 @@ export default function DrivingRangeBookingPage() {
                           if (slot.availableSeats > 0) {
                             setSelectedSlot(slot);
                             setNumberOfSlots(1);
-                          } else {
-                            Toast.show({ type: "info", text1: "No slots available" });
                           }
                         }}
                         style={{
                           width: "31%", // roughly 3 per row for mobile instead of 4
                           paddingVertical: 12,
                           borderRadius: 10,
-                          backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#fff",
+                          backgroundColor: slot.availableSeats === 0 
+                            ? (isDark ? "rgba(255, 255, 255, 0.02)" : "#f1f5f9") 
+                            : (isDark ? "rgba(255, 255, 255, 0.05)" : "#fff"),
                           borderWidth: 1,
-                          borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#e2e8f0",
+                          borderColor: slot.availableSeats === 0 
+                            ? (isDark ? "rgba(255, 255, 255, 0.05)" : "#cbd5e1") 
+                            : (isDark ? "rgba(255, 255, 255, 0.1)" : "#e2e8f0"),
                           alignItems: "center",
+                          opacity: slot.availableSeats === 0 ? 0.6 : 1,
                         }}
                       >
-                        <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>
+                        <Text style={{ fontSize: 16, fontWeight: "700", color: slot.availableSeats === 0 ? (isDark ? "#64748b" : "#94a3b8") : (isDark ? "#fff" : "#111") }}>
                           {slot.time}
                         </Text>
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: "#8BC34A", marginTop: 4 }}>
-                          {slot.availableSeats} slots left
+                        <Text style={{ fontSize: 10, fontWeight: "600", color: slot.availableSeats === 0 ? "#ef4444" : "#8BC34A", marginTop: 4 }}>
+                          {slot.availableSeats === 0 ? "Expired" : `${slot.availableSeats} slots left`}
                         </Text>
                       </Pressable>
                     ))}

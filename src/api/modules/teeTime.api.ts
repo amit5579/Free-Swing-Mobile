@@ -75,19 +75,44 @@ export const getBookingStatus = async (date: string) => {
 
 // book seat - TeeTime/book payload - courseId: 2, date: "2026-03-25", timeSlot: "06:00", seatNumber: 1, tee: 1
 
-export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
+export const bookSeat = async (courseId: number, date: string, memberCategory: string, seatNumber: number, tee: number, timeSlot: string) => {
+
     try {
         const response = await client.post(`TeeTime/book`, {
             courseId,
             date,
+            memberCategory,
             seatNumber,
             tee,
-            timeSlot
+            timeSlot,
+
         });
-        // console.log("fffff",response.data);
+        console.log("fffff",response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error("Booking seat Error:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+// tee booking ss
+export const uploadTeeBookingScreenshot = async (bookingId: number, uri: string, type: string, name: string) => {
+    try {
+        const formData = new FormData();
+        formData.append("image", {
+            uri,
+            name,
+            type,
+        } as any);
+
+        const response = await client.post(`TeeTime/${bookingId}/upload-screenshot`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
         return response.data;
     } catch (error) {
-        console.error("Booking seat Error:", error);
+        console.error("Upload Tee Booking Screenshot Error:", error);
         throw error;
     }
 };

@@ -11,7 +11,9 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Pressable, useColorScheme, View } from "react-native";
+import { Pressable, useColorScheme, View, Modal, Linking } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import QRCode from "react-native-qrcode-svg";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
@@ -19,6 +21,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import {
   bookSeat,
   cancelSeatBooking,
+  uploadTeeBookingScreenshot,
   getSubAdminCourses,
   getTeeTimeSeats,
 } from "@/api/modules/teeTime.api";
@@ -45,6 +48,17 @@ export default function TeeTimeBookingPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [memberCategoryModalVisible, setMemberCategoryModalVisible] = useState(false);
+  const [selectedSeatInfo, setSelectedSeatInfo] = useState<any>(null);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [bookingResponse, setBookingResponse] = useState<any>(null);
+  const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+  const [screenshotUploaded, setScreenshotUploaded] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [seatToCancel, setSeatToCancel] = useState<any>(null);
+
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTeeTiming();
@@ -67,11 +81,12 @@ export default function TeeTimeBookingPage() {
       if (showSkeleton) setLoading(true);
 
       const courseResponse = await getSubAdminCourses();
-      // console.log("courseResponse", courseResponse);
+      console.log("courseResponse", courseResponse);
 
       const formattedCourses = courseResponse.map((c: any) => ({
         label: c.name || `Course ${c.courseId}`,
         value: c.courseId,
+        ...c,
       }));
 
       setCourses(formattedCourses);
@@ -113,7 +128,14 @@ export default function TeeTimeBookingPage() {
 
   // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
 
-  const bookSeatHandler = async (timeSlot: string, seatNumber: number) => {
+  const initiateBooking = (timeSlot: string, seatNumber: number) => {
+    setSelectedSeatInfo({ timeSlot, seatNumber });
+    setMemberCategoryModalVisible(true);
+  };
+
+  const bookSeatHandler = async (memberCategory: string) => {
+    setMemberCategoryModalVisible(false);
+    const { timeSlot, seatNumber } = selectedSeatInfo;
     const date = availableDates[selectedDateIndex];
     const teeBox = activeTeeTab;
     const key = getSeatKey(date, teeBox, timeSlot, seatNumber);
@@ -165,10 +187,16 @@ export default function TeeTimeBookingPage() {
 
     setLoadingSeats((prev: any) => ({ ...prev, [key]: true }));
 
-    try {
-      await bookSeat(selectedCourse, date, seatNumber, teeBox, timeSlot);
+    try {      
+      const resp = await bookSeat(selectedCourse, date, memberCategory, seatNumber, teeBox, timeSlot);
 
-      await fetchTeeTiming();
+      await fetchTeeTiming(false);
+      setBookingResponse(resp);
+      setScreenshotUri(null);
+      setScreenshotUploaded(false);
+      if (resp?.amountToPay > 0 || resp?.paymentStatus === "Pending") {
+        setPaymentModalVisible(true);
+      }
       Toast.show({
         type: "success",
         text1: "Seat Booked",
@@ -225,6 +253,39 @@ export default function TeeTimeBookingPage() {
         return updated;
       });
     }
+  };
+
+
+  const handleUploadScreenshot = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setScreenshotUri(asset.uri);
+      try {
+        setUploadingScreenshot(true);
+        const fileName = asset.uri.split('/').pop() || 'screenshot.jpg';
+        await uploadTeeBookingScreenshot(bookingResponse.bookingId, asset.uri, asset.mimeType || 'image/jpeg', fileName);
+        setScreenshotUploaded(true);
+        Toast.show({ type: "success", text1: "Screenshot Uploaded", text2: "Awaiting admin approval." });
+      } catch (error) {
+        Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
+        setScreenshotUri(null);
+      } finally {
+        setUploadingScreenshot(false);
+      }
+    }
+  };
+
+  const openUPIApp = () => {
+    if (!bookingResponse) return;
+    const url = `upi://pay?pa=${bookingResponse.subAdminUpiId}&pn=${encodeURIComponent(bookingResponse.subAdminUpiPayeeName)}&am=${bookingResponse.amountToPay}&cu=INR`;
+    Linking.openURL(url).catch(() => {
+      Toast.show({ type: "error", text1: "Error", text2: "No UPI app found." });
+    });
   };
 
   const formatDate = (date: Date) => {
@@ -330,6 +391,26 @@ export default function TeeTimeBookingPage() {
   };
 
   const TeeRow = ({ slot }: any) => {
+    const isSlotExpired = () => {
+      if (!availableDates[selectedDateIndex]) return false;
+      const parts = slot.time.trim().split(" ");
+      const timePart = parts[0];
+      const modifier = parts[1];
+      
+      let [hours, minutes] = timePart.split(":").map(Number);
+      
+      if (modifier) {
+        if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
+        if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
+      }
+      
+      const slotDate = new Date(availableDates[selectedDateIndex]);
+      slotDate.setHours(hours, minutes, 0, 0);
+      return slotDate.getTime() < new Date().getTime();
+    };
+
+    const isExpired = isSlotExpired();
+
     return (
       <Box
         style={{
@@ -390,95 +471,115 @@ export default function TeeTimeBookingPage() {
             const key = getSeatKey(date, teeBox, slot.time, seat.seatNumber);
             const isMine = seat?.userId === userId;
             const isLoading = loadingSeats[key];
+            const isRequested = seat?.paymentStatus === 'Pending' || seat?.status === 'Requested';
+            
+            const seatExpired = !isBooked && isExpired;
+
+            let bgColor = seatExpired
+                    ? "#94a3b8"
+                    : isBooked
+                      ? isMine
+                        ? isRequested ? "#eab308" : "#ef4444"
+                        : "grey"
+                      : "#8BC34A";
 
             return (
-              <Pressable
+              <View
                 key={seat.id ?? `${slot.time}-${index}`}
-                onPress={() => {
-                  if (isLoading) return;
-
-                  if (isBooked) {
-                    if (isMine && seat.bookingId) {
-                      cancelBookingHandler(
-                        seat.bookingId,
-                        slot.time,
-                        seat.seatNumber,
-                      );
-                    }
-                    //  else if (!isMine) {
-                    //   Toast.show({
-                    //     type: "error",
-                    //     text1: "Cannot Cancel",
-                    //     text2: "You don't have permission to cancel this booking.",
-                    //   });
-                    // }
-                  } else {
-                    bookSeatHandler(slot.time, seat.seatNumber);
-                  }
-                }}
-                disabled={isLoading}
                 style={{
-                  width: "23%", // 👈 4 per row
-                  paddingVertical: 10,
+                  width: "23%",
                   borderRadius: 10,
                   marginBottom: 10,
-                  alignItems: "center",
-                  backgroundColor: isBooked
-                    ? isMine
-                      ? "#ef4444"
-                      : "grey"
-                    : "#8BC34A",
-                  // opacity: isLoading ? 0.6 : 1,
+                  backgroundColor: bgColor,
+                  overflow: "hidden",
                 }}
               >
-                {/*  {isLoading
-                    ? "Please wait"
-                    : isBooked
-                      ? isMine
-                        ? "Cancel booking"
-                        : seat.userName || "Booked"
-                      : "Book"} */}
-                <Ionicons
-                  name={
-                    isLoading
-                      ? "hourglass-outline"
-                      : isBooked
-                        ? isMine
-                          ? "close-circle"
-                          : "person"
-                        : "add-circle-sharp"
-                  }
-                  size={20}
-                  color="#fff"
-                  style={{ marginBottom: 4 }}
-                />
+                <Pressable
+                  onPress={() => {
+                    if (isLoading || seatExpired) return;
 
-                <Text
+                    if (isBooked) {
+                      if (isMine && seat.bookingId && !isRequested) {
+                        setSeatToCancel({ bookingId: seat.bookingId, timeSlot: slot.time, seatNumber: seat.seatNumber });
+                        setCancelModalVisible(true);
+                      }
+                    } else {
+                      initiateBooking(slot.time, seat.seatNumber);
+                    }
+                  }}
+                  disabled={isLoading || seatExpired || (isMine && isRequested)}
                   style={{
-                    fontSize: 11,
-                    fontWeight: "500",
-                    color: "#fff",
-                    textAlign: "center",
+                    paddingVertical: 10,
+                    alignItems: "center",
+                    width: "100%",
                   }}
                 >
-                  {isLoading
-                    ? "Please wait"
-                    : isBooked
-                      ? isMine
-                        ? "Cancel"
-                        : seat.userName || "Booked"
-                      : "Book"}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "700",
-                    color: "#fff",
-                  }}
-                >
-                  Seat {seat.seatNumber}
-                </Text>
-              </Pressable>
+                  <Ionicons
+                    name={
+                      isLoading
+                        ? "hourglass-outline"
+                        : seatExpired
+                          ? "ban"
+                          : isBooked
+                            ? isMine
+                              ? isRequested ? "time" : "close-circle"
+                              : "person"
+                            : "add-circle-sharp"
+                    }
+                    size={20}
+                    color="#fff"
+                    style={{ marginBottom: 4 }}
+                  />
+
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "500",
+                      color: "#fff",
+                      textAlign: "center",
+                    }}
+                  >
+                    {isLoading
+                      ? "Please wait"
+                      : seatExpired
+                        ? "Expired"
+                        : isBooked
+                          ? isMine
+                            ? isRequested ? "Requested" : "Cancel"
+                            : seat.userName || "Booked"
+                          : "Book"}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: "#fff",
+                    }}
+                  >
+                    Seat {seat.seatNumber}
+                  </Text>
+                </Pressable>
+
+                {isBooked && isMine && isRequested && (
+                  <Pressable
+                    onPress={() => {
+                      if (seat.bookingId) {
+                        setSeatToCancel({ bookingId: seat.bookingId, timeSlot: slot.time, seatNumber: seat.seatNumber });
+                        setCancelModalVisible(true);
+                      }
+                    }}
+                    style={{
+                      backgroundColor: "#ef4444",
+                      paddingVertical: 6,
+                      alignItems: "center",
+                      borderTopWidth: 1,
+                      borderTopColor: "rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, color: "#fff", fontWeight: "bold" }}>CANCEL</Text>
+                  </Pressable>
+                )}
+              </View>
             );
           })}
         </HStack>
@@ -868,7 +969,140 @@ export default function TeeTimeBookingPage() {
             </Box>
           </VStack>
         </ScrollView>
+
+        <Modal visible={memberCategoryModalVisible} transparent={true} animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <View style={{ backgroundColor: isDark ? '#1e293b' : '#fff', padding: 20, borderRadius: 12, width: '100%' }}>
+              <HStack style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                 <Text style={{ fontSize: 18, fontWeight: '700', color: isDark ? '#fff' : '#000' }}>Select Member Category</Text>
+                 <Pressable onPress={() => setMemberCategoryModalVisible(false)}>
+                   <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+                 </Pressable>
+              </HStack>
+              <Text style={{ textAlign: 'center', color: isDark ? '#ccc' : '#555', marginBottom: 20 }}>
+                Please select your category for this course. Club members are not charged.
+              </Text>
+              
+              <Pressable onPress={() => bookSeatHandler("ClubMember")}
+                style={{ padding: 15, borderWidth: 1, borderColor: '#8BC34A', borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(139,195,74,0.1)' : 'rgba(139,195,74,0.05)' }}>
+                <Ionicons name="star" size={20} color="#8BC34A" style={{ marginRight: 10 }} />
+                <View style={{ flex: 1 }}>
+                   <Text style={{ color: '#8BC34A', fontWeight: '600' }}>Club Member (₹0)</Text>
+                   <Text style={{ fontSize: 12, color: isDark ? '#aaa' : '#777' }}>Only available if invited by the club's admin.</Text>
+                </View>
+              </Pressable>
+
+              <Pressable onPress={() => bookSeatHandler("Affiliated")}
+                style={{ padding: 15, borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <HStack style={{ alignItems: 'center' }}>
+                   <Ionicons name="business" size={20} color="#3b82f6" style={{ marginRight: 10 }} />
+                   <Text style={{ color: '#3b82f6', fontWeight: '600' }}>Affiliated Club / Serving / Retired</Text>
+                </HStack>
+                <View style={{ backgroundColor: '#8BC34A', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+                   <Text style={{ color: '#fff', fontWeight: '700' }}>₹{courses.find((c: any) => c.value === selectedCourse)?.affiliatedMemberRate || 1}</Text>
+                </View>
+              </Pressable>
+              
+              <Pressable onPress={() => bookSeatHandler("NonAffiliated")}
+                style={{ padding: 15, borderWidth: 1, borderColor: '#64748b', borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <HStack style={{ alignItems: 'center' }}>
+                   <Ionicons name="person" size={20} color="#64748b" style={{ marginRight: 10 }} />
+                   <Text style={{ color: isDark ? '#cbd5e1' : '#64748b', fontWeight: '600' }}>Non-Affiliated Member</Text>
+                </HStack>
+                <View style={{ backgroundColor: '#64748b', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+                   <Text style={{ color: '#fff', fontWeight: '700' }}>₹{courses.find((c: any) => c.value === selectedCourse)?.nonAffiliatedMemberRate || 2}</Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={paymentModalVisible} transparent={true} animationType="slide">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <View style={{ backgroundColor: isDark ? '#1e293b' : '#fff', padding: 20, borderRadius: 12, width: '100%', alignItems: 'center' }}>
+              <Ionicons name="time-outline" size={50} color="#fbbf24" style={{ marginBottom: 10 }} />
+              <Text style={{ fontSize: 22, fontWeight: '700', color: isDark ? '#fff' : '#000', marginBottom: 10 }}>Slot Requested!</Text>
+              <Text style={{ textAlign: 'center', color: isDark ? '#ccc' : '#555', marginBottom: 20 }}>
+                Your tee time slot has been reserved. Complete payment to confirm your booking.
+              </Text>
+              
+              <View style={{ backgroundColor: isDark ? '#334155' : '#f8fafc', padding: 15, borderRadius: 10, width: '100%', alignItems: 'center', marginBottom: 20 }}>
+                 <Text style={{ fontSize: 16, fontWeight: '600', color: isDark ? '#fff' : '#000' }}>
+                   Payment Required: <Text style={{ color: '#8BC34A' }}>₹{bookingResponse?.amountToPay}</Text>
+                 </Text>
+                 <Text style={{ fontSize: 12, color: isDark ? '#aaa' : '#777', marginTop: 4 }}>Pay the club admin to confirm your slot.</Text>
+              </View>
+
+              {bookingResponse?.subAdminUpiId && (
+                <View style={{ marginBottom: 20, padding: 10, backgroundColor: '#fff', borderRadius: 10 }}>
+                  <QRCode value={`upi://pay?pa=${bookingResponse.subAdminUpiId}&pn=${encodeURIComponent(bookingResponse.subAdminUpiPayeeName)}&am=${bookingResponse.amountToPay}&cu=INR`} size={150} />
+                </View>
+              )}
+
+              <Text style={{ fontSize: 14, fontWeight: '600', color: isDark ? '#fff' : '#000', marginBottom: 5 }}>Scan with any UPI app</Text>
+              <Text style={{ fontSize: 12, color: isDark ? '#aaa' : '#777', marginBottom: 20 }}>Awaiting admin confirmation after payment.</Text>
+
+              <Pressable onPress={openUPIApp}
+                style={{ width: '100%', padding: 12, borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                 <Ionicons name="phone-portrait-outline" size={20} color="#3b82f6" style={{ marginRight: 8 }} />
+                 <Text style={{ color: '#3b82f6', fontWeight: '600' }}>Open UPI App</Text>
+              </Pressable>
+
+              <Text style={{ fontSize: 12, color: isDark ? '#aaa' : '#777', marginBottom: 5 }}>Or pay to this UPI ID:</Text>
+              <View style={{ width: '100%', padding: 12, backgroundColor: isDark ? '#334155' : '#f1f5f9', borderRadius: 10, alignItems: 'center', marginBottom: 20 }}>
+                 <Text style={{ fontWeight: '600', color: isDark ? '#fff' : '#000' }}>{bookingResponse?.subAdminUpiId}</Text>
+              </View>
+
+              <View style={{ width: '100%', marginBottom: 20 }}>
+                 <Text style={{ fontSize: 12, color: isDark ? '#fff' : '#000', marginBottom: 5, fontWeight: '500' }}>Upload Payment Screenshot</Text>
+                 {screenshotUploaded ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: 'rgba(139,195,74,0.1)', borderRadius: 10, borderWidth: 1, borderColor: '#8BC34A' }}>
+                       <Ionicons name="checkmark-circle" size={20} color="#8BC34A" style={{ marginRight: 8 }} />
+                       <Text style={{ color: '#8BC34A', fontWeight: '600', flex: 1 }}>Screenshot uploaded. Awaiting admin approval.</Text>
+                    </View>
+                 ) : (
+                    <Pressable onPress={handleUploadScreenshot} disabled={uploadingScreenshot}
+                       style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: isDark ? '#475569' : '#e2e8f0', borderRadius: 10 }}>
+                       <View style={{ backgroundColor: isDark ? '#334155' : '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5, marginRight: 10 }}>
+                          <Text style={{ color: isDark ? '#fff' : '#000', fontSize: 12 }}>Choose File</Text>
+                       </View>
+                       <Text style={{ color: isDark ? '#aaa' : '#777', fontSize: 12 }}>{uploadingScreenshot ? 'Uploading...' : (screenshotUri ? 'File selected' : 'No file chosen')}</Text>
+                    </Pressable>
+                 )}
+              </View>
+
+              <Pressable onPress={() => { setPaymentModalVisible(false); fetchTeeTiming(false); }}
+                style={{ width: '100%', padding: 12, borderWidth: 1, borderColor: isDark ? '#475569' : '#cbd5e1', borderRadius: 10, alignItems: 'center' }}>
+                 <Text style={{ color: isDark ? '#cbd5e1' : '#64748b', fontWeight: '600' }}>Close</Text>
+              </Pressable>
+
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={cancelModalVisible} transparent={true} animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <View style={{ backgroundColor: isDark ? '#1e293b' : '#fff', padding: 20, borderRadius: 12, width: '100%' }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: isDark ? '#fff' : '#000', marginBottom: 15 }}>Cancel Booking</Text>
+              <Text style={{ color: isDark ? '#ccc' : '#555', marginBottom: 20 }}>Are you sure you want to cancel this booking?</Text>
+              <HStack style={{ justifyContent: 'flex-end', gap: 10 }}>
+                 <Pressable onPress={() => setCancelModalVisible(false)} style={{ paddingVertical: 10, paddingHorizontal: 20 }}>
+                   <Text style={{ color: isDark ? '#aaa' : '#777', fontWeight: '600' }}>Cancel</Text>
+                 </Pressable>
+                 <Pressable onPress={() => {
+                   setCancelModalVisible(false);
+                   if (seatToCancel) {
+                     cancelBookingHandler(seatToCancel.bookingId, seatToCancel.timeSlot, seatToCancel.seatNumber);
+                   }
+                 }} style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#ef4444', borderRadius: 8 }}>
+                   <Text style={{ color: '#fff', fontWeight: '600' }}>Ok</Text>
+                 </Pressable>
+              </HStack>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
+
     </>
   );
 }
