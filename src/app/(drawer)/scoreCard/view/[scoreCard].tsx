@@ -62,7 +62,8 @@ const ScoreCard: React.FC = () => {
     const fetchScorecard = async () => {
       try {
         setLoading(true);
-        const data = await getScorecardDetails(scoreCard!);
+        const data = await getScorecardDetails(scoreCard!);       
+          
         setHoles(data);
       } catch (err) {
         setError("Failed to load scorecard.");

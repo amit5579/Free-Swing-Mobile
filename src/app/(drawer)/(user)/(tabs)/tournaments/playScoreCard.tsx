@@ -482,6 +482,8 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
               h.score === undefined || h.score === null || h.score === ""
                 ? null
                 : Number(h.score),
+            matchScoringType: null,
+            nassauStartingNine: null,
             companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
             companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
             playingGroupRoundKey: playingGroupRoundKey || null,
@@ -490,7 +492,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             userId: Number(userId),
           }));
-        // console.log("finishPayload", finishPayload);
+        console.log("finishPayload", finishPayload);
 
         await updateHoleScoresApi(
           tournamentId

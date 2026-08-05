@@ -122,14 +122,16 @@ const ScoreCard: React.FC = () => {
   };
 
   const isExcluded = holes.length > 0 && holes.some((h: any) => h.isExcluded);
-  const isSystem36 = holes.length > 0 && holes.some(
-    (h: any) =>
-      h.matchScoringType === "system-36" ||
-      h.scoringType === "system-36" ||
-      h.scoring_type === "system-36" ||
-      h.isSystem36 === true ||
-      h.IsSystem36 === true
-  );
+  const isSystem36 =
+    holes.length > 0 &&
+    holes.some(
+      (h: any) =>
+        h.matchScoringType === "system-36" ||
+        h.scoringType === "system-36" ||
+        h.scoring_type === "system-36" ||
+        h.isSystem36 === true ||
+        h.IsSystem36 === true,
+    );
 
   const getScoringLabel = () => {
     if (holes.length === 0) return "";
@@ -222,8 +224,6 @@ const ScoreCard: React.FC = () => {
               ? h.stablefordPoints
               : h.StablefordPoints,
         }));
-        // console.log("dd",data);
-        
 
         // Parse partners
         let parsedPartners: any[] = [];
@@ -235,11 +235,13 @@ const ScoreCard: React.FC = () => {
                 typeof (firstHole as any).playingPartnersJson === "string"
                   ? JSON.parse((firstHole as any).playingPartnersJson)
                   : (firstHole as any).playingPartnersJson;
-              const sortedPartners = (parsedPartners || []).slice().sort((a: any, b: any) => {
-                const teamA = a.team ?? 1;
-                const teamB = b.team ?? 1;
-                return teamA - teamB;
-              });
+              const sortedPartners = (parsedPartners || [])
+                .slice()
+                .sort((a: any, b: any) => {
+                  const teamA = a.team ?? 1;
+                  const teamB = b.team ?? 1;
+                  return teamA - teamB;
+                });
               setPartners(sortedPartners);
             } catch (e) {
               console.error("Error parsing playingPartnersJson:", e);
@@ -309,7 +311,8 @@ const ScoreCard: React.FC = () => {
           let stablefordPoints = null;
           if (score !== null && score > 0) {
             if (isSystem36) {
-              stablefordPoints = score <= h.par ? 2 : score === h.par + 1 ? 1 : 0;
+              stablefordPoints =
+                score <= h.par ? 2 : score === h.par + 1 ? 1 : 0;
             } else if (netScore !== null) {
               stablefordPoints = Math.max(0, h.par - netScore + 2);
             }
@@ -542,7 +545,6 @@ const ScoreCard: React.FC = () => {
     }
     return basePoints + sandyBonus;
   };
-
 
   const getPlayerTotals = (holesList: any[], partner: any) => {
     let gross = 0;
@@ -923,15 +925,15 @@ const ScoreCard: React.FC = () => {
               "Score",
               ...(showNetColumns ? ["Net"] : []),
             ].map((_, i) => (
-                <View key={i} className="flex-1 items-center">
-                  <Skeleton
-                    isDark={isDark}
-                    width={28}
-                    height={12}
-                    borderRadius={4}
-                  />
-                </View>
-              ))}
+              <View key={i} className="flex-1 items-center">
+                <Skeleton
+                  isDark={isDark}
+                  width={28}
+                  height={12}
+                  borderRadius={4}
+                />
+              </View>
+            ))}
             {showPtsColumns && (
               <View className="flex-1 items-center">
                 <Skeleton
@@ -1111,7 +1113,10 @@ const ScoreCard: React.FC = () => {
                       : "text-sky-600 bg-sky-600/10"
                   }`}
                 >
-                  Sys36 HC: {holes.some((h: any) => h.score !== null && h.score > 0) ? 36 - Number(sumPts(holes)) : "N/A"}
+                  Sys36 HC:{" "}
+                  {holes.some((h: any) => h.score !== null && h.score > 0)
+                    ? 36 - Number(sumPts(holes))
+                    : "N/A"}
                 </Text>
               )}
 
@@ -1665,7 +1670,10 @@ const ScoreCard: React.FC = () => {
                       return (
                         <VStack
                           key={p.playerId}
-                          style={{ width: colPartnerWidth, alignItems: "center" }}
+                          style={{
+                            width: colPartnerWidth,
+                            alignItems: "center",
+                          }}
                         >
                           <ThemedText
                             style={{
@@ -1816,7 +1824,10 @@ const ScoreCard: React.FC = () => {
                           {isDetailsVisible && (
                             <>
                               <ThemedText
-                                style={{ width: colSIWidth, textAlign: "center" }}
+                                style={{
+                                  width: colSIWidth,
+                                  textAlign: "center",
+                                }}
                               >
                                 {h.strokeIndex}
                               </ThemedText>
@@ -1857,10 +1868,15 @@ const ScoreCard: React.FC = () => {
                             }
 
                             return (
-                              <View key={p.playerId} style={{ flexDirection: "row" }}>
+                              <View
+                                key={p.playerId}
+                                style={{ flexDirection: "row" }}
+                              >
                                 <View
                                   style={{
-                                    width: showPtsColumns ? 50 : colPartnerWidth,
+                                    width: showPtsColumns
+                                      ? 50
+                                      : colPartnerWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: bgColor,
@@ -2015,7 +2031,13 @@ const ScoreCard: React.FC = () => {
                                   </HStack>
                                 </View>
                                 {showPtsColumns && (
-                                  <View style={{ width: 45, alignItems: "center", justifyContent: "center" }}>
+                                  <View
+                                    style={{
+                                      width: 45,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
                                     <Text
                                       style={{
                                         color: isDark ? "#fff" : "#000",
@@ -2024,7 +2046,9 @@ const ScoreCard: React.FC = () => {
                                         textAlign: "center",
                                       }}
                                     >
-                                      {info.score !== null && info.score >= 0 ? info.stablefordPoints ?? 0 : "-"}
+                                      {info.score !== null && info.score >= 0
+                                        ? (info.stablefordPoints ?? 0)
+                                        : "-"}
                                     </Text>
                                   </View>
                                 )}
@@ -2148,7 +2172,10 @@ const ScoreCard: React.FC = () => {
                             partners.length >= 2 &&
                             (() => {
                               const hRes = ns?.holeResults[h.holeNumber];
-                              if (!hRes) return <View style={{ width: colNassauWidth }} />;
+                              if (!hRes)
+                                return (
+                                  <View style={{ width: colNassauWidth }} />
+                                );
 
                               return (
                                 <View
@@ -2160,7 +2187,9 @@ const ScoreCard: React.FC = () => {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  {renderNassauHouses(hRes.overallHousesDisplay)}
+                                  {renderNassauHouses(
+                                    hRes.overallHousesDisplay,
+                                  )}
                                   {(nassauStartingNine === "back"
                                     ? h.holeNumber <= 9
                                     : h.holeNumber >= 10) &&
@@ -2209,26 +2238,43 @@ const ScoreCard: React.FC = () => {
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: colSIWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colSIWidth,
+                                    textAlign: "center",
+                                  }}
                                 />
                                 <ThemedText
-                                  style={{ width: colYardsWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colYardsWidth,
+                                    textAlign: "center",
+                                  }}
                                 >
                                   {sumYardage(front9)}
                                 </ThemedText>
                               </>
                             )}
                             <ThemedText
-                              style={{ width: colParWidth, textAlign: "center" }}
+                              style={{
+                                width: colParWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {sumPar(front9)}
                             </ThemedText>
                             {partners.map((p) => {
                               const t = getPlayerTotals(front9, p);
                               return (
-                                <View key={p.playerId} style={{ flexDirection: "row" }}>
+                                <View
+                                  key={p.playerId}
+                                  style={{ flexDirection: "row" }}
+                                >
                                   <VStack
-                                    style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
+                                    style={{
+                                      width: showPtsColumns
+                                        ? 50
+                                        : colPartnerWidth,
+                                      alignItems: "center",
+                                    }}
                                   >
                                     <ThemedText
                                       style={{
@@ -2253,7 +2299,12 @@ const ScoreCard: React.FC = () => {
                                     )} */}
                                   </VStack>
                                   {showPtsColumns && (
-                                    <VStack style={{ width: 45, alignItems: "center" }}>
+                                    <VStack
+                                      style={{
+                                        width: 45,
+                                        alignItems: "center",
+                                      }}
+                                    >
                                       <ThemedText
                                         style={{
                                           fontWeight: "700",
@@ -2443,26 +2494,43 @@ const ScoreCard: React.FC = () => {
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: colSIWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colSIWidth,
+                                    textAlign: "center",
+                                  }}
                                 />
                                 <ThemedText
-                                  style={{ width: colYardsWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colYardsWidth,
+                                    textAlign: "center",
+                                  }}
                                 >
                                   {sumYardage(back9)}
                                 </ThemedText>
                               </>
                             )}
                             <ThemedText
-                              style={{ width: colParWidth, textAlign: "center" }}
+                              style={{
+                                width: colParWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {sumPar(back9)}
                             </ThemedText>
                             {partners.map((p) => {
                               const t = getPlayerTotals(back9, p);
                               return (
-                                <View key={p.playerId} style={{ flexDirection: "row" }}>
+                                <View
+                                  key={p.playerId}
+                                  style={{ flexDirection: "row" }}
+                                >
                                   <VStack
-                                    style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
+                                    style={{
+                                      width: showPtsColumns
+                                        ? 50
+                                        : colPartnerWidth,
+                                      alignItems: "center",
+                                    }}
                                   >
                                     <ThemedText
                                       style={{
@@ -2487,7 +2555,12 @@ const ScoreCard: React.FC = () => {
                                     )} */}
                                   </VStack>
                                   {showPtsColumns && (
-                                    <VStack style={{ width: 45, alignItems: "center" }}>
+                                    <VStack
+                                      style={{
+                                        width: 45,
+                                        alignItems: "center",
+                                      }}
+                                    >
                                       <ThemedText
                                         style={{
                                           fontWeight: "700",
@@ -2690,7 +2763,11 @@ const ScoreCard: React.FC = () => {
                       </>
                     )}
                     <ThemedText
-                      style={{ width: colParWidth, textAlign: "center", color: "#fff" }}
+                      style={{
+                        width: colParWidth,
+                        textAlign: "center",
+                        color: "#fff",
+                      }}
                     >
                       {sumPar(holes)}
                     </ThemedText>
@@ -2699,7 +2776,10 @@ const ScoreCard: React.FC = () => {
                       return (
                         <View key={p.playerId} style={{ flexDirection: "row" }}>
                           <VStack
-                            style={{ width: showPtsColumns ? 50 : colPartnerWidth, alignItems: "center" }}
+                            style={{
+                              width: showPtsColumns ? 50 : colPartnerWidth,
+                              alignItems: "center",
+                            }}
                           >
                             <ThemedText
                               style={{
@@ -2951,7 +3031,11 @@ const ScoreCard: React.FC = () => {
                             fontWeight: bold ? "700" : "500",
                             width: 60,
                             textAlign: "center",
-                            color: bold ? "#84cc16" : isDark ? "white" : "black",
+                            color: bold
+                              ? "#84cc16"
+                              : isDark
+                                ? "white"
+                                : "black",
                           }}
                         >
                           {v}
@@ -3418,26 +3502,40 @@ const ScoreCard: React.FC = () => {
                           marginTop: 6,
                         }}
                       >
-                      <Row
-                        label="Final Result"
-                        a={
-                          <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamAColor }}>
-                            Match - {ns?.overallMatches?.team1 || 0}{" "}
-                            {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                            {" "}
-                            Half - {(ns?.front9Halfs?.team1 || 0) + (ns?.back9Halfs?.team1 || 0)}
-                          </ThemedText>
-                        }
-                        b={
-                          <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamBColor }}>
-                            Match - {ns?.overallMatches?.team2 || 0}{" "}
-                            {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                            {" "}
-                            Half - {(ns?.front9Halfs?.team2 || 0) + (ns?.back9Halfs?.team2 || 0)}
-                          </ThemedText>
-                        }
-                        bold
-                      />
+                        <Row
+                          label="Final Result"
+                          a={
+                            <ThemedText
+                              style={{
+                                fontSize: 11,
+                                fontWeight: "700",
+                                color: teamAColor,
+                              }}
+                            >
+                              Match - {ns?.overallMatches?.team1 || 0}{" "}
+                              {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                              Half -{" "}
+                              {(ns?.front9Halfs?.team1 || 0) +
+                                (ns?.back9Halfs?.team1 || 0)}
+                            </ThemedText>
+                          }
+                          b={
+                            <ThemedText
+                              style={{
+                                fontSize: 11,
+                                fontWeight: "700",
+                                color: teamBColor,
+                              }}
+                            >
+                              Match - {ns?.overallMatches?.team2 || 0}{" "}
+                              {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                              Half -{" "}
+                              {(ns?.front9Halfs?.team2 || 0) +
+                                (ns?.back9Halfs?.team2 || 0)}
+                            </ThemedText>
+                          }
+                          bold
+                        />
                         <ThemedText
                           style={{
                             fontSize: 11,
