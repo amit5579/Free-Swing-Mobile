@@ -192,7 +192,6 @@ const ScoreCard: React.FC = () => {
       try {
         setLoading(true);
         const data = await getScorecardDetails(scoreCard!);
-
         if (data.length > 0) {
           try {
             const hc = await getHandicapDetails(

@@ -1755,7 +1755,7 @@ export default function ResumeScorecard() {
                   overflow: "hidden",
                 }}
               >
-                Sys36 HC: {holes.some(h => h.score !== null && h.score > 0) ? 36 - Number(sumPts(holes)) : "N/A"}
+                Sys36 HC: {holes.some(h => h.score !== null && h.score > 0) ? Math.min(26, 36 - Number(sumPts(holes))) : "N/A"}
               </Text>
             )}
           </HStack>

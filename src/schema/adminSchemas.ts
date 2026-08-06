@@ -72,35 +72,9 @@ export const tournamentSchema = z
 
 
 export const acceptanceWeiverSchema = z.object({
-  isUnder18: z.boolean(),
-  parentGuardianMobile: z.string().optional(),
-  parentGuardianName: z.string().optional(),
-  parentGuardianRelation: z.string().optional(),
+  isUnder18: z.boolean().optional(),
+  readAndUnderstood: z.boolean().refine(val => val === true, "You must confirm that you have read and understood the waiver"),
   agreedToTerms: z.boolean().refine(val => val === true, "You must agree to the terms"),
-}).superRefine((data, ctx) => {
-  if (data.isUnder18) {
-    if (!data.parentGuardianName || data.parentGuardianName.length < 3) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Parent Guardian Name must be at least 3 characters",
-        path: ["parentGuardianName"],
-      });
-    }
-    if (!data.parentGuardianMobile || data.parentGuardianMobile.length < 10) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Invalid Phone Number",
-        path: ["parentGuardianMobile"],
-      });
-    }
-    if (!data.parentGuardianRelation || data.parentGuardianRelation.length < 3) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Parent Guardian Relation must be at least 3 characters",
-        path: ["parentGuardianRelation"],
-      });
-    }
-  }
 });
 
 export type AcceptanceWeiverType = z.infer<typeof acceptanceWeiverSchema>;

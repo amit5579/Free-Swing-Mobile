@@ -72,14 +72,10 @@ export default function TournamentsScreen() {
     resolver: zodResolver(acceptanceWeiverSchema),
     defaultValues: {
       isUnder18: false,
+      readAndUnderstood: false,
       agreedToTerms: false,
-      parentGuardianName: "",
-      parentGuardianMobile: "",
-      parentGuardianRelation: "",
     },
   });
-
-  const selectedIsUnder18 = watchWaiver("isUnder18");
 
   const {
     control,
@@ -216,10 +212,10 @@ export default function TournamentsScreen() {
       setLoading(true);
       await postAcceptanceWeiver(
         selectedTournament.tournamentId,
-        data.isUnder18,
-        data.parentGuardianMobile || "",
-        data.parentGuardianName || "",
-        data.parentGuardianRelation || "",
+        data.isUnder18 ?? false,
+        "",
+        "",
+        "",
       );
 
       Toast.show({
@@ -1061,10 +1057,11 @@ export default function TournamentsScreen() {
                                     DIGITAL ACCEPTANCE
                                   </Text>
 
-                                  {/* MINOR CHECKBOX */}
+
+                                  {/* ACCEPT CHECKBOXES */}
                                   <Controller
                                     control={waiverControl}
-                                    name="isUnder18"
+                                    name="readAndUnderstood"
                                     render={({
                                       field: { onChange, value },
                                     }) => (
@@ -1099,130 +1096,19 @@ export default function TournamentsScreen() {
                                             { color: isDark ? "#ccc" : "#000" },
                                           ]}
                                         >
-                                          I am under 18 years of age
+                                          I confirm I have read and understood the waiver.
                                         </Text>
                                       </Pressable>
                                     )}
                                   />
-
-                                  {/* GUARDIAN FORM */}
-                                  {selectedIsUnder18 && (
-                                    <VStack style={styles.guardianForm}>
-                                      <ThemedText style={styles.formTitle}>
-                                        Parent / Guardian Details
-                                      </ThemedText>
-                                      <Controller
-                                        control={waiverControl}
-                                        name="parentGuardianName"
-                                        render={({
-                                          field: { onChange, value },
-                                        }) => (
-                                          <TextInput
-                                            placeholder="Name"
-                                            placeholderTextColor={
-                                              isDark ? "#fff" : "#999"
-                                            }
-                                            style={[
-                                              styles.input,
-                                              {
-                                                backgroundColor: isDark
-                                                  ? "#1a1a1a"
-                                                  : "#fff",
-                                                color: isDark ? "#fff" : "#000",
-                                              },
-                                            ]}
-                                            value={value}
-                                            onChangeText={onChange}
-                                          />
-                                        )}
-                                      />
-                                      {waiverErrors.parentGuardianName && (
-                                        <Text
-                                          style={{ color: "red", fontSize: 12 }}
-                                        >
-                                          {
-                                            waiverErrors.parentGuardianName
-                                              .message
-                                          }
-                                        </Text>
-                                      )}
-
-                                      <Controller
-                                        control={waiverControl}
-                                        name="parentGuardianMobile"
-                                        render={({
-                                          field: { onChange, value },
-                                        }) => (
-                                          <TextInput
-                                            placeholder="Mobile Number"
-                                            placeholderTextColor={
-                                              isDark ? "#fff" : "#999"
-                                            }
-                                            keyboardType="phone-pad"
-                                            style={[
-                                              styles.input,
-                                              {
-                                                backgroundColor: isDark
-                                                  ? "#1a1a1a"
-                                                  : "#fff",
-                                                color: isDark ? "#fff" : "#000",
-                                              },
-                                            ]}
-                                            value={value}
-                                            onChangeText={onChange}
-                                          />
-                                        )}
-                                      />
-                                      {waiverErrors.parentGuardianMobile && (
-                                        <Text
-                                          style={{ color: "red", fontSize: 12 }}
-                                        >
-                                          {
-                                            waiverErrors.parentGuardianMobile
-                                              .message
-                                          }
-                                        </Text>
-                                      )}
-
-                                      <Controller
-                                        control={waiverControl}
-                                        name="parentGuardianRelation"
-                                        render={({
-                                          field: { onChange, value },
-                                        }) => (
-                                          <TextInput
-                                            placeholder="Relation"
-                                            placeholderTextColor={
-                                              isDark ? "#fff" : "#999"
-                                            }
-                                            style={[
-                                              styles.input,
-                                              {
-                                                backgroundColor: isDark
-                                                  ? "#1a1a1a"
-                                                  : "#fff",
-                                                color: isDark ? "#fff" : "#000",
-                                              },
-                                            ]}
-                                            value={value}
-                                            onChangeText={onChange}
-                                          />
-                                        )}
-                                      />
-                                      {waiverErrors.parentGuardianRelation && (
-                                        <Text
-                                          style={{ color: "red", fontSize: 12 }}
-                                        >
-                                          {
-                                            waiverErrors.parentGuardianRelation
-                                              .message
-                                          }
-                                        </Text>
-                                      )}
-                                    </VStack>
+                                  {waiverErrors.readAndUnderstood && (
+                                    <Text
+                                      style={{ color: "red", fontSize: 12, marginBottom: 10 }}
+                                    >
+                                      {waiverErrors.readAndUnderstood.message}
+                                    </Text>
                                   )}
 
-                                  {/* ACCEPT CHECKBOX */}
                                   <Controller
                                     control={waiverControl}
                                     name="agreedToTerms"
@@ -1260,8 +1146,7 @@ export default function TournamentsScreen() {
                                             { color: isDark ? "#ccc" : "#000" },
                                           ]}
                                         >
-                                          I confirm I have read and agree to the
-                                          terms above.
+                                          I agree to the terms above.
                                         </Text>
                                       </Pressable>
                                     )}
