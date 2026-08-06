@@ -588,7 +588,7 @@ export function OverviewTab({
       <VStack>
         {!searchQuery && (
           <HStack
-            className="mb-4 mt-4 p-1.5 rounded-full"
+            className="mb-4 p-1.5 rounded-full"
             style={{
               backgroundColor: isDark
                 ? "rgba(22, 22, 24, 0.6)"

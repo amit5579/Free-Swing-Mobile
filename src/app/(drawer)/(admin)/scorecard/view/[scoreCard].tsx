@@ -192,6 +192,8 @@ const ScoreCard: React.FC = () => {
       try {
         setLoading(true);
         const data = await getScorecardDetails(scoreCard!);
+        console.log("data",data);
+        
         if (data.length > 0) {
           try {
             const hc = await getHandicapDetails(
@@ -399,7 +401,22 @@ const ScoreCard: React.FC = () => {
         holes.some(
           (h: any) => h.tournamentId !== null && h.tournamentId !== undefined,
         );
-      if (hasTournamentId) {
+
+        const hasFrontNine = holes.some((h: any) => h.courseHalf === "Front9");
+        const hasBackNine = holes.some((h: any) => h.courseHalf === "Back9");
+
+      const hasNullCourseHalf = holes.some((h: any) => !h.courseHalf || h.courseHalf === "null");
+
+      if (hasNullCourseHalf) {
+        setDisplayFront9(true);
+        setDisplayBack9(true);
+      } else if (hasFrontNine && !hasBackNine) {
+        setDisplayFront9(true);
+        setDisplayBack9(false);
+      } else if (hasBackNine && !hasFrontNine) {
+        setDisplayFront9(false);
+        setDisplayBack9(true);
+      } else if (hasTournamentId) {
         setDisplayFront9(true);
         setDisplayBack9(true);
       } else {
