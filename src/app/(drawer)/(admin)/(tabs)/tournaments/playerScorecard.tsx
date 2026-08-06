@@ -36,27 +36,30 @@ const PlayerScorecard = () => {
       ? scorecard[0].isSystem36
         ? "System 36"
         : scorecard[0].stablefordPoints == null &&
-          scorecard[0].isExcluded == false
-        ? "Net Score Include Par 3"
-        : scorecard[0].stablefordPoints == null &&
-            scorecard[0].isExcluded == true
-          ? "Net Score Exclude Par 3"
-          : "Stableford"
+            scorecard[0].isExcluded == false
+          ? "Net Score Include Par 3"
+          : scorecard[0].stablefordPoints == null &&
+              scorecard[0].isExcluded == true
+            ? "Net Score Exclude Par 3"
+            : "Stableford"
       : "";
 
   const fetchScorecardData = async () => {
     try {
       setLoading(true);
       const data = await getScorecardById(Number(scorecardId));
-      
+
       if (!data || data.length === 0) {
         setLoading(false);
         return;
       }
 
-      console.log("dddd",data[0].appliedHandicap);
-      
-      const rsc = await getSubScorecardHandicap(data[0].userId, data[0].teeBoxId);
+      console.log("dddd", data[0].appliedHandicap);
+
+      const rsc = await getSubScorecardHandicap(
+        data[0].userId,
+        data[0].teeBoxId,
+      );
       // const hcp = await getScorecardHandicap(Number(teeBoxId));
 
       // Calculate System 36 points if missing
@@ -400,7 +403,10 @@ const PlayerScorecard = () => {
               marginTop: 2,
             }}
           >
-            Scorecard {scorecard && scorecard.length > 0 && scorecard[0].groupName ? `- ${scorecard[0].groupName}` : ""}
+            Scorecard{" "}
+            {scorecard && scorecard.length > 0 && scorecard[0].groupName
+              ? `- ${scorecard[0].groupName}`
+              : ""}
           </ThemedText>
         </VStack>
 
@@ -514,9 +520,9 @@ const PlayerScorecard = () => {
               "Par",
               "Score",
               "Net",
-              ...(scorecard?.[0]?.stablefordPoints != null 
-                 ? [scorecard[0].isSystem36 ? "Sys36\nPts" : "Pts"]
-                 : [])
+              ...(scorecard?.[0]?.stablefordPoints != null
+                ? [scorecard[0].isSystem36 ? "Sys36\nPts" : "Pts"]
+                : []),
             ].map((h) => (
               <Text
                 key={h}

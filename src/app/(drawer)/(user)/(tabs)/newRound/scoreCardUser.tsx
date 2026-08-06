@@ -636,7 +636,7 @@ export default function ScoreCardUserPage() {
                 }
               : {}),
           }));
-        // console.log("saveRound payload", payload);
+        console.log("saveRound payload", payload);
 
         await saveScoreCard(payload);
 
@@ -727,6 +727,8 @@ export default function ScoreCardUserPage() {
     }));
 
     try {
+      console.log("ppp",payload);
+      
       await saveScoreCard(payload);
     } catch (err) {
       console.error("Final save failed:", err);
@@ -1054,7 +1056,7 @@ export default function ScoreCardUserPage() {
           ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
           : {}),
       }));
-      // console.log("Auto-saving payload:", payload);
+      console.log("Auto-saving payload:", payload);
       saveScoreCard(payload).catch((err) =>
         console.error("Auto-save error:", err),
       );

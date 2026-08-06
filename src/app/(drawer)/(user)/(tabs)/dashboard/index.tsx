@@ -1,4 +1,3 @@
-import { Badge } from "@/components/badge";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
@@ -813,7 +812,7 @@ export default function DashboardScreen() {
                         }}
                       >
                         {/* LEFT CONTENT */}
-                        <Box style={{ flex: 1 }}>
+                        <Box>
                           <Text
                             style={{
                               fontSize: 11,
@@ -902,4 +901,3 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({});
