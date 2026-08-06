@@ -394,8 +394,18 @@ const ScoreCard: React.FC = () => {
         ? b9.reduce((t: number, h: any) => t + (h.score || 0), 0)
         : "-";
 
-      setDisplayFront9(f9Sum !== "-" && f9Sum > 0);
-      setDisplayBack9(b9Sum !== "-" && b9Sum > 0);
+      const hasTournamentId =
+        holes.length > 0 &&
+        holes.some(
+          (h: any) => h.tournamentId !== null && h.tournamentId !== undefined,
+        );
+      if (hasTournamentId) {
+        setDisplayFront9(true);
+        setDisplayBack9(true);
+      } else {
+        setDisplayFront9(f9Sum !== "-" && f9Sum > 0);
+        setDisplayBack9(b9Sum !== "-" && b9Sum > 0);
+      }
     }
   }, [holes]);
 
@@ -2143,7 +2153,9 @@ const ScoreCard: React.FC = () => {
                                       }}
                                     >
                                       {info.score !== null && info.score >= 0
-                                        ? (showPtsColumns ? (info.stablefordPoints ?? 0) : info.netScore)
+                                        ? showPtsColumns
+                                          ? (info.stablefordPoints ?? 0)
+                                          : info.netScore
                                         : "-"}
                                     </Text>
                                   </View>

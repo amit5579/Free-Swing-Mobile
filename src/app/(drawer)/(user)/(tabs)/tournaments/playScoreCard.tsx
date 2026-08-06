@@ -27,7 +27,10 @@ import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { Box } from "@/components/box";
 
-import { fetchScoreCardOpen, fetchHandicap } from "@/redux/slices/userScorecard.slice";
+import {
+  fetchScoreCardOpen,
+  fetchHandicap,
+} from "@/redux/slices/userScorecard.slice";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { RootState } from "@/redux/store";
@@ -41,11 +44,11 @@ export default function PlayScoreCard() {
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
 
-const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-const { loading, scorecardData, handicapData, error } = useAppSelector(
-  (state: RootState) => state.userScoreCard as any
-);
+  const { loading, scorecardData, handicapData, error } = useAppSelector(
+    (state: RootState) => state.userScoreCard as any,
+  );
 
   // const [loading, setLoading] = useState(false);
   const [scoreCard, setScoreCard] = useState<any>([]);
@@ -58,49 +61,63 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   const focusTimeoutRef = useRef<any>(null);
 
   const [roundPlayers, setRoundPlayers] = useState<any[]>([]);
-  const [playingGroupRoundKey, setPlayingGroupRoundKey] = useState<string | null>(null);
+  const [playingGroupRoundKey, setPlayingGroupRoundKey] = useState<
+    string | null
+  >(null);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
 
-
-  useEffect(() => {
+  useEffect(() => {    
     if (scorecardData) {
       // parse playingPartnersJson if it exists
-      const firstWithPlayers = scorecardData.find((item: any) => item.playingPartnersJson || item.PlayingPartnersJson);
+      const firstWithPlayers = scorecardData.find(
+        (item: any) => item.playingPartnersJson || item.PlayingPartnersJson,
+      );
       let players = [];
       if (firstWithPlayers) {
         try {
-          const jsonStr = firstWithPlayers.playingPartnersJson || firstWithPlayers.PlayingPartnersJson;
+          const jsonStr =
+            firstWithPlayers.playingPartnersJson ||
+            firstWithPlayers.PlayingPartnersJson;
           players = JSON.parse(jsonStr);
         } catch (e) {
           console.error("Error parsing playingPartnersJson:", e);
         }
       }
-      
+
       if (players.length === 0) {
-        players = [{
-          playerId: 'p1',
-          userId: userId,
-          name: 'You',
-          isPrimary: true
-        }];
+        players = [
+          {
+            playerId: "p1",
+            userId: userId,
+            name: "You",
+            isPrimary: true,
+          },
+        ];
       }
       setRoundPlayers(players);
 
-      const firstWithRoundKey = scorecardData.find((item: any) => item.playingGroupRoundKey || item.PlayingGroupRoundKey);
+      const firstWithRoundKey = scorecardData.find(
+        (item: any) => item.playingGroupRoundKey || item.PlayingGroupRoundKey,
+      );
       if (firstWithRoundKey) {
-        setPlayingGroupRoundKey(firstWithRoundKey.playingGroupRoundKey || firstWithRoundKey.PlayingGroupRoundKey);
+        setPlayingGroupRoundKey(
+          firstWithRoundKey.playingGroupRoundKey ||
+            firstWithRoundKey.PlayingGroupRoundKey,
+        );
       }
 
       const parsedScoreCard = scorecardData.map((hole: any) => {
         let companionScores = {};
         if (hole.companionScoresJson || hole.CompanionScoresJson) {
           try {
-            companionScores = JSON.parse(hole.companionScoresJson || hole.CompanionScoresJson);
+            companionScores = JSON.parse(
+              hole.companionScoresJson || hole.CompanionScoresJson,
+            );
           } catch (e) {}
         }
         return {
           ...hole,
-          companionScores
+          companionScores,
         };
       });
 
@@ -108,19 +125,31 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
     }
   }, [scorecardData, userId]);
 
+  const isStablefordStr = Array.isArray(scoringType) ? scoringType[0] : scoringType;
+  const isStableford =
+    isStablefordStr ? isStablefordStr.toLowerCase().includes("stableford") : false;
+
   const renderScoringType =
     scorecardData && scorecardData.length > 0
       ? scorecardData[0].isSystem36
         ? "System 36"
-        : scorecardData[0].stablefordPoints == null
-          ? scorecardData[0].isExcluded
+        : (isStableford || scorecardData[0].stablefordPoints != null)
+          ? "Stableford"
+          : scorecardData[0].isExcluded
             ? "Net Score Exclude Par 3"
             : "Net Score Include Par 3"
-          : "Stableford"
       : "";
- 
+
+  const showNetColumns =
+    renderScoringType === "Net Score Include Par 3" ||
+    renderScoringType === "Net Score Exclude Par 3" ||
+    renderScoringType === "Stableford";
+
+  const showPtsColumns =
+    renderScoringType === "Stableford" || renderScoringType === "System 36";
+
   useEffect(() => {
-    scoreCardRef.current = scoreCard;    
+    scoreCardRef.current = scoreCard;
   }, [scoreCard]);
 
   useEffect(() => {
@@ -130,16 +159,15 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   const processedScoreCardRef = useRef<any>([]);
   const inputRefs = useRef<any[]>([]);
 
-  const isStableford =
-    scoringType === "stableford" || scoringType === "Stableford";
 
   const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
 
   const isSystem36 =
     scoringType === "system-36" ||
     scoringType === "System-36" ||
-    (scoreCard && scoreCard.length > 0 && (scoreCard[0].isSystem36 === true || scoreCard[0].IsSystem36 === true));
-
+    (scoreCard &&
+      scoreCard.length > 0 &&
+      (scoreCard[0].isSystem36 === true || scoreCard[0].IsSystem36 === true));
 
   useEffect(() => {
     const getUserId = async () => {
@@ -152,7 +180,6 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
     dispatch(fetchHandicap(Number(teeBoxId)));
 
     // fetchScoreCard();
-
   }, []);
 
   // ── Calculation helpers ──
@@ -231,7 +258,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
     value: string,
     index: number,
     playerId: string,
-    isPrimary: boolean
+    isPrimary: boolean,
   ) => {
     if (value === "") {
       setScoreCard((prev: any[]) =>
@@ -242,12 +269,12 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
               ...hole,
               companionScores: {
                 ...(hole.companionScores || {}),
-                [playerId]: ""
-              }
+                [playerId]: "",
+              },
             };
           }
           return hole;
-        })
+        }),
       );
       return;
     }
@@ -278,8 +305,9 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
             ...hole,
             companionScores: {
               ...(hole.companionScores || {}),
-              [playerId]: currentScoreText === "" ? null : Number(currentScoreText)
-            }
+              [playerId]:
+                currentScoreText === "" ? null : Number(currentScoreText),
+            },
           };
         }
       }
@@ -301,10 +329,19 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
           h.score === undefined || h.score === null || h.score === ""
             ? null
             : Number(h.score),
-        companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
-        companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+        companionScoresJson:
+          roundPlayers && roundPlayers.length > 1
+            ? JSON.stringify(h.companionScores || {})
+            : null,
+        companionSandysJson:
+          roundPlayers && roundPlayers.length > 1
+            ? JSON.stringify(h.companionSandys || {})
+            : null,
         playingGroupRoundKey: playingGroupRoundKey || null,
-        playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
+        playingPartnersJson:
+          roundPlayers && roundPlayers.length > 1
+            ? JSON.stringify(roundPlayers)
+            : null,
         teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
         tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
         userId: Number(userId),
@@ -444,10 +481,19 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
         h.score === undefined || h.score === null || h.score === ""
           ? null
           : Number(h.score),
-      companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
-      companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+      companionScoresJson:
+        roundPlayers && roundPlayers.length > 1
+          ? JSON.stringify(h.companionScores || {})
+          : null,
+      companionSandysJson:
+        roundPlayers && roundPlayers.length > 1
+          ? JSON.stringify(h.companionSandys || {})
+          : null,
       playingGroupRoundKey: playingGroupRoundKey || null,
-      playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
+      playingPartnersJson:
+        roundPlayers && roundPlayers.length > 1
+          ? JSON.stringify(roundPlayers)
+          : null,
       teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
       tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
       userId: Number(userId),
@@ -482,15 +528,26 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
               h.score === undefined || h.score === null || h.score === ""
                 ? null
                 : Number(h.score),
-            companionScoresJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionScores || {}) : null,
-            companionSandysJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(h.companionSandys || {}) : null,
+            matchScoringType: null,
+            nassauStartingNine: null,
+            companionScoresJson:
+              roundPlayers && roundPlayers.length > 1
+                ? JSON.stringify(h.companionScores || {})
+                : null,
+            companionSandysJson:
+              roundPlayers && roundPlayers.length > 1
+                ? JSON.stringify(h.companionSandys || {})
+                : null,
             playingGroupRoundKey: playingGroupRoundKey || null,
-            playingPartnersJson: roundPlayers && roundPlayers.length > 1 ? JSON.stringify(roundPlayers) : null,
+            playingPartnersJson:
+              roundPlayers && roundPlayers.length > 1
+                ? JSON.stringify(roundPlayers)
+                : null,
             teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             userId: Number(userId),
           }));
-        // console.log("finishPayload", finishPayload);
+        console.log("finishPayload", finishPayload);
 
         await updateHoleScoresApi(
           tournamentId
@@ -667,10 +724,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
             className="px-3 items-center"
             style={{ height: 40, justifyContent: "space-between" }}
           >
-            <Pressable
-              onPress={handleGoBack}
-              style={{ padding: 8 }}
-            >
+            <Pressable onPress={handleGoBack} style={{ padding: 8 }}>
               <Ionicons
                 name="arrow-back-outline"
                 size={24}
@@ -685,7 +739,10 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                 textAlign: "center",
               }}
             >
-              Scorecard {scoreCard && scoreCard.length > 0 && scoreCard[0].groupName ? `- ${scoreCard[0].groupName}` : ""}
+              Scorecard{" "}
+              {scoreCard && scoreCard.length > 0 && scoreCard[0].groupName
+                ? `- ${scoreCard[0].groupName}`
+                : ""}
             </ThemedText>
 
             {/* ⚖️ TOGGLE */}
@@ -741,7 +798,9 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
   };
 
   const isGroup = roundPlayers && roundPlayers.length > 1;
-  const colStyle = isGroup ? { width: 70, textAlign: "center" as const } : { flex: 1, textAlign: "center" as const };
+  const colStyle = isGroup
+    ? { width: 70, textAlign: "center" as const }
+    : { flex: 1, textAlign: "center" as const };
   const headerStyle = { ...colStyle, fontWeight: "600" as const, fontSize: 13 };
 
   const getPlayerScore = (h: any, p: any) => {
@@ -751,7 +810,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
 
   const getPlayerNetScore = (h: any, p: any) => {
     if (p.isPrimary) return h.netScore;
-    return getPlayerScore(h, p); 
+    return getPlayerScore(h, p);
   };
 
   const getPlayerStablefordPoints = (h: any, p: any) => {
@@ -763,16 +822,22 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
       if (score === h.par + 1) return 1;
       return 0;
     }
-    return "-"; 
+    return "-";
   };
 
-  const getPlayerTotals = (holes: any[], playerId: string, isPrimary: boolean, type: "score" | "net" | "pts") => {
+  const getPlayerTotals = (
+    holes: any[],
+    playerId: string,
+    isPrimary: boolean,
+    type: "score" | "net" | "pts",
+  ) => {
     return holes.reduce((sum, h) => {
       let s;
       if (type === "score") s = getPlayerScore(h, { playerId, isPrimary });
-      else if (type === "net") s = getPlayerNetScore(h, { playerId, isPrimary });
+      else if (type === "net")
+        s = getPlayerNetScore(h, { playerId, isPrimary });
       else s = getPlayerStablefordPoints(h, { playerId, isPrimary });
-      
+
       const num = Number(s);
       return sum + (isNaN(num) ? 0 : num);
     }, 0);
@@ -791,7 +856,11 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                 <ThemedText>Loading...</ThemedText>
               ) : (
                 <>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                  >
                     <VStack style={{ minWidth: "100%" }}>
                       <VStack
                         style={{
@@ -817,25 +886,58 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                           }}
                         >
                           <ThemedText style={headerStyle}>Hole</ThemedText>
-                          {isDetailsVisible && <ThemedText style={headerStyle}>Stroke{"\n"}Index</ThemedText>}
-                          {isDetailsVisible && <ThemedText style={headerStyle}>Yards</ThemedText>}
+                          {isDetailsVisible && (
+                            <ThemedText style={headerStyle}>
+                              Stroke{"\n"}Index
+                            </ThemedText>
+                          )}
+                          {isDetailsVisible && (
+                            <ThemedText style={headerStyle}>Yards</ThemedText>
+                          )}
                           <ThemedText style={headerStyle}>Par</ThemedText>
-                          
+
                           {roundPlayers && roundPlayers.length > 0 ? (
-                            roundPlayers.map(p => (
+                            roundPlayers.map((p) => (
                               <React.Fragment key={p.playerId}>
-                                <ThemedText style={headerStyle} numberOfLines={1}>{isGroup ? p.name : "Score"}</ThemedText>
-                                {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
-                                {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Pts</ThemedText>}
-                                {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                                <ThemedText
+                                  style={headerStyle}
+                                  numberOfLines={1}
+                                >
+                                  {isGroup ? p.name : "Score"}
+                                </ThemedText>
+                                {showNetColumns && (
+                                  <ThemedText style={headerStyle}>
+                                    Net
+                                  </ThemedText>
+                                )}
+                                {showPtsColumns && renderScoringType === "Stableford" && (
+                                    <ThemedText style={headerStyle}>
+                                      Pts
+                                    </ThemedText>
+                                  )}
+                                {showPtsColumns && renderScoringType === "System 36" && (
+                                    <ThemedText style={headerStyle}>
+                                      Sys36{"\n"}Pts
+                                    </ThemedText>
+                                  )}
                               </React.Fragment>
                             ))
                           ) : (
                             <React.Fragment>
                               <ThemedText style={headerStyle}>Score</ThemedText>
-                              {!isSystem36 && <ThemedText style={headerStyle}>Net</ThemedText>}
-                              {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Pts</ThemedText>}
-                              {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={headerStyle}>Sys36{"\n"}Pts</ThemedText>}
+                              {showNetColumns && (
+                                <ThemedText style={headerStyle}>Net</ThemedText>
+                              )}
+                              {showPtsColumns && renderScoringType === "Stableford" && (
+                                  <ThemedText style={headerStyle}>
+                                    Pts
+                                  </ThemedText>
+                                )}
+                              {showPtsColumns && renderScoringType === "System 36" && (
+                                  <ThemedText style={headerStyle}>
+                                    Sys36{"\n"}Pts
+                                  </ThemedText>
+                                )}
                             </React.Fragment>
                           )}
                         </HStack>
@@ -850,36 +952,80 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                 borderColor: isDark ? "#333" : "#eee",
                               }}
                             >
-                              <ThemedText style={colStyle}>{h.holeNumber}</ThemedText>
-                              {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#888" }}>{h.strokeIndex}</ThemedText>}
-                              {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#888" }}>{h.yardage}</ThemedText>}
+                              <ThemedText style={colStyle}>
+                                {h.holeNumber}
+                              </ThemedText>
+                              {isDetailsVisible && (
+                                <ThemedText
+                                  style={{ ...colStyle, color: "#888" }}
+                                >
+                                  {h.strokeIndex}
+                                </ThemedText>
+                              )}
+                              {isDetailsVisible && (
+                                <ThemedText
+                                  style={{ ...colStyle, color: "#888" }}
+                                >
+                                  {h.yardage}
+                                </ThemedText>
+                              )}
                               <ThemedText style={colStyle}>{h.par}</ThemedText>
 
                               {roundPlayers && roundPlayers.length > 0 ? (
                                 roundPlayers.map((p, pIndex) => (
                                   <React.Fragment key={p.playerId}>
-                                    <View style={{ ...colStyle, alignItems: "center", justifyContent: "center" } as any}>
-                                      {p.isPrimary && renderScoreIndicator(h.score, h.par, isDark)}
+                                    <View
+                                      style={
+                                        {
+                                          ...colStyle,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        } as any
+                                      }
+                                    >
+                                      {p.isPrimary &&
+                                        renderScoreIndicator(
+                                          h.score,
+                                          h.par,
+                                          isDark,
+                                        )}
                                       <TextInput
                                         value={
-                                          getPlayerScore(h, p) !== null && getPlayerScore(h, p) !== undefined
+                                          getPlayerScore(h, p) !== null &&
+                                          getPlayerScore(h, p) !== undefined
                                             ? String(getPlayerScore(h, p))
                                             : ""
                                         }
                                         onChangeText={(val) =>
-                                          handleScoreChange(h.holeId, val, index, p.playerId, p.isPrimary)
+                                          handleScoreChange(
+                                            h.holeId,
+                                            val,
+                                            index,
+                                            p.playerId,
+                                            p.isPrimary,
+                                          )
                                         }
                                         onBlur={() => {
-                                          if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                          if (focusTimeoutRef.current)
+                                            clearTimeout(
+                                              focusTimeoutRef.current,
+                                            );
                                           saveRound(false, false);
                                         }}
                                         onSubmitEditing={() => {
                                           if (index < 17) {
-                                            inputRefs.current[index + 1]?.focus();
+                                            inputRefs.current[
+                                              index + 1
+                                            ]?.focus();
                                           }
                                         }}
-                                        returnKeyType={index === 17 ? "done" : "next"}
-                                        ref={(el: any) => p.isPrimary && (inputRefs.current[index] = el)}
+                                        returnKeyType={
+                                          index === 17 ? "done" : "next"
+                                        }
+                                        ref={(el: any) =>
+                                          p.isPrimary &&
+                                          (inputRefs.current[index] = el)
+                                        }
                                         keyboardType="numeric"
                                         style={{
                                           width: 42,
@@ -895,40 +1041,74 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                       />
                                     </View>
 
-                                    {!isSystem36 && (
-                                      <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#8BC34A" }}>
+                                    {showNetColumns && (
+                                      <ThemedText
+                                        style={{
+                                          ...colStyle,
+                                          fontWeight: "600",
+                                          color: "#8BC34A",
+                                        }}
+                                      >
                                         {getPlayerNetScore(h, p) ?? "-"}
                                       </ThemedText>
                                     )}
 
-                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && (
-                                      <ThemedText style={colStyle}>
-                                        {getPlayerStablefordPoints(h, p) ?? "-"}
-                                      </ThemedText>
-                                    )}
+                                    {showPtsColumns && renderScoringType === "Stableford" && (
+                                        <ThemedText style={colStyle}>
+                                          {getPlayerStablefordPoints(h, p) ??
+                                            "-"}
+                                        </ThemedText>
+                                      )}
 
-                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && (
-                                      <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
-                                        {getPlayerStablefordPoints(h, p) ?? "-"}
-                                      </ThemedText>
-                                    )}
+                                    {showPtsColumns && renderScoringType === "System 36" && (
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "600",
+                                            color: "#0ea5e9",
+                                          }}
+                                        >
+                                          {getPlayerStablefordPoints(h, p) ??
+                                            "-"}
+                                        </ThemedText>
+                                      )}
                                   </React.Fragment>
                                 ))
                               ) : (
                                 <React.Fragment>
-                                  <View style={{ ...colStyle, alignItems: "center", justifyContent: "center" } as any}>
-                                    {renderScoreIndicator(h.score, h.par, isDark)}
+                                  <View
+                                    style={
+                                      {
+                                        ...colStyle,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      } as any
+                                    }
+                                  >
+                                    {renderScoreIndicator(
+                                      h.score,
+                                      h.par,
+                                      isDark,
+                                    )}
                                     <TextInput
                                       value={
-                                        h.score !== null && h.score !== undefined
+                                        h.score !== null &&
+                                        h.score !== undefined
                                           ? String(h.score)
                                           : ""
                                       }
                                       onChangeText={(val) =>
-                                        handleScoreChange(h.holeId, val, index, "", true)
+                                        handleScoreChange(
+                                          h.holeId,
+                                          val,
+                                          index,
+                                          "",
+                                          true,
+                                        )
                                       }
                                       onBlur={() => {
-                                        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+                                        if (focusTimeoutRef.current)
+                                          clearTimeout(focusTimeoutRef.current);
                                         saveRound(false, false);
                                       }}
                                       onSubmitEditing={() => {
@@ -936,8 +1116,12 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                           inputRefs.current[index + 1]?.focus();
                                         }
                                       }}
-                                      returnKeyType={index === 17 ? "done" : "next"}
-                                      ref={(el: any) => (inputRefs.current[index] = el)}
+                                      returnKeyType={
+                                        index === 17 ? "done" : "next"
+                                      }
+                                      ref={(el: any) =>
+                                        (inputRefs.current[index] = el)
+                                      }
                                       keyboardType="numeric"
                                       style={{
                                         width: 42,
@@ -953,23 +1137,35 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                     />
                                   </View>
 
-                                  {!isSystem36 && (
-                                    <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#8BC34A" }}>
+                                  {showNetColumns && (
+                                    <ThemedText
+                                      style={{
+                                        ...colStyle,
+                                        fontWeight: "600",
+                                        color: "#8BC34A",
+                                      }}
+                                    >
                                       {h.netScore ?? "-"}
                                     </ThemedText>
                                   )}
 
-                                  {isStableford && scoreCard?.[0]?.stablefordPoints != null && (
-                                    <ThemedText style={colStyle}>
-                                      {h.stablefordPoints ?? "-"}
-                                    </ThemedText>
-                                  )}
+                                  {showPtsColumns && renderScoringType === "Stableford" && (
+                                      <ThemedText style={colStyle}>
+                                        {h.stablefordPoints ?? "-"}
+                                      </ThemedText>
+                                    )}
 
-                                  {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && (
-                                    <ThemedText style={{ ...colStyle, fontWeight: "600", color: "#0ea5e9" }}>
-                                      {h.stablefordPoints ?? "-"}
-                                    </ThemedText>
-                                  )}
+                                  {showPtsColumns && renderScoringType === "System 36" && (
+                                      <ThemedText
+                                        style={{
+                                          ...colStyle,
+                                          fontWeight: "600",
+                                          color: "#0ea5e9",
+                                        }}
+                                      >
+                                        {h.stablefordPoints ?? "-"}
+                                      </ThemedText>
+                                    )}
                                 </React.Fragment>
                               )}
                             </HStack>
@@ -986,31 +1182,117 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                   borderColor: isDark ? "#444" : "#ddd",
                                 }}
                               >
-                                <ThemedText style={{ ...colStyle, fontWeight: "700" }}>Front 9</ThemedText>
-                                {isDetailsVisible && <ThemedText style={colStyle}>{frontTotals.strokeIndex}</ThemedText>}
-                                {isDetailsVisible && <ThemedText style={colStyle}>{frontTotals.yards}</ThemedText>}
-                                <ThemedText style={colStyle}>{frontTotals.par}</ThemedText>
+                                <ThemedText
+                                  style={{ ...colStyle, fontWeight: "700" }}
+                                >
+                                  Front 9
+                                </ThemedText>
+                                {isDetailsVisible && (
+                                  <ThemedText style={colStyle}>
+                                    {frontTotals.strokeIndex}
+                                  </ThemedText>
+                                )}
+                                {isDetailsVisible && (
+                                  <ThemedText style={colStyle}>
+                                    {frontTotals.yards}
+                                  </ThemedText>
+                                )}
+                                <ThemedText style={colStyle}>
+                                  {frontTotals.par}
+                                </ThemedText>
 
                                 {roundPlayers && roundPlayers.length > 0 ? (
-                                  roundPlayers.map(p => {
-                                    const s = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "score");
-                                    const n = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "net");
-                                    const pt = getPlayerTotals(processedFront9, p.playerId, p.isPrimary, "pts");
+                                  roundPlayers.map((p) => {
+                                    const s = getPlayerTotals(
+                                      processedFront9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "score",
+                                    );
+                                    const n = getPlayerTotals(
+                                      processedFront9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "net",
+                                    );
+                                    const pt = getPlayerTotals(
+                                      processedFront9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "pts",
+                                    );
                                     return (
                                       <React.Fragment key={p.playerId}>
-                                        <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
-                                        {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                        {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                        {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "700",
+                                          }}
+                                        >
+                                          {s > 0 ? s : "-"}
+                                        </ThemedText>
+                                        {showNetColumns && (
+                                          <ThemedText
+                                            style={{
+                                              ...colStyle,
+                                              fontWeight: "700",
+                                            }}
+                                          >
+                                            {n > 0 ? n : "-"}
+                                          </ThemedText>
+                                        )}
+                                        {showPtsColumns && renderScoringType === "Stableford" && (
+                                            <ThemedText style={colStyle}>
+                                              {pt > 0 ? pt : "-"}
+                                            </ThemedText>
+                                          )}
+                                        {showPtsColumns && renderScoringType === "System 36" && (
+                                            <ThemedText
+                                              style={{
+                                                ...colStyle,
+                                                fontWeight: "700",
+                                                color: "#0ea5e9",
+                                              }}
+                                            >
+                                              {pt > 0 ? pt : "-"}
+                                            </ThemedText>
+                                          )}
                                       </React.Fragment>
                                     );
                                   })
                                 ) : (
                                   <React.Fragment>
-                                    <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.score}</ThemedText>
-                                    {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{frontTotals.net}</ThemedText>}
-                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{frontTotals.stableford}</ThemedText>}
-                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{frontTotals.stableford}</ThemedText>}
+                                    <ThemedText
+                                      style={{ ...colStyle, fontWeight: "700" }}
+                                    >
+                                      {frontTotals.score}
+                                    </ThemedText>
+                                    {showNetColumns && (
+                                      <ThemedText
+                                        style={{
+                                          ...colStyle,
+                                          fontWeight: "700",
+                                        }}
+                                      >
+                                        {frontTotals.net}
+                                      </ThemedText>
+                                    )}
+                                    {showPtsColumns && renderScoringType === "Stableford" && (
+                                        <ThemedText style={colStyle}>
+                                          {frontTotals.stableford}
+                                        </ThemedText>
+                                      )}
+                                    {showPtsColumns && renderScoringType === "System 36" && (
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "700",
+                                            color: "#0ea5e9",
+                                          }}
+                                        >
+                                          {frontTotals.stableford}
+                                        </ThemedText>
+                                      )}
                                   </React.Fragment>
                                 )}
                               </HStack>
@@ -1028,31 +1310,117 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                                   borderColor: isDark ? "#444" : "#ddd",
                                 }}
                               >
-                                <ThemedText style={{ ...colStyle, fontWeight: "700" }}>Back 9</ThemedText>
-                                {isDetailsVisible && <ThemedText style={colStyle}>{backTotals.strokeIndex}</ThemedText>}
-                                {isDetailsVisible && <ThemedText style={colStyle}>{backTotals.yards}</ThemedText>}
-                                <ThemedText style={colStyle}>{backTotals.par}</ThemedText>
+                                <ThemedText
+                                  style={{ ...colStyle, fontWeight: "700" }}
+                                >
+                                  Back 9
+                                </ThemedText>
+                                {isDetailsVisible && (
+                                  <ThemedText style={colStyle}>
+                                    {backTotals.strokeIndex}
+                                  </ThemedText>
+                                )}
+                                {isDetailsVisible && (
+                                  <ThemedText style={colStyle}>
+                                    {backTotals.yards}
+                                  </ThemedText>
+                                )}
+                                <ThemedText style={colStyle}>
+                                  {backTotals.par}
+                                </ThemedText>
 
                                 {roundPlayers && roundPlayers.length > 0 ? (
-                                  roundPlayers.map(p => {
-                                    const s = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "score");
-                                    const n = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "net");
-                                    const pt = getPlayerTotals(processedBack9, p.playerId, p.isPrimary, "pts");
+                                  roundPlayers.map((p) => {
+                                    const s = getPlayerTotals(
+                                      processedBack9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "score",
+                                    );
+                                    const n = getPlayerTotals(
+                                      processedBack9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "net",
+                                    );
+                                    const pt = getPlayerTotals(
+                                      processedBack9,
+                                      p.playerId,
+                                      p.isPrimary,
+                                      "pts",
+                                    );
                                     return (
                                       <React.Fragment key={p.playerId}>
-                                        <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
-                                        {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                        {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                        {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "700",
+                                          }}
+                                        >
+                                          {s > 0 ? s : "-"}
+                                        </ThemedText>
+                                        {showNetColumns && (
+                                          <ThemedText
+                                            style={{
+                                              ...colStyle,
+                                              fontWeight: "700",
+                                            }}
+                                          >
+                                            {n > 0 ? n : "-"}
+                                          </ThemedText>
+                                        )}
+                                        {showPtsColumns && renderScoringType === "Stableford" && (
+                                            <ThemedText style={colStyle}>
+                                              {pt > 0 ? pt : "-"}
+                                            </ThemedText>
+                                          )}
+                                        {showPtsColumns && renderScoringType === "System 36" && (
+                                            <ThemedText
+                                              style={{
+                                                ...colStyle,
+                                                fontWeight: "700",
+                                                color: "#0ea5e9",
+                                              }}
+                                            >
+                                              {pt > 0 ? pt : "-"}
+                                            </ThemedText>
+                                          )}
                                       </React.Fragment>
                                     );
                                   })
                                 ) : (
                                   <React.Fragment>
-                                    <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.score}</ThemedText>
-                                    {!isSystem36 && <ThemedText style={{ ...colStyle, fontWeight: "700" }}>{backTotals.net}</ThemedText>}
-                                    {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={colStyle}>{backTotals.stableford}</ThemedText>}
-                                    {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, fontWeight: "700", color: "#0ea5e9" }}>{backTotals.stableford}</ThemedText>}
+                                    <ThemedText
+                                      style={{ ...colStyle, fontWeight: "700" }}
+                                    >
+                                      {backTotals.score}
+                                    </ThemedText>
+                                    {showNetColumns && (
+                                      <ThemedText
+                                        style={{
+                                          ...colStyle,
+                                          fontWeight: "700",
+                                        }}
+                                      >
+                                        {backTotals.net}
+                                      </ThemedText>
+                                    )}
+                                    {showPtsColumns && renderScoringType === "Stableford" && (
+                                        <ThemedText style={colStyle}>
+                                          {backTotals.stableford}
+                                        </ThemedText>
+                                      )}
+                                    {showPtsColumns && renderScoringType === "System 36" && (
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "700",
+                                            color: "#0ea5e9",
+                                          }}
+                                        >
+                                          {backTotals.stableford}
+                                        </ThemedText>
+                                      )}
                                   </React.Fragment>
                                 )}
                               </HStack>
@@ -1060,7 +1428,7 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                           </View>
                         ))}
 
-                        {scorecardData && scorecardData.length == 0  && (
+                        {scorecardData && scorecardData.length == 0 && (
                           <ThemedText style={{ textAlign: "center" }}>
                             No games played in this tournament yet.
                           </ThemedText>
@@ -1076,31 +1444,132 @@ const { loading, scorecardData, handicapData, error } = useAppSelector(
                           borderRadius: 12,
                         }}
                       >
-                        <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>Total</ThemedText>
-                        {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.strokeIndex}</ThemedText>}
-                        {isDetailsVisible && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.yards}</ThemedText>}
-                        <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.par}</ThemedText>
-                        
+                        <ThemedText
+                          style={{
+                            ...colStyle,
+                            color: "#fff",
+                            fontWeight: "700",
+                          }}
+                        >
+                          Total
+                        </ThemedText>
+                        {isDetailsVisible && (
+                          <ThemedText style={{ ...colStyle, color: "#fff" }}>
+                            {grandTotals.strokeIndex}
+                          </ThemedText>
+                        )}
+                        {isDetailsVisible && (
+                          <ThemedText style={{ ...colStyle, color: "#fff" }}>
+                            {grandTotals.yards}
+                          </ThemedText>
+                        )}
+                        <ThemedText style={{ ...colStyle, color: "#fff" }}>
+                          {grandTotals.par}
+                        </ThemedText>
+
                         {roundPlayers && roundPlayers.length > 0 ? (
-                          roundPlayers.map(p => {
-                            const s = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "score");
-                            const n = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "net");
-                            const pt = getPlayerTotals(processedScoreCard, p.playerId, p.isPrimary, "pts");
+                          roundPlayers.map((p) => {
+                            const s = getPlayerTotals(
+                              processedScoreCard,
+                              p.playerId,
+                              p.isPrimary,
+                              "score",
+                            );
+                            const n = getPlayerTotals(
+                              processedScoreCard,
+                              p.playerId,
+                              p.isPrimary,
+                              "net",
+                            );
+                            const pt = getPlayerTotals(
+                              processedScoreCard,
+                              p.playerId,
+                              p.isPrimary,
+                              "pts",
+                            );
                             return (
                               <React.Fragment key={p.playerId}>
-                                <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{s > 0 ? s : "-"}</ThemedText>
-                                {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{n > 0 ? n : "-"}</ThemedText>}
-                                {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff" }}>{pt > 0 ? pt : "-"}</ThemedText>}
-                                {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{pt > 0 ? pt : "-"}</ThemedText>}
+                                <ThemedText
+                                  style={{
+                                    ...colStyle,
+                                    color: "#fff",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  {s > 0 ? s : "-"}
+                                </ThemedText>
+                                {showNetColumns && (
+                                  <ThemedText
+                                    style={{
+                                      ...colStyle,
+                                      color: "#fff",
+                                      fontWeight: "700",
+                                    }}
+                                  >
+                                    {n > 0 ? n : "-"}
+                                  </ThemedText>
+                                )}
+                                {showPtsColumns && renderScoringType === "Stableford" && (
+                                    <ThemedText
+                                      style={{ ...colStyle, color: "#fff" }}
+                                    >
+                                      {pt > 0 ? pt : "-"}
+                                    </ThemedText>
+                                  )}
+                                {showPtsColumns && renderScoringType === "System 36" && (
+                                    <ThemedText
+                                      style={{
+                                        ...colStyle,
+                                        color: "#fff",
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      {pt > 0 ? pt : "-"}
+                                    </ThemedText>
+                                  )}
                               </React.Fragment>
                             );
                           })
                         ) : (
                           <React.Fragment>
-                            <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.score}</ThemedText>
-                            {!isSystem36 && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.net}</ThemedText>}
-                            {isStableford && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff" }}>{grandTotals.stableford}</ThemedText>}
-                            {isSystem36 && scoreCard?.[0]?.stablefordPoints != null && <ThemedText style={{ ...colStyle, color: "#fff", fontWeight: "700" }}>{grandTotals.stableford}</ThemedText>}
+                            <ThemedText
+                              style={{
+                                ...colStyle,
+                                color: "#fff",
+                                fontWeight: "700",
+                              }}
+                            >
+                              {grandTotals.score}
+                            </ThemedText>
+                            {showNetColumns && (
+                              <ThemedText
+                                style={{
+                                  ...colStyle,
+                                  color: "#fff",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {grandTotals.net}
+                              </ThemedText>
+                            )}
+                            {showPtsColumns && renderScoringType === "Stableford" && (
+                                <ThemedText
+                                  style={{ ...colStyle, color: "#fff" }}
+                                >
+                                  {grandTotals.stableford}
+                                </ThemedText>
+                              )}
+                            {showPtsColumns && renderScoringType === "System 36" && (
+                                <ThemedText
+                                  style={{
+                                    ...colStyle,
+                                    color: "#fff",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  {grandTotals.stableford}
+                                </ThemedText>
+                              )}
                           </React.Fragment>
                         )}
                       </HStack>

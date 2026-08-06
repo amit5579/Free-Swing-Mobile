@@ -65,6 +65,14 @@ export default function TournamentHistory() {
             : "Net Score Include Par 3"
           : "Stableford"
       : "";
+
+  const showNetColumns =
+    renderScoringType === "Net Score Include Par 3" ||
+    renderScoringType === "Net Score Exclude Par 3" ||
+    renderScoringType === "Stableford";
+
+  const showPtsColumns =
+    renderScoringType === "Stableford" || renderScoringType === "System 36";
   // ── Helper Functions (Defined early to avoid hoisting issues) ──
 
   // ── Score Indicator Helper ──
@@ -384,22 +392,26 @@ export default function TournamentHistory() {
           {h.score ?? "-"}
         </Text>
       </View>
-      <ThemedText
-        style={[
-          { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "700" },
-          isDark ? { color: "#8BC34A" } : { color: "#15803d" },
-        ]}
-      >
-        {h.netScore ?? "-"}
-      </ThemedText>
-      <ThemedText
-        style={[
-          { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "700" },
-          isDark ? { color: "#3b82f6" } : { color: "#1d4ed8" },
-        ]}
-      >
-        {h.stablefordPoints ?? "0"}
-      </ThemedText>
+      {showNetColumns && (
+        <ThemedText
+          style={[
+            { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "700" },
+            isDark ? { color: "#8BC34A" } : { color: "#15803d" },
+          ]}
+        >
+          {h.netScore ?? "-"}
+        </ThemedText>
+      )}
+      {showPtsColumns && (
+        <ThemedText
+          style={[
+            { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "700" },
+            isDark ? { color: "#3b82f6" } : { color: "#1d4ed8" },
+          ]}
+        >
+          {h.stablefordPoints ?? "0"}
+        </ThemedText>
+      )}
     </View>
   );
 
@@ -478,30 +490,34 @@ export default function TournamentHistory() {
       >
         {totals.score}
       </ThemedText>
-      <ThemedText
-        style={[
-          { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "900" },
-          isGrand
-            ? { color: "#fff" }
-            : isDark
-              ? { color: "#8BC34A" }
-              : { color: "#15803d" },
-        ]}
-      >
-        {totals.net}
-      </ThemedText>
-      <ThemedText
-        style={[
-          { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "900" },
-          isGrand
-            ? { color: "#fff" }
-            : isDark
-              ? { color: "#3b82f6" }
-              : { color: "#1d4ed8" },
-        ]}
-      >
-        {totals.stableford}
-      </ThemedText>
+      {showNetColumns && (
+        <ThemedText
+          style={[
+            { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "900" },
+            isGrand
+              ? { color: "#fff" }
+              : isDark
+                ? { color: "#8BC34A" }
+                : { color: "#15803d" },
+          ]}
+        >
+          {totals.net}
+        </ThemedText>
+      )}
+      {showPtsColumns && (
+        <ThemedText
+          style={[
+            { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "900" },
+            isGrand
+              ? { color: "#fff" }
+              : isDark
+                ? { color: "#3b82f6" }
+                : { color: "#1d4ed8" },
+          ]}
+        >
+          {totals.stableford}
+        </ThemedText>
+      )}
     </View>
   );
 
@@ -722,8 +738,8 @@ export default function TournamentHistory() {
               "Yards",
               "Par",
               "Score",
-              "Net",
-              "Pts",
+              ...(showNetColumns ? ["Net"] : []),
+              ...(showPtsColumns ? ["Pts"] : []),
             ].map((h) => (
               <Text
                 key={h}
