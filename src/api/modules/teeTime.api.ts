@@ -129,3 +129,14 @@ export const cancelSeatBooking = async (bookingId: number) => {
         throw error;
     }
 };
+
+// get my bookings
+export const getMyTeeTimeBookings = async () => {
+    try {
+        const response = await client.get(`TeeTime/my-bookings`);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching my tee time bookings Error:", error);
+        throw error;
+    }
+};
