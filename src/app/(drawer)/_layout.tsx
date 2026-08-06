@@ -135,7 +135,7 @@ function CustomDrawerContent({ navigation }: any) {
           </LinearGradient>
         </View>
 
-        <View style={styles.drawerItemsContainer}>
+        <ScrollView style={styles.drawerItemsContainer} showsVerticalScrollIndicator={false}>
           {isAdmin && (
             <>
               <TouchableOpacity
@@ -428,6 +428,37 @@ function CustomDrawerContent({ navigation }: any) {
                   <Ionicons name="diamond-outline" size={22} color="#8bc34a" />
                 </View>
                 <Text style={styles.drawerText}>Subscription</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#8bc34a"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: isDark ? "#fff" : "#000",
+                    opacity: isDark ? 0.2 : 0.08,
+                  },
+                ]}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.closeDrawer();
+                  requestAnimationFrame(() => {
+                    router.push("/(drawer)/(user)/(myBookings)" as any);
+                  });
+                }}
+                style={styles.drawerItem}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="albums-outline" size={22} color="#8bc34a" />
+                </View>
+                <Text style={styles.drawerText}>My Bookings</Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
@@ -749,7 +780,7 @@ function CustomDrawerContent({ navigation }: any) {
               },
             ]}
           />
-        </View>
+        </ScrollView>
 
         <View style={styles.logoutContainer}>
           <TouchableOpacity

@@ -40,3 +40,23 @@ export const uploadScreenshot = async (bookingId: number, fileUri: string, fileT
         throw error;
     }
 };
+
+export const getMyDrivingRangeBookings = async () => {
+    try {
+        const response = await client.get(`DrivingRange/my-bookings`);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching my driving range bookings Error:", error);
+        throw error;
+    }
+};
+
+export const cancelDrivingRangeBooking = async (bookingId: number) => {
+    try {
+        const response = await client.delete(`DrivingRange/cancel/${bookingId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Canceling driving range booking Error:", error);
+        throw error;
+    }
+};
