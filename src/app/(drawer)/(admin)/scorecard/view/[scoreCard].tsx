@@ -145,7 +145,7 @@ const ScoreCard: React.FC = () => {
   const isSystem36 =
     holes.length > 0 && holes.some((h: any) => isSystem36Hole(h));
   const showPtsColumns = isStableford || isSystem36;
-  const showNetColumns = !isGross && !isStableford && !isSystem36;
+  const showNetColumns = !isGross && !isStableford && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
   const hasSubColumn = showPtsColumns || showNetColumns;
 
   const getScoringLabel = () => {
@@ -192,7 +192,7 @@ const ScoreCard: React.FC = () => {
       try {
         setLoading(true);
         const data = await getScorecardDetails(scoreCard!);
-        console.log("data", data);
+        // console.log("data", data);
 
         if (data.length > 0) {
           try {
@@ -292,12 +292,18 @@ const ScoreCard: React.FC = () => {
           const isHL =
             (mode.includes("high_low") ||
               mode.includes("high-low") ||
-              (pLength === 4 && !isGr && !dataIsSystem36 && !hasStablefordPoints)) &&
+              (pLength === 4 &&
+                !isGr &&
+                !dataIsSystem36 &&
+                !hasStablefordPoints)) &&
             !(isNB || isNC);
           const isS6 =
             (mode.includes("split_six") ||
               mode.includes("split-six") ||
-              (pLength === 3 && !isGr && !dataIsSystem36 && !hasStablefordPoints)) &&
+              (pLength === 3 &&
+                !isGr &&
+                !dataIsSystem36 &&
+                !hasStablefordPoints)) &&
             !(isNB || isNC);
 
           setIsHighLow(isHL);
@@ -1459,7 +1465,7 @@ const ScoreCard: React.FC = () => {
                   "Yards",
                   "Par",
                   "Score",
-                  "Net",
+                  ...(showNetColumns ? ["Net"] : []),
                   ...(showPtsColumns
                     ? [isSystem36 ? "Sys36\nPts" : "Pts"]
                     : []),
@@ -1534,15 +1540,17 @@ const ScoreCard: React.FC = () => {
                         placeholderTextColor={isDark ? "#666" : "#999"}
                       />
                     </View>
-                    <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                    >
-                      {textScores[h.holeId] !== "" &&
-                      textScores[h.holeId] !== undefined &&
-                      parseInt(textScores[h.holeId]) >= 0
-                        ? h.netScore
-                        : "-"}
-                    </Text>
+                    {showNetColumns && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                      >
+                        {textScores[h.holeId] !== "" &&
+                        textScores[h.holeId] !== undefined &&
+                        parseInt(textScores[h.holeId]) >= 0
+                          ? h.netScore
+                          : "-"}
+                      </Text>
+                    )}
                     {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -1586,11 +1594,13 @@ const ScoreCard: React.FC = () => {
                   >
                     {sumScores(front9) === 0 ? "-" : sumScores(front9)}
                   </Text>
-                  <Text
-                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                  >
-                    {sumNet(front9) === 0 ? "-" : sumNet(front9)}
-                  </Text>
+                  {showNetColumns && (
+                    <Text
+                      className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    >
+                      {sumNet(front9) === 0 ? "-" : sumNet(front9)}
+                    </Text>
+                  )}
                   {showPtsColumns && (
                     <Text
                       className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -1661,15 +1671,17 @@ const ScoreCard: React.FC = () => {
                         placeholderTextColor={isDark ? "#666" : "#999"}
                       />
                     </View>
-                    <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                    >
-                      {textScores[h.holeId] !== "" &&
-                      textScores[h.holeId] !== undefined &&
-                      parseInt(textScores[h.holeId]) >= 0
-                        ? h.netScore
-                        : "-"}
-                    </Text>
+                    {showNetColumns && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                      >
+                        {textScores[h.holeId] !== "" &&
+                        textScores[h.holeId] !== undefined &&
+                        parseInt(textScores[h.holeId]) >= 0
+                          ? h.netScore
+                          : "-"}
+                      </Text>
+                    )}
                     {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -1713,11 +1725,13 @@ const ScoreCard: React.FC = () => {
                   >
                     {sumScores(back9) === 0 ? "-" : sumScores(back9)}
                   </Text>
-                  <Text
-                    className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                  >
-                    {sumNet(back9) === 0 ? "-" : sumNet(back9)}
-                  </Text>
+                  {showNetColumns && (
+                    <Text
+                      className={`flex-1 text-center font-black text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                    >
+                      {sumNet(back9) === 0 ? "-" : sumNet(back9)}
+                    </Text>
+                  )}
                   {showPtsColumns && (
                     <Text
                       className={`flex-1 text-center font-black text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -1748,9 +1762,11 @@ const ScoreCard: React.FC = () => {
                   ? "0"
                   : sumScores(displayedHoles)}
               </Text>
-              <Text className="flex-1 text-center font-black text-xs text-white">
-                {sumNet(displayedHoles) === 0 ? "0" : sumNet(displayedHoles)}
-              </Text>
+              {showNetColumns && (
+                <Text className="flex-1 text-center font-black text-xs text-white">
+                  {sumNet(displayedHoles) === 0 ? "0" : sumNet(displayedHoles)}
+                </Text>
+              )}
               {showPtsColumns && (
                 <Text className="flex-1 text-center font-black text-xs text-white">
                   {sumPts(displayedHoles)}
@@ -1793,12 +1809,16 @@ const ScoreCard: React.FC = () => {
               ns = computeNassauState(mode as "best" | "combined", allData);
             }
             const colNassauWidth = 80;
+            const colHighLowWidth = 65;
+            const teamAColor = isDark ? "#4ade80" : "#198754";
+            const teamBColor = isDark ? "#60a5fa" : "#0d6efd";
             const detailsWidth = isDetailsVisible ? 115 : 0;
             const totalWidth =
               50 +
               detailsWidth +
               50 +
               partners.length * 95 +
+              (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
               (isNassau && partners.length >= 2 ? colNassauWidth : 0);
             const renderNassauHouses = (
               houses: number[],
@@ -1965,13 +1985,55 @@ const ScoreCard: React.FC = () => {
                                   fontSize: 10,
                                 }}
                               >
-                                {showPtsColumns ? `${p.name}\nPts` : `${p.name}\nNet`}
+                                {showPtsColumns
+                                  ? `${p.name}\nPts`
+                                  : `${p.name}\nNet`}
                               </ThemedText>
                             </VStack>
                           )}
                         </View>
                       );
                     })}
+                    {isHighLow && partners.length >= 4 && (
+                      <>
+                        <VStack
+                          style={{
+                            width: colHighLowWidth,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 11,
+                              color: teamAColor,
+                            }}
+                          >
+                            Team A
+                          </ThemedText>
+                        </VStack>
+                        <VStack
+                          style={{
+                            width: colHighLowWidth,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 11,
+                              color: teamBColor,
+                            }}
+                          >
+                            Team B
+                          </ThemedText>
+                        </VStack>
+                      </>
+                    )}
                     {isNassau && partners.length >= 2 && (
                       <ThemedText
                         style={{
@@ -2224,6 +2286,49 @@ const ScoreCard: React.FC = () => {
                                 </View>
                               );
                             })()}
+                          {isHighLow &&
+                            partners.length >= 4 &&
+                            (() => {
+                              const allFilled = hlStats?.isComplete;
+                              return (
+                                <>
+                                  <View
+                                    style={{
+                                      width: colHighLowWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "bold",
+                                        color: teamAColor,
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      {allFilled ? hlStats.teamAMatchPts : "-"}
+                                    </ThemedText>
+                                  </View>
+                                  <View
+                                    style={{
+                                      width: colHighLowWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <ThemedText
+                                      style={{
+                                        fontWeight: "bold",
+                                        color: teamBColor,
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      {allFilled ? hlStats.teamBMatchPts : "-"}
+                                    </ThemedText>
+                                  </View>
+                                </>
+                              );
+                            })()}
                         </HStack>
 
                         {/* FRONT 9 TOTALS ROW */}
@@ -2275,7 +2380,7 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <VStack
                                     style={{
-                                      width: showPtsColumns ? 50 : 95,
+                                      width: hasSubColumn ? 50 : 95,
                                       alignItems: "center",
                                     }}
                                   >
@@ -2308,7 +2413,7 @@ const ScoreCard: React.FC = () => {
                                       </Text>
                                     </HStack> */}
                                   </VStack>
-                                  {showPtsColumns && (
+                                  {hasSubColumn && (
                                     <VStack
                                       style={{
                                         width: 45,
@@ -2321,13 +2426,57 @@ const ScoreCard: React.FC = () => {
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
-                                        {t.stableford}
+                                        {showPtsColumns ? t.stableford : t.net}
                                       </ThemedText>
                                     </VStack>
                                   )}
                                 </View>
                               );
                             })}
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                const fh = front9[front9.length - 1] || {};
+                                const st = getHighLowHoleStats(fh);
+                                return (
+                                  <>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamAColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {st.teamAMatchPts ?? "-"}
+                                      </ThemedText>
+                                    </View>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamBColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {st.teamBMatchPts ?? "-"}
+                                      </ThemedText>
+                                    </View>
+                                  </>
+                                );
+                              })()}
                             {isNassau && partners.length >= 2 && ns && (
                               <VStack
                                 style={{
@@ -2393,7 +2542,7 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <VStack
                                     style={{
-                                      width: showPtsColumns ? 50 : 95,
+                                      width: hasSubColumn ? 50 : 95,
                                       alignItems: "center",
                                     }}
                                   >
@@ -2426,7 +2575,7 @@ const ScoreCard: React.FC = () => {
                                       </Text>
                                     </HStack> */}
                                   </VStack>
-                                  {showPtsColumns && (
+                                  {hasSubColumn && (
                                     <VStack
                                       style={{
                                         width: 45,
@@ -2439,13 +2588,57 @@ const ScoreCard: React.FC = () => {
                                           color: isDark ? "#fff" : "#000",
                                         }}
                                       >
-                                        {t.stableford}
+                                        {showPtsColumns ? t.stableford : t.net}
                                       </ThemedText>
                                     </VStack>
                                   )}
                                 </View>
                               );
                             })}
+                            {isHighLow &&
+                              partners.length >= 4 &&
+                              (() => {
+                                const bh = back9[back9.length - 1] || {};
+                                const st = getHighLowHoleStats(bh);
+                                return (
+                                  <>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamAColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {st.teamAMatchPts ?? "-"}
+                                      </ThemedText>
+                                    </View>
+                                    <View
+                                      style={{
+                                        width: colHighLowWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: teamBColor,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        {st.teamBMatchPts ?? "-"}
+                                      </ThemedText>
+                                    </View>
+                                  </>
+                                );
+                              })()}
                             {isNassau && partners.length >= 2 && ns && (
                               <VStack
                                 style={{
@@ -2511,7 +2704,7 @@ const ScoreCard: React.FC = () => {
                         <View key={p.playerId} style={{ flexDirection: "row" }}>
                           <VStack
                             style={{
-                              width: showPtsColumns ? 50 : 95,
+                              width: hasSubColumn ? 50 : 95,
                               alignItems: "center",
                             }}
                           >
@@ -2523,40 +2716,8 @@ const ScoreCard: React.FC = () => {
                             >
                               {t.gross}
                             </ThemedText>
-                            {/* <HStack style={{ gap: 4, alignItems: "center" }}>
-                              {isStableford ? (
-                                <Text
-                                  style={{
-                                    fontSize: 9,
-                                    color: "#fff",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {t.stableford}
-                                </Text>
-                              ) : (
-                                <Text
-                                  style={{
-                                    fontSize: 9,
-                                    color: "#fff",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {t.net}
-                                </Text>
-                              )}
-                              <Text
-                                style={{
-                                  fontSize: 9,
-                                  color: "#fff",
-                                  fontWeight: "600",
-                                }}
-                              >
-                                {t.sandys}
-                              </Text>
-                            </HStack> */}
                           </VStack>
-                          {showPtsColumns && (
+                          {hasSubColumn && (
                             <VStack style={{ width: 45, alignItems: "center" }}>
                               <ThemedText
                                 style={{
@@ -2564,13 +2725,66 @@ const ScoreCard: React.FC = () => {
                                   color: "#fff",
                                 }}
                               >
-                                {t.stableford}
+                                {showPtsColumns ? t.stableford : t.net}
                               </ThemedText>
                             </VStack>
                           )}
                         </View>
                       );
                     })}
+                    {isHighLow &&
+                      partners.length >= 4 &&
+                      (() => {
+                        let totalA = 0,
+                          totalB = 0;
+                        let hasAny = false;
+                        displayHoles.forEach((th: any) => {
+                          const st = getHighLowHoleStats(th);
+                          if (st && st.teamALow !== null) {
+                            totalA += st.teamAMatchPts;
+                            totalB += st.teamBMatchPts;
+                            hasAny = true;
+                          }
+                        });
+                        return (
+                          <>
+                            <View
+                              style={{
+                                width: colHighLowWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  fontWeight: "bold",
+                                  color: teamAColor,
+                                  fontSize: 13,
+                                }}
+                              >
+                                {hasAny ? totalA : "-"}
+                              </ThemedText>
+                            </View>
+                            <View
+                              style={{
+                                width: colHighLowWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  fontWeight: "bold",
+                                  color: teamBColor,
+                                  fontSize: 13,
+                                }}
+                              >
+                                {hasAny ? totalB : "-"}
+                              </ThemedText>
+                            </View>
+                          </>
+                        );
+                      })()}
                     {isNassau && partners.length >= 2 && ns && (
                       <VStack
                         style={{

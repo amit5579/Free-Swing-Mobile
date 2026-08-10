@@ -161,7 +161,9 @@ export default function ResumeScorecard() {
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
   >({});
-  const [delegationStatuses, setDelegationStatuses] = useState<Record<number, string>>({});
+  const [delegationStatuses, setDelegationStatuses] = useState<
+    Record<number, string>
+  >({});
   const [isHighLow, setIsHighLow] = useState(false);
   const [isSplit6, setIsSplit6] = useState(false);
   const [isGross, setIsGross] = useState(false);
@@ -327,8 +329,7 @@ export default function ResumeScorecard() {
                 : h.NassauStartingNine,
           }));
 
-          console.log("normalizedServerHoles",normalizedServerHoles);
-          
+          console.log("normalizedServerHoles", normalizedServerHoles);
 
           const state = getLatestRoundState(
             localDraft,
@@ -451,11 +452,13 @@ export default function ResumeScorecard() {
               typeof firstHole.playingPartnersJson === "string"
                 ? JSON.parse(firstHole.playingPartnersJson)
                 : firstHole.playingPartnersJson;
-            const sortedPartners = (parsedPartners || []).slice().sort((a: any, b: any) => {
-              const teamA = a.team ?? 1;
-              const teamB = b.team ?? 1;
-              return teamA - teamB;
-            });
+            const sortedPartners = (parsedPartners || [])
+              .slice()
+              .sort((a: any, b: any) => {
+                const teamA = a.team ?? 1;
+                const teamB = b.team ?? 1;
+                return teamA - teamB;
+              });
             setPartners(sortedPartners);
           } catch (e) {
             console.error("Error parsing playingPartnersJson:", e);
@@ -489,11 +492,12 @@ export default function ResumeScorecard() {
           setIsStableford(showPts);
 
           const isG =
-            !showPts && (
-              (!firstHole.isExcluded && pLength > 1 && (!matchScoring || matchScoring.trim() === "")) ||
+            !showPts &&
+            ((!firstHole.isExcluded &&
+              pLength > 1 &&
+              (!matchScoring || matchScoring.trim() === "")) ||
               matchScoring.includes("gross") ||
-              matchScoring.includes("gross_score")
-            );
+              matchScoring.includes("gross_score"));
 
           setIsHighLow(isHL);
           setIsSplit6(isS6);
@@ -582,7 +586,7 @@ export default function ResumeScorecard() {
   // Polling for live scoring and delegation statuses
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     const fetchDelegationStatuses = async () => {
       if (roundContextId) {
         try {
@@ -604,7 +608,7 @@ export default function ResumeScorecard() {
     interval = setInterval(async () => {
       // 1. Poll delegation statuses
       await fetchDelegationStatuses();
-      
+
       // 2. Poll live scorecard data (silent load)
       if (id) {
         try {
@@ -612,17 +616,17 @@ export default function ResumeScorecard() {
           if (liveData && liveData.length > 0) {
             setHoles(liveData);
             setTextScores((prev: any) => {
-               const newScores = { ...prev };
-               liveData.forEach((h: any) => {
-                 if (h.score !== null && h.score !== undefined && h.score >= 0) {
-                   // Only update text score if it's not currently set, 
-                   // so we don't overwrite active typing.
-                   if (newScores[h.holeId] === undefined) {
-                     newScores[h.holeId] = String(h.score);
-                   }
-                 }
-               });
-               return newScores;
+              const newScores = { ...prev };
+              liveData.forEach((h: any) => {
+                if (h.score !== null && h.score !== undefined && h.score >= 0) {
+                  // Only update text score if it's not currently set,
+                  // so we don't overwrite active typing.
+                  if (newScores[h.holeId] === undefined) {
+                    newScores[h.holeId] = String(h.score);
+                  }
+                }
+              });
+              return newScores;
             });
           }
         } catch (e) {
@@ -877,14 +881,16 @@ export default function ResumeScorecard() {
   };
 
   const isExcluded = holes.length > 0 ? holes[0].isExcluded : false;
-  const isSystem36 = holes.length > 0 && holes.some(
-    (h: any) =>
-      h.matchScoringType === "system-36" ||
-      h.scoringType === "system-36" ||
-      h.scoring_type === "system-36" ||
-      h.isSystem36 === true ||
-      h.IsSystem36 === true
-  );
+  const isSystem36 =
+    holes.length > 0 &&
+    holes.some(
+      (h: any) =>
+        h.matchScoringType === "system-36" ||
+        h.scoringType === "system-36" ||
+        h.scoring_type === "system-36" ||
+        h.isSystem36 === true ||
+        h.IsSystem36 === true,
+    );
 
   const getScoringLabel = () => {
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
@@ -1561,16 +1567,15 @@ export default function ResumeScorecard() {
               "Scor",
               ...(showNetColumns ? ["Net"] : []),
             ].map((_, i) => (
-                <View key={i} className="flex-1 items-center">
-                  <Skeleton
-                    isDark={isDark}
-                    width={28}
-                    height={12}
-                    borderRadius={4}
-                  />
-                </View>
-              ),
-            )}
+              <View key={i} className="flex-1 items-center">
+                <Skeleton
+                  isDark={isDark}
+                  width={28}
+                  height={12}
+                  borderRadius={4}
+                />
+              </View>
+            ))}
             {showPtsColumns && (
               <View className="flex-1 items-center">
                 <Skeleton
@@ -1825,14 +1830,19 @@ export default function ResumeScorecard() {
                   fontSize: 12,
                   fontWeight: "600",
                   color: isDark ? "#38bdf8" : "#0284c7",
-                  backgroundColor: isDark ? "rgba(56, 189, 248, 0.2)" : "rgba(2, 132, 199, 0.1)",
+                  backgroundColor: isDark
+                    ? "rgba(56, 189, 248, 0.2)"
+                    : "rgba(2, 132, 199, 0.1)",
                   paddingHorizontal: 6,
                   paddingVertical: 2,
                   borderRadius: 4,
                   overflow: "hidden",
                 }}
               >
-                Sys36 HC: {holes.some(h => h.score !== null && h.score > 0) ? Math.min(26, 36 - Number(sumPts(holes))) : "N/A"}
+                Sys36 HC:{" "}
+                {holes.some((h) => h.score !== null && h.score > 0)
+                  ? Math.min(26, 36 - Number(sumPts(holes)))
+                  : "N/A"}
               </Text>
             )}
           </HStack>
@@ -2028,20 +2038,17 @@ export default function ResumeScorecard() {
                           placeholderTextColor={isDark ? "#666" : "#999"}
                         />
                       </View>
-                      <Text
-                        className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
-                      >
-                        {/* {h.netScore !== null &&
-                            h.netScore !== undefined &&
-                            (textScores[h.holeId] || h.score !== null)
-                              ? h.netScore
-                              : "-"} */}
-                        {textScores[h.holeId] !== undefined
-                          ? textScores[h.holeId]
-                          : h.score !== null && h.score !== undefined
-                            ? h.score.toString()
+                      {showNetColumns && (
+                        <Text
+                          className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
+                        >
+                          {h.netScore !== null &&
+                          h.netScore !== undefined &&
+                          (textScores[h.holeId] || h.score !== null)
+                            ? h.netScore
                             : "-"}
-                      </Text>
+                        </Text>
+                      )}
                       {showPtsColumns && (
                         <Text
                           className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -2195,15 +2202,17 @@ export default function ResumeScorecard() {
                           placeholderTextColor={isDark ? "#666" : "#999"}
                         />
                       </View>
-                      <Text
-                        className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
-                      >
-                        {h.netScore !== null &&
-                        h.netScore !== undefined &&
-                        (textScores[h.holeId] || h.score !== null)
-                          ? h.netScore
-                          : "-"}
-                      </Text>
+                      {showNetColumns && (
+                        <Text
+                          className={`flex-1 text-center font-semibold text-xs ${isDark ? "text-white" : "text-black"}`}
+                        >
+                          {h.netScore !== null &&
+                          h.netScore !== undefined &&
+                          (textScores[h.holeId] || h.score !== null)
+                            ? h.netScore
+                            : "-"}
+                        </Text>
+                      )}
                       {showPtsColumns && (
                         <Text
                           className={`flex-1 text-center font-bold ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -2618,14 +2627,20 @@ export default function ResumeScorecard() {
                             }}
                           >
                             <ThemedText
-                              style={{ width: colHoleWidth, textAlign: "center" }}
+                              style={{
+                                width: colHoleWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {h.holeNumber}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: colSIWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colSIWidth,
+                                    textAlign: "center",
+                                  }}
                                 >
                                   {h.strokeIndex}
                                 </ThemedText>
@@ -2641,7 +2656,10 @@ export default function ResumeScorecard() {
                               </>
                             )}
                             <ThemedText
-                              style={{ width: colParWidth, textAlign: "center" }}
+                              style={{
+                                width: colParWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {h.par}
                             </ThemedText>
@@ -2650,7 +2668,9 @@ export default function ResumeScorecard() {
                               const info = getPlayerHoleInfo(h, p);
                               const flatIndex =
                                 index * partners.length + pIndex;
-                              const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
+                              const isPending =
+                                !p.isPrimary &&
+                                delegationStatuses[p.userId] === "Pending";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
@@ -2741,11 +2761,21 @@ export default function ResumeScorecard() {
                                         width: 30,
                                         height: 30,
                                         textAlign: "center",
-                                        color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
+                                        color: isPending
+                                          ? isDark
+                                            ? "#777"
+                                            : "#9ca3af"
+                                          : isDark
+                                            ? "#fff"
+                                            : "#000",
                                         fontWeight: "700",
                                         fontSize: 13,
                                         zIndex: 10,
-                                        backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
+                                        backgroundColor: isPending
+                                          ? isDark
+                                            ? "#333"
+                                            : "#e5e7eb"
+                                          : "transparent",
                                         padding: 0,
                                       }}
                                     />
@@ -2755,8 +2785,7 @@ export default function ResumeScorecard() {
                                     "Net Score • Include Par 3" &&
                                     getScoringLabel() !==
                                       "Net Score • Exclude Par 3" &&
-                                    getScoringLabel() !==
-                                      "Stableford" &&
+                                    getScoringLabel() !== "Stableford" &&
                                     getScoringLabel() !==
                                       "Stableford • Exclude Par 3" && (
                                       <HStack
@@ -2826,8 +2855,17 @@ export default function ResumeScorecard() {
                                       </HStack>
                                     )}
 
-                                  {(getScoringLabel() === "Stableford" || getScoringLabel() === "Stableford • Exclude Par 3") && (
-                                    <Text style={{ fontSize: 10, color: "#f59e0b", marginTop: 2, fontWeight: "bold" }}>
+                                  {(getScoringLabel() === "Stableford" ||
+                                    getScoringLabel() ===
+                                      "Stableford • Exclude Par 3") && (
+                                    <Text
+                                      style={{
+                                        fontSize: 10,
+                                        color: "#f59e0b",
+                                        marginTop: 2,
+                                        fontWeight: "bold",
+                                      }}
+                                    >
                                       {info.stablefordPoints ?? "-"} pts
                                     </Text>
                                   )}
@@ -2995,7 +3033,10 @@ export default function ResumeScorecard() {
                             style={{ width: colSIWidth, textAlign: "center" }}
                           />
                           <ThemedText
-                            style={{ width: colYardsWidth, textAlign: "center" }}
+                            style={{
+                              width: colYardsWidth,
+                              textAlign: "center",
+                            }}
                           >
                             {sumYardage(front9Holes)}
                           </ThemedText>
@@ -3015,7 +3056,10 @@ export default function ResumeScorecard() {
                         return (
                           <VStack
                             key={p.playerId}
-                            style={{ width: colPartnerWidth, alignItems: "center" }}
+                            style={{
+                              width: colPartnerWidth,
+                              alignItems: "center",
+                            }}
                           >
                             <ThemedText
                               style={{
@@ -3168,14 +3212,20 @@ export default function ResumeScorecard() {
                             }}
                           >
                             <ThemedText
-                              style={{ width: colHoleWidth, textAlign: "center" }}
+                              style={{
+                                width: colHoleWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {h.holeNumber}
                             </ThemedText>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
-                                  style={{ width: colSIWidth, textAlign: "center" }}
+                                  style={{
+                                    width: colSIWidth,
+                                    textAlign: "center",
+                                  }}
                                 >
                                   {h.strokeIndex}
                                 </ThemedText>
@@ -3191,7 +3241,10 @@ export default function ResumeScorecard() {
                               </>
                             )}
                             <ThemedText
-                              style={{ width: colParWidth, textAlign: "center" }}
+                              style={{
+                                width: colParWidth,
+                                textAlign: "center",
+                              }}
                             >
                               {h.par}
                             </ThemedText>
@@ -3200,7 +3253,9 @@ export default function ResumeScorecard() {
                               const info = getPlayerHoleInfo(h, p);
                               const flatIndex =
                                 front9Offset + index * partners.length + pIndex;
-                              const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
+                              const isPending =
+                                !p.isPrimary &&
+                                delegationStatuses[p.userId] === "Pending";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
@@ -3291,11 +3346,21 @@ export default function ResumeScorecard() {
                                         width: 30,
                                         height: 30,
                                         textAlign: "center",
-                                        color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
+                                        color: isPending
+                                          ? isDark
+                                            ? "#777"
+                                            : "#9ca3af"
+                                          : isDark
+                                            ? "#fff"
+                                            : "#000",
                                         fontWeight: "700",
                                         fontSize: 13,
                                         zIndex: 10,
-                                        backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
+                                        backgroundColor: isPending
+                                          ? isDark
+                                            ? "#333"
+                                            : "#e5e7eb"
+                                          : "transparent",
                                         padding: 0,
                                       }}
                                     />
@@ -3305,8 +3370,7 @@ export default function ResumeScorecard() {
                                     "Net Score • Include Par 3" &&
                                     getScoringLabel() !==
                                       "Net Score • Exclude Par 3" &&
-                                    getScoringLabel() !==
-                                      "Stableford" &&
+                                    getScoringLabel() !== "Stableford" &&
                                     getScoringLabel() !==
                                       "Stableford • Exclude Par 3" && (
                                       <HStack
@@ -3471,7 +3535,9 @@ export default function ResumeScorecard() {
                                 {(() => {
                                   const hRes = ns?.holeResults[h.holeNumber];
                                   if (!hRes)
-                                    return <View style={{ width: colNassauWidth }} />;
+                                    return (
+                                      <View style={{ width: colNassauWidth }} />
+                                    );
 
                                   return (
                                     <View
@@ -3540,7 +3606,10 @@ export default function ResumeScorecard() {
                             style={{ width: colSIWidth, textAlign: "center" }}
                           />
                           <ThemedText
-                            style={{ width: colYardsWidth, textAlign: "center" }}
+                            style={{
+                              width: colYardsWidth,
+                              textAlign: "center",
+                            }}
                           >
                             {sumYardage(back9Holes)}
                           </ThemedText>
@@ -3560,7 +3629,10 @@ export default function ResumeScorecard() {
                         return (
                           <VStack
                             key={p.playerId}
-                            style={{ width: colPartnerWidth, alignItems: "center" }}
+                            style={{
+                              width: colPartnerWidth,
+                              alignItems: "center",
+                            }}
                           >
                             <ThemedText
                               style={{
@@ -3579,11 +3651,28 @@ export default function ResumeScorecard() {
                           let b9Pts = [0, 0, 0];
                           let hasAnyB9 = false;
                           back9Holes.forEach((bh) => {
-                            const raw1 = getPlayerHoleInfo(bh, partners[0]).score;
-                            const raw2 = getPlayerHoleInfo(bh, partners[1]).score;
-                            const raw3 = getPlayerHoleInfo(bh, partners[2]).score;
-                            if (raw1 !== null && raw2 !== null && raw3 !== null) {
-                              const pts = calculateSplitSixPoints(raw1, raw2, raw3);
+                            const raw1 = getPlayerHoleInfo(
+                              bh,
+                              partners[0],
+                            ).score;
+                            const raw2 = getPlayerHoleInfo(
+                              bh,
+                              partners[1],
+                            ).score;
+                            const raw3 = getPlayerHoleInfo(
+                              bh,
+                              partners[2],
+                            ).score;
+                            if (
+                              raw1 !== null &&
+                              raw2 !== null &&
+                              raw3 !== null
+                            ) {
+                              const pts = calculateSplitSixPoints(
+                                raw1,
+                                raw2,
+                                raw3,
+                              );
                               b9Pts[0] += pts[0];
                               b9Pts[1] += pts[1];
                               b9Pts[2] += pts[2];
@@ -3731,7 +3820,10 @@ export default function ResumeScorecard() {
                       return (
                         <VStack
                           key={p.playerId}
-                          style={{ width: colPartnerWidth, alignItems: "center" }}
+                          style={{
+                            width: colPartnerWidth,
+                            alignItems: "center",
+                          }}
                         >
                           <ThemedText
                             style={{
@@ -4130,22 +4222,22 @@ export default function ResumeScorecard() {
                       </ThemedText>
                       <ThemedText
                         style={{
-                           fontWeight: "700",
-                           fontSize: 11,
-                           width: 70,
-                           textAlign: "center",
-                           color: teamAColor,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          width: 70,
+                          textAlign: "center",
+                          color: teamAColor,
                         }}
                       >
                         Team A
                       </ThemedText>
                       <ThemedText
                         style={{
-                           fontWeight: "700",
-                           fontSize: 11,
-                           width: 70,
-                           textAlign: "center",
-                           color: teamBColor,
+                          fontWeight: "700",
+                          fontSize: 11,
+                          width: 70,
+                          textAlign: "center",
+                          color: teamBColor,
                         }}
                       >
                         Team B
@@ -4422,19 +4514,33 @@ export default function ResumeScorecard() {
                             <Row
                               label="Final Result"
                               a={
-                                <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamAColor }}>
+                                <ThemedText
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: "700",
+                                    color: teamAColor,
+                                  }}
+                                >
                                   Match - {ns?.overallMatches?.team1 || 0}{" "}
-                                  {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                                  {" "}
-                                  Half - {(ns?.front9Halfs?.team1 || 0) + (ns?.back9Halfs?.team1 || 0)}
+                                  {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                                  Half -{" "}
+                                  {(ns?.front9Halfs?.team1 || 0) +
+                                    (ns?.back9Halfs?.team1 || 0)}
                                 </ThemedText>
                               }
                               b={
-                                <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamBColor }}>
+                                <ThemedText
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: "700",
+                                    color: teamBColor,
+                                  }}
+                                >
                                   Match - {ns?.overallMatches?.team2 || 0}{" "}
-                                  {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                                  {" "}
-                                  Half - {(ns?.front9Halfs?.team2 || 0) + (ns?.back9Halfs?.team2 || 0)}
+                                  {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                                  Half -{" "}
+                                  {(ns?.front9Halfs?.team2 || 0) +
+                                    (ns?.back9Halfs?.team2 || 0)}
                                 </ThemedText>
                               }
                               bold

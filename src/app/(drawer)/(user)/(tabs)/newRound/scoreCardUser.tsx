@@ -262,7 +262,7 @@ export default function ScoreCardUserPage() {
         holes as string,
       );
 
-      console.log("response: ", response);
+      // console.log("response: ", response);
       setScoreCardDetails(response);
     } catch (error) {
       console.error("Fetching scorecard Error:", error);
@@ -636,7 +636,7 @@ export default function ScoreCardUserPage() {
                 }
               : {}),
           }));
-        console.log("saveRound payload", payload);
+        // console.log("saveRound payload", payload);
 
         await saveScoreCard(payload);
 
@@ -1120,7 +1120,7 @@ export default function ScoreCardUserPage() {
           ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
           : {}),
       }));
-      console.log("Auto-saving payload:", payload);
+      // console.log("Auto-saving payload:", payload);
       saveScoreCard(payload).catch((err) =>
         console.error("Auto-save error:", err),
       );
