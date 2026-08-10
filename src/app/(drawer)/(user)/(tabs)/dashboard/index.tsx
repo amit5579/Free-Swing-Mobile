@@ -31,6 +31,9 @@ import {
   ScoreStats,
   getUserProfile,
   UserProfile,
+  getPendingScorecardRequests,
+  approveScorecardRequest,
+  rejectScorecardRequest
 } from "@/api/modules/dashboard.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Watermark from "@/components/watermark";
@@ -57,6 +60,7 @@ export default function DashboardScreen() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statsScrollIndex, setStatsScrollIndex] = useState(0);
   const [overviewSubTab, setOverviewSubTab] = useState<"feed" | "paradise" | "members">("feed");
+  const [pendingScorecardRequests, setPendingScorecardRequests] = useState<any[]>([]);
 
 // useEffect(() => {
 //   console.log("cccc",cards);
@@ -68,7 +72,8 @@ export default function DashboardScreen() {
     await Promise.all([
       fetchFeed(false),
       fetchStats(),
-      fetchProfile()
+      fetchProfile(),
+      fetchPendingRequests()
     ]);
     if (showSkeleton) setLoading(false);
   };
@@ -156,6 +161,37 @@ export default function DashboardScreen() {
         setProfile(data);
     } catch (error) {
       console.log("Profile error:", error);
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) return;
+      const data = await getPendingScorecardRequests(Number(userId));
+      setPendingScorecardRequests(data || []);
+    } catch (error) {
+      console.log("Pending requests error:", error);
+    }
+  };
+
+  const handleApproveRequest = async (id: number) => {
+    try {
+      await approveScorecardRequest(id);
+      Alert.alert("Success", "Scorecard request approved");
+      fetchPendingRequests();
+    } catch (error) {
+      Alert.alert("Error", "Failed to approve request");
+    }
+  };
+
+  const handleRejectRequest = async (id: number) => {
+    try {
+      await rejectScorecardRequest(id);
+      Alert.alert("Success", "Scorecard request rejected");
+      fetchPendingRequests();
+    } catch (error) {
+      Alert.alert("Error", "Failed to reject request");
     }
   };
 
@@ -685,6 +721,48 @@ export default function DashboardScreen() {
                 <>
                   {!searchQuery && (
                     <>
+                      {pendingScorecardRequests && pendingScorecardRequests.length > 0 && (
+                        <VStack space="sm" className="mb-4 mt-2">
+                          {pendingScorecardRequests.map((req: any, index: number) => (
+                            <Box
+                              key={index}
+                              className="rounded-xl p-4 flex-row items-center justify-between border"
+                              style={{
+                                backgroundColor: isDark ? "rgba(251, 191, 36, 0.1)" : "rgba(253, 246, 178, 0.5)",
+                                borderColor: "#FBBF24"
+                              }}
+                            >
+                              <HStack className="items-center flex-1 pr-2">
+                                <Box className="bg-yellow-400 rounded-full w-10 h-10 items-center justify-center mr-3">
+                                  <Ionicons name="pencil" size={20} color="#000" />
+                                </Box>
+                                <VStack className="flex-1">
+                                  <Text className="font-bold text-base" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>
+                                    Scorecard Request
+                                  </Text>
+                                  <Text style={{ color: isDark ? "#fff" : "#111", fontSize: 13 }} numberOfLines={2}>
+                                    <Text className="font-bold">{req.primaryUserName}</Text> wants to fill in your scorecard for a multiplayer round.
+                                  </Text>
+                                </VStack>
+                              </HStack>
+                              <VStack space="xs">
+                                <Pressable
+                                  onPress={() => handleApproveRequest(req.id)}
+                                  className="bg-green-500 py-1.5 px-3 rounded-lg items-center"
+                                >
+                                  <Text className="text-white font-bold text-sm">Approve</Text>
+                                </Pressable>
+                                <Pressable
+                                  onPress={() => handleRejectRequest(req.id)}
+                                  className="bg-red-500 py-1.5 px-3 rounded-lg items-center mt-1"
+                                >
+                                  <Text className="text-white font-bold text-sm">Reject</Text>
+                                </Pressable>
+                              </VStack>
+                            </Box>
+                          ))}
+                        </VStack>
+                      )}
                       <VStack space="sm">
                         <ScrollView
                           ref={statsScrollViewRef}

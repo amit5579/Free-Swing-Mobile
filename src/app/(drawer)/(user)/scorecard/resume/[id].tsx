@@ -5,6 +5,7 @@ import {
   updateHoleScoresApi,
   updateScorecardApi,
   getInProgressGames,
+  getDelegationStatuses,
 } from "@/api/modules/dashboard.api";
 import {
   computeSplitSixSummary,
@@ -160,6 +161,7 @@ export default function ResumeScorecard() {
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
   >({});
+  const [delegationStatuses, setDelegationStatuses] = useState<Record<number, string>>({});
   const [isHighLow, setIsHighLow] = useState(false);
   const [isSplit6, setIsSplit6] = useState(false);
   const [isGross, setIsGross] = useState(false);
@@ -325,6 +327,9 @@ export default function ResumeScorecard() {
                 : h.NassauStartingNine,
           }));
 
+          console.log("normalizedServerHoles",normalizedServerHoles);
+          
+
           const state = getLatestRoundState(
             localDraft,
             normalizedServerHoles,
@@ -432,11 +437,10 @@ export default function ResumeScorecard() {
           }
         }
 
-        const showPts = data.some(
+        let showPts = data.some(
           (h) =>
             h.stablefordPoints !== null && h.stablefordPoints !== undefined,
         );
-        setIsStableford(showPts);
 
         // Parse partners
         let parsedPartners: any[] = [];
@@ -479,10 +483,17 @@ export default function ResumeScorecard() {
           const isNC =
             matchScoring.includes("nassau-combined") ||
             matchScoring.includes("nassau_combined");
+          if (matchScoring.includes("stableford")) {
+            showPts = true;
+          }
+          setIsStableford(showPts);
+
           const isG =
-            (pLength > 1 && (!matchScoring || matchScoring.trim() === "")) ||
-            matchScoring.includes("gross") ||
-            matchScoring.includes("gross_score");
+            !showPts && (
+              (!firstHole.isExcluded && pLength > 1 && (!matchScoring || matchScoring.trim() === "")) ||
+              matchScoring.includes("gross") ||
+              matchScoring.includes("gross_score")
+            );
 
           setIsHighLow(isHL);
           setIsSplit6(isS6);
@@ -525,6 +536,8 @@ export default function ResumeScorecard() {
             };
             fetchCompanionHandicaps();
           }
+        } else {
+          setIsStableford(showPts);
         }
 
         // Determine which halves to display based on courseHalf from API or hole numbers fallback
@@ -565,6 +578,61 @@ export default function ResumeScorecard() {
       fetchScorecard();
     }, [fetchScorecard]),
   );
+
+  // Polling for live scoring and delegation statuses
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    const fetchDelegationStatuses = async () => {
+      if (roundContextId) {
+        try {
+          const statuses = await getDelegationStatuses(String(roundContextId));
+          const newStatuses: Record<number, string> = {};
+          statuses.forEach((s: any) => {
+            newStatuses[s.targetUserId] = s.status;
+          });
+          // console.log("newStatuses", newStatuses);
+          setDelegationStatuses(newStatuses);
+        } catch (e) {
+          console.error("Polling delegation statuses error:", e);
+        }
+      }
+    };
+
+    fetchDelegationStatuses(); // Fetch immediately on mount
+
+    interval = setInterval(async () => {
+      // 1. Poll delegation statuses
+      await fetchDelegationStatuses();
+      
+      // 2. Poll live scorecard data (silent load)
+      if (id) {
+        try {
+          const liveData = await getScorecardDetails(id);
+          if (liveData && liveData.length > 0) {
+            setHoles(liveData);
+            setTextScores((prev: any) => {
+               const newScores = { ...prev };
+               liveData.forEach((h: any) => {
+                 if (h.score !== null && h.score !== undefined && h.score >= 0) {
+                   // Only update text score if it's not currently set, 
+                   // so we don't overwrite active typing.
+                   if (newScores[h.holeId] === undefined) {
+                     newScores[h.holeId] = String(h.score);
+                   }
+                 }
+               });
+               return newScores;
+            });
+          }
+        } catch (e) {
+          console.error("Polling live scorecard error:", e);
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [id, roundContextId]);
 
   useEffect(() => {
     textScoresRef.current = textScores;
@@ -852,9 +920,7 @@ export default function ResumeScorecard() {
 
   const showNetColumns =
     getScoringLabel() === "Net Score • Include Par 3" ||
-    getScoringLabel() === "Net Score • Exclude Par 3" ||
-    getScoringLabel() === "Stableford" ||
-    getScoringLabel() === "Stableford • Exclude Par 3";
+    getScoringLabel() === "Net Score • Exclude Par 3";
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -1123,9 +1189,21 @@ export default function ResumeScorecard() {
     }, 500);
 
     // Auto-focus next input if 2 digits are entered
+    let nextIndex = flatIndex + 1;
+    const totalInputs = holes.length * partners.length;
+
+    while (nextIndex < totalInputs) {
+      const nextPIndex = nextIndex % partners.length;
+      const nextPlayer = partners[nextPIndex];
+      const isPending =
+        !nextPlayer.isPrimary &&
+        delegationStatuses[nextPlayer.userId] === "Pending";
+      if (!isPending) break;
+      nextIndex++;
+    }
+
     if (value.length >= 2) {
-      const nextIndex = flatIndex + 1;
-      if (nextIndex < holes.length * partners.length) {
+      if (nextIndex < totalInputs) {
         if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
         inputRefs.current[nextIndex]?.focus();
       }
@@ -1135,8 +1213,7 @@ export default function ResumeScorecard() {
     if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
     if (value !== "") {
       focusTimeoutRef.current = setTimeout(() => {
-        const nextIndex = flatIndex + 1;
-        if (nextIndex < holes.length * partners.length) {
+        if (nextIndex < totalInputs) {
           inputRefs.current[nextIndex]?.focus();
         }
       }, 1500);
@@ -2573,6 +2650,7 @@ export default function ResumeScorecard() {
                               const info = getPlayerHoleInfo(h, p);
                               const flatIndex =
                                 index * partners.length + pIndex;
+                              const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
@@ -2644,6 +2722,7 @@ export default function ResumeScorecard() {
                                       ref={(el) => {
                                         inputRefs.current[flatIndex] = el;
                                       }}
+                                      editable={!isPending}
                                       keyboardType="numeric"
                                       value={textVal}
                                       onChangeText={(val) =>
@@ -2662,11 +2741,11 @@ export default function ResumeScorecard() {
                                         width: 30,
                                         height: 30,
                                         textAlign: "center",
-                                        color: isDark ? "#fff" : "#000",
+                                        color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
                                         fontWeight: "700",
                                         fontSize: 13,
                                         zIndex: 10,
-                                        backgroundColor: "transparent",
+                                        backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
                                         padding: 0,
                                       }}
                                     />
@@ -2746,6 +2825,12 @@ export default function ResumeScorecard() {
                                           })()}
                                       </HStack>
                                     )}
+
+                                  {(getScoringLabel() === "Stableford" || getScoringLabel() === "Stableford • Exclude Par 3") && (
+                                    <Text style={{ fontSize: 10, color: "#f59e0b", marginTop: 2, fontWeight: "bold" }}>
+                                      {info.stablefordPoints ?? "-"} pts
+                                    </Text>
+                                  )}
                                 </View>
                               );
                             })}
@@ -3115,6 +3200,7 @@ export default function ResumeScorecard() {
                               const info = getPlayerHoleInfo(h, p);
                               const flatIndex =
                                 front9Offset + index * partners.length + pIndex;
+                              const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
@@ -3186,6 +3272,7 @@ export default function ResumeScorecard() {
                                       ref={(el) => {
                                         inputRefs.current[flatIndex] = el;
                                       }}
+                                      editable={!isPending}
                                       keyboardType="numeric"
                                       value={textVal}
                                       onChangeText={(val) =>
@@ -3204,11 +3291,11 @@ export default function ResumeScorecard() {
                                         width: 30,
                                         height: 30,
                                         textAlign: "center",
-                                        color: isDark ? "#fff" : "#000",
+                                        color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
                                         fontWeight: "700",
                                         fontSize: 13,
                                         zIndex: 10,
-                                        backgroundColor: "transparent",
+                                        backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
                                         padding: 0,
                                       }}
                                     />

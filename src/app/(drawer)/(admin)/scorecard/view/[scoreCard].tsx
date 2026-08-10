@@ -192,8 +192,8 @@ const ScoreCard: React.FC = () => {
       try {
         setLoading(true);
         const data = await getScorecardDetails(scoreCard!);
-        console.log("data",data);
-        
+        console.log("data", data);
+
         if (data.length > 0) {
           try {
             const hc = await getHandicapDetails(
@@ -292,12 +292,12 @@ const ScoreCard: React.FC = () => {
           const isHL =
             (mode.includes("high_low") ||
               mode.includes("high-low") ||
-              (pLength === 4 && !isGr && !dataIsSystem36)) &&
+              (pLength === 4 && !isGr && !dataIsSystem36 && !hasStablefordPoints)) &&
             !(isNB || isNC);
           const isS6 =
             (mode.includes("split_six") ||
               mode.includes("split-six") ||
-              (pLength === 3 && !isGr && !dataIsSystem36)) &&
+              (pLength === 3 && !isGr && !dataIsSystem36 && !hasStablefordPoints)) &&
             !(isNB || isNC);
 
           setIsHighLow(isHL);
@@ -402,10 +402,12 @@ const ScoreCard: React.FC = () => {
           (h: any) => h.tournamentId !== null && h.tournamentId !== undefined,
         );
 
-        const hasFrontNine = holes.some((h: any) => h.courseHalf === "Front9");
-        const hasBackNine = holes.some((h: any) => h.courseHalf === "Back9");
+      const hasFrontNine = holes.some((h: any) => h.courseHalf === "Front9");
+      const hasBackNine = holes.some((h: any) => h.courseHalf === "Back9");
 
-      const hasNullCourseHalf = holes.some((h: any) => !h.courseHalf || h.courseHalf === "null");
+      const hasNullCourseHalf = holes.some(
+        (h: any) => !h.courseHalf || h.courseHalf === "null",
+      );
 
       if (hasNullCourseHalf) {
         setDisplayFront9(true);
@@ -1122,7 +1124,7 @@ const ScoreCard: React.FC = () => {
           <View
             className={`flex-row p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
           >
-            {["Hole", "SI", "Yards", "Par", "Scor", "Net", "Pts"].map(
+            {["Hole", "SI", "Yards", "Par", "Score", "Net", "Pts"].map(
               (_, i) => (
                 <View key={i} className="flex-1 items-center">
                   <Skeleton
@@ -1916,7 +1918,7 @@ const ScoreCard: React.FC = () => {
                             }}
                           >
                             <ThemedText
-                              numberOfLines={1}
+                              // numberOfLines={1}
                               style={{
                                 textAlign: "center",
                                 fontWeight: "700",
@@ -1956,14 +1958,14 @@ const ScoreCard: React.FC = () => {
                               }}
                             >
                               <ThemedText
-                                numberOfLines={1}
+                                // numberOfLines={1}
                                 style={{
                                   textAlign: "center",
                                   fontWeight: "700",
                                   fontSize: 10,
                                 }}
                               >
-                                {showPtsColumns ? `${p.name} Pts` : `Net`}
+                                {showPtsColumns ? `${p.name}\nPts` : `${p.name}\nNet`}
                               </ThemedText>
                             </VStack>
                           )}
