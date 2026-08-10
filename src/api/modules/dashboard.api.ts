@@ -325,3 +325,58 @@ export const postParadise = async (formData: any) => {
     throw error;
   }
 };
+
+export const getPendingScorecardRequests = async (userId: number) => {
+  try {
+    const response = await client.get(`scorecard/group-round/pending/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Fetching pending scorecard requests error:", error);
+    throw error;
+  }
+};
+
+export const approveScorecardRequest = async (id: number) => {
+  try {
+    const response = await client.post(`scorecard/group-round/approve/${id}`, {});
+    return response.data;
+  } catch (error) {
+    console.error("Approving scorecard request error:", error);
+    throw error;
+  }
+};
+
+export const rejectScorecardRequest = async (id: number) => {
+  try {
+    const response = await client.post(`scorecard/group-round/reject/${id}`, {});
+    return response.data;
+  } catch (error) {
+    console.error("Rejecting scorecard request error:", error);
+    throw error;
+  }
+};
+
+export const initGroupRound = async (primaryUserId: number, targetUserIds: number[], roundContextId: string) => {
+  try {
+    const response = await client.post(`scorecard/group-round/init`, {
+      primaryUserId,
+      targetUserIds,
+      roundContextId
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Init group round error:", error);
+    throw error;
+  }
+};
+
+export const getDelegationStatuses = async (playingGroupRoundKey: string) => {
+  try {
+    const response = await client.get(`scorecard/group-round/status/${playingGroupRoundKey}`);
+    // console.log("rrr", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Fetching delegation statuses error:", error);
+    throw error;
+  }
+};

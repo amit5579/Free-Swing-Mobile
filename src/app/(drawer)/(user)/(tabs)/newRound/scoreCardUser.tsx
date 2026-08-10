@@ -12,6 +12,7 @@ import {
   saveScoreCard,
   getSubScorecardHandicap,
 } from "@/api/modules/scoreCard.api";
+import { getDelegationStatuses, initGroupRound, getScorecardDetails as fetchLiveScorecard } from "@/api/modules/dashboard.api";
 import { saveDraft } from "@/utils/draftStorage";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
@@ -130,6 +131,7 @@ export default function ScoreCardUserPage() {
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
   >({});
+  const [delegationStatuses, setDelegationStatuses] = useState<Record<number, string>>({});
   const partners = (pendingRoundContext?.players || []).slice().sort((a: any, b: any) => {
     const teamA = a.team ?? 1;
     const teamB = b.team ?? 1;
@@ -244,9 +246,7 @@ export default function ScoreCardUserPage() {
 
   const showNetColumns =
     getScoringLabel() === "Net Score • Include Par 3" ||
-    getScoringLabel() === "Net Score • Exclude Par 3" ||
-    getScoringLabel() === "Stableford" ||
-    getScoringLabel() === "Stableford • Exclude Par 3";
+    getScoringLabel() === "Net Score • Exclude Par 3";
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -636,7 +636,7 @@ export default function ScoreCardUserPage() {
                 }
               : {}),
           }));
-        console.log("saveRound payload", payload);
+        // console.log("saveRound payload", payload);
 
         await saveScoreCard(payload);
 
@@ -727,7 +727,7 @@ export default function ScoreCardUserPage() {
     }));
 
     try {
-      console.log("ppp",payload);
+      // console.log("ppp",payload);
       
       await saveScoreCard(payload);
     } catch (err) {
@@ -974,6 +974,21 @@ export default function ScoreCardUserPage() {
         }));
 
         await saveScoreCard(payload);
+
+        if (playingGroupRoundKey && pendingRoundContext && pendingRoundContext.players && pendingRoundContext.players.length > 1) {
+          const primaryUserId = Number(currentUserId);
+          const targetUserIds = pendingRoundContext.players
+            .filter((p: any) => p.userId && Number(p.userId) !== primaryUserId)
+            .map((p: any) => Number(p.userId));
+          
+          if (targetUserIds.length > 0) {
+            try {
+              await initGroupRound(primaryUserId, targetUserIds, playingGroupRoundKey);
+            } catch (err) {
+              console.error("Error initializing group round:", err);
+            }
+          }
+        }
       } catch (err) {
         console.error("Error in initial draft/server save:", err);
       }
@@ -990,6 +1005,55 @@ export default function ScoreCardUserPage() {
   useEffect(() => {
     fetchScoreCard();
   }, [selectedScore, holes, handicap, courseId, teeBoxId]);
+
+  // Polling for live scoring and delegation statuses
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    const fetchDelegationStatuses = async () => {
+      if (roundContextId) {
+        try {
+          const statuses = await getDelegationStatuses(String(roundContextId));
+          // console.log("statuses", statuses);
+          const newStatuses: Record<number, string> = {};
+          statuses.forEach((s: any) => {
+            newStatuses[s.targetUserId] = s.status;
+          });
+          setDelegationStatuses(newStatuses);
+        } catch (e) {
+          console.error("Polling delegation statuses error:", e);
+        }
+      }
+    };
+
+    fetchDelegationStatuses(); // Fetch immediately on mount
+
+    interval = setInterval(async () => {
+      // 1. Poll delegation statuses
+      await fetchDelegationStatuses();
+      
+      // 2. Poll live scorecard data
+      const currentScorecardId = scoreCardRef.current[0]?.scorecardId;
+      if (currentScorecardId) {
+        try {
+          const liveData = await fetchLiveScorecard(currentScorecardId);
+          if (liveData && liveData.length > 0) {
+            // Only update if not actively focused on an input to avoid overwriting typing
+            setScoreCardDetails((prevDetails: any) => {
+              // Merge live data with local unsaved changes, or just replace for simplicity 
+              // (assuming active user is typing fast enough or focus is managed)
+              // We replace here as the simplest form of live sync
+              return liveData;
+            });
+          }
+        } catch (e) {
+          console.error("Polling live scorecard error:", e);
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [roundContextId]);
 
   useEffect(() => {
     if (scoreCardDetails && scoreCardDetails.length > 0) {
@@ -1056,7 +1120,7 @@ export default function ScoreCardUserPage() {
           ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
           : {}),
       }));
-      console.log("Auto-saving payload:", payload);
+      // console.log("Auto-saving payload:", payload);
       saveScoreCard(payload).catch((err) =>
         console.error("Auto-save error:", err),
       );
@@ -1142,8 +1206,18 @@ export default function ScoreCardUserPage() {
 
     if (index !== undefined && pIndex !== undefined) {
       const flatIndex = index * partners.length + pIndex;
-      const nextFlatIndex = flatIndex + 1;
+      let nextFlatIndex = flatIndex + 1;
       const totalInputs = processedHoles.length * partners.length;
+
+      while (nextFlatIndex < totalInputs) {
+        const nextPIndex = nextFlatIndex % partners.length;
+        const nextPlayer = partners[nextPIndex];
+        const isPending =
+          !nextPlayer.isPrimary &&
+          delegationStatuses[nextPlayer.userId] === "Pending";
+        if (!isPending) break;
+        nextFlatIndex++;
+      }
 
       // Auto-focus next input if 2 digits are entered
       if (value.length >= 2) {
@@ -2231,6 +2305,31 @@ export default function ScoreCardUserPage() {
                               })}
 
                               {/* Calculated Net Points Headers (RHS) */}
+                              {showPtsColumns &&
+                                partners.map((p: any) => {
+                                  const pName = p.isPrimary ? "You" : p.name;
+                                  return (
+                                    <VStack
+                                      key={`pts-hdr-${p.playerId}`}
+                                      style={{
+                                        width: pPtsWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          textAlign: "center",
+                                          fontWeight: "700",
+                                          fontSize: 11,
+                                          color: "#f59e0b",
+                                        }}
+                                      >
+                                        {`Pts(${pName})`}
+                                      </ThemedText>
+                                    </VStack>
+                                  );
+                                })}
                               {showNetColumns &&
                                 partners.map((p: any) => {
                                   const pName = p.isPrimary ? "You" : p.name;
@@ -2257,32 +2356,6 @@ export default function ScoreCardUserPage() {
                                   );
                                 })}
 
-                              {/* Stableford Points Headers (RHS) */}
-                              {showPtsColumns &&
-                                partners.map((p: any) => {
-                                  const pName = p.isPrimary ? "You" : p.name;
-                                  return (
-                                    <VStack
-                                      key={`pts-col-hdr-${p.playerId}`}
-                                      style={{
-                                        width: pPtsWidth,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          textAlign: "center",
-                                          fontWeight: "700",
-                                          fontSize: 11,
-                                          color: "#f59e0b",
-                                        }}
-                                      >
-                                        {`Pts(${pName})`}
-                                      </ThemedText>
-                                    </VStack>
-                                  );
-                                })}
                               {isSplit6 &&
                                 partners.length >= 3 &&
                                 partners.slice(0, 3).map((p: any) => (
@@ -2443,6 +2516,7 @@ export default function ScoreCardUserPage() {
                                     {/* Score Input Columns (LHS) */}
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
+                                      const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
 
                                       let bgColor = "transparent";
                                       if (
@@ -2485,6 +2559,7 @@ export default function ScoreCardUserPage() {
                                               isDark,
                                             )}
                                             <TextInput
+                                              editable={!isPending}
                                               value={
                                                 info.score !== null
                                                   ? String(info.score)
@@ -2512,15 +2587,23 @@ export default function ScoreCardUserPage() {
                                                 ] = el)
                                               }
                                               onSubmitEditing={() => {
-                                                const nextIdx =
+                                                let nextIdx =
                                                   index * partners.length +
                                                   pIndex +
                                                   1;
-                                                if (
-                                                  nextIdx <
-                                                  processedHoles.length *
-                                                    partners.length
-                                                ) {
+                                                const totalInputs = processedHoles.length * partners.length;
+
+                                                while (nextIdx < totalInputs) {
+                                                  const nextPIndex = nextIdx % partners.length;
+                                                  const nextPlayer = partners[nextPIndex];
+                                                  const isPending =
+                                                    !nextPlayer.isPrimary &&
+                                                    delegationStatuses[nextPlayer.userId] === "Pending";
+                                                  if (!isPending) break;
+                                                  nextIdx++;
+                                                }
+
+                                                if (nextIdx < totalInputs) {
                                                   inputRefs.current[
                                                     nextIdx
                                                   ]?.focus();
@@ -2546,9 +2629,9 @@ export default function ScoreCardUserPage() {
                                                 borderColor: isDark
                                                   ? "#444"
                                                   : "#ccc",
-                                                backgroundColor: "transparent",
+                                                backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
                                                 textAlign: "center",
-                                                color: isDark ? "#fff" : "#000",
+                                                color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
                                                 fontWeight: "700",
                                                 padding: 0,
                                               }}
@@ -2642,6 +2725,34 @@ export default function ScoreCardUserPage() {
                                       );
                                     })}
 
+                                    {/* Stableford Points Columns (RHS) */}
+                                    {showPtsColumns &&
+                                      partners.map((p: any) => {
+                                        const info = getPlayerHoleInfo(h, p);
+                                        return (
+                                          <View
+                                            key={`pts-cell-${p.playerId}`}
+                                            style={{
+                                              width: pPtsWidth,
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <ThemedText
+                                              style={{
+                                                fontWeight: "bold",
+                                                color: "#f59e0b",
+                                                fontSize: 13,
+                                              }}
+                                            >
+                                              {info.score !== null && info.score >= 0
+                                                ? info.stablefordPoints ?? "-"
+                                                : "-"}
+                                            </ThemedText>
+                                          </View>
+                                        );
+                                      })}
+
                                     {/* Net Score Columns (RHS) */}
                                     {showNetColumns &&
                                       partners.map((p: any, pIndex: number) => {
@@ -2683,52 +2794,6 @@ export default function ScoreCardUserPage() {
                                               }}
                                             >
                                               {info.netScore ?? "-"}
-                                            </ThemedText>
-                                          </View>
-                                        );
-                                      })}
-
-                                    {/* Stableford Points Columns (RHS) */}
-                                    {showPtsColumns &&
-                                      partners.map((p: any, pIndex: number) => {
-                                        const info = getPlayerHoleInfo(h, p);
-
-                                        let bgColor = "transparent";
-                                        if (
-                                          isNassau &&
-                                          ns &&
-                                          ns.holeResults[h.holeNumber]
-                                        ) {
-                                          const winner =
-                                            ns.holeResults[h.holeNumber].winner;
-                                          const isTeamA =
-                                            pIndex <
-                                            (partners.length >= 4 ? 2 : 1);
-                                          if (winner === "teamA" && isTeamA)
-                                            bgColor = "rgba(25, 135, 84, 0.15)";
-                                          if (winner === "teamB" && !isTeamA)
-                                            bgColor =
-                                              "rgba(13, 110, 253, 0.15)";
-                                        }
-
-                                        return (
-                                          <View
-                                            key={`pts-cell-${p.playerId}`}
-                                            style={{
-                                              width: pPtsWidth,
-                                              alignItems: "center",
-                                              justifyContent: "center",
-                                              backgroundColor: bgColor,
-                                            }}
-                                          >
-                                            <ThemedText
-                                              style={{
-                                                fontWeight: "bold",
-                                                color: "#f59e0b",
-                                                fontSize: 13,
-                                              }}
-                                            >
-                                              {info.stablefordPoints ?? "-"}
                                             </ThemedText>
                                           </View>
                                         );

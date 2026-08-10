@@ -356,12 +356,12 @@ const ScoreCard: React.FC = () => {
         const isHL =
           (mode.includes("high_low") ||
             mode.includes("high-low") ||
-            (pLength === 4 && !isGr)) &&
+            (pLength === 4 && !isGr && !isStablefordMode)) &&
           !(isNB || isNC);
         const isS6 =
           (mode.includes("split_six") ||
             mode.includes("split-six") ||
-            (pLength === 3 && !isGr)) &&
+            (pLength === 3 && !isGr && !isStablefordMode)) &&
           !(isNB || isNC);
 
         setIsHighLow(isHL);
