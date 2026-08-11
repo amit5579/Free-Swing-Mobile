@@ -1214,7 +1214,7 @@ export default function ScoreCardUserPage() {
         const nextPlayer = partners[nextPIndex];
         const isPending =
           !nextPlayer.isPrimary &&
-          delegationStatuses[nextPlayer.userId] === "Pending";
+          delegationStatuses[nextPlayer.userId] !== "Approved";
         if (!isPending) break;
         nextFlatIndex++;
       }

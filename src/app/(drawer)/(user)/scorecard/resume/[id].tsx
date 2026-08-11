@@ -329,7 +329,7 @@ export default function ResumeScorecard() {
                 : h.NassauStartingNine,
           }));
 
-          console.log("normalizedServerHoles", normalizedServerHoles);
+          // console.log("normalizedServerHoles", normalizedServerHoles);
 
           const state = getLatestRoundState(
             localDraft,
@@ -493,10 +493,7 @@ export default function ResumeScorecard() {
 
           const isG =
             !showPts &&
-            ((!firstHole.isExcluded &&
-              pLength > 1 &&
-              (!matchScoring || matchScoring.trim() === "")) ||
-              matchScoring.includes("gross") ||
+            (matchScoring.includes("gross") ||
               matchScoring.includes("gross_score"));
 
           setIsHighLow(isHL);
