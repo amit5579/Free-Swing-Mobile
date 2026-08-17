@@ -95,6 +95,7 @@ const ScoreCard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isStableford, setIsStableford] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
 
   // Multiplayer layout state variables
   const [partners, setPartners] = useState<any[]>([]);
@@ -1238,11 +1239,14 @@ const ScoreCard: React.FC = () => {
                   key={h.holeId}
                   className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                 >
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.holeNumber}
-                  </Text>
+                  <View className="flex-1 flex-row justify-center items-center">
+                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                      {h.holeNumber}
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
+                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    </TouchableOpacity>
+                  </View>
                   {isDetailsVisible && (
                     <>
                       <Text
@@ -1374,11 +1378,14 @@ const ScoreCard: React.FC = () => {
                   key={h.holeId}
                   className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                 >
-                  <Text
-                    className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                  >
-                    {h.holeNumber}
-                  </Text>
+                  <View className="flex-1 flex-row justify-center items-center">
+                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                      {h.holeNumber}
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
+                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    </TouchableOpacity>
+                  </View>
                   {isDetailsVisible && (
                     <>
                       <Text
@@ -4088,7 +4095,15 @@ const ScoreCard: React.FC = () => {
           );
         })()}
       </ScrollView>
+    
+      <RangefinderModal
+        visible={activeRangefinderHole !== null}
+        onClose={() => setActiveRangefinderHole(null)}
+        holes={holes}
+        initialHoleId={activeRangefinderHole}
+      />
     </ThemedView>
+    
   );
 };
 

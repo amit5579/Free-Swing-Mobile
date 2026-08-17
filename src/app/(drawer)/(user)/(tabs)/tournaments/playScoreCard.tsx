@@ -19,6 +19,7 @@ import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 // import {
 //   getScorecardHandicap,
 //   getScoreCardOpen,
@@ -65,6 +66,7 @@ export default function PlayScoreCard() {
     string | null
   >(null);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
 
   useEffect(() => {    
     if (scorecardData) {
@@ -547,7 +549,7 @@ export default function PlayScoreCard() {
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             userId: Number(userId),
           }));
-        console.log("finishPayload", finishPayload);
+        // console.log("finishPayload", finishPayload);
 
         await updateHoleScoresApi(
           tournamentId
@@ -728,9 +730,9 @@ export default function PlayScoreCard() {
               <Ionicons
                 name="arrow-back-outline"
                 size={24}
-                color={isDark ? "#ffffff" : "#020617"}
-              />
-            </Pressable>
+                color={isDark ? "#ffffff" : "#020617"} />
+              </Pressable>
+            </HStack>
 
             <ThemedText
               style={{
@@ -746,10 +748,18 @@ export default function PlayScoreCard() {
             </ThemedText>
 
             {/* ⚖️ TOGGLE */}
-            <Pressable
-              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-              style={{ padding: 8 }}
-            >
+            <HStack style={{ alignItems: "center" }}>
+              <Pressable
+                onPress={() => setActiveRangefinderHole(scoreCard[0]?.holeId || null)}
+                style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+                style={{ padding: 8 }}
+              >
               <Ionicons
                 name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
                 size={24}
@@ -952,9 +962,14 @@ export default function PlayScoreCard() {
                                 borderColor: isDark ? "#333" : "#eee",
                               }}
                             >
-                              <ThemedText style={colStyle}>
-                                {h.holeNumber}
-                              </ThemedText>
+                              <View style={{...colStyle, alignItems: 'center', justifyContent: 'center'} as any}>
+                                <ThemedText style={{ fontWeight: 'bold' }}>
+                                  {h.holeNumber}
+                                </ThemedText>
+                                <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} style={{ marginTop: 2 }}>
+                                  <Ionicons name="location-outline" size={16} color={isDark ? "#8BC34A" : "#198754"} />
+                                </TouchableOpacity>
+                              </View>
                               {isDetailsVisible && (
                                 <ThemedText
                                   style={{ ...colStyle, color: "#888" }}
@@ -1901,11 +1916,45 @@ export default function PlayScoreCard() {
           </View>
         </View>
       </Modal>
+
+      <RangefinderModal
+        visible={activeRangefinderHole !== null}
+        onClose={() => setActiveRangefinderHole(null)}
+        holes={scoreCard}
+        initialHoleId={activeRangefinderHole}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  indicatorContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  singleCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  singleSquare: {
+    width: 32,
+    height: 32,
+    borderWidth: 2,
+  },
+  doubleSquare: {
+    width: 32,
+    height: 32,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  innerSquare: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -1913,91 +1962,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContainer: {
-    width: "85%",
+    width: "80%",
     borderRadius: 12,
-    padding: 20,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   heading: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   content: {
-    fontSize: 14,
-    marginBottom: 20,
-    lineHeight: 20,
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
   },
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 10,
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 12,
   },
   cancelBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 8,
+    alignItems: "center",
   },
   confirmBtn: {
-    backgroundColor: "#8BC34A",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 8,
-  },
-  indicatorContainer: {
-    position: "absolute",
-    width: 42,
-    height: 42,
-    justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
-    pointerEvents: "none",
-  },
-  doubleCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  innerCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  singleCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 2,
-  },
-  singleSquare: {
-    width: 32,
-    height: 32,
-    borderWidth: 2,
-    borderRadius: 4,
-  },
-  doubleSquare: {
-    width: 34,
-    height: 34,
-    borderWidth: 1.5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  innerSquare: {
-    width: 26,
-    height: 26,
-    borderWidth: 1.5,
+    backgroundColor: "#22c55e",
   },
   legendItemStyle: {
-    width: "48%",
     alignItems: "center",
-    marginBottom: 18,
+    justifyContent: "center",
+    width: 70,
+    marginBottom: 8,
   },
   legendText: {
-    fontSize: 12,
-    marginTop: 6,
+    fontSize: 10,
     textAlign: "center",
+    marginTop: 4,
   },
 });
