@@ -100,3 +100,16 @@ export const updateAdminScores = async (tournamentId: number, userId:number, hol
     throw error;
   }
 };
+
+
+export const pinMapLocation = async (holeId: number, pinLat: number, pinLng: number) => {
+  try {
+    const response = await client.put(`holes/${holeId}/pin`, { pinLat, pinLng });
+    console.log("rrsdd",response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Updating pin location Error:", error);
+    throw error;
+  }
+}

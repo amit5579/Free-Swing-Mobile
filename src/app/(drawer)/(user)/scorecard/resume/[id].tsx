@@ -54,6 +54,7 @@ import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ThemedText } from "@/components/themed-text";
 import Toast from "react-native-toast-message";
+import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 
 export default function ResumeScorecard() {
   const {
@@ -111,6 +112,7 @@ export default function ResumeScorecard() {
   const [displayFront, setDisplayFront] = useState(true);
   const [displayBack, setDisplayBack] = useState(true);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const textScoresRef = useRef<Record<number, string>>({});
   const holesRef = useRef<ScorecardHole[]>([]);
@@ -1956,11 +1958,14 @@ export default function ResumeScorecard() {
                       key={h.holeId}
                       className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
                     >
-                      <Text
-                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                      >
-                        {h.holeNumber}
-                      </Text>
+                      <View className="flex-1 flex-row justify-center items-center">
+                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                      {h.holeNumber}
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
+                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    </TouchableOpacity>
+                  </View>
                       {isDetailsVisible && (
                         <>
                           <Text
@@ -2117,11 +2122,14 @@ export default function ResumeScorecard() {
                       key={h.holeId}
                       className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
                     >
-                      <Text
-                        className={`flex-1 text-center ${isDark ? "text-white" : "text-black"}`}
-                      >
-                        {h.holeNumber}
-                      </Text>
+                      <View className="flex-1 flex-row justify-center items-center">
+                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                      {h.holeNumber}
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
+                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    </TouchableOpacity>
+                  </View>
                       {isDetailsVisible && (
                         <>
                           <Text
@@ -4957,7 +4965,15 @@ export default function ResumeScorecard() {
           );
         })()}
       </ScrollView>
+    
+      <RangefinderModal
+        visible={activeRangefinderHole !== null}
+        onClose={() => setActiveRangefinderHole(null)}
+        holes={holes}
+        initialHoleId={activeRangefinderHole}
+      />
     </ThemedView>
+    
   );
 }
 

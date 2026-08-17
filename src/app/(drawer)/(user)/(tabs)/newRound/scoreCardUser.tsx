@@ -127,6 +127,7 @@ export default function ScoreCardUserPage() {
 
   const [visible, setVisible] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
   const [scoreCardDetails, setScoreCardDetails] = useState<any>([]);
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>

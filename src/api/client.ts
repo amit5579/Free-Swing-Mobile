@@ -1,9 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import ENV from "../config/env";
 
 const client = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  baseURL: ENV.API_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
