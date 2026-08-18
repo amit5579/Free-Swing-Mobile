@@ -271,6 +271,7 @@ export type ScorecardHoleApi = {
   "isExcluded": boolean,
   "userId":number,
   "groupName"?: string,
+  "courseName": string,
   "nassauStartingNine": string
 };
 

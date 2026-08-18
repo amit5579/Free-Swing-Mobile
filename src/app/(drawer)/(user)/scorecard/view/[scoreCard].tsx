@@ -37,6 +37,7 @@ import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ThemedText } from "@/components/themed-text";
 import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
+import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 
 const ScoreCard: React.FC = () => {
   const {
@@ -4101,6 +4102,7 @@ const ScoreCard: React.FC = () => {
         onClose={() => setActiveRangefinderHole(null)}
         holes={holes}
         initialHoleId={activeRangefinderHole}
+        courseName={courseName}
       />
     </ThemedView>
     

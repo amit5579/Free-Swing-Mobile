@@ -45,6 +45,7 @@ import { ThemedText } from "@/components/themed-text";
 import { Box } from "@/components/box";
 import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
 import { getHandicapDetails } from "@/api/modules/newRound.api";
+import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 
 const ScoreCard: React.FC = () => {
   const { scoreCard, handicap: paramHandicap } = useLocalSearchParams<{
@@ -1263,15 +1264,7 @@ const ScoreCard: React.FC = () => {
         >
           <Text className="text-white font-bold">Go Back</Text>
         </Pressable>
-      
-      <RangefinderModal
-        visible={activeRangefinderHole !== null}
-        onClose={() => setActiveRangefinderHole(null)}
-        holes={holes}
-        initialHoleId={activeRangefinderHole}
-      />
-    </ThemedView>
-    
+      </ThemedView>
     );
   }
   const renderHeader = () => {
@@ -1371,25 +1364,33 @@ const ScoreCard: React.FC = () => {
               </Text>
             </Box>
           </HStack>
-
-          <Pressable
-            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-            }}
-            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-          >
-            <Ionicons
-              name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-              size={20}
-              color={isDark ? "#fff" : "#020617"}
-            />
-          </Pressable>
+          <HStack style={{ alignItems: "center" }}>
+            <Pressable
+              onPress={() => setActiveRangefinderHole(holes[0]?.holeId || null)}
+              style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
+            >
+              <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+              }}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            >
+              <Ionicons
+                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color={isDark ? "#fff" : "#020617"}
+              />
+            </Pressable>
+          </HStack>
         </HStack>
       </View>
     );
@@ -3830,6 +3831,14 @@ const ScoreCard: React.FC = () => {
           );
         })()}
       </ScrollView>
+
+      <RangefinderModal
+        visible={activeRangefinderHole !== null}
+        onClose={() => setActiveRangefinderHole(null)}
+        holes={holes}
+        initialHoleId={activeRangefinderHole}
+        courseName={holes[0]?.courseName || ""}
+      />
     </SafeAreaView>
   );
 };

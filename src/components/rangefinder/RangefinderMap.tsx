@@ -3,6 +3,11 @@ import { StyleSheet, View } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { createGeoJSONCircle, createLineString, createFeatureCollection } from '../../utils/rangefinder/geojson';
 
+export interface ClubDistance {
+  name: string;
+  distanceYards: number;
+}
+
 interface RangefinderMapProps {
   playerLocation: [number, number] | null;
   pinLocation: [number, number] | null;
@@ -14,6 +19,7 @@ interface RangefinderMapProps {
   onPinDragEnd?: (coords: [number, number]) => void;
   onAimDragEnd?: (coords: [number, number]) => void;
   cameraRef?: React.RefObject<Mapbox.Camera>;
+  clubDistances?: ClubDistance[];
 }
 
 // Ensure Mapbox gets initialized with public token in the main app layout.
@@ -33,6 +39,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   onPinDragEnd,
   onAimDragEnd,
   cameraRef,
+  clubDistances,
 }) => {
 
   const mapStyle = Mapbox.StyleURL.Satellite;
@@ -49,18 +56,32 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
     return createLineString(coords);
   }, [playerLocation, pinLocation, aimLocation]);
 
-  // Create club distance arcs (e.g. 100, 150, 200 yards)
+  // Create club distance arcs dynamically
   const arcsGeoJSON = useMemo(() => {
     if (!playerLocation) return null;
     
-    const arcs = [
-      createGeoJSONCircle(playerLocation[1], playerLocation[0], 100),
-      createGeoJSONCircle(playerLocation[1], playerLocation[0], 150),
-      createGeoJSONCircle(playerLocation[1], playerLocation[0], 200),
+    // Fallback to default distances if none are provided
+    const distances = clubDistances && clubDistances.length > 0 ? clubDistances : [
+      { name: 'Driver', distanceYards: 250 },
+      { name: '3-Wood', distanceYards: 225 },
+      { name: '5-Iron', distanceYards: 185 },
+      { name: '7-Iron', distanceYards: 160 },
+      { name: 'Pitching Wedge', distanceYards: 125 }
     ];
+
+    const arcs = distances.map((club) => {
+      // Using distanceYards as radius for the utility
+      const radius = club.distanceYards; 
+      
+      return createGeoJSONCircle(
+        playerLocation[1], // longitude
+        playerLocation[0], // latitude
+        radius
+      );
+    });
     
     return createFeatureCollection(arcs);
-  }, [playerLocation]);
+  }, [playerLocation, clubDistances]);
 
   const centerCoordinate = playerLocation || pinLocation || [0,0];
 
@@ -146,11 +167,12 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
                 onPinDragEnd(e.geometry.coordinates as [number, number]);
               }
             }}
+            anchor={{ x: 0.5, y: 1 }}
           >
             <View style={styles.flagMarker}>
-               {/* Custom SVG or styling for a flag. We can use a simple view for now or an icon if Ionicons is imported. Since Ionicons might not be available here, let's use a stylized view. */}
                <View style={styles.flagPole} />
                <View style={styles.flagTriangle} />
+               <View style={styles.flagBase} />
             </View>
           </Mapbox.PointAnnotation>
         )}
@@ -179,33 +201,55 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   flagMarker: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    width: 24,
-    height: 32,
+    width: 40,
+    height: 48,
+  },
+  flagBase: {
+    position: 'absolute',
+    bottom: 0,
+    left: 13,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 1,
+    elevation: 3,
+    zIndex: 2,
   },
   flagPole: {
-    width: 3,
-    height: 32,
-    backgroundColor: '#fff',
     position: 'absolute',
-    left: 4,
-    bottom: 0,
+    bottom: 6,
+    left: 18.5,
+    width: 3,
+    height: 36,
+    backgroundColor: '#fff',
     borderRadius: 1.5,
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1,
+    elevation: 2,
   },
   flagTriangle: {
     position: 'absolute',
-    left: 7,
-    top: 0,
+    left: 20,
+    top: 6,
     width: 0,
     height: 0,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
-    borderLeftWidth: 14,
-    borderTopWidth: 8,
-    borderBottomWidth: 8,
+    borderLeftWidth: 16,
+    borderTopWidth: 10,
+    borderBottomWidth: 10,
     borderLeftColor: '#4CAF50',
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
+    zIndex: 2,
   }
 });
