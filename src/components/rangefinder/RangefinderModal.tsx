@@ -9,21 +9,26 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Linking,
 } from "react-native";
+import * as Location from 'expo-location';
 import { Ionicons } from "@expo/vector-icons";
-import { RangefinderMap } from "./RangefinderMap";
+import { RangefinderMap, ClubDistance } from "./RangefinderMap";
 import { useRangefinder } from "../../hooks/useRangefinder";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import client from "@/api/client";
 import Mapbox from "@rnmapbox/maps";
 import { useRef } from "react";
 import { pinMapLocation } from "@/api/modules/scoreCard.api";
+import { getCourseDetails } from "@/api/modules/subAdmin/tournaments.api";
 
 interface RangefinderModalProps {
   visible: boolean;
   onClose: () => void;
   holes: any[];
   initialHoleId: number | null;
+  courseName?: string;
 }
 
 const GreenDistances = ({
@@ -88,6 +93,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   onClose,
   holes,
   initialHoleId,
+  courseName,
 }) => {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -96,6 +102,64 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   const [currentHoleIndex, setCurrentHoleIndex] = useState(0);
   const [unit, setUnit] = useState<"YD" | "M">("YD");
   const [isFlagMode, setIsFlagMode] = useState(false);
+  const [myClubs, setMyClubs] = useState<ClubDistance[]>([]);
+  const [locationPermission, setLocationPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [fetchedCourseName, setFetchedCourseName] = useState<string>("");
+
+  useEffect(() => {
+    const courseId = holes[0]?.courseId;
+    if (visible && courseId) {
+      getCourseDetails(courseId)
+        .then((response) => {
+          if (response?.name) {
+            setFetchedCourseName(response.name);
+          }
+        })
+        .catch((error) => console.error("Failed to fetch course details for rangefinder", error));
+    }
+  }, [visible, holes]);
+
+  // Check location permission when modal becomes visible
+  useEffect(() => {
+    if (visible) {
+      (async () => {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          setLocationPermission('granted');
+        } else {
+          // Try requesting
+          const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
+          setLocationPermission(newStatus === 'granted' ? 'granted' : 'denied');
+        }
+      })();
+    } else {
+      setLocationPermission('unknown');
+    }
+  }, [visible]);
+
+  const handleRetryPermission = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === 'granted') {
+      setLocationPermission('granted');
+      startTracking();
+    } else {
+      setLocationPermission('denied');
+    }
+  };
+
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        const saved = await AsyncStorage.getItem('rangefinder_clubs');
+        if (saved) {
+          setMyClubs(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error("Failed to load clubs from AsyncStorage:", error);
+      }
+    };
+    loadClubs();
+  }, []);
   const [isAimMode, setIsAimMode] = useState(false);
   const [isSavingPin, setIsSavingPin] = useState(false);
   const cameraRef = useRef<Mapbox.Camera>(null);
@@ -113,10 +177,22 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     setIsUiVisible(!isUiVisible);
   };
 
+  // Track if we've already set the initial hole for this session
+  const hasInitializedHole = useRef(false);
+  // Reset the tracker when the modal is closed
   useEffect(() => {
-    if (visible && initialHoleId && holes.length > 0) {
+    if (!visible) {
+      hasInitializedHole.current = false;
+    }
+  }, [visible]);
+  // Only set the initial hole once when the modal opens and data is ready
+  useEffect(() => {
+    if (visible && !hasInitializedHole.current && initialHoleId && holes.length > 0) {
       const index = holes.findIndex((h) => h.holeId === initialHoleId);
-      if (index !== -1) setCurrentHoleIndex(index);
+      if (index !== -1) {
+        setCurrentHoleIndex(index);
+        hasInitializedHole.current = true;
+      }
     }
   }, [visible, initialHoleId, holes]);
 
@@ -200,14 +276,20 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     try {
       setIsSavingPin(true);
       const payload = { pinLat: pinLocation[1], pinLng: pinLocation[0] };
+      if(!payload) {
+        Alert.alert("Error", "Pin location is required");
+        return;
+      }
       const res = await pinMapLocation(
         currentHole.holeId,
         payload.pinLat,
         payload.pinLng,
       );
 
-      if (res.status === 200 || res.status === 201) {
+      if (res) {
         Alert.alert("Success", "Pin location saved successfully");
+        currentHole.pinLat = payload.pinLat;
+        currentHole.pinLng = payload.pinLng;
       }
     } catch (error) {
       Alert.alert("Error", "Failed to update pin location");
@@ -266,6 +348,38 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
           { backgroundColor: isDark ? "#161618" : "#F9FAFB" },
         ]}
       >
+        {/* Location Permission Denied Screen */}
+        {locationPermission === 'denied' && (
+          <View style={[styles.permissionOverlay, { backgroundColor: isDark ? '#161618' : '#F9FAFB' }]}>
+            <View style={styles.permissionCloseRow}>
+              <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+                <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.permissionContent}>
+              <View style={styles.permissionIconCircle}>
+                <Ionicons name="location-outline" size={48} color="#8BC34A" />
+              </View>
+              <Text style={[styles.permissionTitle, { color: isDark ? '#fff' : '#000' }]}>
+                Location Permission Required
+              </Text>
+              <Text style={[styles.permissionDesc, { color: isDark ? '#aaa' : '#666' }]}>
+                The GPS Rangefinder needs access to your location to show distances to the pin and track your position on the course.
+              </Text>
+              <TouchableOpacity style={styles.permissionBtn} onPress={handleRetryPermission}>
+                <Ionicons name="refresh" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={styles.permissionBtnText}>Grant Permission</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.permissionBtn, { backgroundColor: isDark ? '#333' : '#e5e7eb', marginTop: 10 }]}
+                onPress={() => Linking.openSettings()}
+              >
+                <Ionicons name="settings-outline" size={18} color={isDark ? '#fff' : '#000'} style={{ marginRight: 6 }} />
+                <Text style={[styles.permissionBtnText, { color: isDark ? '#fff' : '#000' }]}>Open Settings</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
         {/* Header HUD */}
         <Animated.View
           style={[
@@ -308,7 +422,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
                   ]}
                   numberOfLines={1}
                 >
-                  {currentHole?.courseName || "Course"}
+                  {courseName || fetchedCourseName || currentHole?.courseName || "Course"}
                 </Text>
                 <Text
                   style={[
@@ -395,6 +509,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             onPinDragEnd={handlePinDragEnd}
             onAimDragEnd={handleAimDragEnd}
             cameraRef={cameraRef as any}
+            clubDistances={myClubs}
           />
 
           {/* vertical buttons on right side are below */}
@@ -702,5 +817,57 @@ const styles = StyleSheet.create({
   addScoreText: {
     color: "#FFF",
     fontWeight: "bold",
+  },
+  permissionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionCloseRow: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    zIndex: 101,
+  },
+  permissionContent: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  permissionIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(139, 195, 74, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  permissionTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  permissionDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 28,
+  },
+  permissionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8BC34A',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 12,
+    width: '100%',
+  },
+  permissionBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

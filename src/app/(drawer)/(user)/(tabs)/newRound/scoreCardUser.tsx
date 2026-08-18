@@ -22,6 +22,7 @@ import Watermark from "@/components/watermark";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
@@ -1618,24 +1619,33 @@ export default function ScoreCardUserPage() {
             </ThemedText>
 
             {/* ⚖️ TOGGLE */}
-            <Pressable
-              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-              }}
-              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-            >
-              <Ionicons
-                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-                size={20}
-                color={isDark ? "#fff" : "#020617"}
-              />
-            </Pressable>
+            <HStack style={{ alignItems: "center" }}>
+              <Pressable
+                onPress={() => setActiveRangefinderHole(scoreCardDetails[0]?.holeId || null)}
+                style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                }}
+                android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+              >
+                <Ionicons
+                  name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                  size={20}
+                  color={isDark ? "#fff" : "#020617"}
+                />
+              </Pressable>
+            </HStack>
           </HStack>
 
           {/* 📌 META INFO ROW */}
@@ -4956,6 +4966,14 @@ export default function ScoreCardUserPage() {
           </View>
         </View>
       </Modal>
+
+      <RangefinderModal
+        visible={activeRangefinderHole !== null}
+        onClose={() => setActiveRangefinderHole(null)}
+        holes={scoreCardDetails}
+        initialHoleId={activeRangefinderHole}
+        courseName={scoreCardDetails[0]?.courseName || ""}
+      />
     </>
   );
 }

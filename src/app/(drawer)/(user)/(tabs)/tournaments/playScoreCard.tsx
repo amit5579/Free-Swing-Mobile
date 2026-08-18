@@ -748,7 +748,7 @@ export default function PlayScoreCard() {
             </ThemedText>
 
             {/* ⚖️ TOGGLE */}
-            <HStack style={{ alignItems: "center" }}>
+            <HStack style={{ alignItems: "center", justifyContent: "space-between", paddingHorizontal: 10 }}>
               <Pressable
                 onPress={() => setActiveRangefinderHole(scoreCard[0]?.holeId || null)}
                 style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
@@ -1922,6 +1922,7 @@ export default function PlayScoreCard() {
         onClose={() => setActiveRangefinderHole(null)}
         holes={scoreCard}
         initialHoleId={activeRangefinderHole}
+        courseName={scoreCard[0]?.courseName || ""}
       />
     </>
   );
