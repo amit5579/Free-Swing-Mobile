@@ -7,6 +7,7 @@ import {
   useColorScheme,
   View,
   ViewStyle,
+  InteractionManager,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
@@ -94,14 +95,17 @@ export default function LeaderboardUser() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchData(true);
-
-      const intervalId = setInterval(() => {
-        fetchData(false);        
-      }, 3000);
+      let intervalId: NodeJS.Timeout;
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchData(true);
+        intervalId = setInterval(() => {
+          fetchData(false);        
+        }, 3000);
+      });
 
       return () => {
-        clearInterval(intervalId);
+        task.cancel();
+        if (intervalId) clearInterval(intervalId);
       };
     }, [tournamentId, teeboxId])
   );

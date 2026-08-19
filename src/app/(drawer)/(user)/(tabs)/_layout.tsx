@@ -51,14 +51,10 @@ export default function TabLayout() {
     fetchProfile();
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchProfile();
-    }, []),
-  );
   return (
     <Tabs
       screenOptions={{
+        freezeOnBlur: true,
         headerShown: true,
         headerShadowVisible: false,
         headerStyle: {

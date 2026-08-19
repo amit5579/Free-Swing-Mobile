@@ -13,6 +13,7 @@ import {
   View,
   ScrollView,
   RefreshControl,
+  InteractionManager,
 } from "react-native";
 import { useEffect, useState, useCallback } from "react";
 import { getScoreHistory, ScoreHistoryItem } from "@/api/modules/dashboard.api";
@@ -52,7 +53,10 @@ export function HistoryTab({
 
   useFocusEffect(
     useCallback(() => {
-      fetchHistory(true);
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchHistory(true);
+      });
+      return () => task.cancel();
     }, [playerId]),
   );
 

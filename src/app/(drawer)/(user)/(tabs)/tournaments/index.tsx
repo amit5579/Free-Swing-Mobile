@@ -9,6 +9,7 @@ import {
   TextInput,
   useColorScheme,
   RefreshControl,
+  InteractionManager,
 } from "react-native";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -149,8 +150,10 @@ export default function TournamentsScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchTournaments();
-      // 🔥 refetch when screen is focused again
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchTournaments();
+      });
+      return () => task.cancel();
     }, []),
   );
 
