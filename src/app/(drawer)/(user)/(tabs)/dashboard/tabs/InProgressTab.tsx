@@ -14,6 +14,7 @@ import {
   Pressable,
   Alert,
   RefreshControl,
+  InteractionManager,
 } from "react-native";
 import {
   getInProgressGames,
@@ -102,7 +103,10 @@ export function InProgressTab({
 
   useFocusEffect(
     useCallback(() => {
-      fetchGames(true);
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchGames(true);
+      });
+      return () => task.cancel();
     }, [playerId]),
   );
 

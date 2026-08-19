@@ -16,6 +16,7 @@ import {
   PanResponder,
   Alert,
   RefreshControl,
+  InteractionManager,
 } from "react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -117,7 +118,10 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchAllData(true);
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchAllData(true);
+      });
+      return () => task.cancel();
     }, []),
   );
 

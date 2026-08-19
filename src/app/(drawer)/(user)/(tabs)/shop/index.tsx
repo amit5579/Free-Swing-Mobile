@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
   useColorScheme,
   RefreshControl,
+  InteractionManager,
 } from "react-native";
 import { Image } from "expo-image";
 import Animated, {
@@ -245,7 +246,10 @@ export default function ShopScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchProducts(true);
+      const task = InteractionManager.runAfterInteractions(() => {
+        fetchProducts(true);
+      });
+      return () => task.cancel();
     }, []),
   );
 
