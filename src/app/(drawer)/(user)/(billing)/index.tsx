@@ -19,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import QRCode from "react-native-qrcode-svg";
 
 import { getMyBills, uploadBillScreenshot } from "@/api/modules/billing.api";
@@ -58,25 +58,25 @@ export default function UserBillingPage() {
 
   const handleUploadScreenshot = async (billId: number) => {
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        cropping: true,
+        cropperChooseText: "Done/Submit",
+        cropperToolbarTitle: "Edit Image",
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setUploadingId(billId);
-        const asset = result.assets[0];
-        const fileName = asset.uri.split("/").pop() || "screenshot.jpg";
-        const fileType = asset.mimeType || "image/jpeg";
-        
-        await uploadBillScreenshot(billId, asset.uri, fileType, fileName);
-        Toast.show({ type: "success", text1: "Screenshot uploaded successfully. Awaiting verification." });
-        fetchBills(false);
+      setUploadingId(billId);
+      const fileName = result.filename || result.path.split("/").pop() || "screenshot.jpg";
+      const fileType = result.mime || "image/jpeg";
+      
+      await uploadBillScreenshot(billId, result.path, fileType, fileName);
+      Toast.show({ type: "success", text1: "Screenshot uploaded successfully. Awaiting verification." });
+      fetchBills(false);
+    } catch (err: any) {
+      if (err.code !== "E_PICKER_CANCELLED") {
+        console.error(err);
+        Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
       }
-    } catch (err) {
-      console.error(err);
-      Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
     } finally {
       setUploadingId(null);
     }

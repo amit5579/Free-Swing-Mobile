@@ -286,6 +286,17 @@ export default function StartNewRoundPage() {
     return nameMatch || locationMatch;
   });
 
+  const combinedSearchList = [
+    ...filteredLocalCourses.map((c: any) => ({ ...c, isExternal: false })),
+    ...searchedCourseList
+      .filter((c: any) => !c.alreadyImported)
+      .map((c: any) => ({ ...c, isExternal: true })),
+  ].sort((a, b) => {
+    const nameA = (a.isExternal ? a.courseName : a.name) || "";
+    const nameB = (b.isExternal ? b.courseName : b.name) || "";
+    return nameA.localeCompare(nameB);
+  });
+
   return (
     <>
       <View
@@ -372,38 +383,12 @@ export default function StartNewRoundPage() {
                 <>
                   {search.trim().length > 0 ? (
                     <>
-                      {/* My Saved Courses matching the query */}
-                      {filteredLocalCourses.length > 0 && (
-                        <VStack className="mb-6">
-                          <ThemedText
-                            style={{
-                              fontSize: 16,
-                              fontWeight: "700",
-                              marginBottom: 12,
-                              color: "#8bc34a",
-                            }}
-                          >
-                            My Courses ({filteredLocalCourses.length})
-                          </ThemedText>
-                          {filteredLocalCourses.map((course: any) => (
-                            <CourseCard
-                              key={course.courseId}
-                              course={course}
-                              isDark={isDark}
-                              playerList={playerList}
-                              profile={profile}
-                            />
-                          ))}
-                        </VStack>
-                      )}
-
-                      {/* Online Database Search results */}
                       <HStack className="justify-between items-center mb-4">
                         <VStack>
                           <ThemedText
                             style={{ fontSize: 16, fontWeight: "700" }}
                           >
-                            Online Database Results
+                            Search Results
                           </ThemedText>
                           <ThemedText
                             style={{
@@ -422,7 +407,7 @@ export default function StartNewRoundPage() {
                               color: "#475569",
                             }}
                           >
-                            {searchedCourseList.length} result(s)
+                            {combinedSearchList.length} result(s)
                           </ThemedText>
                         </Box>
                       </HStack>
@@ -433,12 +418,19 @@ export default function StartNewRoundPage() {
                             <SearchCourseSkeleton key={i} isDark={isDark} />
                           ))}
                         </>
-                      ) : searchedCourseList.length > 0 ? (
-                        searchedCourseList.map((course: any) => (
-                          <ExternalCourseCard
-                            key={course.externalCourseId}
+                      ) : combinedSearchList.length > 0 ? (
+                        combinedSearchList.map((course: any) => (
+                          <CourseCard
+                            key={
+                              course.isExternal
+                                ? `ext-${course.externalCourseId}`
+                                : `loc-${course.courseId}`
+                            }
                             course={course}
                             isDark={isDark}
+                            playerList={playerList}
+                            profile={profile}
+                            isExternal={course.isExternal}
                             handleCourseSave={handleCourseSave}
                           />
                         ))
@@ -446,7 +438,7 @@ export default function StartNewRoundPage() {
                         <ThemedText
                           style={{ textAlign: "center", marginVertical: 20 }}
                         >
-                          No online golf courses found for "{search}"
+                          No courses found for "{search}"
                         </ThemedText>
                       )}
                     </>
@@ -471,127 +463,15 @@ export default function StartNewRoundPage() {
   );
 }
 
-/* ---------- EXTERNAL COURSE CARD ---------- */
-function ExternalCourseCard({ course, isDark, handleCourseSave }: any) {
-  const textColor = isDark ? "#f8fafc" : "#0f172a";
-  const subTextColor = isDark ? "#94a3b8" : "#64748b";
-
-  return (
-    <Box
-      className="rounded-2xl p-4 mb-4"
-      style={{
-        borderWidth: 1,
-        backgroundColor: isDark
-          ? "rgba(15, 23, 42, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
-        borderColor: isDark ? "#1e293b" : "#e2e8f0",
-      }}
-    >
-      {/* Top Row: Name and ID */}
-      <HStack className="justify-between items-start mb-1">
-        <VStack className="flex-1 mr-2">
-          <ThemedText
-            style={{ fontSize: 17, fontWeight: "700", color: textColor }}
-          >
-            {course.courseName}
-          </ThemedText>
-          <ThemedText style={{ fontSize: 13, color: subTextColor }}>
-            {course.clubName}
-          </ThemedText>
-        </VStack>
-        <Box className="bg-[#f1f5f9] px-2 py-0.5 rounded-md border border-[#e2e8f0]">
-          <ThemedText
-            style={{ fontSize: 10, fontWeight: "700", color: "#64748b" }}
-          >
-            ID {course.externalCourseId}
-          </ThemedText>
-        </Box>
-      </HStack>
-
-      {/* Save Button Row */}
-      <HStack className="justify-end mb-3">
-        {course.alreadyImported ? (
-          <Box className="flex-row items-center gap-1 border border-[#8bc34a] px-4 py-1.5 rounded-lg bg-[#f0f9eb]">
-            <Ionicons name="checkmark-circle" size={16} color="#8bc34a" />
-            <ThemedText
-              style={{ fontSize: 13, fontWeight: "700", color: "#8bc34a" }}
-            >
-              Saved
-            </ThemedText>
-          </Box>
-        ) : (
-          <Pressable
-            onPress={() => handleCourseSave(course.sourceCourse)}
-            className="flex-row items-center gap-1 bg-[#8bc34a] px-5 py-2 rounded-lg"
-            android_ripple={{ color: "rgba(255,255,255,0.2)" }}
-          >
-            <Ionicons name="download-outline" size={16} color="#fff" />
-            <ThemedText
-              style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
-            >
-              Save
-            </ThemedText>
-          </Pressable>
-        )}
-      </HStack>
-
-      {/* Address Row */}
-      <HStack className="items-start gap-1 mb-4 pr-4">
-        <Ionicons
-          name="location"
-          size={16}
-          color="#ef4444"
-          style={{ marginTop: 2 }}
-        />
-        <ThemedText
-          numberOfLines={2}
-          style={{ fontSize: 13, color: subTextColor, lineHeight: 18, flex: 1 }}
-        >
-          {course.address || "Address not available"}
-        </ThemedText>
-      </HStack>
-
-      {/* Bottom Badges */}
-      <HStack className="gap-2 flex-wrap">
-        <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
-          <ThemedText
-            style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}
-          >
-            Male Tees: {course.maleTeeCount}
-          </ThemedText>
-        </Box>
-        <Box className="bg-[#f8fafc] border border-[#e2e8f0] px-2.5 py-1 rounded-full">
-          <ThemedText
-            style={{ fontSize: 11, fontWeight: "600", color: "#475569" }}
-          >
-            Female Tees: {course.femaleTeeCount}
-          </ThemedText>
-        </Box>
-        <Box
-          className="px-2.5 py-1 rounded-full"
-          style={{
-            backgroundColor: course.alreadyImported ? "#ecfdf5" : "#f1f5f9",
-            borderWidth: 1,
-            borderColor: course.alreadyImported ? "#10b981" : "#94a3b8",
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              color: course.alreadyImported ? "#047857" : "#475569",
-            }}
-          >
-            {course.alreadyImported ? "Already in DB" : "Not saved locally"}
-          </ThemedText>
-        </Box>
-      </HStack>
-    </Box>
-  );
-}
-
 /* ---------- COURSE CARD ---------- */
-function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
+function CourseCard({
+  course,
+  isDark,
+  playerList = [],
+  profile = null,
+  isExternal = false,
+  handleCourseSave,
+}: any) {
   const routePage = useRouter();
 
   /* ---------- CONSTANTS ---------- */
@@ -815,23 +695,25 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
         }}
       >
         {/* Free Badge */}
-        <Box
-          className="absolute top-3 right-3 px-3 py-1 rounded-full"
-          style={{
-            backgroundColor:
-              course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
-          }}
-        >
-          <ThemedText
+        {!isExternal && (
+          <Box
+            className="absolute top-3 right-3 px-3 py-1 rounded-full"
             style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: course.isPremium ? "#3D2412" : "#fff",
+              backgroundColor:
+                course.isPremium === false ? "#8b8b8bff" : "#EFBF04",
             }}
           >
-            {course.isPremium === false ? "Free" : "Premium"}
-          </ThemedText>
-        </Box>
+            <ThemedText
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: course.isPremium ? "#3D2412" : "#fff",
+              }}
+            >
+              {course.isPremium === false ? "Free" : "Premium"}
+            </ThemedText>
+          </Box>
+        )}
 
         {/* Flag */}
         <HStack className="mb-3">
@@ -845,8 +727,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
         {/* Course Name */}
         <ThemedText style={{ fontSize: 18, fontWeight: "700" }}>
-          {course.name}
-          {/* {courseList.name} */}
+          {isExternal ? course.courseName : course.name}
         </ThemedText>
 
         <HStack className="justify-between gap-4">
@@ -862,8 +743,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                 flex: 1,
               }}
             >
-              {course.location}
-              {/* course location */}
+              {isExternal ? course.address : course.location}
             </ThemedText>
           </HStack>
         </HStack>
@@ -877,44 +757,62 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
               opacity: 0.7,
             }}
           >
-            {course.teeBoxes.length} Tee Boxes
+            {isExternal
+              ? (course.maleTeeCount || 0) + (course.femaleTeeCount || 0)
+              : course.teeBoxes?.length || 0}{" "}
+            Tee Boxes
           </ThemedText>
         </HStack>
         <Divider className="my-3 h-[1px] bg-[#e5e5e5]" />
 
-        <Pressable
-          onPress={() => {
-            setModalVisible(true);
-            setTeeBoxList(course.teeBoxes);
-            reset(); // reset form to defaults
-            setNumberOfPlayers("solo");
-            setPlayer2(null);
-            setPlayer3(null);
-            setPlayer4(null);
-          }}
-          className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? "#8bc34a" : "transparent",
-          })}
-        >
-          {({ pressed }) => (
-            <>
-              <Ionicons
-                name={pressed ? "apps" : "apps-outline"}
-                size={18}
-                color={pressed ? "white" : "#8bc34a"}
-              />
-              <ThemedText
-                style={{
-                  color: pressed ? "white" : "#8bc34a",
-                  fontWeight: "600",
-                }}
-              >
-                Select Tee Box
-              </ThemedText>
-            </>
-          )}
-        </Pressable>
+        {isExternal ? (
+          <Pressable
+            onPress={() =>
+              handleCourseSave && handleCourseSave(course.sourceCourse)
+            }
+            className="mt-3 rounded-xl py-2 items-center flex-row justify-center gap-2 bg-[#8bc34a]"
+            android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+          >
+            <Ionicons name="download-outline" size={18} color="white" />
+            <ThemedText style={{ color: "white", fontWeight: "600" }}>
+              Save Course
+            </ThemedText>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => {
+              setModalVisible(true);
+              setTeeBoxList(course.teeBoxes || []);
+              reset(); // reset form to defaults
+              setNumberOfPlayers("solo");
+              setPlayer2(null);
+              setPlayer3(null);
+              setPlayer4(null);
+            }}
+            className="mt-3 rounded-xl py-2 items-center border border-[#8bc34a] flex-row justify-center gap-2"
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? "#8bc34a" : "transparent",
+            })}
+          >
+            {({ pressed }) => (
+              <>
+                <Ionicons
+                  name={pressed ? "apps" : "apps-outline"}
+                  size={18}
+                  color={pressed ? "white" : "#8bc34a"}
+                />
+                <ThemedText
+                  style={{
+                    color: pressed ? "white" : "#8bc34a",
+                    fontWeight: "600",
+                  }}
+                >
+                  Select Tee Box
+                </ThemedText>
+              </>
+            )}
+          </Pressable>
+        )}
       </Box>
 
       <Modal animationType="slide" transparent visible={modalVisible}>
@@ -1042,7 +940,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
                             fontSize: 34,
                             fontWeight: "700",
                             lineHeight: 38,
-                            color:"#8bc34a"
+                            color: "#8bc34a",
                           }}
                         >
                           {handicapDetails.handicap}
@@ -1052,11 +950,7 @@ function CourseCard({ course, isDark, playerList = [], profile = null }: any) {
 
                     {/* Info */}
                     <HStack className="items-start gap-3">
-                      <Ionicons
-                        name="alert-circle"
-                        size={25}
-                        color="#8bc34a"
-                      />
+                      <Ionicons name="alert-circle" size={25} color="#8bc34a" />
 
                       <Text className="flex-1 text-md leading-5 text-[#8bc34a] font-semibold">
                         Net scores are calculated using the WHS 95% playing

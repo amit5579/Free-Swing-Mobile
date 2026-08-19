@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
 import { getDrivingRangeSlots, bookDrivingRangeSlot, uploadScreenshot } from "@/api/modules/drivingRange.api";
 import { getProfile } from "@/api/modules/profile.api";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 
 export default function DrivingRangeBookingPage() {
   const colorScheme = useColorScheme();
@@ -194,27 +194,27 @@ export default function DrivingRangeBookingPage() {
 
   const handlePickAndUploadScreenshot = async () => {
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        cropping: true,
+        cropperChooseText: "Done/Submit",
+        cropperToolbarTitle: "Edit Image",
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setIsUploading(true);
-        const asset = result.assets[0];
-        const fileName = asset.uri.split("/").pop() || "screenshot.jpg";
-        const fileType = asset.mimeType || "image/jpeg";
-        
-        if (paymentPendingBookingId) {
-          const res = await uploadScreenshot(paymentPendingBookingId, asset.uri, fileType, fileName);
-          setPaymentScreenshotUrl(res.url || "uploaded");
-          Toast.show({ type: "success", text1: "Screenshot uploaded successfully. Awaiting verification." });
-        }
+      setIsUploading(true);
+      const fileName = result.filename || result.path.split("/").pop() || "screenshot.jpg";
+      const fileType = result.mime || "image/jpeg";
+      
+      if (paymentPendingBookingId) {
+        const res = await uploadScreenshot(paymentPendingBookingId, result.path, fileType, fileName);
+        setPaymentScreenshotUrl(res.url || "uploaded");
+        Toast.show({ type: "success", text1: "Screenshot uploaded successfully. Awaiting verification." });
       }
-    } catch (err) {
-      console.error(err);
-      Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
+    } catch (err: any) {
+      if (err.code !== "E_PICKER_CANCELLED") {
+        console.error(err);
+        Toast.show({ type: "error", text1: "Upload Failed", text2: "Failed to upload screenshot." });
+      }
     } finally {
       setIsUploading(false);
     }

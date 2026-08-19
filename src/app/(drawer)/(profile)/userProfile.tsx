@@ -30,7 +30,7 @@ import {
   uploadProfileImage,
 } from "@/api/modules/profile.api";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passwordSchema } from "@/schema/adminSchemas";
@@ -92,43 +92,36 @@ export default function UserProfile() {
   };
 
   const handleCertificateClick = () => {
-    // completedHolesCount >= 180
-    if (
-      userCertificate?.completedHolesCount >= 180 &&
-      userCertificate?.certificate
-    ) {
+    if (userCertificate?.isEligible) {
       router.push("/(drawer)/(profile)/certificate");
     } else {
       Toast.show({
         type: "error",
         text1: "You are not eligible for handicap certificate",
-        text2: `You have only played ${userCertificate?.completedHolesCount} holes (Required 180 holes)`,
-        // position: "bottom"
+        text2: `You have only completed ${userCertificate?.completedHolesCount || 0} holes (requires 180).`,
       });
     }
   };
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        cropping: true,
+        cropperChooseText: "Done/Submit",
+        cropperToolbarTitle: "Edit Image",
+      });
 
-    if (!permission.granted) {
-      alert("Permission required to access gallery");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
       setImageError(false);
 
       try {
         setUploading(true);
-        await uploadProfileImage(result.assets[0]);
+        await uploadProfileImage({
+          uri: result.path,
+          type: result.mime || "image/jpeg",
+          name: result.filename || result.path.split('/').pop() || "screenshot.jpg",
+          size: result.size,
+        } as any);
         Toast.show({
           type: "success",
           text1: "Profile Picture Updated",
@@ -142,6 +135,10 @@ export default function UserProfile() {
         });
       } finally {
         setUploading(false);
+      }
+    } catch (error: any) {
+      if (error.code !== "E_PICKER_CANCELLED") {
+        console.log("Image picker error:", error);
       }
     }
   };
@@ -541,19 +538,21 @@ export default function UserProfile() {
                     </ThemedText>
                   </Pressable>
 
-                  <Pressable
-                    onPress={() => handleCertificateClick()}
-                    style={{
-                      backgroundColor: "#8BC34A",
-                      padding: 14,
-                      borderRadius: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <ThemedText style={{ fontWeight: "600", color: "#fff" }}>
-                      Handicap Certificate
-                    </ThemedText>
-                  </Pressable>
+                  {userProfile?.role === "Player" && (
+                    <Pressable
+                      onPress={() => handleCertificateClick()}
+                      style={{
+                        backgroundColor: "#8BC34A",
+                        padding: 14,
+                        borderRadius: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <ThemedText style={{ fontWeight: "600", color: "#fff" }}>
+                        Handicap Certificate
+                      </ThemedText>
+                    </Pressable>
+                  )}
                 </VStack>
               </>
             )}

@@ -21,7 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Divider } from "@/components/divider";
 import { Button, ButtonText } from "@/components/button";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import https from "@/api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postParadise } from "@/api/modules/dashboard.api";
@@ -218,18 +218,23 @@ export default function GolferParadise({
   };
 
   const pickImage = async (allowsEditing: boolean) => {
-    const options: any = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing,
-      quality: 0.8,
-    };
-    if (allowsEditing) {
-      options.aspect = [4, 3];
-    }
-    const result = await ImagePicker.launchImageLibraryAsync(options);
+    try {
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        cropping: allowsEditing,
+        cropperChooseText: "Done/Submit",
+        cropperToolbarTitle: "Edit Image",
+      });
 
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0]);
+      setSelectedImage({
+        uri: result.path,
+        type: result.mime || "image/jpeg",
+        fileName: result.filename || result.path.split('/').pop() || "image.jpg",
+      } as any);
+    } catch (error: any) {
+      if (error.code !== "E_PICKER_CANCELLED") {
+        console.error("Image picker error:", error);
+      }
     }
   };
 
