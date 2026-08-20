@@ -128,7 +128,7 @@ export function InProgressTab({
         courseName: item.courseName,
         date: item.date,
         holesPlayed: item.holesPlayed,
-        isDQ: !!item.isDQ,
+        isDQ: Boolean(item.isDQ ?? item.IsDQ ?? item.isDisqualified ?? item.IsDisqualified ?? false),
         hasLocalDraft: !!item.hasLocalDraft,
         isLocalDraftOnly: !!item.isLocalDraftOnly,
       }));
@@ -195,9 +195,7 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: isDark
-                    ? "rgba(26,26,26,0.6)"
-                    : "rgba(255,255,255,0.6)",
+                  backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
@@ -315,9 +313,7 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: isDark
-                    ? "rgba(26,26,26,0.6)"
-                    : "rgba(255,255,255,0.6)",
+                  backgroundColor: game.isDQ ? (isDark ? "rgba(50, 20, 20, 0.7)" : "#FFF1F2") : (isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)"),
                   borderLeftWidth: 6,
                   borderLeftColor: game.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,

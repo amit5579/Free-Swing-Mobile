@@ -90,9 +90,7 @@ const FeedCard = ({
         shadowOpacity: isDark ? 0.35 : 0.1,
         shadowRadius: 16,
         elevation: 4,
-        backgroundColor: isDark
-          ? "rgba(30, 30, 32, 0.85)"
-          : "rgba(255, 255, 255, 0.95)",
+        backgroundColor: card.isDQ ? (isDark ? "rgba(50, 20, 20, 0.9)" : "#FFF1F2") : (isDark ? "rgba(30, 30, 32, 0.85)" : "rgba(255, 255, 255, 0.95)"),
         borderLeftWidth: 6,
         borderLeftColor: card.isDQ ? "#EF4444" : "#8BC34A",
         borderWidth: 1,

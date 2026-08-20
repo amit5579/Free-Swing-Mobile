@@ -619,8 +619,23 @@ export default function PlayScoreCard() {
     score: number | string | null,
     par: number,
     dark: boolean,
+    textVal: string = "",
   ) => {
-    if (score === null || score === "" || score === undefined) return null;
+    if (score === null || score === "" || score === undefined || textVal === "") {
+      return (
+        <View style={styles.indicatorContainer}>
+          <View
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 5,
+              borderWidth: 1,
+              borderColor: dark ? "#444" : "#ccc",
+            }}
+          />
+        </View>
+      );
+    }
 
     const numericScore = Number(score);
     const diff = numericScore - par;
@@ -719,93 +734,204 @@ export default function PlayScoreCard() {
   };
 
   const renderHeader = () => {
-    return (
-      <>
-        <View style={{ paddingTop: 10 }}>
-          <HStack
-            className="px-3 items-center"
-            style={{ height: 40, justifyContent: "space-between" }}
-          >
-            <Pressable onPress={handleGoBack} style={{ padding: 8 }}>
-              <Ionicons
-                name="arrow-back-outline"
-                size={24}
-                color={isDark ? "#ffffff" : "#020617"} />
-              </Pressable>
-            </HStack>
+  return (
+    <View>
+      {/* Main Header */}
+      <View
+        style={{
+          height: 56,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 8,
+          position: "relative",
+        }}
+      >
+        {/* Back Button */}
+        <Pressable
+          onPress={handleGoBack}
+          style={{
+            width: 44,
+            height: 44,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons
+            name="arrow-back-outline"
+            size={24}
+            color={isDark ? "#ffffff" : "#020617"}
+          />
+        </Pressable>
 
-            <ThemedText
+        {/* Centered Title */}
+        <View
+          style={{
+            position: "absolute",
+            left: 60,
+            right: 120,
+            alignItems: "center",
+          }}
+        >
+          <ThemedText
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            Scorecard
+            {scoreCard?.[0]?.groupName
+              ? ` - ${scoreCard[0].groupName}`
+              : ""}
+          </ThemedText>
+        </View>
+
+        {/* Right Actions */}
+        <View
+          style={{
+            marginLeft: "auto",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          {/* GPS */}
+          <Pressable
+            onPress={() =>
+              setActiveRangefinderHole(scoreCard?.[0]?.holeId || null)
+            }
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              backgroundColor: "#198754",
+              borderRadius: 6,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons
+              name="map"
+              size={14}
+              color="#fff"
+              style={{ marginRight: 4 }}
+            />
+
+            <Text
               style={{
-                fontSize: 20,
+                color: "#fff",
+                fontSize: 12,
                 fontWeight: "700",
-                textAlign: "center",
               }}
             >
-              Scorecard{" "}
-              {scoreCard && scoreCard.length > 0 && scoreCard[0].groupName
-                ? `- ${scoreCard[0].groupName}`
-                : ""}
-            </ThemedText>
+              GPS
+            </Text>
+          </Pressable>
 
-            {/* ⚖️ TOGGLE */}
-            <HStack style={{ alignItems: "center", justifyContent: "space-between", paddingHorizontal: 10 }}>
-              <Pressable
-                onPress={() => setActiveRangefinderHole(scoreCard[0]?.holeId || null)}
-                style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
-              >
-                <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-                style={{ padding: 8 }}
-              >
-              <Ionicons
-                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-                size={24}
-                color={isDark ? "#ffffff" : "#020617"}
-              />
-            </Pressable>
-          </HStack>
+          {/* Details Toggle */}
+          <Pressable
+            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+            style={{
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons
+              name={
+                isDetailsVisible
+                  ? "eye-outline"
+                  : "eye-off-outline"
+              }
+              size={24}
+              color={isDark ? "#ffffff" : "#020617"}
+            />
+          </Pressable>
+        </View>
+      </View>
 
-          <HStack className="justify-between m-3">
-            <ThemedText style={{ fontSize: 13, opacity: 0.8 }}>
-              ({renderScoringType})
-            </ThemedText>
-            <HStack style={{ gap: 8 }}>
-              <Box
+      {/* Score Information */}
+      <View
+        style={{
+          marginHorizontal: 12,
+          marginTop: 4,
+          marginBottom: 8,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Scoring Type */}
+        <ThemedText
+          style={{
+            fontSize: 13,
+            opacity: 0.8,
+            flex: 1,
+          }}
+        >
+          ({renderScoringType})
+        </ThemedText>
+
+        {/* Handicap Information */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {/* Handicap */}
+          <Box
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 7,
+              backgroundColor: "#8bc34a",
+              borderRadius: 8,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "700",
+                fontSize: 12,
+              }}
+            >
+              Handicap: {scoreCard?.[0]?.appliedHandicap}
+            </Text>
+          </Box>
+
+          {/* System 36 Handicap */}
+          {isSystem36 && (
+            <Box
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 7,
+                backgroundColor: "#0ea5e9",
+                borderRadius: 8,
+              }}
+            >
+              <Text
                 style={{
-                  padding: 8,
-                  backgroundColor: "#8bc34a",
-                  borderRadius: 8,
+                  color: "#fff",
+                  fontWeight: "700",
+                  fontSize: 12,
                 }}
               >
-                <Text style={{ color: "#fff", fontWeight: 700 }}>
-                  Handicap: {scoreCard?.[0]?.appliedHandicap}
-                </Text>
-              </Box>
-              {isSystem36 && (
-                <Box
-                  style={{
-                    padding: 8,
-                    backgroundColor: "#0ea5e9",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontWeight: 700 }}>
-                    Sys36 HC:{" "}
-                    {scoreCard.some((h: any) => h.score !== null && h.score > 0)
-                      ? 36 - Number(grandTotals.stableford)
-                      : "N/A"}
-                  </Text>
-                </Box>
-              )}
-            </HStack>
-          </HStack>
+                Sys36 HC:{" "}
+                {scoreCard.some(
+                  (h: any) => h.score !== null && h.score > 0
+                )
+                  ? 36 - Number(grandTotals.stableford)
+                  : "N/A"}
+              </Text>
+            </Box>
+          )}
         </View>
-      </>
-    );
-  };
+      </View>
+    </View>
+  );
+};
 
   const isGroup = roundPlayers && roundPlayers.length > 1;
   const colStyle = isGroup
@@ -987,28 +1113,155 @@ export default function PlayScoreCard() {
                               <ThemedText style={colStyle}>{h.par}</ThemedText>
 
                               {roundPlayers && roundPlayers.length > 0 ? (
-                                roundPlayers.map((p, pIndex) => (
-                                  <React.Fragment key={p.playerId}>
-                                    <View
-                                      style={
-                                        {
-                                          ...colStyle,
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                        } as any
-                                      }
-                                    >
-                                      {p.isPrimary &&
-                                        renderScoreIndicator(
-                                          h.score,
-                                          h.par,
-                                          isDark,
+                                roundPlayers.map((p, pIndex) => {
+                                  const rawVal = getPlayerScore(h, p);
+                                  const textVal =
+                                    rawVal !== null && rawVal !== undefined
+                                      ? String(rawVal)
+                                      : "";
+                                  return (
+                                    <React.Fragment key={p.playerId}>
+                                      <View
+                                        style={
+                                          {
+                                            ...colStyle,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                          } as any
+                                        }
+                                      >
+                                        <View
+                                          style={{
+                                            position: "relative",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 38,
+                                            height: 38,
+                                          }}
+                                        >
+                                          {renderScoreIndicator(
+                                            rawVal,
+                                            h.par,
+                                            isDark,
+                                            textVal,
+                                          )}
+                                          <TextInput
+                                            value={textVal}
+                                            onChangeText={(val) =>
+                                              handleScoreChange(
+                                                h.holeId,
+                                                val,
+                                                index,
+                                                p.playerId,
+                                                p.isPrimary,
+                                              )
+                                            }
+                                            onBlur={() => {
+                                              if (focusTimeoutRef.current)
+                                                clearTimeout(
+                                                  focusTimeoutRef.current,
+                                                );
+                                              saveRound(false, false);
+                                            }}
+                                            onSubmitEditing={() => {
+                                              if (index < 17) {
+                                                inputRefs.current[
+                                                  index + 1
+                                                ]?.focus();
+                                              }
+                                            }}
+                                            returnKeyType={
+                                              index === 17 ? "done" : "next"
+                                            }
+                                            ref={(el: any) =>
+                                              p.isPrimary &&
+                                              (inputRefs.current[index] = el)
+                                            }
+                                            keyboardType="numeric"
+                                            style={{
+                                              width: 32,
+                                              height: 32,
+                                              textAlign: "center",
+                                              color: isDark ? "#fff" : "#000",
+                                              fontWeight: "600",
+                                              zIndex: 10,
+                                              backgroundColor: "transparent",
+                                              padding: 0,
+                                            }}
+                                          />
+                                        </View>
+                                      </View>
+
+                                      {showNetColumns && (
+                                        <ThemedText
+                                          style={{
+                                            ...colStyle,
+                                            fontWeight: "600",
+                                            color: "#8BC34A",
+                                          }}
+                                        >
+                                          {getPlayerNetScore(h, p) ?? "-"}
+                                        </ThemedText>
+                                      )}
+
+                                      {showPtsColumns &&
+                                        renderScoringType === "Stableford" && (
+                                          <ThemedText style={colStyle}>
+                                            {getPlayerStablefordPoints(h, p) ??
+                                              "-"}
+                                          </ThemedText>
                                         )}
+
+                                      {showPtsColumns &&
+                                        renderScoringType === "System 36" && (
+                                          <ThemedText
+                                            style={{
+                                              ...colStyle,
+                                              fontWeight: "600",
+                                              color: "#0ea5e9",
+                                            }}
+                                          >
+                                            {getPlayerStablefordPoints(h, p) ??
+                                              "-"}
+                                          </ThemedText>
+                                        )}
+                                    </React.Fragment>
+                                  );
+                                })
+                              ) : (
+                                <React.Fragment>
+                                  <View
+                                    style={
+                                      {
+                                        ...colStyle,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      } as any
+                                    }
+                                  >
+                                    <View
+                                      style={{
+                                        position: "relative",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 38,
+                                        height: 38,
+                                      }}
+                                    >
+                                      {renderScoreIndicator(
+                                        h.score,
+                                        h.par,
+                                        isDark,
+                                        h.score !== null &&
+                                          h.score !== undefined
+                                          ? String(h.score)
+                                          : "",
+                                      )}
                                       <TextInput
                                         value={
-                                          getPlayerScore(h, p) !== null &&
-                                          getPlayerScore(h, p) !== undefined
-                                            ? String(getPlayerScore(h, p))
+                                          h.score !== null &&
+                                          h.score !== undefined
+                                            ? String(h.score)
                                             : ""
                                         }
                                         onChangeText={(val) =>
@@ -1016,8 +1269,8 @@ export default function PlayScoreCard() {
                                             h.holeId,
                                             val,
                                             index,
-                                            p.playerId,
-                                            p.isPrimary,
+                                            "",
+                                            true,
                                           )
                                         }
                                         onBlur={() => {
@@ -1038,118 +1291,21 @@ export default function PlayScoreCard() {
                                           index === 17 ? "done" : "next"
                                         }
                                         ref={(el: any) =>
-                                          p.isPrimary &&
                                           (inputRefs.current[index] = el)
                                         }
                                         keyboardType="numeric"
                                         style={{
-                                          width: 42,
-                                          height: 42,
-                                          borderRadius: 5,
-                                          borderColor: "#b9b9b9ff",
-                                          borderWidth: 1,
-                                          backgroundColor: "transparent",
+                                          width: 32,
+                                          height: 32,
                                           textAlign: "center",
                                           color: isDark ? "#fff" : "#000",
                                           fontWeight: "600",
+                                          zIndex: 10,
+                                          backgroundColor: "transparent",
+                                          padding: 0,
                                         }}
                                       />
                                     </View>
-
-                                    {showNetColumns && (
-                                      <ThemedText
-                                        style={{
-                                          ...colStyle,
-                                          fontWeight: "600",
-                                          color: "#8BC34A",
-                                        }}
-                                      >
-                                        {getPlayerNetScore(h, p) ?? "-"}
-                                      </ThemedText>
-                                    )}
-
-                                    {showPtsColumns && renderScoringType === "Stableford" && (
-                                        <ThemedText style={colStyle}>
-                                          {getPlayerStablefordPoints(h, p) ??
-                                            "-"}
-                                        </ThemedText>
-                                      )}
-
-                                    {showPtsColumns && renderScoringType === "System 36" && (
-                                        <ThemedText
-                                          style={{
-                                            ...colStyle,
-                                            fontWeight: "600",
-                                            color: "#0ea5e9",
-                                          }}
-                                        >
-                                          {getPlayerStablefordPoints(h, p) ??
-                                            "-"}
-                                        </ThemedText>
-                                      )}
-                                  </React.Fragment>
-                                ))
-                              ) : (
-                                <React.Fragment>
-                                  <View
-                                    style={
-                                      {
-                                        ...colStyle,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      } as any
-                                    }
-                                  >
-                                    {renderScoreIndicator(
-                                      h.score,
-                                      h.par,
-                                      isDark,
-                                    )}
-                                    <TextInput
-                                      value={
-                                        h.score !== null &&
-                                        h.score !== undefined
-                                          ? String(h.score)
-                                          : ""
-                                      }
-                                      onChangeText={(val) =>
-                                        handleScoreChange(
-                                          h.holeId,
-                                          val,
-                                          index,
-                                          "",
-                                          true,
-                                        )
-                                      }
-                                      onBlur={() => {
-                                        if (focusTimeoutRef.current)
-                                          clearTimeout(focusTimeoutRef.current);
-                                        saveRound(false, false);
-                                      }}
-                                      onSubmitEditing={() => {
-                                        if (index < 17) {
-                                          inputRefs.current[index + 1]?.focus();
-                                        }
-                                      }}
-                                      returnKeyType={
-                                        index === 17 ? "done" : "next"
-                                      }
-                                      ref={(el: any) =>
-                                        (inputRefs.current[index] = el)
-                                      }
-                                      keyboardType="numeric"
-                                      style={{
-                                        width: 42,
-                                        height: 42,
-                                        borderRadius: 5,
-                                        borderColor: "#b9b9b9ff",
-                                        borderWidth: 1,
-                                        backgroundColor: "transparent",
-                                        textAlign: "center",
-                                        color: isDark ? "#fff" : "#000",
-                                        fontWeight: "600",
-                                      }}
-                                    />
                                   </View>
 
                                   {showNetColumns && (
@@ -1930,31 +2086,38 @@ export default function PlayScoreCard() {
 
 const styles = StyleSheet.create({
   indicatorContainer: {
-    alignItems: "center",
+    position: "absolute",
+    width: 38,
+    height: 38,
     justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
   },
   singleCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     borderWidth: 2,
   },
   singleSquare: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
+    borderRadius: 4,
     borderWidth: 2,
   },
   doubleSquare: {
-    width: 32,
-    height: 32,
-    borderWidth: 2,
-    alignItems: "center",
+    width: 36,
+    height: 36,
+    borderRadius: 4,
+    borderWidth: 1.5,
     justifyContent: "center",
+    alignItems: "center",
   },
   innerSquare: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 2,
+    borderWidth: 1.5,
   },
   overlay: {
     flex: 1,

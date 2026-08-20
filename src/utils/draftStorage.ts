@@ -30,6 +30,7 @@ export interface ScorecardHole {
   matchScoringType?: string | null;
   nassauStartingNine?: string | null;
   NassauStartingNine?: string | null;
+  groupName?: string | null;
 }
 
 export interface ScorecardDraft {
