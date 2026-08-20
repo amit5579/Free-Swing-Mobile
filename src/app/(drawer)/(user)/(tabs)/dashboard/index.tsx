@@ -34,7 +34,7 @@ import {
   UserProfile,
   getPendingScorecardRequests,
   approveScorecardRequest,
-  rejectScorecardRequest
+  rejectScorecardRequest,
 } from "@/api/modules/dashboard.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Watermark from "@/components/watermark";
@@ -60,13 +60,17 @@ export default function DashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statsScrollIndex, setStatsScrollIndex] = useState(0);
-  const [overviewSubTab, setOverviewSubTab] = useState<"feed" | "paradise" | "members">("feed");
-  const [pendingScorecardRequests, setPendingScorecardRequests] = useState<any[]>([]);
+  const [overviewSubTab, setOverviewSubTab] = useState<
+    "feed" | "paradise" | "members"
+  >("feed");
+  const [pendingScorecardRequests, setPendingScorecardRequests] = useState<
+    any[]
+  >([]);
 
-// useEffect(() => {
-//   console.log("cccc",cards);
-  
-// }, [])
+  // useEffect(() => {
+  //   console.log("cccc",cards);
+
+  // }, [])
 
   const fetchAllData = async (showSkeleton = true) => {
     if (showSkeleton) setLoading(true);
@@ -74,7 +78,7 @@ export default function DashboardScreen() {
       fetchFeed(false),
       fetchStats(),
       fetchProfile(),
-      fetchPendingRequests()
+      fetchPendingRequests(),
     ]);
     if (showSkeleton) setLoading(false);
   };
@@ -285,7 +289,10 @@ export default function DashboardScreen() {
               console.error(err);
               // Revert on error
               fetchFeed();
-              Alert.alert("Error", "Failed to authenticate round. Please try again.");
+              Alert.alert(
+                "Error",
+                "Failed to authenticate round. Please try again.",
+              );
             }
           },
         },
@@ -427,7 +434,10 @@ export default function DashboardScreen() {
                 })}
               </HStack>
 
-              {!(activeTab === "overview" && (overviewSubTab === "paradise" || overviewSubTab === "members")) && (
+              {!(
+                activeTab === "overview" &&
+                (overviewSubTab === "paradise" || overviewSubTab === "members")
+              ) && (
                 <Box
                   className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
                   style={{
@@ -460,7 +470,7 @@ export default function DashboardScreen() {
                       marginLeft: 8,
                       color: isDark ? "#fff" : "#111",
                       fontSize: 15,
-                      paddingVertical: 5
+                      paddingVertical: 5,
                     }}
                   />
                   {searchQuery !== "" && (
@@ -725,48 +735,76 @@ export default function DashboardScreen() {
                 <>
                   {!searchQuery && (
                     <>
-                      {pendingScorecardRequests && pendingScorecardRequests.length > 0 && (
-                        <VStack space="sm" className="mb-4 mt-2">
-                          {pendingScorecardRequests.map((req: any, index: number) => (
-                            <Box
-                              key={index}
-                              className="rounded-xl p-4 flex-row items-center justify-between border"
-                              style={{
-                                backgroundColor: isDark ? "rgba(251, 191, 36, 0.1)" : "rgba(253, 246, 178, 0.5)",
-                                borderColor: "#FBBF24"
-                              }}
-                            >
-                              <HStack className="items-center flex-1 pr-2">
-                                <Box className="bg-yellow-400 rounded-full w-10 h-10 items-center justify-center mr-3">
-                                  <Ionicons name="pencil" size={20} color="#000" />
-                                </Box>
-                                <VStack className="flex-1">
-                                  <Text className="font-bold text-base" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>
-                                    Scorecard Request
-                                  </Text>
-                                  <Text style={{ color: isDark ? "#fff" : "#111", fontSize: 13 }} numberOfLines={2}>
-                                    <Text className="font-bold">{req.primaryUserName}</Text> wants to fill in your scorecard for a multiplayer round.
-                                  </Text>
-                                </VStack>
-                              </HStack>
-                              <VStack space="xs">
-                                <Pressable
-                                  onPress={() => handleApproveRequest(req.id)}
-                                  className="bg-green-500 py-1.5 px-3 rounded-lg items-center"
+                      {pendingScorecardRequests &&
+                        pendingScorecardRequests.length > 0 && (
+                          <VStack space="sm" className="mb-4 mt-2">
+                            {pendingScorecardRequests.map(
+                              (req: any, index: number) => (
+                                <Box
+                                  key={index}
+                                  className="rounded-xl p-4 flex-row items-center justify-between border"
+                                  style={{
+                                    backgroundColor: isDark
+                                      ? "rgba(251, 191, 36, 0.1)"
+                                      : "rgba(253, 246, 178, 0.5)",
+                                    borderColor: "#FBBF24",
+                                  }}
                                 >
-                                  <Text className="text-white font-bold text-sm">Approve</Text>
-                                </Pressable>
-                                <Pressable
+                                  <HStack className="items-center flex-1 pr-2">
+                                    <Box className="bg-yellow-400 rounded-full w-10 h-10 items-center justify-center mr-3">
+                                      <Ionicons
+                                        name="pencil"
+                                        size={20}
+                                        color="#000"
+                                      />
+                                    </Box>
+                                    <VStack className="flex-1">
+                                      <Text
+                                        className="font-bold text-base"
+                                        style={{
+                                          color: isDark ? "#FBBF24" : "#92400E",
+                                        }}
+                                      >
+                                        Scorecard Request
+                                      </Text>
+                                      <Text
+                                        style={{
+                                          color: isDark ? "#fff" : "#111",
+                                          fontSize: 13,
+                                        }}
+                                        numberOfLines={2}
+                                      >
+                                        <Text className="font-bold">
+                                          {req.primaryUserName}
+                                        </Text>{" "}
+                                        wants to fill in your scorecard for a
+                                        multiplayer round.
+                                      </Text>
+                                    </VStack>
+                                  </HStack>
+                                  <VStack space="xs">
+                                    <Pressable
+                                      onPress={() =>
+                                        handleApproveRequest(req.id)
+                                      }
+                                      className="bg-green-500 py-1.5 px-3 rounded-lg items-center"
+                                    >
+                                      <Text className="text-white font-bold text-sm">
+                                        Approve
+                                      </Text>
+                                    </Pressable>
+                                    {/* <Pressable
                                   onPress={() => handleRejectRequest(req.id)}
                                   className="bg-red-500 py-1.5 px-3 rounded-lg items-center mt-1"
                                 >
                                   <Text className="text-white font-bold text-sm">Reject</Text>
-                                </Pressable>
-                              </VStack>
-                            </Box>
-                          ))}
-                        </VStack>
-                      )}
+                                </Pressable> */}
+                                  </VStack>
+                                </Box>
+                              ),
+                            )}
+                          </VStack>
+                        )}
                       <VStack space="sm">
                         <ScrollView
                           ref={statsScrollViewRef}
@@ -964,7 +1002,12 @@ export default function DashboardScreen() {
               onResume={(id, courseName, date) => {
                 router.push({
                   pathname: "/(drawer)/(user)/scorecard/resume/[id]",
-                  params: { id: id, handicap: profile?.handicap || 0, courseName, date },
+                  params: {
+                    id: id,
+                    handicap: profile?.handicap || 0,
+                    courseName,
+                    date,
+                  },
                 });
               }}
             />
@@ -982,4 +1025,3 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-

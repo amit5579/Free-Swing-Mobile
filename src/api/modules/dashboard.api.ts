@@ -231,7 +231,7 @@ export type ScorecardHole = {
   isExcluded: boolean;
   scoringType?: string;
   isTournament?: boolean;
-  groupName?: string;
+  groupName?: string | null;
   userId?: number;
   handicap?: number;
   companionScoresJson?: string | null;

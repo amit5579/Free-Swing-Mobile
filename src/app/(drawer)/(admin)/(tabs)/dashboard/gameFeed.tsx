@@ -96,13 +96,11 @@ const FeedCard = ({
           ? "rgba(30, 30, 32, 0.85)"
           : "rgba(255, 255, 255, 0.95)",
         borderLeftWidth: 6,
-        borderLeftColor: card.isDQ ? "#EF4444" : "#8BC34A",
+        borderLeftColor: "#8BC34A",
         borderWidth: 1,
-        borderColor: card.isDQ
-          ? "rgba(239, 68, 68, 0.4)"
-          : isDark
-            ? "rgba(139, 195, 74, 0.25)"
-            : "rgba(224, 224, 224, 0.6)",
+        borderColor: isDark
+          ? "rgba(139, 195, 74, 0.25)"
+          : "rgba(224, 224, 224, 0.6)",
         borderRadius: 20,
         overflow: "hidden",
       }}
@@ -121,11 +119,9 @@ const FeedCard = ({
                   height: 44,
                   borderRadius: 22,
                   borderWidth: card.isAuthenticated ? 2 : 1.5,
-                  borderColor: card.isDQ
-                    ? "#ef4444"
-                    : card.isAuthenticated
-                      ? "#4CAF50"
-                      : "#8BC34A",
+                  borderColor: card.isAuthenticated
+                    ? "#4CAF50"
+                    : "#8BC34A",
                   justifyContent: "center",
                   alignItems: "center",
                   overflow: "hidden",
@@ -449,8 +445,8 @@ const FeedCard = ({
               ) : (
                 <Button
                   size="xs"
-                  disabled={card.isDQ || !card.canAuthenticate}
-                  className={`rounded-full px-3 ml-1 h-8 shadow-none ${!card.isDQ && card.canAuthenticate ? "opacity-100" : "opacity-40"}`}
+                  disabled={!card.canAuthenticate}
+                  className={`rounded-full px-3 ml-1 h-8 shadow-none ${card.canAuthenticate ? "opacity-100" : "opacity-40"}`}
                   style={{
                     backgroundColor: isDark
                       ? "rgba(139,195,74,0.12)"
@@ -462,7 +458,7 @@ const FeedCard = ({
                     name="shield"
                     size={12}
                     color={
-                      !card.isDQ && card.canAuthenticate
+                      card.canAuthenticate
                         ? "#8BC34A"
                         : isDark
                           ? "#9CA3AF"
@@ -472,12 +468,11 @@ const FeedCard = ({
                   <ButtonText
                     className="text-xs font-bold ml-1"
                     style={{
-                      color:
-                        !card.isDQ && card.canAuthenticate
-                          ? "#8BC34A"
-                          : isDark
-                            ? "#9CA3AF"
-                            : "#6B7280",
+                      color: card.canAuthenticate
+                        ? "#8BC34A"
+                        : isDark
+                          ? "#9CA3AF"
+                          : "#6B7280",
                     }}
                   >
                     Auth

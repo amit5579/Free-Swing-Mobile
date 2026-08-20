@@ -112,7 +112,9 @@ export default function ResumeScorecard() {
   const [displayFront, setDisplayFront] = useState(true);
   const [displayBack, setDisplayBack] = useState(true);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
-  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
+    number | null
+  >(null);
   const [userId, setUserId] = useState<number | null>(null);
   const textScoresRef = useRef<Record<number, string>>({});
   const holesRef = useRef<ScorecardHole[]>([]);
@@ -120,10 +122,59 @@ export default function ResumeScorecard() {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    AsyncStorage.getItem("userId").then((stored) => {
+      if (stored) setUserId(Number(stored));
+    });
+  }, []);
+
+  const [partners, setPartners] = useState<any[]>([]);
+  const [companionHandicaps, setCompanionHandicaps] = useState<
+    Record<number, number>
+  >({});
+  const [delegationStatuses, setDelegationStatuses] = useState<
+    Record<number, string>
+  >({});
+  const [isHighLow, setIsHighLow] = useState(false);
+  const [isSplit6, setIsSplit6] = useState(false);
+  const [isGross, setIsGross] = useState(false);
+  const [isNassauBest, setIsNassauBest] = useState(false);
+  const [isNassauCombined, setIsNassauCombined] = useState(false);
+  const isNassau = isNassauBest || isNassauCombined;
+  const [roundContextId, setRoundContextId] = useState<string | null>(null);
+
+  // Extract designated scorer from playingGroupRoundKey (format: groupId_scorerUserId_timestamp)
+  const groupScorerId = (() => {
+    if (!roundContextId) return null;
+    const parts = String(roundContextId).split("_");
+    if (parts.length >= 2) {
+      const parsed = parseInt(parts[1], 10);
+      return isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  })();
+
+  // Companion/Spectator: In a group round, non-scorers cannot edit scores
+  const isCompanionView = Boolean(
+    roundContextId &&
+      groupScorerId !== null &&
+      userId !== null &&
+      groupScorerId !== userId,
+  );
+
+  const isRoundCompleted = Boolean(
+    holes.length > 0 &&
+      (holes[0].isCompleted || (holes[0] as any).IsCompleted),
+  );
+
+  // Forced read-only if round is completed or if viewer is a spectator
+  const isReadOnly = isRoundCompleted || isCompanionView;
+
   const triggerSaveDraft = async (
     updatedHoles: ScorecardHole[],
     newTextScores: Record<number, string>,
   ) => {
+    if (isReadOnly) return;
     try {
       const holesPlayed = updatedHoles.filter(
         (h) => h.score !== null && h.score > 0,
@@ -159,20 +210,6 @@ export default function ResumeScorecard() {
     }
   };
 
-  const [partners, setPartners] = useState<any[]>([]);
-  const [companionHandicaps, setCompanionHandicaps] = useState<
-    Record<number, number>
-  >({});
-  const [delegationStatuses, setDelegationStatuses] = useState<
-    Record<number, string>
-  >({});
-  const [isHighLow, setIsHighLow] = useState(false);
-  const [isSplit6, setIsSplit6] = useState(false);
-  const [isGross, setIsGross] = useState(false);
-  const [isNassauBest, setIsNassauBest] = useState(false);
-  const [isNassauCombined, setIsNassauCombined] = useState(false);
-  const isNassau = isNassauBest || isNassauCombined;
-  const [roundContextId, setRoundContextId] = useState<string | null>(null);
   const nassauStartingNine =
     holes[0]?.nassauStartingNine || holes[0]?.NassauStartingNine || null;
   const front9Holes =
@@ -195,7 +232,8 @@ export default function ResumeScorecard() {
   //         : holes[0].isExcluded
   //           ? "Net Score Exclude Par 3"
   //           : "Net Score Include Par 3"
-  //     : "";
+  const groupName =
+    holes.find((h: any) => h.groupName)?.groupName || holes[0]?.groupName || null;
 
   const renderScoringType = (() => {
     if (isSplit6) return "Split Six";
@@ -216,6 +254,7 @@ export default function ResumeScorecard() {
   })();
 
   const saveToServer = async (holesToSave: ScorecardHole[]) => {
+    if (isReadOnly) return;
     const performSave = async () => {
       try {
         const playingGroupRoundKey = roundContextId
@@ -251,6 +290,7 @@ export default function ResumeScorecard() {
           companionSandysJson: h.companionSandysJson || null,
           nassauStartingNine: nassauStartingNine,
           NassauStartingNine: nassauStartingNine,
+          groupName: h.groupName || (h as any).GroupName || null,
           ...(playingGroupRoundKey
             ? {
                 playingGroupRoundKey,
@@ -329,9 +369,13 @@ export default function ResumeScorecard() {
               h.nassauStartingNine !== null
                 ? h.nassauStartingNine
                 : h.NassauStartingNine,
+            groupName:
+              h.groupName !== undefined && h.groupName !== null
+                ? h.groupName
+                : h.GroupName,
           }));
 
-          // console.log("normalizedServerHoles", normalizedServerHoles);
+          console.log("normalizedServerHoles", normalizedServerHoles);
 
           const state = getLatestRoundState(
             localDraft,
@@ -516,6 +560,10 @@ export default function ResumeScorecard() {
               const handicapsMap: Record<number, number> = {};
               for (const p of parsedPartners) {
                 if (!p.isPrimary && p.userId) {
+                  if (p.handicap !== undefined && p.handicap !== null) {
+                    handicapsMap[p.userId] = Math.round(Number(p.handicap) || 0);
+                    continue;
+                  }
                   try {
                     const hData = await getSubScorecardHandicap(
                       p.userId,
@@ -523,9 +571,12 @@ export default function ResumeScorecard() {
                     );
                     const hc =
                       typeof hData === "object" && hData !== null
-                        ? (hData.handicap ?? 0)
+                        ? (hData.handicapIndex ??
+                          hData.userHandicap ??
+                          hData.handicap ??
+                          0)
                         : Number(hData) || 0;
-                    handicapsMap[p.userId] = hc;
+                    handicapsMap[p.userId] = Math.round(Number(hc) || 0);
                   } catch (e) {
                     console.error(
                       "Error fetching companion handicap for userId",
@@ -604,6 +655,8 @@ export default function ResumeScorecard() {
 
     fetchDelegationStatuses(); // Fetch immediately on mount
 
+    const pollIntervalTime = isCompanionView ? 5000 : 10000;
+
     interval = setInterval(async () => {
       // 1. Poll delegation statuses
       await fetchDelegationStatuses();
@@ -615,12 +668,10 @@ export default function ResumeScorecard() {
           if (liveData && liveData.length > 0) {
             setHoles(liveData);
             setTextScores((prev: any) => {
-              const newScores = { ...prev };
+              const newScores = isReadOnly ? {} : { ...prev };
               liveData.forEach((h: any) => {
                 if (h.score !== null && h.score !== undefined && h.score >= 0) {
-                  // Only update text score if it's not currently set,
-                  // so we don't overwrite active typing.
-                  if (newScores[h.holeId] === undefined) {
+                  if (isReadOnly || newScores[h.holeId] === undefined) {
                     newScores[h.holeId] = String(h.score);
                   }
                 }
@@ -632,10 +683,10 @@ export default function ResumeScorecard() {
           console.error("Polling live scorecard error:", e);
         }
       }
-    }, 10000);
+    }, pollIntervalTime);
 
     return () => clearInterval(interval);
-  }, [id, roundContextId]);
+  }, [id, roundContextId, isReadOnly, isCompanionView]);
 
   useEffect(() => {
     textScoresRef.current = textScores;
@@ -645,6 +696,10 @@ export default function ResumeScorecard() {
     holesRef.current = holes;
   }, [holes]);
   const handleGoBack = useCallback(async () => {
+    if (isReadOnly) {
+      router.back();
+      return;
+    }
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -683,6 +738,7 @@ export default function ResumeScorecard() {
       companionSandysJson: h.companionSandysJson || null,
       nassauStartingNine: nassauStartingNine,
       NassauStartingNine: nassauStartingNine,
+      groupName: h.groupName || (h as any).GroupName || null,
       ...(playingGroupRoundKey
         ? { playingGroupRoundKey, PlayingGroupRoundKey: playingGroupRoundKey }
         : {}),
@@ -708,6 +764,7 @@ export default function ResumeScorecard() {
     isNassauBest,
     isNassauCombined,
     nassauStartingNine,
+    isReadOnly,
   ]);
 
   useEffect(() => {
@@ -723,9 +780,16 @@ export default function ResumeScorecard() {
   }, [handleGoBack]);
 
   const calculateStrokes = (handicap: number, strokeIndex: number) => {
-    const base = Math.floor(handicap / 18);
-    const remainder = handicap % 18;
-    return base + (strokeIndex <= remainder ? 1 : 0);
+    if (!handicap || handicap === 0) return 0;
+    const absoluteHandicap = Math.abs(handicap);
+    const baseStrokes = Math.floor(absoluteHandicap / 18);
+    const remainder = absoluteHandicap % 18;
+    if (handicap > 0) {
+      return baseStrokes + (strokeIndex <= remainder ? 1 : 0);
+    }
+    return -(
+      baseStrokes + (remainder > 0 && strokeIndex > 18 - remainder ? 1 : 0)
+    );
   };
 
   const getPlayerHoleInfo = (hole: any, partner: any) => {
@@ -791,11 +855,12 @@ export default function ResumeScorecard() {
 
     const playerHandicap = isPrimary
       ? Number(handicap || 0)
-      : companionHandicaps[partnerUserId] || 0;
-    let strokesReceived = calculateStrokes(
-      playerHandicap,
-      hole.handicap || hole.strokeIndex,
-    );
+      : partner.handicap !== undefined && partner.handicap !== null
+        ? Math.round(Number(partner.handicap) || 0)
+        : companionHandicaps[partnerUserId] !== undefined
+          ? companionHandicaps[partnerUserId]
+          : 0;
+    let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
     if (hole.isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
@@ -1123,6 +1188,7 @@ export default function ResumeScorecard() {
     value: string,
     flatIndex: number,
   ) => {
+    if (isReadOnly) return;
     let finalVal: number | null = null;
     if (value !== "") {
       if (!/^\d+$/.test(value)) {
@@ -1226,6 +1292,7 @@ export default function ResumeScorecard() {
   };
 
   const handleSandyToggle = (holeId: number, playerId: string) => {
+    if (isReadOnly) return;
     const updatedHoles = holes.map((h) => {
       if (h.holeId === holeId) {
         let companionSandys: Record<string, boolean> = {};
@@ -1260,6 +1327,7 @@ export default function ResumeScorecard() {
   };
 
   const handleScoreChange = (holeId: number, text: string) => {
+    if (isReadOnly) return;
     let formattedText = text.replace(/[^0-9]/g, "");
 
     if (formattedText !== "") {
@@ -1334,6 +1402,7 @@ export default function ResumeScorecard() {
   };
 
   const handleSave = async () => {
+    if (isReadOnly) return;
     try {
       setSaving(true);
       const playingGroupRoundKey = roundContextId
@@ -1383,6 +1452,7 @@ export default function ResumeScorecard() {
   };
 
   const handleFinishRound = async () => {
+    if (isReadOnly) return;
     Alert.alert("Finish Round", "Are you sure you want to finish this round?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -1435,7 +1505,7 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
-            // console.log("pppp", payload);
+            console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
             await deleteDraft(id!);
@@ -1760,25 +1830,43 @@ export default function ResumeScorecard() {
               Scorecard
             </Text>
 
-            {/* <Text
-              style={{
-                marginTop: 2,
-                fontSize: 12,
-                color: isDark ? "#94a3b8" : "#64748b",
-              }}
-            >
-              {renderScoringType || "Round Details"}
-            </Text> */}
+            {/* {groupName ? (
+              <Text
+                style={{
+                  marginTop: 2,
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color: isDark ? "#a3e635" : "#198754",
+                }}
+              >
+                {groupName}
+              </Text>
+            ) : null} */}
           </VStack>
 
           {/* ⚖️ TOGGLE */}
           <HStack style={{ alignItems: "center" }}>
             <Pressable
               onPress={() => setActiveRangefinderHole(holes[0]?.holeId || null)}
-              style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                backgroundColor: "#198754",
+                borderRadius: 6,
+                marginRight: 8,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
             >
-              <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
-              <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
+              <Ionicons
+                name="map"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                GPS
+              </Text>
             </Pressable>
             <Pressable
               onPress={() => setIsDetailsVisible(!isDetailsVisible)}
@@ -1813,28 +1901,53 @@ export default function ResumeScorecard() {
             backgroundColor: isDark ? "#111827" : "#f8fafc",
           }}
         >
-          {/* Handicap */}
-          <HStack style={{ alignItems: "center" }}>
-            <Ionicons
-              name="person-outline"
-              size={14}
-              color={isDark ? "#94a3b8" : "#64748b"}
-            />
+          {/* Handicap & Group */}
+          <HStack style={{ alignItems: "center", gap: 8 }}>
+            <HStack style={{ alignItems: "center" }}>
+              <Ionicons
+                name="person-outline"
+                size={14}
+                color={isDark ? "#94a3b8" : "#64748b"}
+              />
 
-            <Text
-              style={{
-                marginLeft: 6,
-                fontSize: 13,
-                fontWeight: "600",
-                color: isDark ? "#e5e7eb" : "#374151",
-              }}
-            >
-              Handicap: {handicap}
-            </Text>
+              <Text
+                style={{
+                  marginLeft: 6,
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: isDark ? "#e5e7eb" : "#374151",
+                }}
+              >
+                Handicap: {handicap}
+              </Text>
+            </HStack>
+
+            {groupName && (
+              <View
+                style={{
+                  backgroundColor: isDark
+                    ? "rgba(139, 195, 74, 0.18)"
+                    : "rgba(25, 135, 84, 0.12)",
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  borderRadius: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: isDark ? "#a3e635" : "#198754",
+                  }}
+                >
+                  {groupName}
+                </Text>
+              </View>
+            )}
+
             {isSystem36 && (
               <Text
                 style={{
-                  marginLeft: 8,
                   fontSize: 12,
                   fontWeight: "600",
                   color: isDark ? "#38bdf8" : "#0284c7",
@@ -1865,6 +1978,49 @@ export default function ResumeScorecard() {
             {renderScoringType}
           </Text>
         </HStack>
+
+        {/* 👁️ SPECTATOR BANNER */}
+        {isCompanionView && (
+          <HStack
+            style={{
+              marginTop: 10,
+              padding: 10,
+              borderRadius: 10,
+              alignItems: "center",
+              backgroundColor: isDark
+                ? "rgba(14, 165, 233, 0.12)"
+                : "#e0f2fe",
+              borderWidth: 1,
+              borderColor: isDark ? "#0284c7" : "#7dd3fc",
+              gap: 8,
+            }}
+          >
+            <Ionicons
+              name="eye-outline"
+              size={18}
+              color={isDark ? "#38bdf8" : "#0284c7"}
+            />
+            <VStack style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color: isDark ? "#38bdf8" : "#0284c7",
+                }}
+              >
+                Viewing in Live Spectator Mode
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: isDark ? "#94a3b8" : "#64748b",
+                }}
+              >
+                Only the designated scorer can enter scores. Scores will update live.
+              </Text>
+            </VStack>
+          </HStack>
+        )}
 
         {/* ✏️ HELPER BANNER */}
         {/* <HStack
@@ -1968,13 +2124,22 @@ export default function ResumeScorecard() {
                       className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
                     >
                       <View className="flex-1 flex-row justify-center items-center">
-                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
-                      {h.holeNumber}
-                    </Text>
-                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
-                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
-                    </TouchableOpacity>
-                  </View>
+                        <Text
+                          className={`text-center ${isDark ? "text-white" : "text-black"}`}
+                        >
+                          {h.holeNumber}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setActiveRangefinderHole(h.holeId)}
+                          className="ml-1"
+                        >
+                          <Ionicons
+                            name="locate-outline"
+                            size={14}
+                            color={isDark ? "#8BC34A" : "#198754"}
+                          />
+                        </TouchableOpacity>
+                      </View>
                       {isDetailsVisible && (
                         <>
                           <Text
@@ -2005,25 +2170,36 @@ export default function ResumeScorecard() {
                           ref={(el) => {
                             inputRefs.current[index] = el;
                           }}
+                          editable={!isReadOnly}
                           style={{
                             width: 50,
                             height: 40,
-                            backgroundColor:
-                              textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                            backgroundColor: isReadOnly
+                              ? isDark
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(0,0,0,0.02)"
+                              : textScores[h.holeId] !== "" &&
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
-                            borderColor:
-                              textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                            borderColor: isReadOnly
+                              ? "transparent"
+                              : textScores[h.holeId] !== "" &&
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
                                   : "rgba(0,0,0,0.1)",
                             borderWidth: 1,
-                            color: isDark ? "#fff" : "#000",
+                            color: isReadOnly
+                              ? isDark
+                                ? "#94a3b8"
+                                : "#64748b"
+                              : isDark
+                                ? "#fff"
+                                : "#000",
                             textAlign: "center",
                             borderRadius: 8,
                             padding: 0,
@@ -2038,9 +2214,10 @@ export default function ResumeScorecard() {
                                 ? h.score.toString()
                                 : ""
                           }
-                          onChangeText={(val) =>
-                            handleScoreChange(h.holeId, val)
-                          }
+                          onChangeText={(val) => {
+                            if (isReadOnly) return;
+                            handleScoreChange(h.holeId, val);
+                          }}
                           onBlur={() => {
                             if (focusTimeoutRef.current)
                               clearTimeout(focusTimeoutRef.current);
@@ -2132,13 +2309,22 @@ export default function ResumeScorecard() {
                       className={`flex-row items-center p-3 ${index < 8 ? (isDark ? "border-b border-[#1e293b]" : "border-b border-[#e5e7eb]") : ""}`}
                     >
                       <View className="flex-1 flex-row justify-center items-center">
-                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
-                      {h.holeNumber}
-                    </Text>
-                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
-                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
-                    </TouchableOpacity>
-                  </View>
+                        <Text
+                          className={`text-center ${isDark ? "text-white" : "text-black"}`}
+                        >
+                          {h.holeNumber}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => setActiveRangefinderHole(h.holeId)}
+                          className="ml-1"
+                        >
+                          <Ionicons
+                            name="locate-outline"
+                            size={14}
+                            color={isDark ? "#8BC34A" : "#198754"}
+                          />
+                        </TouchableOpacity>
+                      </View>
                       {isDetailsVisible && (
                         <>
                           <Text
@@ -2172,25 +2358,36 @@ export default function ResumeScorecard() {
                                 index
                             ] = el;
                           }}
+                          editable={!isReadOnly}
                           style={{
                             width: 50,
                             height: 40,
-                            backgroundColor:
-                              textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                            backgroundColor: isReadOnly
+                              ? isDark
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(0,0,0,0.02)"
+                              : textScores[h.holeId] !== "" &&
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
                                   : "rgba(0,0,0,0.04)",
-                            borderColor:
-                              textScores[h.holeId] !== "" &&
-                              textScores[h.holeId] !== undefined
+                            borderColor: isReadOnly
+                              ? "transparent"
+                              : textScores[h.holeId] !== "" &&
+                                textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
                                   : "rgba(0,0,0,0.1)",
                             borderWidth: 1,
-                            color: isDark ? "#fff" : "#000",
+                            color: isReadOnly
+                              ? isDark
+                                ? "#94a3b8"
+                                : "#64748b"
+                              : isDark
+                                ? "#fff"
+                                : "#000",
                             textAlign: "center",
                             borderRadius: 8,
                             paddingVertical: 0,
@@ -2205,9 +2402,10 @@ export default function ResumeScorecard() {
                                 ? h.score.toString()
                                 : ""
                           }
-                          onChangeText={(val) =>
-                            handleScoreChange(h.holeId, val)
-                          }
+                          onChangeText={(val) => {
+                            if (isReadOnly) return;
+                            handleScoreChange(h.holeId, val);
+                          }}
                           onBlur={() => {
                             if (focusTimeoutRef.current)
                               clearTimeout(focusTimeoutRef.current);
@@ -2402,16 +2600,21 @@ export default function ResumeScorecard() {
             const colParWidth = 40;
             const colSIWidth = 40;
             const colYardsWidth = 45;
-            const colPartnerWidth = 65;
+            const colPartnerWidth = 60;
+            const colNetWidth = 50;
             const colSplit6Width = 70;
             const colHighLowWidth = 65;
             const colNassauWidth = 80;
+
+            const hasExtraPerPartnerCol = showNetColumns || showPtsColumns;
 
             const totalWidth =
               colHoleWidth +
               colParWidth + // Par is always visible
               (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
-              partners.length * colPartnerWidth +
+              partners.length *
+                (colPartnerWidth +
+                  (hasExtraPerPartnerCol ? colNetWidth : 0)) +
               (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
               (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
               (isNassau && partners.length >= 2 ? colNassauWidth : 0);
@@ -2481,41 +2684,81 @@ export default function ResumeScorecard() {
                     badgeColor = isTeamA ? teamAColor : teamBColor;
                   }
                   return (
-                    <VStack
-                      key={p.playerId}
-                      style={{ width: colPartnerWidth, alignItems: "center" }}
-                    >
-                      <ThemedText
+                    <React.Fragment key={p.playerId}>
+                      <VStack
                         style={{
-                          textAlign: "center",
-                          fontWeight: "700",
-                          fontSize: 12,
+                          width: colPartnerWidth,
+                          alignItems: "center",
                         }}
                       >
-                        {p.isPrimary ? "You" : p.name}
-                      </ThemedText>
-                      {badgeText !== "" && (
-                        <View
+                        <ThemedText
+                          numberOfLines={1}
                           style={{
-                            backgroundColor: badgeColor,
-                            borderRadius: 4,
-                            paddingHorizontal: 6,
-                            paddingVertical: 1,
-                            marginTop: 2,
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontSize: 12,
                           }}
                         >
-                          <Text
+                          {p.isPrimary ? "You" : p.name}
+                        </ThemedText>
+                        {badgeText !== "" && (
+                          <View
                             style={{
-                              color: "#fff",
-                              fontSize: 8,
-                              fontWeight: "700",
+                              backgroundColor: badgeColor,
+                              borderRadius: 4,
+                              paddingHorizontal: 6,
+                              paddingVertical: 1,
+                              marginTop: 2,
                             }}
                           >
-                            {badgeText}
-                          </Text>
-                        </View>
+                            <Text
+                              style={{
+                                color: "#fff",
+                                fontSize: 8,
+                                fontWeight: "700",
+                              }}
+                            >
+                              {badgeText}
+                            </Text>
+                          </View>
+                        )}
+                      </VStack>
+                      {hasExtraPerPartnerCol && (
+                        <VStack
+                          style={{
+                            width: colNetWidth,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "600",
+                              fontSize: 10,
+                              color: isDark ? "#94a3b8" : "#64748b",
+                            }}
+                          >
+                            {`(${p.isPrimary ? "You" : (p.name ? p.name.split(" ")[0] : "P")})`}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 11,
+                              color: showPtsColumns
+                                ? "#f59e0b"
+                                : isDark
+                                  ? "#94a3b8"
+                                  : "#64748b",
+                            }}
+                          >
+                            {showPtsColumns ? "Pts" : "Net"}
+                          </ThemedText>
+                        </VStack>
                       )}
-                    </VStack>
+                    </React.Fragment>
                   );
                 })}
                 {isSplit6 &&
@@ -2728,162 +2971,200 @@ export default function ResumeScorecard() {
                               }
 
                               return (
-                                <View
-                                  key={p.playerId}
-                                  style={{
-                                    width: colPartnerWidth,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: bgColor,
-                                  }}
-                                >
+                                <React.Fragment key={p.playerId}>
                                   <View
                                     style={{
-                                      position: "relative",
+                                      width: colPartnerWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      width: 36,
-                                      height: 36,
+                                      backgroundColor: bgColor,
                                     }}
                                   >
-                                    {renderScoreIndicator(
-                                      info.score,
-                                      h.par,
-                                      isDark,
-                                      textVal,
-                                    )}
-                                    <TextInput
-                                      ref={(el) => {
-                                        inputRefs.current[flatIndex] = el;
-                                      }}
-                                      editable={!isPending}
-                                      keyboardType="numeric"
-                                      value={textVal}
-                                      onChangeText={(val) =>
-                                        handleMultiplayerScoreChange(
-                                          h.holeId,
-                                          p.playerId,
-                                          val,
-                                          flatIndex,
-                                        )
-                                      }
-                                      placeholder="-"
-                                      placeholderTextColor={
-                                        isDark ? "#666" : "#999"
-                                      }
+                                    <View
                                       style={{
-                                        width: 30,
-                                        height: 30,
-                                        textAlign: "center",
-                                        color: isPending
-                                          ? isDark
-                                            ? "#777"
-                                            : "#9ca3af"
-                                          : isDark
-                                            ? "#fff"
-                                            : "#000",
-                                        fontWeight: "700",
-                                        fontSize: 13,
-                                        zIndex: 10,
-                                        backgroundColor: isPending
-                                          ? isDark
-                                            ? "#333"
-                                            : "#e5e7eb"
-                                          : "transparent",
-                                        padding: 0,
-                                      }}
-                                    />
-                                  </View>
-
-                                  {getScoringLabel() !==
-                                    "Net Score • Include Par 3" &&
-                                    getScoringLabel() !==
-                                      "Net Score • Exclude Par 3" &&
-                                    getScoringLabel() !== "Stableford" &&
-                                    getScoringLabel() !==
-                                      "Stableford • Exclude Par 3" && (
-                                      <HStack
-                                        style={{
-                                          alignItems: "center",
-                                          gap: 4,
-                                          marginTop: 4,
-                                        }}
-                                      >
-                                        <TouchableOpacity
-                                          onPress={() =>
-                                            handleSandyToggle(
-                                              h.holeId,
-                                              p.playerId,
-                                            )
-                                          }
-                                          style={{
-                                            width: 18,
-                                            height: 18,
-                                            borderRadius: 9,
-                                            backgroundColor: info.sandy
-                                              ? "#2e7d32"
-                                              : isDark
-                                                ? "#333"
-                                                : "#e5e5e5",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                          }}
-                                        >
-                                          <Text
-                                            style={{
-                                              fontSize: 9,
-                                              fontWeight: "bold",
-                                              color: info.sandy
-                                                ? "#fff"
-                                                : isDark
-                                                  ? "#aaa"
-                                                  : "#666",
-                                            }}
-                                          >
-                                            S
-                                          </Text>
-                                        </TouchableOpacity>
-
-                                        {info.score !== null &&
-                                          (() => {
-                                            const badgeVal = getBadgeMultiplier(
-                                              info.score,
-                                              h.par,
-                                              info.sandy,
-                                            );
-                                            if (badgeVal > 0) {
-                                              return (
-                                                <Text
-                                                  style={{
-                                                    fontSize: 9,
-                                                    color: "#f59e0b",
-                                                    fontWeight: "bold",
-                                                  }}
-                                                >
-                                                  {badgeVal}x
-                                                </Text>
-                                              );
-                                            }
-                                            return null;
-                                          })()}
-                                      </HStack>
-                                    )}
-
-                                  {(getScoringLabel() === "Stableford" ||
-                                    getScoringLabel() ===
-                                      "Stableford • Exclude Par 3") && (
-                                    <Text
-                                      style={{
-                                        fontSize: 10,
-                                        color: "#f59e0b",
-                                        marginTop: 2,
-                                        fontWeight: "bold",
+                                        position: "relative",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 36,
+                                        height: 36,
                                       }}
                                     >
-                                      {info.stablefordPoints ?? "-"} pts
-                                    </Text>
+                                      {renderScoreIndicator(
+                                        info.score,
+                                        h.par,
+                                        isDark,
+                                        textVal,
+                                      )}
+                                      <TextInput
+                                        ref={(el) => {
+                                          inputRefs.current[flatIndex] = el;
+                                        }}
+                                        editable={!isReadOnly && !isPending}
+                                        keyboardType="numeric"
+                                        value={textVal}
+                                        onChangeText={(val) => {
+                                          if (isReadOnly) return;
+                                          handleMultiplayerScoreChange(
+                                            h.holeId,
+                                            p.playerId,
+                                            val,
+                                            flatIndex,
+                                          );
+                                        }}
+                                        placeholder="-"
+                                        placeholderTextColor={
+                                          isDark ? "#666" : "#999"
+                                        }
+                                        style={{
+                                          width: 30,
+                                          height: 30,
+                                          textAlign: "center",
+                                          color: isReadOnly || isPending
+                                            ? isDark
+                                              ? "#777"
+                                              : "#9ca3af"
+                                            : isDark
+                                              ? "#fff"
+                                              : "#000",
+                                          fontWeight: "700",
+                                          fontSize: 13,
+                                          zIndex: 10,
+                                          backgroundColor: isReadOnly
+                                            ? isDark
+                                              ? "rgba(255,255,255,0.04)"
+                                              : "rgba(0,0,0,0.02)"
+                                            : isPending
+                                              ? isDark
+                                                ? "#333"
+                                                : "#e5e7eb"
+                                              : "transparent",
+                                          padding: 0,
+                                        }}
+                                      />
+                                    </View>
+
+                                    {getScoringLabel() !==
+                                      "Net Score • Include Par 3" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Exclude Par 3" &&
+                                      getScoringLabel() !== "Stableford" &&
+                                      getScoringLabel() !==
+                                        "Stableford • Exclude Par 3" && (
+                                        <HStack
+                                          style={{
+                                            alignItems: "center",
+                                            gap: 4,
+                                            marginTop: 4,
+                                          }}
+                                        >
+                                          <TouchableOpacity
+                                            disabled={isReadOnly}
+                                            onPress={() => {
+                                              if (isReadOnly) return;
+                                              handleSandyToggle(
+                                                h.holeId,
+                                                p.playerId,
+                                              );
+                                            }}
+                                            style={{
+                                              width: 18,
+                                              height: 18,
+                                              borderRadius: 9,
+                                              backgroundColor: info.sandy
+                                                ? "#2e7d32"
+                                                : isDark
+                                                  ? "#333"
+                                                  : "#e5e5e5",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              opacity: isReadOnly ? 0.6 : 1,
+                                            }}
+                                          >
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                fontWeight: "bold",
+                                                color: info.sandy
+                                                  ? "#fff"
+                                                  : isDark
+                                                    ? "#aaa"
+                                                    : "#666",
+                                              }}
+                                            >
+                                              S
+                                            </Text>
+                                          </TouchableOpacity>
+
+                                          {info.score !== null &&
+                                            (() => {
+                                              const badgeVal =
+                                                getBadgeMultiplier(
+                                                  info.score,
+                                                  h.par,
+                                                  info.sandy,
+                                                );
+                                              if (badgeVal > 0) {
+                                                return (
+                                                  <Text
+                                                    style={{
+                                                      fontSize: 9,
+                                                      color: "#f59e0b",
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    {badgeVal}x
+                                                  </Text>
+                                                );
+                                              }
+                                              return null;
+                                            })()}
+                                        </HStack>
+                                      )}
+                                  </View>
+
+                                  {hasExtraPerPartnerCol && (
+                                    <View
+                                      style={{
+                                        width: colNetWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backgroundColor: bgColor,
+                                      }}
+                                    >
+                                      {showPtsColumns ? (
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 12,
+                                            fontWeight: "700",
+                                            color: "#f59e0b",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {info.score !== null &&
+                                          info.stablefordPoints !== null
+                                            ? info.stablefordPoints
+                                            : "-"}
+                                        </ThemedText>
+                                      ) : (
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 12,
+                                            fontWeight: "600",
+                                            color: isDark
+                                              ? "#e2e8f0"
+                                              : "#334155",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {info.score !== null &&
+                                          info.netScore !== null
+                                            ? info.netScore
+                                            : "-"}
+                                        </ThemedText>
+                                      )}
+                                    </View>
                                   )}
-                                </View>
+                                </React.Fragment>
                               );
                             })}
                             {isSplit6 &&
@@ -3068,22 +3349,55 @@ export default function ResumeScorecard() {
                       {partners.map((p) => {
                         const t = getPlayerTotals(front9Holes, p);
                         return (
-                          <VStack
-                            key={p.playerId}
-                            style={{
-                              width: colPartnerWidth,
-                              alignItems: "center",
-                            }}
-                          >
-                            <ThemedText
+                          <React.Fragment key={p.playerId}>
+                            <VStack
                               style={{
-                                fontWeight: "700",
-                                color: isDark ? "#fff" : "#000",
+                                width: colPartnerWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              {t.gross}
-                            </ThemedText>
-                          </VStack>
+                              <ThemedText
+                                style={{
+                                  fontWeight: "700",
+                                  color: isDark ? "#fff" : "#000",
+                                }}
+                              >
+                                {t.gross}
+                              </ThemedText>
+                            </VStack>
+                            {hasExtraPerPartnerCol && (
+                              <VStack
+                                style={{
+                                  width: colNetWidth,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {showPtsColumns ? (
+                                  <ThemedText
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: "700",
+                                      color: "#f59e0b",
+                                    }}
+                                  >
+                                    {t.stableford}
+                                  </ThemedText>
+                                ) : (
+                                  <ThemedText
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: "700",
+                                      color: isDark ? "#8BC34A" : "#198754",
+                                    }}
+                                  >
+                                    {t.net}
+                                  </ThemedText>
+                                )}
+                              </VStack>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                       {isSplit6 &&
@@ -3313,147 +3627,200 @@ export default function ResumeScorecard() {
                               }
 
                               return (
-                                <View
-                                  key={p.playerId}
-                                  style={{
-                                    width: colPartnerWidth,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: bgColor,
-                                  }}
-                                >
+                                <React.Fragment key={p.playerId}>
                                   <View
                                     style={{
-                                      position: "relative",
+                                      width: colPartnerWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      width: 36,
-                                      height: 36,
+                                      backgroundColor: bgColor,
                                     }}
                                   >
-                                    {renderScoreIndicator(
-                                      info.score,
-                                      h.par,
-                                      isDark,
-                                      textVal,
-                                    )}
-                                    <TextInput
-                                      ref={(el) => {
-                                        inputRefs.current[flatIndex] = el;
-                                      }}
-                                      editable={!isPending}
-                                      keyboardType="numeric"
-                                      value={textVal}
-                                      onChangeText={(val) =>
-                                        handleMultiplayerScoreChange(
-                                          h.holeId,
-                                          p.playerId,
-                                          val,
-                                          flatIndex,
-                                        )
-                                      }
-                                      placeholder="-"
-                                      placeholderTextColor={
-                                        isDark ? "#666" : "#999"
-                                      }
+                                    <View
                                       style={{
-                                        width: 30,
-                                        height: 30,
-                                        textAlign: "center",
-                                        color: isPending
-                                          ? isDark
-                                            ? "#777"
-                                            : "#9ca3af"
-                                          : isDark
-                                            ? "#fff"
-                                            : "#000",
-                                        fontWeight: "700",
-                                        fontSize: 13,
-                                        zIndex: 10,
-                                        backgroundColor: isPending
-                                          ? isDark
-                                            ? "#333"
-                                            : "#e5e7eb"
-                                          : "transparent",
-                                        padding: 0,
+                                        position: "relative",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 36,
+                                        height: 36,
                                       }}
-                                    />
-                                  </View>
-
-                                  {getScoringLabel() !==
-                                    "Net Score • Include Par 3" &&
-                                    getScoringLabel() !==
-                                      "Net Score • Exclude Par 3" &&
-                                    getScoringLabel() !== "Stableford" &&
-                                    getScoringLabel() !==
-                                      "Stableford • Exclude Par 3" && (
-                                      <HStack
-                                        style={{
-                                          alignItems: "center",
-                                          gap: 4,
-                                          marginTop: 4,
+                                    >
+                                      {renderScoreIndicator(
+                                        info.score,
+                                        h.par,
+                                        isDark,
+                                        textVal,
+                                      )}
+                                      <TextInput
+                                        ref={(el) => {
+                                          inputRefs.current[flatIndex] = el;
                                         }}
-                                      >
-                                        <TouchableOpacity
-                                          onPress={() =>
-                                            handleSandyToggle(
-                                              h.holeId,
-                                              p.playerId,
-                                            )
-                                          }
-                                          style={{
-                                            width: 18,
-                                            height: 18,
-                                            borderRadius: 9,
-                                            backgroundColor: info.sandy
-                                              ? "#2e7d32"
-                                              : isDark
+                                        editable={!isReadOnly && !isPending}
+                                        keyboardType="numeric"
+                                        value={textVal}
+                                        onChangeText={(val) => {
+                                          if (isReadOnly) return;
+                                          handleMultiplayerScoreChange(
+                                            h.holeId,
+                                            p.playerId,
+                                            val,
+                                            flatIndex,
+                                          );
+                                        }}
+                                        placeholder="-"
+                                        placeholderTextColor={
+                                          isDark ? "#666" : "#999"
+                                        }
+                                        style={{
+                                          width: 30,
+                                          height: 30,
+                                          textAlign: "center",
+                                          color: isReadOnly || isPending
+                                            ? isDark
+                                              ? "#777"
+                                              : "#9ca3af"
+                                            : isDark
+                                              ? "#fff"
+                                              : "#000",
+                                          fontWeight: "700",
+                                          fontSize: 13,
+                                          zIndex: 10,
+                                          backgroundColor: isReadOnly
+                                            ? isDark
+                                              ? "rgba(255,255,255,0.04)"
+                                              : "rgba(0,0,0,0.02)"
+                                            : isPending
+                                              ? isDark
                                                 ? "#333"
-                                                : "#e5e5e5",
+                                                : "#e5e7eb"
+                                              : "transparent",
+                                          padding: 0,
+                                        }}
+                                      />
+                                    </View>
+
+                                    {getScoringLabel() !==
+                                      "Net Score • Include Par 3" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Exclude Par 3" &&
+                                      getScoringLabel() !== "Stableford" &&
+                                      getScoringLabel() !==
+                                        "Stableford • Exclude Par 3" && (
+                                        <HStack
+                                          style={{
                                             alignItems: "center",
-                                            justifyContent: "center",
+                                            gap: 4,
+                                            marginTop: 4,
                                           }}
                                         >
-                                          <Text
+                                          <TouchableOpacity
+                                            disabled={isReadOnly}
+                                            onPress={() => {
+                                              if (isReadOnly) return;
+                                              handleSandyToggle(
+                                                h.holeId,
+                                                p.playerId,
+                                              );
+                                            }}
                                             style={{
-                                              fontSize: 9,
-                                              fontWeight: "bold",
-                                              color: info.sandy
-                                                ? "#fff"
+                                              width: 18,
+                                              height: 18,
+                                              borderRadius: 9,
+                                              backgroundColor: info.sandy
+                                                ? "#2e7d32"
                                                 : isDark
-                                                  ? "#aaa"
-                                                  : "#666",
+                                                  ? "#333"
+                                                  : "#e5e5e5",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              opacity: isReadOnly ? 0.6 : 1,
                                             }}
                                           >
-                                            S
-                                          </Text>
-                                        </TouchableOpacity>
+                                            <Text
+                                              style={{
+                                                fontSize: 9,
+                                                fontWeight: "bold",
+                                                color: info.sandy
+                                                  ? "#fff"
+                                                  : isDark
+                                                    ? "#aaa"
+                                                    : "#666",
+                                              }}
+                                            >
+                                              S
+                                            </Text>
+                                          </TouchableOpacity>
 
-                                        {info.score !== null &&
-                                          (() => {
-                                            const badgeVal = getBadgeMultiplier(
-                                              info.score,
-                                              h.par,
-                                              info.sandy,
-                                            );
-                                            if (badgeVal > 0) {
-                                              return (
-                                                <Text
-                                                  style={{
-                                                    fontSize: 9,
-                                                    color: "#f59e0b",
-                                                    fontWeight: "bold",
-                                                  }}
-                                                >
-                                                  {badgeVal}x
-                                                </Text>
-                                              );
-                                            }
-                                            return null;
-                                          })()}
-                                      </HStack>
-                                    )}
-                                </View>
+                                          {info.score !== null &&
+                                            (() => {
+                                              const badgeVal =
+                                                getBadgeMultiplier(
+                                                  info.score,
+                                                  h.par,
+                                                  info.sandy,
+                                                );
+                                              if (badgeVal > 0) {
+                                                return (
+                                                  <Text
+                                                    style={{
+                                                      fontSize: 9,
+                                                      color: "#f59e0b",
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    {badgeVal}x
+                                                  </Text>
+                                                );
+                                              }
+                                              return null;
+                                            })()}
+                                        </HStack>
+                                      )}
+                                  </View>
+
+                                  {hasExtraPerPartnerCol && (
+                                    <View
+                                      style={{
+                                        width: colNetWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backgroundColor: bgColor,
+                                      }}
+                                    >
+                                      {showPtsColumns ? (
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 12,
+                                            fontWeight: "700",
+                                            color: "#f59e0b",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {info.score !== null &&
+                                          info.stablefordPoints !== null
+                                            ? info.stablefordPoints
+                                            : "-"}
+                                        </ThemedText>
+                                      ) : (
+                                        <ThemedText
+                                          style={{
+                                            fontSize: 12,
+                                            fontWeight: "600",
+                                            color: isDark
+                                              ? "#e2e8f0"
+                                              : "#334155",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {info.score !== null &&
+                                          info.netScore !== null
+                                            ? info.netScore
+                                            : "-"}
+                                        </ThemedText>
+                                      )}
+                                    </View>
+                                  )}
+                                </React.Fragment>
                               );
                             })}
 
@@ -3641,22 +4008,55 @@ export default function ResumeScorecard() {
                       {partners.map((p) => {
                         const t = getPlayerTotals(back9Holes, p);
                         return (
-                          <VStack
-                            key={p.playerId}
-                            style={{
-                              width: colPartnerWidth,
-                              alignItems: "center",
-                            }}
-                          >
-                            <ThemedText
+                          <React.Fragment key={p.playerId}>
+                            <VStack
                               style={{
-                                fontWeight: "700",
-                                color: isDark ? "#fff" : "#000",
+                                width: colPartnerWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              {t.gross}
-                            </ThemedText>
-                          </VStack>
+                              <ThemedText
+                                style={{
+                                  fontWeight: "700",
+                                  color: isDark ? "#fff" : "#000",
+                                }}
+                              >
+                                {t.gross}
+                              </ThemedText>
+                            </VStack>
+                            {hasExtraPerPartnerCol && (
+                              <VStack
+                                style={{
+                                  width: colNetWidth,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {showPtsColumns ? (
+                                  <ThemedText
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: "700",
+                                      color: "#f59e0b",
+                                    }}
+                                  >
+                                    {t.stableford}
+                                  </ThemedText>
+                                ) : (
+                                  <ThemedText
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: "700",
+                                      color: isDark ? "#8BC34A" : "#198754",
+                                    }}
+                                  >
+                                    {t.net}
+                                  </ThemedText>
+                                )}
+                              </VStack>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                       {isSplit6 &&
@@ -3832,43 +4232,42 @@ export default function ResumeScorecard() {
                     {partners.map((p) => {
                       const t = getPlayerTotals(holes, p);
                       return (
-                        <VStack
-                          key={p.playerId}
-                          style={{
-                            width: colPartnerWidth,
-                            alignItems: "center",
-                          }}
-                        >
-                          <ThemedText
+                        <React.Fragment key={p.playerId}>
+                          <VStack
                             style={{
-                              fontWeight: "800",
-                              color: "#fff",
+                              width: colPartnerWidth,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            {t.gross}
-                          </ThemedText>
-                          {/* {isStableford ? (
-                            <Text
+                            <ThemedText
                               style={{
-                                fontSize: 9,
+                                fontWeight: "800",
                                 color: "#fff",
-                                fontWeight: "600",
                               }}
                             >
-                              Pts:{t.stableford}
-                            </Text>
-                          ) : (
-                            <Text
+                              {t.gross}
+                            </ThemedText>
+                          </VStack>
+                          {hasExtraPerPartnerCol && (
+                            <VStack
                               style={{
-                                fontSize: 9,
-                                color: "#fff",
-                                fontWeight: "600",
+                                width: colNetWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              Net:{t.net}
-                            </Text>
-                          )} */}
-                        </VStack>
+                              <ThemedText
+                                style={{
+                                  fontWeight: "800",
+                                  color: "#fff",
+                                }}
+                              >
+                                {showPtsColumns ? t.stableford : t.net}
+                              </ThemedText>
+                            </VStack>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                     {isSplit6 &&
@@ -4597,22 +4996,24 @@ export default function ResumeScorecard() {
         )}
 
         {/* Finish Round Button */}
-        <Pressable
-          onPress={handleFinishRound}
-          disabled={saving}
-          className={`mt-6 p-4 rounded-xl mb-4 flex-row justify-center items-center ${saving ? "bg-gray-500" : "bg-[#8BC34A]"}`}
-        >
-          {saving ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-done-outline" size={20} color="white" />
-              <Text className="text-white font-bold ml-2 text-lg">
-                Finish Round
-              </Text>
-            </>
-          )}
-        </Pressable>
+        {!isReadOnly && (
+          <Pressable
+            onPress={handleFinishRound}
+            disabled={saving}
+            className={`mt-6 p-4 rounded-xl mb-4 flex-row justify-center items-center ${saving ? "bg-gray-500" : "bg-[#8BC34A]"}`}
+          >
+            {saving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-done-outline" size={20} color="white" />
+                <Text className="text-white font-bold ml-2 text-lg">
+                  Finish Round
+                </Text>
+              </>
+            )}
+          </Pressable>
+        )}
 
         {(() => {
           const scoreCounts: Record<string, number> = {
@@ -4974,7 +5375,7 @@ export default function ResumeScorecard() {
           );
         })()}
       </ScrollView>
-    
+
       <RangefinderModal
         visible={activeRangefinderHole !== null}
         onClose={() => setActiveRangefinderHole(null)}
@@ -4983,7 +5384,6 @@ export default function ResumeScorecard() {
         courseName={courseNameParam}
       />
     </ThemedView>
-    
   );
 }
 

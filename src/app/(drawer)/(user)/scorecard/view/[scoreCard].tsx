@@ -377,6 +377,10 @@ const ScoreCard: React.FC = () => {
             const handicapsMap: Record<number, number> = {};
             for (const p of parsedPartners) {
               if (!p.isPrimary && p.userId) {
+                if (p.handicap !== undefined && p.handicap !== null) {
+                  handicapsMap[p.userId] = Math.round(Number(p.handicap) || 0);
+                  continue;
+                }
                 try {
                   const hData = await getSubScorecardHandicap(
                     p.userId,
@@ -384,9 +388,12 @@ const ScoreCard: React.FC = () => {
                   );
                   const hc =
                     typeof hData === "object" && hData !== null
-                      ? (hData.handicap ?? 0)
+                      ? (hData.handicapIndex ??
+                        hData.userHandicap ??
+                        hData.handicap ??
+                        0)
                       : Number(hData) || 0;
-                  handicapsMap[p.userId] = hc;
+                  handicapsMap[p.userId] = Math.round(Number(hc) || 0);
                 } catch (e) {
                   console.error(
                     "Error fetching companion handicap for userId",
@@ -495,7 +502,11 @@ const ScoreCard: React.FC = () => {
 
     const playerHandicap = isPrimary
       ? Number(displayHandicap || 0)
-      : companionHandicaps[userId] || 0;
+      : partner.handicap !== undefined && partner.handicap !== null
+        ? Math.round(Number(partner.handicap) || 0)
+        : companionHandicaps[userId] !== undefined
+          ? companionHandicaps[userId]
+          : 0;
     let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
     if (hole.isExcluded && hole.par === 3) {
       strokesReceived = 0;
