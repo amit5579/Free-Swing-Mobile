@@ -333,6 +333,8 @@ export default function ResumeScorecard() {
 
       try {
         const serverHoles = await getScorecardDetails(id!);
+        console.log("ssvvrrhhll",serverHoles);
+        
         if (serverHoles && serverHoles.length > 0) {
           const normalizedServerHoles = serverHoles.map((h: any) => ({
             ...h,

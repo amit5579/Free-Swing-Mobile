@@ -109,6 +109,23 @@ export const postAcceptanceWeiver = async (tournamentId: number, isUnder18: bool
     }
 };
 
+export const getWaiverStatus = async (tournamentId: number, userId?: number | string) => {
+    try {
+        let finalUserId = userId;
+        if (!finalUserId) {
+            finalUserId = await AsyncStorage.getItem("userId") ?? undefined;
+        }
+        if (!finalUserId) {
+            throw new Error("User ID not found in storage");
+        }
+        const response = await client.get(`Tournament/${tournamentId}/waiver-status/${finalUserId}`);
+        console.log("Fetching waiver status:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Fetching waiver status Error:", error);
+        throw error;
+    }
+};
 
 // get all players User/list
 

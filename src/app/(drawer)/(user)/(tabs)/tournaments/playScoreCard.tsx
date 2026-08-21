@@ -44,6 +44,10 @@ export default function PlayScoreCard() {
 
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
+  console.log("tournamentId", tournamentId);
+  console.log("teeBoxId", teeBoxId);
+  console.log("courseId", courseId);
+  console.log("scoringType", scoringType);
 
   const dispatch = useAppDispatch();
 
@@ -65,16 +69,41 @@ export default function PlayScoreCard() {
   const [playingGroupRoundKey, setPlayingGroupRoundKey] = useState<
     string | null
   >(null);
+  const [matchScoringType, setMatchScoringType] = useState<string | null>(null);
+  const [nassauStartingNine, setNassauStartingNine] = useState<string | null>(null);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
   const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
-
+  // ── Companion Helper Functions (Matches Web Payload Generation) ──
+  const buildHoleCompanionScores = (hole: any, players: any[]) => {
+    const scores: Record<string, number | null> = {};
+    players.forEach((p) => {
+      if (p.isPrimary) {
+        scores[p.playerId] =
+          hole.score !== undefined && hole.score !== null && hole.score !== ""
+            ? Number(hole.score)
+            : null;
+      } else {
+        const val = hole.companionScores?.[p.playerId];
+        scores[p.playerId] =
+          val !== undefined && val !== null && val !== "" ? Number(val) : null;
+      }
+    });
+    return scores;
+  };
+  const buildHoleCompanionSandys = (hole: any, players: any[]) => {
+    const sandys: Record<string, boolean> = {};
+    players.forEach((p) => {
+      sandys[p.playerId] = hole.companionSandys?.[p.playerId] ?? false;
+    });
+    return sandys;
+  };
   useEffect(() => {    
     if (scorecardData) {
       // parse playingPartnersJson if it exists
       const firstWithPlayers = scorecardData.find(
         (item: any) => item.playingPartnersJson || item.PlayingPartnersJson,
       );
-      let players = [];
+      let players: any[] = [];
       if (firstWithPlayers) {
         try {
           const jsonStr =
@@ -85,19 +114,24 @@ export default function PlayScoreCard() {
           console.error("Error parsing playingPartnersJson:", e);
         }
       }
-
+      const firstUserId =
+        scorecardData[0]?.userId ||
+        scorecardData[0]?.UserId ||
+        userId;
+      if (firstUserId && !userId) {
+        setUserId(Number(firstUserId));
+      }
       if (players.length === 0) {
         players = [
           {
-            playerId: "p1",
-            userId: userId,
+            playerId: firstUserId ? String(firstUserId) : "p1",
+            userId: firstUserId ? Number(firstUserId) : null,
             name: "You",
             isPrimary: true,
           },
         ];
       }
       setRoundPlayers(players);
-
       const firstWithRoundKey = scorecardData.find(
         (item: any) => item.playingGroupRoundKey || item.PlayingGroupRoundKey,
       );
@@ -107,9 +141,29 @@ export default function PlayScoreCard() {
             firstWithRoundKey.PlayingGroupRoundKey,
         );
       }
-
+      const firstWithMode = scorecardData.find(
+        (item: any) => item.matchScoringType || item.MatchScoringType,
+      );
+      if (firstWithMode) {
+        setMatchScoringType(
+          firstWithMode.matchScoringType ||
+            firstWithMode.MatchScoringType ||
+            null,
+        );
+      }
+      const firstWithNassau = scorecardData.find(
+        (item: any) => item.nassauStartingNine || item.NassauStartingNine,
+      );
+      if (firstWithNassau) {
+        setNassauStartingNine(
+          firstWithNassau.nassauStartingNine ||
+            firstWithNassau.NassauStartingNine ||
+            null,
+        );
+      }
       const parsedScoreCard = scorecardData.map((hole: any) => {
-        let companionScores = {};
+        let companionScores: Record<string, any> = {};
+        let companionSandys: Record<string, boolean> = {};
         if (hole.companionScoresJson || hole.CompanionScoresJson) {
           try {
             companionScores = JSON.parse(
@@ -117,20 +171,40 @@ export default function PlayScoreCard() {
             );
           } catch (e) {}
         }
+        if (hole.companionSandysJson || hole.CompanionSandysJson) {
+          try {
+            companionSandys = JSON.parse(
+              hole.companionSandysJson || hole.CompanionSandysJson,
+            );
+          } catch (e) {}
+        }
+        players.forEach((p: any) => {
+          if (p.isPrimary) {
+            companionScores[p.playerId] =
+              hole.score !== undefined &&
+              hole.score !== null &&
+              hole.score !== ""
+                ? Number(hole.score)
+                : null;
+          } else if (!(p.playerId in companionScores)) {
+            companionScores[p.playerId] = null;
+          }
+          if (!(p.playerId in companionSandys)) {
+            companionSandys[p.playerId] = false;
+          }
+        });
         return {
           ...hole,
           companionScores,
+          companionSandys,
         };
       });
-
       setScoreCard(parsedScoreCard);
     }
   }, [scorecardData, userId]);
-
   const isStablefordStr = Array.isArray(scoringType) ? scoringType[0] : scoringType;
   const isStableford =
     isStablefordStr ? isStablefordStr.toLowerCase().includes("stableford") : false;
-
   const renderScoringType =
     scorecardData && scorecardData.length > 0
       ? scorecardData[0].isSystem36
@@ -141,56 +215,52 @@ export default function PlayScoreCard() {
             ? "Net Score Exclude Par 3"
             : "Net Score Include Par 3"
       : "";
-
   const showNetColumns =
     renderScoringType === "Net Score Include Par 3" ||
     renderScoringType === "Net Score Exclude Par 3" ||
     renderScoringType === "Stableford";
-
   const showPtsColumns =
     renderScoringType === "Stableford" || renderScoringType === "System 36";
-
   useEffect(() => {
     scoreCardRef.current = scoreCard;
   }, [scoreCard]);
-
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
-
   const processedScoreCardRef = useRef<any>([]);
   const inputRefs = useRef<any[]>([]);
-
-
-  const isExcluded = scoringType === "excluded" || scoringType === "Excluded";
-
+  const isExcluded =
+    scoringType === "excluded" ||
+    scoringType === "Excluded" ||
+    (scorecardData &&
+      scorecardData.length > 0 &&
+      !!(scorecardData[0].isExcluded || scorecardData[0].IsExcluded));
   const isSystem36 =
     scoringType === "system-36" ||
     scoringType === "System-36" ||
     (scoreCard &&
       scoreCard.length > 0 &&
       (scoreCard[0].isSystem36 === true || scoreCard[0].IsSystem36 === true));
-
   useEffect(() => {
     const getUserId = async () => {
       const storedUserId = await AsyncStorage.getItem("userId");
       if (storedUserId) setUserId(Number(storedUserId));
     };
     getUserId();
-
     dispatch(fetchScoreCardOpen(Number(tournamentId)));
     dispatch(fetchHandicap(Number(teeBoxId)));
-
-    // fetchScoreCard();
   }, []);
-
   // ── Calculation helpers ──
   const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
-    const base = Math.floor(playerHandicap / 18);
-    const remainder = playerHandicap % 18;
-    return base + (strokeIndex <= remainder ? 1 : 0);
+    if (!playerHandicap || playerHandicap === 0) return 0;
+    const absoluteHandicap = Math.abs(playerHandicap);
+    const base = Math.floor(absoluteHandicap / 18);
+    const remainder = absoluteHandicap % 18;
+    if (playerHandicap > 0) {
+      return base + (strokeIndex <= remainder ? 1 : 0);
+    }
+    return -(base + (remainder > 0 && strokeIndex > 18 - remainder ? 1 : 0));
   };
-
   const calculateHole = (hole: any) => {
     if (
       hole.score === null ||
@@ -204,41 +274,26 @@ export default function PlayScoreCard() {
         stablefordPoints: null,
       };
     }
-
     const score = Number(hole.score);
     const playerHandicapVal =
       handicapData && typeof handicapData === "object"
         ? (handicapData.courseHandicap ?? handicapData.handicap ?? 0)
         : Number(handicapData || 0);
-
+    const strokeIndexVal = Number(
+      hole.strokeIndex ?? hole.StrokeIndex ?? hole.handicap ?? hole.Handicap ?? 0,
+    );
     let strokesReceived = calculateStrokes(
       Number(playerHandicapVal),
-      hole.handicap,
+      strokeIndexVal,
     );
-
-    const calculateStrokesReceived = (strokeIndex: number) => {
-      const handicapValue = handicapData?.userHandicap || 0;
-      let strokes = 0;
-
-      if (handicapValue > 0) {
-        strokes = Math.floor(handicapValue / 18);
-        const remainder = handicapValue % 18;
-        if (strokeIndex <= remainder) {
-          strokes++;
-        }
-      }
-      return strokes;
-    };
-    // Excluded logic
+    // Excluded logic (No handicap on Par 3)
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
-
     const netScore = isSystem36 ? hole.netScore : score - strokesReceived;
-
     let stablefordPoints = null;
     if (isStableford) {
-      const pts = hole.par - netScore + 2;
+      const pts = hole.par - (netScore ?? score) + 2;
       stablefordPoints = pts > 0 ? pts : 0;
     } else if (isSystem36 && score > 0) {
       // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
@@ -246,14 +301,12 @@ export default function PlayScoreCard() {
       else if (score === hole.par + 1) stablefordPoints = 1;
       else stablefordPoints = 0;
     }
-
     return {
       ...hole,
       netScore,
       stablefordPoints,
     };
   };
-
   // ── Score change handler ──
   const handleScoreChange = async (
     holeId: number,
@@ -263,29 +316,35 @@ export default function PlayScoreCard() {
     isPrimary: boolean,
   ) => {
     if (value === "") {
-      setScoreCard((prev: any[]) =>
-        prev.map((hole) => {
-          if (hole.holeId === holeId) {
-            if (isPrimary) return { ...hole, score: "" };
+      const updatedScoreCard = scoreCard.map((hole: any) => {
+        if (hole.holeId === holeId) {
+          if (isPrimary) {
             return {
               ...hole,
+              score: "",
               companionScores: {
                 ...(hole.companionScores || {}),
-                [playerId]: "",
+                [playerId]: null,
               },
             };
           }
-          return hole;
-        }),
-      );
+          return {
+            ...hole,
+            companionScores: {
+              ...(hole.companionScores || {}),
+              [playerId]: null,
+            },
+          };
+        }
+        return hole;
+      });
+      setScoreCard(updatedScoreCard);
       return;
     }
-
     if (!/^\d+$/.test(value)) {
       Toast.show({ type: "error", text1: "Enter valid score" });
       return;
     }
-
     let currentScoreText = value;
     if (currentScoreText !== "") {
       const numericValue = Number(currentScoreText);
@@ -294,66 +353,69 @@ export default function PlayScoreCard() {
         currentScoreText = "";
       }
     }
-
+    const numVal = currentScoreText === "" ? null : Number(currentScoreText);
     const updatedScoreCard = scoreCard.map((hole: any) => {
       if (hole.holeId === holeId) {
         if (isPrimary) {
           return {
             ...hole,
-            score: currentScoreText === "" ? null : Number(currentScoreText),
+            score: numVal,
+            companionScores: {
+              ...(hole.companionScores || {}),
+              [playerId]: numVal,
+            },
           };
         } else {
           return {
             ...hole,
             companionScores: {
               ...(hole.companionScores || {}),
-              [playerId]:
-                currentScoreText === "" ? null : Number(currentScoreText),
+              [playerId]: numVal,
             },
           };
         }
       }
       return hole;
     });
-
     setScoreCard(updatedScoreCard);
-
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
+      const isGroup = roundPlayers && roundPlayers.length > 1;
+      const currentUserId =
+        userId ||
+        (scoreCardRef.current[0]?.userId
+          ? Number(scoreCardRef.current[0].userId)
+          : 0);
       const payload = updatedScoreCard.map(calculateHole).map((h: any) => ({
-        // ...h,
+        userId: currentUserId,
         courseId: courseId ? Number(courseId) : h.courseId,
         holeId: h.holeId,
         isCompleted: false,
-        isExcluded: isExcluded && h.par === 3,
+        isExcluded: isExcluded,
         roundNumber: h.roundNumber || 1,
         score:
           h.score === undefined || h.score === null || h.score === ""
             ? null
             : Number(h.score),
-        companionScoresJson:
-          roundPlayers && roundPlayers.length > 1
-            ? JSON.stringify(h.companionScores || {})
-            : null,
-        companionSandysJson:
-          roundPlayers && roundPlayers.length > 1
-            ? JSON.stringify(h.companionSandys || {})
-            : null,
+        stablefordPoints: h.stablefordPoints ?? null,
+        companionScoresJson: isGroup
+          ? JSON.stringify(buildHoleCompanionScores(h, roundPlayers))
+          : null,
+        companionSandysJson: isGroup
+          ? JSON.stringify(buildHoleCompanionSandys(h, roundPlayers))
+          : null,
         playingGroupRoundKey: playingGroupRoundKey || null,
-        playingPartnersJson:
-          roundPlayers && roundPlayers.length > 1
-            ? JSON.stringify(roundPlayers)
-            : null,
+        playingPartnersJson: isGroup ? JSON.stringify(roundPlayers) : null,
         teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
         tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
-        userId: Number(userId),
+        matchScoringType: matchScoringType || h.matchScoringType || null,
+        nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
       }));
-      // console.log(
-      //   "Triggering debounced save for new round tournamentId:",
-      //   tournamentId,
-      // );
-      // console.log("Payload is ", payload);
-
+      console.log(
+        "Triggering debounced save for new round tournamentId:",
+        tournamentId,
+      );
+      console.log("Payload is ", payload);
       updateHoleScoresApi(
         tournamentId
           ? Number(tournamentId)
@@ -361,8 +423,7 @@ export default function PlayScoreCard() {
         payload,
       ).catch((err) => console.error("Debounced save error:", err));
     }, 300);
-
-    // Auto-focus next input after 5 seconds if a value is entered
+    // Auto-focus next input after 1.5 seconds if a value is entered
     if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
     if (value !== "") {
       focusTimeoutRef.current = setTimeout(() => {
@@ -373,7 +434,6 @@ export default function PlayScoreCard() {
       }, 1500);
     }
   };
-
   const getScoreLegendCounts = (holes: any[]) => {
     const counts = {
       holeInOne: 0,
@@ -386,18 +446,15 @@ export default function PlayScoreCard() {
       triple: 0,
       quadPlus: 0,
     };
-
     holes.forEach((h) => {
       if (!h.score && h.score !== 0) return;
-
       const score = Number(h.score);
       const diff = score - h.par;
-
       if (score === 1) {
         counts.holeInOne++;
         return;
       }
-      if (score === -0) {
+      if (diff <= -3) {
         counts.albatross++;
         return;
       }
@@ -430,10 +487,8 @@ export default function PlayScoreCard() {
         return;
       }
     });
-
     return counts;
   };
-
   const getTotals = (holes: any[]) => {
     const scoreTotal = holes.reduce(
       (sum, h) => sum + (Number(h.score) || 0),
@@ -447,7 +502,6 @@ export default function PlayScoreCard() {
       (sum, h) => sum + (Number(h.stablefordPoints) || 0),
       0,
     );
-
     return {
       strokeIndex: "",
       yards: holes.reduce((sum, h) => sum + (h.yardage || 0), 0),
@@ -457,49 +511,50 @@ export default function PlayScoreCard() {
       stableford: ptsTotal > 0 ? ptsTotal : "-",
     };
   };
-
   const processedScoreCard = scoreCard.map(calculateHole);
   const processedFront9 = processedScoreCard.slice(0, 9);
   const processedBack9 = processedScoreCard.slice(9, 18);
   const legendCounts = getScoreLegendCounts(processedScoreCard);
-
   const frontTotals = getTotals(processedFront9);
   const backTotals = getTotals(processedBack9);
   const grandTotals = getTotals(processedScoreCard);
-
   const handleGoBack = async () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
+    const isGroup = roundPlayers && roundPlayers.length > 1;
+    const currentUserId =
+      userId ||
+      (scoreCardRef.current[0]?.userId
+        ? Number(scoreCardRef.current[0].userId)
+        : 0);
     const payload = scoreCardRef.current.map(calculateHole).map((h: any) => ({
+      userId: currentUserId,
       courseId: courseId ? Number(courseId) : h.courseId,
       holeId: h.holeId,
       isCompleted: false,
-      isExcluded: isExcluded && h.par === 3,
+      isExcluded: isExcluded,
       roundNumber: h.roundNumber || 1,
       score:
         h.score === undefined || h.score === null || h.score === ""
           ? null
           : Number(h.score),
-      companionScoresJson:
-        roundPlayers && roundPlayers.length > 1
-          ? JSON.stringify(h.companionScores || {})
-          : null,
-      companionSandysJson:
-        roundPlayers && roundPlayers.length > 1
-          ? JSON.stringify(h.companionSandys || {})
-          : null,
+      stablefordPoints: h.stablefordPoints ?? null,
+      companionScoresJson: isGroup
+        ? JSON.stringify(buildHoleCompanionScores(h, roundPlayers))
+        : null,
+      companionSandysJson: isGroup
+        ? JSON.stringify(buildHoleCompanionSandys(h, roundPlayers))
+        : null,
       playingGroupRoundKey: playingGroupRoundKey || null,
-      playingPartnersJson:
-        roundPlayers && roundPlayers.length > 1
-          ? JSON.stringify(roundPlayers)
-          : null,
+      playingPartnersJson: isGroup ? JSON.stringify(roundPlayers) : null,
       teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
       tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
-      userId: Number(userId),
+      matchScoringType: matchScoringType || h.matchScoringType || null,
+      nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
     }));
+    console.log("pplldd", payload);
     try {
       await updateHoleScoresApi(
         tournamentId
@@ -512,52 +567,50 @@ export default function PlayScoreCard() {
     }
     routePage.back();
   };
-
   const saveRound = useCallback(
     async (isCompleted: boolean, shouldGoBack: boolean = false) => {
       try {
         setVisible(false);
+        const isGroup = roundPlayers && roundPlayers.length > 1;
+        const currentUserId =
+          userId ||
+          (scoreCardRef.current[0]?.userId
+            ? Number(scoreCardRef.current[0].userId)
+            : 0);
         const finishPayload = scoreCardRef.current
           .map(calculateHole)
           .map((h: any) => ({
-            // ...h,
+            userId: currentUserId,
             courseId: courseId ? Number(courseId) : h.courseId,
             holeId: h.holeId,
             isCompleted: isCompleted,
-            isExcluded: isExcluded && h.par === 3,
+            isExcluded: isExcluded,
             roundNumber: h.roundNumber || 1,
             score:
               h.score === undefined || h.score === null || h.score === ""
                 ? null
                 : Number(h.score),
-            matchScoringType: null,
-            nassauStartingNine: null,
-            companionScoresJson:
-              roundPlayers && roundPlayers.length > 1
-                ? JSON.stringify(h.companionScores || {})
-                : null,
-            companionSandysJson:
-              roundPlayers && roundPlayers.length > 1
-                ? JSON.stringify(h.companionSandys || {})
-                : null,
+            stablefordPoints: h.stablefordPoints ?? null,
+            companionScoresJson: isGroup
+              ? JSON.stringify(buildHoleCompanionScores(h, roundPlayers))
+              : null,
+            companionSandysJson: isGroup
+              ? JSON.stringify(buildHoleCompanionSandys(h, roundPlayers))
+              : null,
             playingGroupRoundKey: playingGroupRoundKey || null,
-            playingPartnersJson:
-              roundPlayers && roundPlayers.length > 1
-                ? JSON.stringify(roundPlayers)
-                : null,
+            playingPartnersJson: isGroup ? JSON.stringify(roundPlayers) : null,
             teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
-            userId: Number(userId),
+            matchScoringType: matchScoringType || h.matchScoringType || null,
+            nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
           }));
-        // console.log("finishPayload", finishPayload);
-
+        console.log("finishPayload", finishPayload);
         await updateHoleScoresApi(
           tournamentId
             ? Number(tournamentId)
             : scoreCardRef.current[0]?.scorecardId || 0,
           finishPayload,
         );
-
         if (isCompleted) {
           Toast.show({
             type: "success",
@@ -565,7 +618,6 @@ export default function PlayScoreCard() {
             text2: "Score submitted successfully",
           });
         }
-
         if (shouldGoBack) {
           routePage.back();
         }
@@ -580,6 +632,10 @@ export default function PlayScoreCard() {
       teeBoxId,
       tournamentId,
       userId,
+      roundPlayers,
+      playingGroupRoundKey,
+      matchScoringType,
+      nassauStartingNine,
       routePage,
     ],
   );
@@ -897,7 +953,7 @@ export default function PlayScoreCard() {
                 fontSize: 12,
               }}
             >
-              Handicap: {scoreCard?.[0]?.appliedHandicap}
+              Handicap: {scoreCard?.[0]?.appliedHandicap ?? (typeof handicapData === 'object' ? (handicapData?.courseHandicap ?? handicapData?.handicap) : handicapData) ?? "N/A"}
             </Text>
           </Box>
 
