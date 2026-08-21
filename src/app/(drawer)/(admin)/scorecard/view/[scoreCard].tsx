@@ -313,34 +313,27 @@ const ScoreCard: React.FC = () => {
           setIsNassauBest(isNB);
           setIsNassauCombined(isNC);
 
-          const teeBoxId = (firstHole as any).teeBoxId;
-          if (parsedPartners.length > 0 && teeBoxId) {
-            const fetchCompanionHandicaps = async () => {
-              const handicapsMap: Record<number, number> = {};
-              for (const p of parsedPartners) {
-                if (!p.isPrimary && p.userId) {
-                  try {
-                    const hData = await getSubScorecardHandicap(
-                      p.userId,
-                      Number(teeBoxId),
-                    );
-                    const hc =
-                      typeof hData === "object" && hData !== null
-                        ? (hData.handicap ?? 0)
-                        : Number(hData) || 0;
-                    handicapsMap[p.userId] = hc;
-                  } catch (e) {
-                    console.error(
-                      "Error fetching companion handicap for userId",
-                      p.userId,
-                      e,
-                    );
-                  }
+          if (parsedPartners.length > 0) {
+            const handicapsMap: Record<string | number, number> = {};
+            for (const p of parsedPartners) {
+              if (!p.isPrimary) {
+                const directHc =
+                  p.appliedHandicap ??
+                  p.courseHandicap ??
+                  p.handicap ??
+                  p.userHandicap;
+                if (
+                  directHc !== undefined &&
+                  directHc !== null &&
+                  directHc !== ""
+                ) {
+                  const hVal = Math.round(Number(directHc) || 0);
+                  if (p.userId) handicapsMap[p.userId] = hVal;
+                  if (p.playerId) handicapsMap[p.playerId] = hVal;
                 }
               }
-              setCompanionHandicaps(handicapsMap);
-            };
-            fetchCompanionHandicaps();
+            }
+            setCompanionHandicaps(handicapsMap);
           }
         }
       } catch (err) {
@@ -436,10 +429,15 @@ const ScoreCard: React.FC = () => {
     }
   }, [holes]);
 
-  const calculateStrokes = (handicap: number, strokeIndex: number) => {
-    const base = Math.floor(handicap / 18);
-    const remainder = handicap % 18;
-    return base + (strokeIndex <= remainder ? 1 : 0);
+  const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
+    if (!playerHandicap || playerHandicap === 0) return 0;
+    const absoluteHandicap = Math.abs(playerHandicap);
+    const base = Math.floor(absoluteHandicap / 18);
+    const remainder = absoluteHandicap % 18;
+    if (playerHandicap > 0) {
+      return base + (strokeIndex <= remainder ? 1 : 0);
+    }
+    return -(base + (remainder > 0 && strokeIndex > 18 - remainder ? 1 : 0));
   };
 
   const getPlayerHoleInfo = (hole: any, partner: any) => {
@@ -505,10 +503,28 @@ const ScoreCard: React.FC = () => {
       };
     }
 
+    const directHc =
+      partner.appliedHandicap ??
+      partner.courseHandicap ??
+      partner.handicap ??
+      partner.userHandicap;
     const playerHandicap = isPrimary
       ? Number(displayHandicap || 0)
-      : companionHandicaps[userId] || 0;
-    let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
+      : directHc !== undefined && directHc !== null && directHc !== ""
+        ? Math.round(Number(directHc) || 0)
+        : userId && companionHandicaps[userId] !== undefined
+          ? companionHandicaps[userId]
+          : playerId && companionHandicaps[playerId] !== undefined
+            ? companionHandicaps[playerId]
+            : 0;
+    const strokeIndexVal = Number(
+      hole.strokeIndex ??
+        hole.StrokeIndex ??
+        hole.handicap ??
+        hole.Handicap ??
+        0,
+    );
+    let strokesReceived = calculateStrokes(playerHandicap, strokeIndexVal);
     if (hole.isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }

@@ -20,11 +20,7 @@ import { VStack } from "@/components/vstack";
 import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
-// import {
-//   getScorecardHandicap,
-//   getScoreCardOpen,
-//   saveScoreCard,
-// } from "@/api/modules/scoreCard.api";
+import { getSubScorecardHandicap } from "@/api/modules/scoreCard.api";
 import Toast from "react-native-toast-message";
 import { Box } from "@/components/box";
 
@@ -66,13 +62,20 @@ export default function PlayScoreCard() {
   const focusTimeoutRef = useRef<any>(null);
 
   const [roundPlayers, setRoundPlayers] = useState<any[]>([]);
+  const [companionHandicaps, setCompanionHandicaps] = useState<
+    Record<number, number>
+  >({});
   const [playingGroupRoundKey, setPlayingGroupRoundKey] = useState<
     string | null
   >(null);
   const [matchScoringType, setMatchScoringType] = useState<string | null>(null);
-  const [nassauStartingNine, setNassauStartingNine] = useState<string | null>(null);
+  const [nassauStartingNine, setNassauStartingNine] = useState<string | null>(
+    null,
+  );
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
-  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
+    number | null
+  >(null);
   // ── Companion Helper Functions (Matches Web Payload Generation) ──
   const buildHoleCompanionScores = (hole: any, players: any[]) => {
     const scores: Record<string, number | null> = {};
@@ -97,7 +100,7 @@ export default function PlayScoreCard() {
     });
     return sandys;
   };
-  useEffect(() => {    
+  useEffect(() => {
     if (scorecardData) {
       // parse playingPartnersJson if it exists
       const firstWithPlayers = scorecardData.find(
@@ -115,9 +118,7 @@ export default function PlayScoreCard() {
         }
       }
       const firstUserId =
-        scorecardData[0]?.userId ||
-        scorecardData[0]?.UserId ||
-        userId;
+        scorecardData[0]?.userId || scorecardData[0]?.UserId || userId;
       if (firstUserId && !userId) {
         setUserId(Number(firstUserId));
       }
@@ -132,6 +133,33 @@ export default function PlayScoreCard() {
         ];
       }
       setRoundPlayers(players);
+
+      const effectiveTeeBoxId = teeBoxId
+        ? Number(teeBoxId)
+        : scorecardData[0]?.teeBoxId || scorecardData[0]?.TeeBoxId;
+
+      if (players.length > 0) {
+        const handicapsMap: Record<string | number, number> = {};
+        for (const p of players) {
+          if (!p.isPrimary) {
+            const directHc =
+              p.appliedHandicap ??
+              p.courseHandicap ??
+              p.handicap ??
+              p.userHandicap;
+            if (
+              directHc !== undefined &&
+              directHc !== null &&
+              directHc !== ""
+            ) {
+              const hVal = Math.round(Number(directHc) || 0);
+              if (p.userId) handicapsMap[p.userId] = hVal;
+              if (p.playerId) handicapsMap[p.playerId] = hVal;
+            }
+          }
+        }
+        setCompanionHandicaps(handicapsMap);
+      }
       const firstWithRoundKey = scorecardData.find(
         (item: any) => item.playingGroupRoundKey || item.PlayingGroupRoundKey,
       );
@@ -202,14 +230,17 @@ export default function PlayScoreCard() {
       setScoreCard(parsedScoreCard);
     }
   }, [scorecardData, userId]);
-  const isStablefordStr = Array.isArray(scoringType) ? scoringType[0] : scoringType;
-  const isStableford =
-    isStablefordStr ? isStablefordStr.toLowerCase().includes("stableford") : false;
+  const isStablefordStr = Array.isArray(scoringType)
+    ? scoringType[0]
+    : scoringType;
+  const isStableford = isStablefordStr
+    ? isStablefordStr.toLowerCase().includes("stableford")
+    : false;
   const renderScoringType =
     scorecardData && scorecardData.length > 0
       ? scorecardData[0].isSystem36
         ? "System 36"
-        : (isStableford || scorecardData[0].stablefordPoints != null)
+        : isStableford || scorecardData[0].stablefordPoints != null
           ? "Stableford"
           : scorecardData[0].isExcluded
             ? "Net Score Exclude Par 3"
@@ -280,7 +311,11 @@ export default function PlayScoreCard() {
         ? (handicapData.courseHandicap ?? handicapData.handicap ?? 0)
         : Number(handicapData || 0);
     const strokeIndexVal = Number(
-      hole.strokeIndex ?? hole.StrokeIndex ?? hole.handicap ?? hole.Handicap ?? 0,
+      hole.strokeIndex ??
+        hole.StrokeIndex ??
+        hole.handicap ??
+        hole.Handicap ??
+        0,
     );
     let strokesReceived = calculateStrokes(
       Number(playerHandicapVal),
@@ -311,7 +346,7 @@ export default function PlayScoreCard() {
   const handleScoreChange = async (
     holeId: number,
     value: string,
-    index: number,
+    flatIndex: number,
     playerId: string,
     isPrimary: boolean,
   ) => {
@@ -427,9 +462,9 @@ export default function PlayScoreCard() {
     if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
     if (value !== "") {
       focusTimeoutRef.current = setTimeout(() => {
-        const nextIndex = index + 1;
-        if (nextIndex < updatedScoreCard.length) {
-          inputRefs.current[nextIndex]?.focus();
+        const nextFlatIndex = flatIndex + 1;
+        if (nextFlatIndex < inputRefs.current.length) {
+          inputRefs.current[nextFlatIndex]?.focus();
         }
       }, 1500);
     }
@@ -602,7 +637,8 @@ export default function PlayScoreCard() {
             teeBoxId: teeBoxId ? Number(teeBoxId) : h.teeBoxId,
             tournamentId: tournamentId ? Number(tournamentId) : h.tournamentId,
             matchScoringType: matchScoringType || h.matchScoringType || null,
-            nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
+            nassauStartingNine:
+              nassauStartingNine || h.nassauStartingNine || null,
           }));
         console.log("finishPayload", finishPayload);
         await updateHoleScoresApi(
@@ -677,7 +713,12 @@ export default function PlayScoreCard() {
     dark: boolean,
     textVal: string = "",
   ) => {
-    if (score === null || score === "" || score === undefined || textVal === "") {
+    if (
+      score === null ||
+      score === "" ||
+      score === undefined ||
+      textVal === ""
+    ) {
       return (
         <View style={styles.indicatorContainer}>
           <View
@@ -790,103 +831,21 @@ export default function PlayScoreCard() {
   };
 
   const renderHeader = () => {
-  return (
-    <View>
-      {/* Main Header */}
-      <View
-        style={{
-          height: 56,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 8,
-          position: "relative",
-        }}
-      >
-        {/* Back Button */}
-        <Pressable
-          onPress={handleGoBack}
-          style={{
-            width: 44,
-            height: 44,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons
-            name="arrow-back-outline"
-            size={24}
-            color={isDark ? "#ffffff" : "#020617"}
-          />
-        </Pressable>
-
-        {/* Centered Title */}
+    return (
+      <View>
+        {/* Main Header */}
         <View
           style={{
-            position: "absolute",
-            left: 60,
-            right: 120,
-            alignItems: "center",
-          }}
-        >
-          <ThemedText
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={{
-              fontSize: 20,
-              fontWeight: "700",
-              textAlign: "center",
-            }}
-          >
-            Scorecard
-            {scoreCard?.[0]?.groupName
-              ? ` - ${scoreCard[0].groupName}`
-              : ""}
-          </ThemedText>
-        </View>
-
-        {/* Right Actions */}
-        <View
-          style={{
-            marginLeft: "auto",
+            height: 56,
             flexDirection: "row",
             alignItems: "center",
+            paddingHorizontal: 8,
+            position: "relative",
           }}
         >
-          {/* GPS */}
+          {/* Back Button */}
           <Pressable
-            onPress={() =>
-              setActiveRangefinderHole(scoreCard?.[0]?.holeId || null)
-            }
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              backgroundColor: "#198754",
-              borderRadius: 6,
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons
-              name="map"
-              size={14}
-              color="#fff"
-              style={{ marginRight: 4 }}
-            />
-
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: "700",
-              }}
-            >
-              GPS
-            </Text>
-          </Pressable>
-
-          {/* Details Toggle */}
-          <Pressable
-            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+            onPress={handleGoBack}
             style={{
               width: 44,
               height: 44,
@@ -895,75 +854,130 @@ export default function PlayScoreCard() {
             }}
           >
             <Ionicons
-              name={
-                isDetailsVisible
-                  ? "eye-outline"
-                  : "eye-off-outline"
-              }
+              name="arrow-back-outline"
               size={24}
               color={isDark ? "#ffffff" : "#020617"}
             />
           </Pressable>
-        </View>
-      </View>
 
-      {/* Score Information */}
-      <View
-        style={{
-          marginHorizontal: 12,
-          marginTop: 4,
-          marginBottom: 8,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Scoring Type */}
-        <ThemedText
-          style={{
-            fontSize: 13,
-            opacity: 0.8,
-            flex: 1,
-          }}
-        >
-          ({renderScoringType})
-        </ThemedText>
-
-        {/* Handicap Information */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          {/* Handicap */}
-          <Box
+          {/* Centered Title */}
+          <View
             style={{
-              paddingHorizontal: 10,
-              paddingVertical: 7,
-              backgroundColor: "#8bc34a",
-              borderRadius: 8,
+              position: "absolute",
+              left: 60,
+              right: 120,
+              alignItems: "center",
             }}
           >
-            <Text
+            <ThemedText
+              numberOfLines={1}
+              ellipsizeMode="tail"
               style={{
-                color: "#fff",
+                fontSize: 20,
                 fontWeight: "700",
-                fontSize: 12,
+                textAlign: "center",
               }}
             >
-              Handicap: {scoreCard?.[0]?.appliedHandicap ?? (typeof handicapData === 'object' ? (handicapData?.courseHandicap ?? handicapData?.handicap) : handicapData) ?? "N/A"}
-            </Text>
-          </Box>
+              Scorecard
+              {scoreCard?.[0]?.groupName ? ` - ${scoreCard[0].groupName}` : ""}
+            </ThemedText>
+          </View>
 
-          {/* System 36 Handicap */}
-          {isSystem36 && (
+          {/* Right Actions */}
+          <View
+            style={{
+              marginLeft: "auto",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            {/* GPS */}
+            <Pressable
+              onPress={() =>
+                setActiveRangefinderHole(scoreCard?.[0]?.holeId || null)
+              }
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                backgroundColor: "#198754",
+                borderRadius: 6,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="map"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
+
+              <Text
+                style={{
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: "700",
+                }}
+              >
+                GPS
+              </Text>
+            </Pressable>
+
+            {/* Details Toggle */}
+            <Pressable
+              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+              style={{
+                width: 44,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                size={24}
+                color={isDark ? "#ffffff" : "#020617"}
+              />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Score Information */}
+        <View
+          style={{
+            marginHorizontal: 12,
+            marginTop: 4,
+            marginBottom: 8,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Scoring Type */}
+          <ThemedText
+            style={{
+              fontSize: 13,
+              opacity: 0.8,
+              flex: 1,
+            }}
+          >
+            ({renderScoringType})
+          </ThemedText>
+
+          {/* Handicap Information */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            {/* Handicap */}
             <Box
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 7,
-                backgroundColor: "#0ea5e9",
+                backgroundColor: "#8bc34a",
                 borderRadius: 8,
               }}
             >
@@ -974,20 +988,44 @@ export default function PlayScoreCard() {
                   fontSize: 12,
                 }}
               >
-                Sys36 HC:{" "}
-                {scoreCard.some(
-                  (h: any) => h.score !== null && h.score > 0
-                )
-                  ? 36 - Number(grandTotals.stableford)
-                  : "N/A"}
+                Handicap:{" "}
+                {scoreCard?.[0]?.appliedHandicap ??
+                  (typeof handicapData === "object"
+                    ? (handicapData?.courseHandicap ?? handicapData?.handicap)
+                    : handicapData) ??
+                  "N/A"}
               </Text>
             </Box>
-          )}
+
+            {/* System 36 Handicap */}
+            {isSystem36 && (
+              <Box
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
+                  backgroundColor: "#0ea5e9",
+                  borderRadius: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                    fontSize: 12,
+                  }}
+                >
+                  Sys36 HC:{" "}
+                  {scoreCard.some((h: any) => h.score !== null && h.score > 0)
+                    ? 36 - Number(grandTotals.stableford)
+                    : "N/A"}
+                </Text>
+              </Box>
+            )}
+          </View>
         </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
   const isGroup = roundPlayers && roundPlayers.length > 1;
   const colStyle = isGroup
@@ -996,25 +1034,87 @@ export default function PlayScoreCard() {
   const headerStyle = { ...colStyle, fontWeight: "600" as const, fontSize: 13 };
 
   const getPlayerScore = (h: any, p: any) => {
-    if (p.isPrimary) return h.score;
-    return h.companionScores?.[p.playerId];
+    if (p.isPrimary) {
+      return h.score !== null && h.score !== "" && h.score !== undefined
+        ? Number(h.score)
+        : null;
+    }
+    const val = h.companionScores?.[p.playerId];
+    return val !== null && val !== "" && val !== undefined ? Number(val) : null;
   };
 
+  const getPlayerHandicap = (p: any) => {
+    if (p.isPrimary) {
+      return (
+        scoreCard?.[0]?.appliedHandicap ??
+        (typeof handicapData === "object"
+          ? (handicapData?.courseHandicap ?? handicapData?.handicap ?? 0)
+          : Number(handicapData || 0))
+      );
+    }
+    if (p.handicap !== undefined && p.handicap !== null && p.handicap !== "") {
+      return Math.round(Number(p.handicap) || 0);
+    }
+    if (
+      p.courseHandicap !== undefined &&
+      p.courseHandicap !== null &&
+      p.courseHandicap !== ""
+    ) {
+      return Math.round(Number(p.courseHandicap) || 0);
+    }
+    if (
+      p.userHandicap !== undefined &&
+      p.userHandicap !== null &&
+      p.userHandicap !== ""
+    ) {
+      return Math.round(Number(p.userHandicap) || 0);
+    }
+    if (
+      p.appliedHandicap !== undefined &&
+      p.appliedHandicap !== null &&
+      p.appliedHandicap !== ""
+    ) {
+      return Math.round(Number(p.appliedHandicap) || 0);
+    }
+    const uid = Number(p.userId || p.playerId);
+    if (uid && companionHandicaps[uid] !== undefined) {
+      return companionHandicaps[uid];
+    }
+    if (p.playerId && companionHandicaps[p.playerId] !== undefined) {
+      return companionHandicaps[p.playerId];
+    }
+    if (p.userId && companionHandicaps[p.userId] !== undefined) {
+      return companionHandicaps[p.userId];
+    }
+    return 0;
+  };
+// playerid , isprimary
   const getPlayerNetScore = (h: any, p: any) => {
-    if (p.isPrimary) return h.netScore;
-    return getPlayerScore(h, p);
+    const raw = getPlayerScore(h, p);
+    if (raw === null || raw === undefined || raw < 0) return null;
+    const pHc = getPlayerHandicap(p);
+    const strokeIndexVal = Number(
+      h.strokeIndex ?? h.StrokeIndex ?? h.handicap ?? h.Handicap ?? 0,
+    );
+    let strokesReceived = calculateStrokes(Number(pHc), strokeIndexVal);
+    if (isExcluded && h.par === 3) {
+      strokesReceived = 0;
+    }
+    return isSystem36 ? h.netScore : raw - strokesReceived;
   };
 
   const getPlayerStablefordPoints = (h: any, p: any) => {
-    if (p.isPrimary) return h.stablefordPoints;
     const score = getPlayerScore(h, p);
-    if (!score) return null;
+    if (score === null || score === undefined || score < 0) return null;
     if (isSystem36) {
       if (score <= h.par) return 2;
       if (score === h.par + 1) return 1;
       return 0;
     }
-    return "-";
+    const net = getPlayerNetScore(h, p);
+    if (net === null || net === undefined) return null;
+    const pts = h.par - net + 2;
+    return pts > 0 ? pts : 0;
   };
 
   const getPlayerTotals = (
@@ -1023,15 +1123,19 @@ export default function PlayScoreCard() {
     isPrimary: boolean,
     type: "score" | "net" | "pts",
   ) => {
+    const playerObj =
+      roundPlayers.find((rp: any) => rp.playerId === playerId) || {
+        playerId,
+        isPrimary,
+      };
     return holes.reduce((sum, h) => {
       let s;
-      if (type === "score") s = getPlayerScore(h, { playerId, isPrimary });
-      else if (type === "net")
-        s = getPlayerNetScore(h, { playerId, isPrimary });
-      else s = getPlayerStablefordPoints(h, { playerId, isPrimary });
+      if (type === "score") s = getPlayerScore(h, playerObj);
+      else if (type === "net") s = getPlayerNetScore(h, playerObj);
+      else s = getPlayerStablefordPoints(h, playerObj);
 
       const num = Number(s);
-      return sum + (isNaN(num) ? 0 : num);
+      return sum + (isNaN(num) || s === null || s === "-" ? 0 : num);
     }, 0);
   };
 
@@ -1102,12 +1206,14 @@ export default function PlayScoreCard() {
                                     Net
                                   </ThemedText>
                                 )}
-                                {showPtsColumns && renderScoringType === "Stableford" && (
+                                {showPtsColumns &&
+                                  renderScoringType === "Stableford" && (
                                     <ThemedText style={headerStyle}>
                                       Pts
                                     </ThemedText>
                                   )}
-                                {showPtsColumns && renderScoringType === "System 36" && (
+                                {showPtsColumns &&
+                                  renderScoringType === "System 36" && (
                                     <ThemedText style={headerStyle}>
                                       Sys36{"\n"}Pts
                                     </ThemedText>
@@ -1120,12 +1226,14 @@ export default function PlayScoreCard() {
                               {showNetColumns && (
                                 <ThemedText style={headerStyle}>Net</ThemedText>
                               )}
-                              {showPtsColumns && renderScoringType === "Stableford" && (
+                              {showPtsColumns &&
+                                renderScoringType === "Stableford" && (
                                   <ThemedText style={headerStyle}>
                                     Pts
                                   </ThemedText>
                                 )}
-                              {showPtsColumns && renderScoringType === "System 36" && (
+                              {showPtsColumns &&
+                                renderScoringType === "System 36" && (
                                   <ThemedText style={headerStyle}>
                                     Sys36{"\n"}Pts
                                   </ThemedText>
@@ -1144,12 +1252,29 @@ export default function PlayScoreCard() {
                                 borderColor: isDark ? "#333" : "#eee",
                               }}
                             >
-                              <View style={{...colStyle, alignItems: 'center', justifyContent: 'center'} as any}>
-                                <ThemedText style={{ fontWeight: 'bold' }}>
+                              <View
+                                style={
+                                  {
+                                    ...colStyle,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  } as any
+                                }
+                              >
+                                <ThemedText style={{ fontWeight: "bold" }}>
                                   {h.holeNumber}
                                 </ThemedText>
-                                <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} style={{ marginTop: 2 }}>
-                                  <Ionicons name="location-outline" size={16} color={isDark ? "#8BC34A" : "#198754"} />
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    setActiveRangefinderHole(h.holeId)
+                                  }
+                                  style={{ marginTop: 2 }}
+                                >
+                                  <Ionicons
+                                    name="location-outline"
+                                    size={16}
+                                    color={isDark ? "#8BC34A" : "#198754"}
+                                  />
                                 </TouchableOpacity>
                               </View>
                               {isDetailsVisible && (
@@ -1170,6 +1295,9 @@ export default function PlayScoreCard() {
 
                               {roundPlayers && roundPlayers.length > 0 ? (
                                 roundPlayers.map((p, pIndex) => {
+                                  const playerCount = roundPlayers.length;
+                                  const flatIndex =
+                                    index * playerCount + pIndex;
                                   const rawVal = getPlayerScore(h, p);
                                   const textVal =
                                     rawVal !== null && rawVal !== undefined
@@ -1207,7 +1335,7 @@ export default function PlayScoreCard() {
                                               handleScoreChange(
                                                 h.holeId,
                                                 val,
-                                                index,
+                                                flatIndex,
                                                 p.playerId,
                                                 p.isPrimary,
                                               )
@@ -1220,19 +1348,25 @@ export default function PlayScoreCard() {
                                               saveRound(false, false);
                                             }}
                                             onSubmitEditing={() => {
-                                              if (index < 17) {
+                                              const nextFlatIndex =
+                                                flatIndex + 1;
+                                              if (
+                                                nextFlatIndex <
+                                                18 * playerCount
+                                              ) {
                                                 inputRefs.current[
-                                                  index + 1
+                                                  nextFlatIndex
                                                 ]?.focus();
                                               }
                                             }}
                                             returnKeyType={
-                                              index === 17 ? "done" : "next"
+                                              flatIndex === 18 * playerCount - 1
+                                                ? "done"
+                                                : "next"
                                             }
-                                            ref={(el: any) =>
-                                              p.isPrimary &&
-                                              (inputRefs.current[index] = el)
-                                            }
+                                            ref={(el: any) => {
+                                              inputRefs.current[flatIndex] = el;
+                                            }}
                                             keyboardType="numeric"
                                             style={{
                                               width: 32,
@@ -1376,13 +1510,15 @@ export default function PlayScoreCard() {
                                     </ThemedText>
                                   )}
 
-                                  {showPtsColumns && renderScoringType === "Stableford" && (
+                                  {showPtsColumns &&
+                                    renderScoringType === "Stableford" && (
                                       <ThemedText style={colStyle}>
                                         {h.stablefordPoints ?? "-"}
                                       </ThemedText>
                                     )}
 
-                                  {showPtsColumns && renderScoringType === "System 36" && (
+                                  {showPtsColumns &&
+                                    renderScoringType === "System 36" && (
                                       <ThemedText
                                         style={{
                                           ...colStyle,
@@ -1468,12 +1604,15 @@ export default function PlayScoreCard() {
                                             {n > 0 ? n : "-"}
                                           </ThemedText>
                                         )}
-                                        {showPtsColumns && renderScoringType === "Stableford" && (
+                                        {showPtsColumns &&
+                                          renderScoringType ===
+                                            "Stableford" && (
                                             <ThemedText style={colStyle}>
                                               {pt > 0 ? pt : "-"}
                                             </ThemedText>
                                           )}
-                                        {showPtsColumns && renderScoringType === "System 36" && (
+                                        {showPtsColumns &&
+                                          renderScoringType === "System 36" && (
                                             <ThemedText
                                               style={{
                                                 ...colStyle,
@@ -1504,12 +1643,14 @@ export default function PlayScoreCard() {
                                         {frontTotals.net}
                                       </ThemedText>
                                     )}
-                                    {showPtsColumns && renderScoringType === "Stableford" && (
+                                    {showPtsColumns &&
+                                      renderScoringType === "Stableford" && (
                                         <ThemedText style={colStyle}>
                                           {frontTotals.stableford}
                                         </ThemedText>
                                       )}
-                                    {showPtsColumns && renderScoringType === "System 36" && (
+                                    {showPtsColumns &&
+                                      renderScoringType === "System 36" && (
                                         <ThemedText
                                           style={{
                                             ...colStyle,
@@ -1596,12 +1737,15 @@ export default function PlayScoreCard() {
                                             {n > 0 ? n : "-"}
                                           </ThemedText>
                                         )}
-                                        {showPtsColumns && renderScoringType === "Stableford" && (
+                                        {showPtsColumns &&
+                                          renderScoringType ===
+                                            "Stableford" && (
                                             <ThemedText style={colStyle}>
                                               {pt > 0 ? pt : "-"}
                                             </ThemedText>
                                           )}
-                                        {showPtsColumns && renderScoringType === "System 36" && (
+                                        {showPtsColumns &&
+                                          renderScoringType === "System 36" && (
                                             <ThemedText
                                               style={{
                                                 ...colStyle,
@@ -1632,12 +1776,14 @@ export default function PlayScoreCard() {
                                         {backTotals.net}
                                       </ThemedText>
                                     )}
-                                    {showPtsColumns && renderScoringType === "Stableford" && (
+                                    {showPtsColumns &&
+                                      renderScoringType === "Stableford" && (
                                         <ThemedText style={colStyle}>
                                           {backTotals.stableford}
                                         </ThemedText>
                                       )}
-                                    {showPtsColumns && renderScoringType === "System 36" && (
+                                    {showPtsColumns &&
+                                      renderScoringType === "System 36" && (
                                         <ThemedText
                                           style={{
                                             ...colStyle,
@@ -1736,14 +1882,16 @@ export default function PlayScoreCard() {
                                     {n > 0 ? n : "-"}
                                   </ThemedText>
                                 )}
-                                {showPtsColumns && renderScoringType === "Stableford" && (
+                                {showPtsColumns &&
+                                  renderScoringType === "Stableford" && (
                                     <ThemedText
                                       style={{ ...colStyle, color: "#fff" }}
                                     >
                                       {pt > 0 ? pt : "-"}
                                     </ThemedText>
                                   )}
-                                {showPtsColumns && renderScoringType === "System 36" && (
+                                {showPtsColumns &&
+                                  renderScoringType === "System 36" && (
                                     <ThemedText
                                       style={{
                                         ...colStyle,
@@ -1779,14 +1927,16 @@ export default function PlayScoreCard() {
                                 {grandTotals.net}
                               </ThemedText>
                             )}
-                            {showPtsColumns && renderScoringType === "Stableford" && (
+                            {showPtsColumns &&
+                              renderScoringType === "Stableford" && (
                                 <ThemedText
                                   style={{ ...colStyle, color: "#fff" }}
                                 >
                                   {grandTotals.stableford}
                                 </ThemedText>
                               )}
-                            {showPtsColumns && renderScoringType === "System 36" && (
+                            {showPtsColumns &&
+                              renderScoringType === "System 36" && (
                                 <ThemedText
                                   style={{
                                     ...colStyle,

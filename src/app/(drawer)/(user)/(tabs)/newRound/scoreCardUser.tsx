@@ -12,7 +12,11 @@ import {
   saveScoreCard,
   getSubScorecardHandicap,
 } from "@/api/modules/scoreCard.api";
-import { getDelegationStatuses, initGroupRound, getScorecardDetails as fetchLiveScorecard } from "@/api/modules/dashboard.api";
+import {
+  getDelegationStatuses,
+  initGroupRound,
+  getScorecardDetails as fetchLiveScorecard,
+} from "@/api/modules/dashboard.api";
 import { saveDraft } from "@/utils/draftStorage";
 import { Box } from "@/components/box";
 import { HStack } from "@/components/hstack";
@@ -128,17 +132,23 @@ export default function ScoreCardUserPage() {
 
   const [visible, setVisible] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
-  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
+    number | null
+  >(null);
   const [scoreCardDetails, setScoreCardDetails] = useState<any>([]);
   const [companionHandicaps, setCompanionHandicaps] = useState<
     Record<number, number>
   >({});
-  const [delegationStatuses, setDelegationStatuses] = useState<Record<number, string>>({});
-  const partners = (pendingRoundContext?.players || []).slice().sort((a: any, b: any) => {
-    const teamA = a.team ?? 1;
-    const teamB = b.team ?? 1;
-    return teamA - teamB;
-  });
+  const [delegationStatuses, setDelegationStatuses] = useState<
+    Record<number, string>
+  >({});
+  const partners = (pendingRoundContext?.players || [])
+    .slice()
+    .sort((a: any, b: any) => {
+      const teamA = a.team ?? 1;
+      const teamB = b.team ?? 1;
+      return teamA - teamB;
+    });
 
   useEffect(() => {
     if (pendingRoundContext && pendingRoundContext.players && teeBoxId) {
@@ -184,11 +194,14 @@ export default function ScoreCardUserPage() {
   const isNassauBest = parsedScore.nassau_best === true;
   const isNassauCombined = parsedScore.nassau_combined === true;
   const isNassau = isNassauBest || isNassauCombined;
-  const isSystem36 = 
-    parsedScore.scoring_type === "system-36" || 
+  const isSystem36 =
+    parsedScore.scoring_type === "system-36" ||
     parsedScore.scoringType === "system-36" ||
     parsedScore.isSystem36 === true ||
-    (scoreCardDetails && scoreCardDetails.some((h: any) => h.isSystem36 === true || h.IsSystem36 === true));
+    (scoreCardDetails &&
+      scoreCardDetails.some(
+        (h: any) => h.isSystem36 === true || h.IsSystem36 === true,
+      ));
   const isDoublePeoria =
     parsedScore.double_peoria === true ||
     parsedScore.scoring_type === "double-peoria" ||
@@ -325,7 +338,11 @@ export default function ScoreCardUserPage() {
     }
 
     const isDP = isDoublePeoria || hole.isDoublePeoria === true;
-    const netScore = isSystem36 ? hole.netScore : (isDP ? score : score - strokesReceived);
+    const netScore = isSystem36
+      ? hole.netScore
+      : isDP
+        ? score
+        : score - strokesReceived;
 
     // Stableford / System 36 Points
     let stablefordPoints = null;
@@ -417,7 +434,11 @@ export default function ScoreCardUserPage() {
     if (isExcluded && hole.par === 3) {
       strokesReceived = 0;
     }
-    const netScore = isSystem36 ? hole.netScore : (isDP ? rawScore : rawScore - strokesReceived);
+    const netScore = isSystem36
+      ? hole.netScore
+      : isDP
+        ? rawScore
+        : rawScore - strokesReceived;
 
     let stablefordPoints = null;
     if (isStableford) {
@@ -730,7 +751,7 @@ export default function ScoreCardUserPage() {
 
     try {
       // console.log("ppp",payload);
-      
+
       await saveScoreCard(payload);
     } catch (err) {
       console.error("Final save failed:", err);
@@ -977,15 +998,24 @@ export default function ScoreCardUserPage() {
 
         await saveScoreCard(payload);
 
-        if (playingGroupRoundKey && pendingRoundContext && pendingRoundContext.players && pendingRoundContext.players.length > 1) {
+        if (
+          playingGroupRoundKey &&
+          pendingRoundContext &&
+          pendingRoundContext.players &&
+          pendingRoundContext.players.length > 1
+        ) {
           const primaryUserId = Number(currentUserId);
           const targetUserIds = pendingRoundContext.players
             .filter((p: any) => p.userId && Number(p.userId) !== primaryUserId)
             .map((p: any) => Number(p.userId));
-          
+
           if (targetUserIds.length > 0) {
             try {
-              await initGroupRound(primaryUserId, targetUserIds, playingGroupRoundKey);
+              await initGroupRound(
+                primaryUserId,
+                targetUserIds,
+                playingGroupRoundKey,
+              );
             } catch (err) {
               console.error("Error initializing group round:", err);
             }
@@ -1011,7 +1041,7 @@ export default function ScoreCardUserPage() {
   // Polling for live scoring and delegation statuses
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     const fetchDelegationStatuses = async () => {
       if (roundContextId) {
         try {
@@ -1033,7 +1063,7 @@ export default function ScoreCardUserPage() {
     interval = setInterval(async () => {
       // 1. Poll delegation statuses
       await fetchDelegationStatuses();
-      
+
       // 2. Poll live scorecard data
       const currentScorecardId = scoreCardRef.current[0]?.scorecardId;
       if (currentScorecardId) {
@@ -1042,7 +1072,7 @@ export default function ScoreCardUserPage() {
           if (liveData && liveData.length > 0) {
             // Only update if not actively focused on an input to avoid overwriting typing
             setScoreCardDetails((prevDetails: any) => {
-              // Merge live data with local unsaved changes, or just replace for simplicity 
+              // Merge live data with local unsaved changes, or just replace for simplicity
               // (assuming active user is typing fast enough or focus is managed)
               // We replace here as the simplest form of live sync
               return liveData;
@@ -1193,7 +1223,10 @@ export default function ScoreCardUserPage() {
           companionScoresJson: JSON.stringify(companionScores),
         };
 
-        if (playerId === "p1") {
+        const isPrimary =
+          partners.some((p: any) => p.playerId === playerId && p.isPrimary) ||
+          playerId === "p1";
+        if (isPrimary) {
           newHole.score = finalVal !== null ? String(finalVal) : "";
         }
 
@@ -1621,11 +1654,30 @@ export default function ScoreCardUserPage() {
             {/* ⚖️ TOGGLE */}
             <HStack style={{ alignItems: "center" }}>
               <Pressable
-                onPress={() => setActiveRangefinderHole(scoreCardDetails[0]?.holeId || null)}
-                style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#198754', borderRadius: 6, marginRight: 8, flexDirection: 'row', alignItems: 'center' }}
+                onPress={() =>
+                  setActiveRangefinderHole(scoreCardDetails[0]?.holeId || null)
+                }
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  backgroundColor: "#198754",
+                  borderRadius: 6,
+                  marginRight: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
               >
-                <Ionicons name="map" size={14} color="#fff" style={{ marginRight: 4 }} />
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>GPS</Text>
+                <Ionicons
+                  name="map"
+                  size={14}
+                  color="#fff"
+                  style={{ marginRight: 4 }}
+                />
+                <Text
+                  style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}
+                >
+                  GPS
+                </Text>
               </Pressable>
               <Pressable
                 onPress={() => setIsDetailsVisible(!isDetailsVisible)}
@@ -1685,14 +1737,19 @@ export default function ScoreCardUserPage() {
                     fontSize: 12,
                     fontWeight: "600",
                     color: isDark ? "#38bdf8" : "#0284c7",
-                    backgroundColor: isDark ? "rgba(56, 189, 248, 0.2)" : "rgba(2, 132, 199, 0.1)",
+                    backgroundColor: isDark
+                      ? "rgba(56, 189, 248, 0.2)"
+                      : "rgba(2, 132, 199, 0.1)",
                     paddingHorizontal: 6,
                     paddingVertical: 2,
                     borderRadius: 4,
                     overflow: "hidden",
                   }}
                 >
-                  Sys36 HC: {Number(grandTotals.score) > 0 ? 36 - Number(grandTotals.stableford) : "N/A"}
+                  Sys36 HC:{" "}
+                  {Number(grandTotals.score) > 0
+                    ? 36 - Number(grandTotals.stableford)
+                    : "N/A"}
                 </Text>
               )}
             </HStack>
@@ -2188,8 +2245,12 @@ export default function ScoreCardUserPage() {
                         colParWidth + // par is always visible
                         (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
                         partnerColsWidth +
-                        (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
-                        (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
+                        (isSplit6 && partners.length >= 3
+                          ? 3 * colSplit6Width
+                          : 0) +
+                        (isHighLow && partners.length >= 4
+                          ? 2 * colHighLowWidth
+                          : 0) +
                         (isNassau && partners.length >= 2 ? colNassauWidth : 0);
                       return (
                         <ScrollView
@@ -2265,11 +2326,15 @@ export default function ScoreCardUserPage() {
                                 let badgeColor = "";
                                 if (isHighLow) {
                                   badgeText = idx < 2 ? "Team A" : "Team B";
-                                  badgeColor = idx < 2 ? teamAColor : teamBColor;
+                                  badgeColor =
+                                    idx < 2 ? teamAColor : teamBColor;
                                 } else if (isNassau) {
-                                  const isTeamA = idx < (partners.length >= 4 ? 2 : 1);
+                                  const isTeamA =
+                                    idx < (partners.length >= 4 ? 2 : 1);
                                   badgeText = isTeamA ? "Team A" : "Team B";
-                                  badgeColor = isTeamA ? teamAColor : teamBColor;
+                                  badgeColor = isTeamA
+                                    ? teamAColor
+                                    : teamBColor;
                                 }
                                 const pName = p.isPrimary ? "You" : p.name;
                                 return (
@@ -2490,7 +2555,10 @@ export default function ScoreCardUserPage() {
                                     }}
                                   >
                                     <ThemedText
-                                      style={{ width: colHoleWidth, textAlign: "center" }}
+                                      style={{
+                                        width: colHoleWidth,
+                                        textAlign: "center",
+                                      }}
                                     >
                                       {h.holeNumber}
                                     </ThemedText>
@@ -2527,7 +2595,10 @@ export default function ScoreCardUserPage() {
                                     {/* Score Input Columns (LHS) */}
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
-                                      const isPending = !p.isPrimary && delegationStatuses[p.userId] === "Pending";
+                                      const isPending =
+                                        !p.isPrimary &&
+                                        delegationStatuses[p.userId] ===
+                                          "Pending";
 
                                       let bgColor = "transparent";
                                       if (
@@ -2602,14 +2673,20 @@ export default function ScoreCardUserPage() {
                                                   index * partners.length +
                                                   pIndex +
                                                   1;
-                                                const totalInputs = processedHoles.length * partners.length;
+                                                const totalInputs =
+                                                  processedHoles.length *
+                                                  partners.length;
 
                                                 while (nextIdx < totalInputs) {
-                                                  const nextPIndex = nextIdx % partners.length;
-                                                  const nextPlayer = partners[nextPIndex];
+                                                  const nextPIndex =
+                                                    nextIdx % partners.length;
+                                                  const nextPlayer =
+                                                    partners[nextPIndex];
                                                   const isPending =
                                                     !nextPlayer.isPrimary &&
-                                                    delegationStatuses[nextPlayer.userId] === "Pending";
+                                                    delegationStatuses[
+                                                      nextPlayer.userId
+                                                    ] === "Pending";
                                                   if (!isPending) break;
                                                   nextIdx++;
                                                 }
@@ -2640,9 +2717,19 @@ export default function ScoreCardUserPage() {
                                                 borderColor: isDark
                                                   ? "#444"
                                                   : "#ccc",
-                                                backgroundColor: isPending ? (isDark ? "#333" : "#e5e7eb") : "transparent",
+                                                backgroundColor: isPending
+                                                  ? isDark
+                                                    ? "#333"
+                                                    : "#e5e7eb"
+                                                  : "transparent",
                                                 textAlign: "center",
-                                                color: isPending ? (isDark ? "#777" : "#9ca3af") : (isDark ? "#fff" : "#000"),
+                                                color: isPending
+                                                  ? isDark
+                                                    ? "#777"
+                                                    : "#9ca3af"
+                                                  : isDark
+                                                    ? "#fff"
+                                                    : "#000",
                                                 fontWeight: "700",
                                                 padding: 0,
                                               }}
@@ -2756,8 +2843,9 @@ export default function ScoreCardUserPage() {
                                                 fontSize: 13,
                                               }}
                                             >
-                                              {info.score !== null && info.score >= 0
-                                                ? info.stablefordPoints ?? "-"
+                                              {info.score !== null &&
+                                              info.score >= 0
+                                                ? (info.stablefordPoints ?? "-")
                                                 : "-"}
                                             </ThemedText>
                                           </View>
@@ -2924,7 +3012,9 @@ export default function ScoreCardUserPage() {
                                           ns?.holeResults[h.holeNumber];
                                         if (!hRes)
                                           return (
-                                            <View style={{ width: colNassauWidth }} />
+                                            <View
+                                              style={{ width: colNassauWidth }}
+                                            />
                                           );
 
                                         return (
@@ -2937,7 +3027,9 @@ export default function ScoreCardUserPage() {
                                               flexWrap: "wrap",
                                             }}
                                           >
-                                            {renderNassauHouses(hRes.overallHousesDisplay)}
+                                            {renderNassauHouses(
+                                              hRes.overallHousesDisplay,
+                                            )}
                                             {(nassauStartingNine === "back"
                                               ? h.holeNumber <= 9
                                               : h.holeNumber >= 10) &&
@@ -2956,7 +3048,9 @@ export default function ScoreCardUserPage() {
                                             {(nassauStartingNine === "back"
                                               ? h.holeNumber <= 9
                                               : h.holeNumber >= 10) &&
-                                              renderNassauHouses(hRes.housesDisplay)}
+                                              renderNassauHouses(
+                                                hRes.housesDisplay,
+                                              )}
                                           </View>
                                         );
                                       })()}
@@ -3552,7 +3646,10 @@ export default function ScoreCardUserPage() {
                               {isDetailsVisible && (
                                 <>
                                   <ThemedText
-                                    style={{ width: colSIWidth, textAlign: "center" }}
+                                    style={{
+                                      width: colSIWidth,
+                                      textAlign: "center",
+                                    }}
                                   />
                                   <ThemedText
                                     style={{
@@ -3958,8 +4055,8 @@ export default function ScoreCardUserPage() {
                                       color: bold
                                         ? "#84cc16"
                                         : isDark
-                                        ? "#fff"
-                                        : "#000",
+                                          ? "#fff"
+                                          : "#000",
                                     }}
                                   >
                                     {v}
@@ -4442,19 +4539,33 @@ export default function ScoreCardUserPage() {
                                   <Row
                                     label="Final Result"
                                     a={
-                                      <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamAColor }}>
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 11,
+                                          fontWeight: "700",
+                                          color: teamAColor,
+                                        }}
+                                      >
                                         Match - {ns?.overallMatches?.team1 || 0}{" "}
-                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                                        {" "}
-                                        Half - {(ns?.front9Halfs?.team1 || 0) + (ns?.back9Halfs?.team1 || 0)}
+                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                                        Half -{" "}
+                                        {(ns?.front9Halfs?.team1 || 0) +
+                                          (ns?.back9Halfs?.team1 || 0)}
                                       </ThemedText>
                                     }
                                     b={
-                                      <ThemedText style={{ fontSize: 11, fontWeight: "700", color: teamBColor }}>
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 11,
+                                          fontWeight: "700",
+                                          color: teamBColor,
+                                        }}
+                                      >
                                         Match - {ns?.overallMatches?.team2 || 0}{" "}
-                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}
-                                        {" "}
-                                        Half - {(ns?.front9Halfs?.team2 || 0) + (ns?.back9Halfs?.team2 || 0)}
+                                        {/* <ThemedText style={{ color: isDark ? "#94a3b8" : "#64748b", marginHorizontal: 2 }}>&</ThemedText> */}{" "}
+                                        Half -{" "}
+                                        {(ns?.front9Halfs?.team2 || 0) +
+                                          (ns?.back9Halfs?.team2 || 0)}
                                       </ThemedText>
                                     }
                                     bold

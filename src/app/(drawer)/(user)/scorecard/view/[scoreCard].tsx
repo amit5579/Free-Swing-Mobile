@@ -96,7 +96,9 @@ const ScoreCard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isStableford, setIsStableford] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
-  const [activeRangefinderHole, setActiveRangefinderHole] = useState<number | null>(null);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
+    number | null
+  >(null);
 
   // Multiplayer layout state variables
   const [partners, setPartners] = useState<any[]>([]);
@@ -371,41 +373,27 @@ const ScoreCard: React.FC = () => {
         setIsNassauBest(isNB);
         setIsNassauCombined(isNC);
 
-        const teeBoxId = (firstHole as any).teeBoxId;
-        if (parsedPartners.length > 0 && teeBoxId) {
-          const fetchCompanionHandicaps = async () => {
-            const handicapsMap: Record<number, number> = {};
-            for (const p of parsedPartners) {
-              if (!p.isPrimary && p.userId) {
-                if (p.handicap !== undefined && p.handicap !== null) {
-                  handicapsMap[p.userId] = Math.round(Number(p.handicap) || 0);
-                  continue;
-                }
-                try {
-                  const hData = await getSubScorecardHandicap(
-                    p.userId,
-                    Number(teeBoxId),
-                  );
-                  const hc =
-                    typeof hData === "object" && hData !== null
-                      ? (hData.handicapIndex ??
-                        hData.userHandicap ??
-                        hData.handicap ??
-                        0)
-                      : Number(hData) || 0;
-                  handicapsMap[p.userId] = Math.round(Number(hc) || 0);
-                } catch (e) {
-                  console.error(
-                    "Error fetching companion handicap for userId",
-                    p.userId,
-                    e,
-                  );
-                }
+        if (parsedPartners.length > 0) {
+          const handicapsMap: Record<string | number, number> = {};
+          for (const p of parsedPartners) {
+            if (!p.isPrimary) {
+              const directHc =
+                p.appliedHandicap ??
+                p.courseHandicap ??
+                p.handicap ??
+                p.userHandicap;
+              if (
+                directHc !== undefined &&
+                directHc !== null &&
+                directHc !== ""
+              ) {
+                const hVal = Math.round(Number(directHc) || 0);
+                if (p.userId) handicapsMap[p.userId] = hVal;
+                if (p.playerId) handicapsMap[p.playerId] = hVal;
               }
             }
-            setCompanionHandicaps(handicapsMap);
-          };
-          fetchCompanionHandicaps();
+          }
+          setCompanionHandicaps(handicapsMap);
         }
       } catch (err) {
         setError("Failed to load scorecard.");
@@ -500,13 +488,20 @@ const ScoreCard: React.FC = () => {
       };
     }
 
+    const directHc =
+      partner.appliedHandicap ??
+      partner.courseHandicap ??
+      partner.handicap ??
+      partner.userHandicap;
     const playerHandicap = isPrimary
       ? Number(displayHandicap || 0)
-      : partner.handicap !== undefined && partner.handicap !== null
-        ? Math.round(Number(partner.handicap) || 0)
-        : companionHandicaps[userId] !== undefined
+      : directHc !== undefined && directHc !== null && directHc !== ""
+        ? Math.round(Number(directHc) || 0)
+        : userId && companionHandicaps[userId] !== undefined
           ? companionHandicaps[userId]
-          : 0;
+          : playerId && companionHandicaps[playerId] !== undefined
+            ? companionHandicaps[playerId]
+            : 0;
     let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
     if (hole.isExcluded && hole.par === 3) {
       strokesReceived = 0;
@@ -1252,11 +1247,20 @@ const ScoreCard: React.FC = () => {
                   className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                 >
                   <View className="flex-1 flex-row justify-center items-center">
-                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                    <Text
+                      className={`text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
                       {h.holeNumber}
                     </Text>
-                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
-                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    <TouchableOpacity
+                      onPress={() => setActiveRangefinderHole(h.holeId)}
+                      className="ml-1"
+                    >
+                      <Ionicons
+                        name="locate-outline"
+                        size={14}
+                        color={isDark ? "#8BC34A" : "#198754"}
+                      />
                     </TouchableOpacity>
                   </View>
                   {isDetailsVisible && (
@@ -1391,11 +1395,20 @@ const ScoreCard: React.FC = () => {
                   className={`flex-row items-center p-3 ${isDark ? "border-b border-[#333]" : "border-b border-gray-100"}`}
                 >
                   <View className="flex-1 flex-row justify-center items-center">
-                    <Text className={`text-center ${isDark ? "text-white" : "text-black"}`}>
+                    <Text
+                      className={`text-center ${isDark ? "text-white" : "text-black"}`}
+                    >
                       {h.holeNumber}
                     </Text>
-                    <TouchableOpacity onPress={() => setActiveRangefinderHole(h.holeId)} className="ml-1">
-                      <Ionicons name="locate-outline" size={14} color={isDark ? "#8BC34A" : "#198754"} />
+                    <TouchableOpacity
+                      onPress={() => setActiveRangefinderHole(h.holeId)}
+                      className="ml-1"
+                    >
+                      <Ionicons
+                        name="locate-outline"
+                        size={14}
+                        color={isDark ? "#8BC34A" : "#198754"}
+                      />
                     </TouchableOpacity>
                   </View>
                   {isDetailsVisible && (
@@ -4107,7 +4120,7 @@ const ScoreCard: React.FC = () => {
           );
         })()}
       </ScrollView>
-    
+
       <RangefinderModal
         visible={activeRangefinderHole !== null}
         onClose={() => setActiveRangefinderHole(null)}
@@ -4116,7 +4129,6 @@ const ScoreCard: React.FC = () => {
         courseName={courseName}
       />
     </ThemedView>
-    
   );
 };
 
