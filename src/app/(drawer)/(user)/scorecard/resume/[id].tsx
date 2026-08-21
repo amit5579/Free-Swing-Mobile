@@ -157,14 +157,13 @@ export default function ResumeScorecard() {
   // Companion/Spectator: In a group round, non-scorers cannot edit scores
   const isCompanionView = Boolean(
     roundContextId &&
-      groupScorerId !== null &&
-      userId !== null &&
-      groupScorerId !== userId,
+    groupScorerId !== null &&
+    userId !== null &&
+    groupScorerId !== userId,
   );
 
   const isRoundCompleted = Boolean(
-    holes.length > 0 &&
-      (holes[0].isCompleted || (holes[0] as any).IsCompleted),
+    holes.length > 0 && (holes[0].isCompleted || (holes[0] as any).IsCompleted),
   );
 
   // Forced read-only if round is completed or if viewer is a spectator
@@ -233,7 +232,9 @@ export default function ResumeScorecard() {
   //           ? "Net Score Exclude Par 3"
   //           : "Net Score Include Par 3"
   const groupName =
-    holes.find((h: any) => h.groupName)?.groupName || holes[0]?.groupName || null;
+    holes.find((h: any) => h.groupName)?.groupName ||
+    holes[0]?.groupName ||
+    null;
 
   const renderScoringType = (() => {
     if (isSplit6) return "Split Six";
@@ -333,8 +334,8 @@ export default function ResumeScorecard() {
 
       try {
         const serverHoles = await getScorecardDetails(id!);
-        console.log("ssvvrrhhll",serverHoles);
-        
+        console.log("ssvvrrhhll", serverHoles);
+
         if (serverHoles && serverHoles.length > 0) {
           const normalizedServerHoles = serverHoles.map((h: any) => ({
             ...h,
@@ -557,40 +558,27 @@ export default function ResumeScorecard() {
             setRoundContextId(playingGroupRoundKey);
           }
 
-          if (parsedPartners.length > 0 && teeBoxId) {
-            const fetchCompanionHandicaps = async () => {
-              const handicapsMap: Record<number, number> = {};
-              for (const p of parsedPartners) {
-                if (!p.isPrimary && p.userId) {
-                  if (p.handicap !== undefined && p.handicap !== null) {
-                    handicapsMap[p.userId] = Math.round(Number(p.handicap) || 0);
-                    continue;
-                  }
-                  try {
-                    const hData = await getSubScorecardHandicap(
-                      p.userId,
-                      Number(teeBoxId),
-                    );
-                    const hc =
-                      typeof hData === "object" && hData !== null
-                        ? (hData.handicapIndex ??
-                          hData.userHandicap ??
-                          hData.handicap ??
-                          0)
-                        : Number(hData) || 0;
-                    handicapsMap[p.userId] = Math.round(Number(hc) || 0);
-                  } catch (e) {
-                    console.error(
-                      "Error fetching companion handicap for userId",
-                      p.userId,
-                      e,
-                    );
-                  }
+          if (parsedPartners.length > 0) {
+            const handicapsMap: Record<string | number, number> = {};
+            for (const p of parsedPartners) {
+              if (!p.isPrimary) {
+                const directHc =
+                  p.appliedHandicap ??
+                  p.courseHandicap ??
+                  p.handicap ??
+                  p.userHandicap;
+                if (
+                  directHc !== undefined &&
+                  directHc !== null &&
+                  directHc !== ""
+                ) {
+                  const hVal = Math.round(Number(directHc) || 0);
+                  if (p.userId) handicapsMap[p.userId] = hVal;
+                  if (p.playerId) handicapsMap[p.playerId] = hVal;
                 }
               }
-              setCompanionHandicaps(handicapsMap);
-            };
-            fetchCompanionHandicaps();
+            }
+            setCompanionHandicaps(handicapsMap);
           }
         } else {
           setIsStableford(showPts);
@@ -855,13 +843,20 @@ export default function ResumeScorecard() {
       };
     }
 
+    const directHc =
+      partner.appliedHandicap ??
+      partner.courseHandicap ??
+      partner.handicap ??
+      partner.userHandicap;
     const playerHandicap = isPrimary
       ? Number(handicap || 0)
-      : partner.handicap !== undefined && partner.handicap !== null
-        ? Math.round(Number(partner.handicap) || 0)
-        : companionHandicaps[partnerUserId] !== undefined
+      : directHc !== undefined && directHc !== null && directHc !== ""
+        ? Math.round(Number(directHc) || 0)
+        : partnerUserId && companionHandicaps[partnerUserId] !== undefined
           ? companionHandicaps[partnerUserId]
-          : 0;
+          : playerId && companionHandicaps[playerId] !== undefined
+            ? companionHandicaps[playerId]
+            : 0;
     let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
     if (hole.isExcluded && hole.par === 3) {
       strokesReceived = 0;
@@ -992,7 +987,10 @@ export default function ResumeScorecard() {
 
   const showNetColumns =
     getScoringLabel() === "Net Score • Include Par 3" ||
-    getScoringLabel() === "Net Score • Exclude Par 3";
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    isStableford ||
+    getScoringLabel() === "Stableford" ||
+    getScoringLabel() === "Stableford • Exclude Par 3";
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -1202,6 +1200,9 @@ export default function ResumeScorecard() {
       }
     }
 
+    const partner = partners.find((p) => p.playerId === playerId);
+    const isPrimary = partner ? !!partner.isPrimary : playerId === "p1";
+
     const updatedHoles = holes.map((h) => {
       if (h.holeId === holeId) {
         let companionScores: Record<string, number | null> = {};
@@ -1222,16 +1223,19 @@ export default function ResumeScorecard() {
           companionScoresJson: JSON.stringify(companionScores),
         };
 
-        if (playerId === "p1") {
+        if (isPrimary) {
           newHole.score = finalVal;
+          const strokes = calculateStrokes(
+            Number(handicap || 0),
+            h.strokeIndex,
+          );
+          newHole.netScore =
+            finalVal !== null && finalVal >= 0 ? finalVal - strokes : 0;
         }
 
         // recalculate stableford points if isStableford
-        if (isStableford) {
-          const partner = partners.find((p) => p.playerId === playerId);
-          const pHc = partner?.isPrimary
-            ? Number(handicap || 0)
-            : companionHandicaps[partner?.userId] || 0;
+        if (isStableford && isPrimary) {
+          const pHc = Number(handicap || 0);
           const strokes = calculateStrokes(pHc, h.strokeIndex);
           const net = finalVal !== null ? finalVal - strokes : 0;
           const pts = h.par - net + 2;
@@ -1248,7 +1252,7 @@ export default function ResumeScorecard() {
     holesRef.current = updatedHoles;
 
     const newTextScores = { ...textScoresRef.current };
-    if (playerId === "p1") {
+    if (isPrimary) {
       newTextScores[holeId] = value;
       setTextScores(newTextScores);
       textScoresRef.current = newTextScores;
@@ -1363,7 +1367,29 @@ export default function ResumeScorecard() {
         //   net: netScore > 0 ? netScore : "-",
         // });
 
-        return { ...h, score: validScore, netScore, stablefordPoints };
+        let companionScores: Record<string, number | null> = {};
+        if (h.companionScoresJson) {
+          try {
+            companionScores =
+              typeof h.companionScoresJson === "string"
+                ? JSON.parse(h.companionScoresJson)
+                : h.companionScoresJson;
+          } catch (e) {}
+        }
+        const primaryPartner = partners.find((p) => p.isPrimary);
+        if (primaryPartner) {
+          companionScores[primaryPartner.playerId] = validScore;
+        } else {
+          companionScores["p1"] = validScore;
+        }
+
+        return {
+          ...h,
+          score: validScore,
+          netScore,
+          stablefordPoints,
+          companionScoresJson: JSON.stringify(companionScores),
+        };
       }
       return h;
     });
@@ -1989,9 +2015,7 @@ export default function ResumeScorecard() {
               padding: 10,
               borderRadius: 10,
               alignItems: "center",
-              backgroundColor: isDark
-                ? "rgba(14, 165, 233, 0.12)"
-                : "#e0f2fe",
+              backgroundColor: isDark ? "rgba(14, 165, 233, 0.12)" : "#e0f2fe",
               borderWidth: 1,
               borderColor: isDark ? "#0284c7" : "#7dd3fc",
               gap: 8,
@@ -2018,7 +2042,8 @@ export default function ResumeScorecard() {
                   color: isDark ? "#94a3b8" : "#64748b",
                 }}
               >
-                Only the designated scorer can enter scores. Scores will update live.
+                Only the designated scorer can enter scores. Scores will update
+                live.
               </Text>
             </VStack>
           </HStack>
@@ -2181,7 +2206,7 @@ export default function ResumeScorecard() {
                                 ? "rgba(255,255,255,0.04)"
                                 : "rgba(0,0,0,0.02)"
                               : textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                                  textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
@@ -2189,7 +2214,7 @@ export default function ResumeScorecard() {
                             borderColor: isReadOnly
                               ? "transparent"
                               : textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                                  textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -2287,11 +2312,13 @@ export default function ResumeScorecard() {
                     >
                       {sumScores(front9Holes)}
                     </Text>
-                    <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                    >
-                      {sumNet(front9Holes)}
-                    </Text>
+                    {showNetColumns && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                      >
+                        {sumNet(front9Holes)}
+                      </Text>
+                    )}
                     {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -2369,7 +2396,7 @@ export default function ResumeScorecard() {
                                 ? "rgba(255,255,255,0.04)"
                                 : "rgba(0,0,0,0.02)"
                               : textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                                  textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.08)"
@@ -2377,7 +2404,7 @@ export default function ResumeScorecard() {
                             borderColor: isReadOnly
                               ? "transparent"
                               : textScores[h.holeId] !== "" &&
-                                textScores[h.holeId] !== undefined
+                                  textScores[h.holeId] !== undefined
                                 ? "transparent"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
@@ -2474,11 +2501,13 @@ export default function ResumeScorecard() {
                     >
                       {sumScores(back9Holes)}
                     </Text>
-                    <Text
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
-                    >
-                      {sumNet(back9Holes)}
-                    </Text>
+                    {showNetColumns && (
+                      <Text
+                        className={`flex-1 text-center font-bold text-xs ${isDark ? "text-[#8BC34A]" : "text-green-700"}`}
+                      >
+                        {sumNet(back9Holes)}
+                      </Text>
+                    )}
                     {showPtsColumns && (
                       <Text
                         className={`flex-1 text-center font-bold text-xs ${isDark ? "text-orange-400" : "text-orange-600"}`}
@@ -2540,15 +2569,17 @@ export default function ResumeScorecard() {
                     ),
                   )}
                 </Text>
-                <Text className="flex-1 text-center font-bold text-white">
-                  {sumNet(
-                    holes.filter(
-                      (h) =>
-                        (displayFront && h.holeNumber <= 9) ||
-                        (displayBack && h.holeNumber >= 10),
-                    ),
-                  )}
-                </Text>
+                {showNetColumns && (
+                  <Text className="flex-1 text-center font-bold text-white">
+                    {sumNet(
+                      holes.filter(
+                        (h) =>
+                          (displayFront && h.holeNumber <= 9) ||
+                          (displayBack && h.holeNumber >= 10),
+                      ),
+                    )}
+                  </Text>
+                )}
                 {showPtsColumns && (
                   <Text className="flex-1 text-center font-bold text-white">
                     {sumPts(
@@ -2603,12 +2634,11 @@ export default function ResumeScorecard() {
             const colSIWidth = 40;
             const colYardsWidth = 45;
             const colPartnerWidth = 60;
-            const colNetWidth = 50;
+            const colNetWidth = 45;
+            const colPtsWidth = 45;
             const colSplit6Width = 70;
             const colHighLowWidth = 65;
             const colNassauWidth = 80;
-
-            const hasExtraPerPartnerCol = showNetColumns || showPtsColumns;
 
             const totalWidth =
               colHoleWidth +
@@ -2616,7 +2646,8 @@ export default function ResumeScorecard() {
               (isDetailsVisible ? colSIWidth + colYardsWidth : 0) +
               partners.length *
                 (colPartnerWidth +
-                  (hasExtraPerPartnerCol ? colNetWidth : 0)) +
+                  (showNetColumns ? colNetWidth : 0) +
+                  (showPtsColumns ? colPtsWidth : 0)) +
               (isSplit6 && partners.length >= 3 ? 3 * colSplit6Width : 0) +
               (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
               (isNassau && partners.length >= 2 ? colNassauWidth : 0);
@@ -2725,7 +2756,7 @@ export default function ResumeScorecard() {
                           </View>
                         )}
                       </VStack>
-                      {hasExtraPerPartnerCol && (
+                      {showNetColumns && (
                         <VStack
                           style={{
                             width: colNetWidth,
@@ -2742,21 +2773,48 @@ export default function ResumeScorecard() {
                               color: isDark ? "#94a3b8" : "#64748b",
                             }}
                           >
-                            {`(${p.isPrimary ? "You" : (p.name ? p.name.split(" ")[0] : "P")})`}
+                            {`(${p.isPrimary ? "You" : p.name ? p.name.split(" ")[0] : "P"})`}
                           </ThemedText>
                           <ThemedText
                             style={{
                               textAlign: "center",
                               fontWeight: "700",
                               fontSize: 11,
-                              color: showPtsColumns
-                                ? "#f59e0b"
-                                : isDark
-                                  ? "#94a3b8"
-                                  : "#64748b",
+                              color: isDark ? "#94a3b8" : "#64748b",
                             }}
                           >
-                            {showPtsColumns ? "Pts" : "Net"}
+                            Net
+                          </ThemedText>
+                        </VStack>
+                      )}
+                      {showPtsColumns && (
+                        <VStack
+                          style={{
+                            width: colPtsWidth,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ThemedText
+                            numberOfLines={1}
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "600",
+                              fontSize: 10,
+                              color: isDark ? "#94a3b8" : "#64748b",
+                            }}
+                          >
+                            {`(${p.isPrimary ? "You" : p.name ? p.name.split(" ")[0] : "P"})`}
+                          </ThemedText>
+                          <ThemedText
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "700",
+                              fontSize: 11,
+                              color: "#f59e0b",
+                            }}
+                          >
+                            {isSystem36 ? "Sys36\nPts" : "Pts"}
                           </ThemedText>
                         </VStack>
                       )}
@@ -2945,9 +3003,15 @@ export default function ResumeScorecard() {
                               }
                               if (p.isPrimary) {
                                 textVal =
-                                  h.score !== null && h.score !== undefined
-                                    ? String(h.score)
-                                    : "";
+                                  textScores[h.holeId] !== undefined
+                                    ? textScores[h.holeId]
+                                    : h.score !== null && h.score !== undefined
+                                      ? String(h.score)
+                                      : companionScores[p.playerId] !==
+                                            undefined &&
+                                          companionScores[p.playerId] !== null
+                                        ? String(companionScores[p.playerId])
+                                        : "";
                               } else {
                                 textVal =
                                   companionScores[p.playerId] !== undefined &&
@@ -3021,13 +3085,14 @@ export default function ResumeScorecard() {
                                           width: 30,
                                           height: 30,
                                           textAlign: "center",
-                                          color: isReadOnly || isPending
-                                            ? isDark
-                                              ? "#777"
-                                              : "#9ca3af"
-                                            : isDark
-                                              ? "#fff"
-                                              : "#000",
+                                          color:
+                                            isReadOnly || isPending
+                                              ? isDark
+                                                ? "#777"
+                                                : "#9ca3af"
+                                              : isDark
+                                                ? "#fff"
+                                                : "#000",
                                           fontWeight: "700",
                                           fontSize: 13,
                                           zIndex: 10,
@@ -3124,7 +3189,7 @@ export default function ResumeScorecard() {
                                       )}
                                   </View>
 
-                                  {hasExtraPerPartnerCol && (
+                                  {showNetColumns && (
                                     <View
                                       style={{
                                         width: colNetWidth,
@@ -3133,37 +3198,44 @@ export default function ResumeScorecard() {
                                         backgroundColor: bgColor,
                                       }}
                                     >
-                                      {showPtsColumns ? (
-                                        <ThemedText
-                                          style={{
-                                            fontSize: 12,
-                                            fontWeight: "700",
-                                            color: "#f59e0b",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {info.score !== null &&
-                                          info.stablefordPoints !== null
-                                            ? info.stablefordPoints
-                                            : "-"}
-                                        </ThemedText>
-                                      ) : (
-                                        <ThemedText
-                                          style={{
-                                            fontSize: 12,
-                                            fontWeight: "600",
-                                            color: isDark
-                                              ? "#e2e8f0"
-                                              : "#334155",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {info.score !== null &&
-                                          info.netScore !== null
-                                            ? info.netScore
-                                            : "-"}
-                                        </ThemedText>
-                                      )}
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 12,
+                                          fontWeight: "600",
+                                          color: isDark ? "#e2e8f0" : "#334155",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {info.score !== null &&
+                                        info.netScore !== null
+                                          ? info.netScore
+                                          : "-"}
+                                      </ThemedText>
+                                    </View>
+                                  )}
+
+                                  {showPtsColumns && (
+                                    <View
+                                      style={{
+                                        width: colPtsWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backgroundColor: bgColor,
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 12,
+                                          fontWeight: "700",
+                                          color: "#f59e0b",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {info.score !== null &&
+                                        info.stablefordPoints !== null
+                                          ? info.stablefordPoints
+                                          : "-"}
+                                      </ThemedText>
                                     </View>
                                   )}
                                 </React.Fragment>
@@ -3368,7 +3440,7 @@ export default function ResumeScorecard() {
                                 {t.gross}
                               </ThemedText>
                             </VStack>
-                            {hasExtraPerPartnerCol && (
+                            {showNetColumns && (
                               <VStack
                                 style={{
                                   width: colNetWidth,
@@ -3376,27 +3448,34 @@ export default function ResumeScorecard() {
                                   justifyContent: "center",
                                 }}
                               >
-                                {showPtsColumns ? (
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      color: "#f59e0b",
-                                    }}
-                                  >
-                                    {t.stableford}
-                                  </ThemedText>
-                                ) : (
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      color: isDark ? "#8BC34A" : "#198754",
-                                    }}
-                                  >
-                                    {t.net}
-                                  </ThemedText>
-                                )}
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: "700",
+                                    color: isDark ? "#8BC34A" : "#198754",
+                                  }}
+                                >
+                                  {t.net}
+                                </ThemedText>
+                              </VStack>
+                            )}
+                            {showPtsColumns && (
+                              <VStack
+                                style={{
+                                  width: colPtsWidth,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: "700",
+                                    color: "#f59e0b",
+                                  }}
+                                >
+                                  {t.stableford}
+                                </ThemedText>
                               </VStack>
                             )}
                           </React.Fragment>
@@ -3601,9 +3680,15 @@ export default function ResumeScorecard() {
                               }
                               if (p.isPrimary) {
                                 textVal =
-                                  h.score !== null && h.score !== undefined
-                                    ? String(h.score)
-                                    : "";
+                                  textScores[h.holeId] !== undefined
+                                    ? textScores[h.holeId]
+                                    : h.score !== null && h.score !== undefined
+                                      ? String(h.score)
+                                      : companionScores[p.playerId] !==
+                                            undefined &&
+                                          companionScores[p.playerId] !== null
+                                        ? String(companionScores[p.playerId])
+                                        : "";
                               } else {
                                 textVal =
                                   companionScores[p.playerId] !== undefined &&
@@ -3677,13 +3762,14 @@ export default function ResumeScorecard() {
                                           width: 30,
                                           height: 30,
                                           textAlign: "center",
-                                          color: isReadOnly || isPending
-                                            ? isDark
-                                              ? "#777"
-                                              : "#9ca3af"
-                                            : isDark
-                                              ? "#fff"
-                                              : "#000",
+                                          color:
+                                            isReadOnly || isPending
+                                              ? isDark
+                                                ? "#777"
+                                                : "#9ca3af"
+                                              : isDark
+                                                ? "#fff"
+                                                : "#000",
                                           fontWeight: "700",
                                           fontSize: 13,
                                           zIndex: 10,
@@ -3780,7 +3866,7 @@ export default function ResumeScorecard() {
                                       )}
                                   </View>
 
-                                  {hasExtraPerPartnerCol && (
+                                  {showNetColumns && (
                                     <View
                                       style={{
                                         width: colNetWidth,
@@ -3789,37 +3875,44 @@ export default function ResumeScorecard() {
                                         backgroundColor: bgColor,
                                       }}
                                     >
-                                      {showPtsColumns ? (
-                                        <ThemedText
-                                          style={{
-                                            fontSize: 12,
-                                            fontWeight: "700",
-                                            color: "#f59e0b",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {info.score !== null &&
-                                          info.stablefordPoints !== null
-                                            ? info.stablefordPoints
-                                            : "-"}
-                                        </ThemedText>
-                                      ) : (
-                                        <ThemedText
-                                          style={{
-                                            fontSize: 12,
-                                            fontWeight: "600",
-                                            color: isDark
-                                              ? "#e2e8f0"
-                                              : "#334155",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {info.score !== null &&
-                                          info.netScore !== null
-                                            ? info.netScore
-                                            : "-"}
-                                        </ThemedText>
-                                      )}
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 12,
+                                          fontWeight: "600",
+                                          color: isDark ? "#e2e8f0" : "#334155",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {info.score !== null &&
+                                        info.netScore !== null
+                                          ? info.netScore
+                                          : "-"}
+                                      </ThemedText>
+                                    </View>
+                                  )}
+
+                                  {showPtsColumns && (
+                                    <View
+                                      style={{
+                                        width: colPtsWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backgroundColor: bgColor,
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontSize: 12,
+                                          fontWeight: "700",
+                                          color: "#f59e0b",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {info.score !== null &&
+                                        info.stablefordPoints !== null
+                                          ? info.stablefordPoints
+                                          : "-"}
+                                      </ThemedText>
                                     </View>
                                   )}
                                 </React.Fragment>
@@ -4027,7 +4120,7 @@ export default function ResumeScorecard() {
                                 {t.gross}
                               </ThemedText>
                             </VStack>
-                            {hasExtraPerPartnerCol && (
+                            {showNetColumns && (
                               <VStack
                                 style={{
                                   width: colNetWidth,
@@ -4035,27 +4128,34 @@ export default function ResumeScorecard() {
                                   justifyContent: "center",
                                 }}
                               >
-                                {showPtsColumns ? (
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      color: "#f59e0b",
-                                    }}
-                                  >
-                                    {t.stableford}
-                                  </ThemedText>
-                                ) : (
-                                  <ThemedText
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: "700",
-                                      color: isDark ? "#8BC34A" : "#198754",
-                                    }}
-                                  >
-                                    {t.net}
-                                  </ThemedText>
-                                )}
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: "700",
+                                    color: isDark ? "#8BC34A" : "#198754",
+                                  }}
+                                >
+                                  {t.net}
+                                </ThemedText>
+                              </VStack>
+                            )}
+                            {showPtsColumns && (
+                              <VStack
+                                style={{
+                                  width: colPtsWidth,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: "700",
+                                    color: "#f59e0b",
+                                  }}
+                                >
+                                  {t.stableford}
+                                </ThemedText>
                               </VStack>
                             )}
                           </React.Fragment>
@@ -4251,7 +4351,7 @@ export default function ResumeScorecard() {
                               {t.gross}
                             </ThemedText>
                           </VStack>
-                          {hasExtraPerPartnerCol && (
+                          {showNetColumns && (
                             <VStack
                               style={{
                                 width: colNetWidth,
@@ -4265,7 +4365,25 @@ export default function ResumeScorecard() {
                                   color: "#fff",
                                 }}
                               >
-                                {showPtsColumns ? t.stableford : t.net}
+                                {t.net}
+                              </ThemedText>
+                            </VStack>
+                          )}
+                          {showPtsColumns && (
+                            <VStack
+                              style={{
+                                width: colPtsWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  fontWeight: "800",
+                                  color: "#fff",
+                                }}
+                              >
+                                {t.stableford}
                               </ThemedText>
                             </VStack>
                           )}
@@ -5008,7 +5126,11 @@ export default function ResumeScorecard() {
               <ActivityIndicator color="white" />
             ) : (
               <>
-                <Ionicons name="checkmark-done-outline" size={20} color="white" />
+                <Ionicons
+                  name="checkmark-done-outline"
+                  size={20}
+                  color="white"
+                />
                 <Text className="text-white font-bold ml-2 text-lg">
                   Finish Round
                 </Text>
