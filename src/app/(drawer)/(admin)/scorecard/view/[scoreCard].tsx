@@ -147,7 +147,8 @@ const ScoreCard: React.FC = () => {
   const isSystem36 =
     holes.length > 0 && holes.some((h: any) => isSystem36Hole(h));
   const showPtsColumns = isStableford || isSystem36;
-  const showNetColumns = !isGross && !isStableford && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
+  const showNetColumns =
+    !isGross && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
   const hasSubColumn = showPtsColumns || showNetColumns;
 
   const getScoringLabel = () => {
@@ -1845,11 +1846,18 @@ const ScoreCard: React.FC = () => {
             const teamAColor = isDark ? "#4ade80" : "#198754";
             const teamBColor = isDark ? "#60a5fa" : "#0d6efd";
             const detailsWidth = isDetailsVisible ? 115 : 0;
+            const colScoreWidth = showNetColumns || showPtsColumns ? 50 : 95;
+            const colNetWidth = 45;
+            const colPtsWidth = 45;
+            const playerSubWidth =
+              colScoreWidth +
+              (showNetColumns ? colNetWidth : 0) +
+              (showPtsColumns ? colPtsWidth : 0);
             const totalWidth =
               50 +
               detailsWidth +
               50 +
-              partners.length * 95 +
+              partners.length * playerSubWidth +
               (isHighLow && partners.length >= 4 ? 2 * colHighLowWidth : 0) +
               (isNassau && partners.length >= 2 ? colNassauWidth : 0);
             const renderNassauHouses = (
@@ -1965,12 +1973,11 @@ const ScoreCard: React.FC = () => {
                         <View key={p.playerId} style={{ flexDirection: "row" }}>
                           <VStack
                             style={{
-                              width: hasSubColumn ? 50 : 95,
+                              width: colScoreWidth,
                               alignItems: "center",
                             }}
                           >
                             <ThemedText
-                              // numberOfLines={1}
                               style={{
                                 textAlign: "center",
                                 fontWeight: "700",
@@ -2001,25 +2008,43 @@ const ScoreCard: React.FC = () => {
                               </View>
                             )}
                           </VStack>
-                          {hasSubColumn && (
+                          {showNetColumns && (
                             <VStack
                               style={{
-                                width: 45,
+                                width: colNetWidth,
                                 alignItems: "center",
                                 justifyContent: "center",
                               }}
                             >
                               <ThemedText
-                                // numberOfLines={1}
                                 style={{
                                   textAlign: "center",
                                   fontWeight: "700",
                                   fontSize: 10,
                                 }}
                               >
-                                {showPtsColumns
-                                  ? `${p.name}\nPts`
-                                  : `${p.name}\nNet`}
+                                {`${p.name}\nNet`}
+                              </ThemedText>
+                            </VStack>
+                          )}
+                          {showPtsColumns && (
+                            <VStack
+                              style={{
+                                width: colPtsWidth,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThemedText
+                                style={{
+                                  textAlign: "center",
+                                  fontWeight: "700",
+                                  fontSize: 10,
+                                }}
+                              >
+                                {isSystem36
+                                  ? `${p.name}\nSys36`
+                                  : `${p.name}\nPts`}
                               </ThemedText>
                             </VStack>
                           )}
@@ -2146,7 +2171,7 @@ const ScoreCard: React.FC = () => {
                               >
                                 <View
                                   style={{
-                                    width: hasSubColumn ? 50 : 95,
+                                    width: colScoreWidth,
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
@@ -2189,41 +2214,6 @@ const ScoreCard: React.FC = () => {
                                         marginTop: 4,
                                       }}
                                     >
-                                      {/* <Pressable
-                                        onPress={() =>
-                                          handleSandyToggle(
-                                            h.holeId,
-                                            p.playerId,
-                                          )
-                                        }
-                                        style={{
-                                          width: 18,
-                                          height: 18,
-                                          borderRadius: 9,
-                                          backgroundColor: info.sandy
-                                            ? "#2e7d32"
-                                            : isDark
-                                              ? "#334155"
-                                              : "#e2e8f0",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                        }}
-                                      >
-                                        <Text
-                                          style={{
-                                            fontSize: 9,
-                                            fontWeight: "bold",
-                                            color: info.sandy
-                                              ? "#fff"
-                                              : isDark
-                                                ? "#94a3b8"
-                                                : "#64748b",
-                                          }}
-                                        >
-                                          S
-                                        </Text>
-                                      </Pressable> */}
-
                                       {info.score !== null &&
                                         (() => {
                                           const badgeVal = getBadgeMultiplier(
@@ -2249,26 +2239,46 @@ const ScoreCard: React.FC = () => {
                                     </HStack>
                                   )}
                                 </View>
-                                {hasSubColumn && (
+                                {showNetColumns && (
                                   <View
                                     style={{
-                                      width: 45,
+                                      width: colNetWidth,
                                       alignItems: "center",
                                       justifyContent: "center",
                                     }}
                                   >
                                     <Text
                                       style={{
-                                        color: isDark ? "#fff" : "#000",
+                                        color: isDark ? "#8BC34A" : "#198754",
                                         fontWeight: "700",
                                         fontSize: 12,
                                         textAlign: "center",
                                       }}
                                     >
                                       {info.score !== null && info.score >= 0
-                                        ? showPtsColumns
-                                          ? (info.stablefordPoints ?? 0)
-                                          : info.netScore
+                                        ? (info.netScore ?? "-")
+                                        : "-"}
+                                    </Text>
+                                  </View>
+                                )}
+                                {showPtsColumns && (
+                                  <View
+                                    style={{
+                                      width: colPtsWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <Text
+                                      style={{
+                                        color: isDark ? "#f59e0b" : "#d97706",
+                                        fontWeight: "700",
+                                        fontSize: 12,
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {info.score !== null && info.score >= 0
+                                        ? (info.stablefordPoints ?? 0)
                                         : "-"}
                                     </Text>
                                   </View>
@@ -2412,7 +2422,7 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <VStack
                                     style={{
-                                      width: hasSubColumn ? 50 : 95,
+                                      width: colScoreWidth,
                                       alignItems: "center",
                                     }}
                                   >
@@ -2424,41 +2434,38 @@ const ScoreCard: React.FC = () => {
                                     >
                                       {t.gross}
                                     </ThemedText>
-                                    {/* <HStack style={{ gap: 4, alignItems: "center" }}>
-                                      {isStableford ? (
-                                        <Text
-                                          style={{ fontSize: 9, color: "#f59e0b" }}
-                                        >
-                                          {t.stableford}
-                                        </Text>
-                                      ) : (
-                                        <Text
-                                          style={{ fontSize: 9, color: "#84cc16" }}
-                                        >
-                                          {t.net}
-                                        </Text>
-                                      )}
-                                      <Text
-                                        style={{ fontSize: 9, color: "#3b82f6" }}
-                                      >
-                                        {t.sandys}
-                                      </Text>
-                                    </HStack> */}
                                   </VStack>
-                                  {hasSubColumn && (
+                                  {showNetColumns && (
                                     <VStack
                                       style={{
-                                        width: 45,
+                                        width: colNetWidth,
                                         alignItems: "center",
                                       }}
                                     >
                                       <ThemedText
                                         style={{
                                           fontWeight: "700",
-                                          color: isDark ? "#fff" : "#000",
+                                          color: isDark ? "#8BC34A" : "#198754",
                                         }}
                                       >
-                                        {showPtsColumns ? t.stableford : t.net}
+                                        {t.net}
+                                      </ThemedText>
+                                    </VStack>
+                                  )}
+                                  {showPtsColumns && (
+                                    <VStack
+                                      style={{
+                                        width: colPtsWidth,
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "700",
+                                          color: isDark ? "#f59e0b" : "#d97706",
+                                        }}
+                                      >
+                                        {t.stableford}
                                       </ThemedText>
                                     </VStack>
                                   )}
@@ -2574,7 +2581,7 @@ const ScoreCard: React.FC = () => {
                                 >
                                   <VStack
                                     style={{
-                                      width: hasSubColumn ? 50 : 95,
+                                      width: colScoreWidth,
                                       alignItems: "center",
                                     }}
                                   >
@@ -2586,41 +2593,38 @@ const ScoreCard: React.FC = () => {
                                     >
                                       {t.gross}
                                     </ThemedText>
-                                    {/* <HStack style={{ gap: 4, alignItems: "center" }}>
-                                      {isStableford ? (
-                                        <Text
-                                          style={{ fontSize: 9, color: "#f59e0b" }}
-                                        >
-                                          {t.stableford}
-                                        </Text>
-                                      ) : (
-                                        <Text
-                                          style={{ fontSize: 9, color: "#84cc16" }}
-                                        >
-                                          {t.net}
-                                        </Text>
-                                      )}
-                                      <Text
-                                        style={{ fontSize: 9, color: "#3b82f6" }}
-                                      >
-                                        {t.sandys}
-                                      </Text>
-                                    </HStack> */}
                                   </VStack>
-                                  {hasSubColumn && (
+                                  {showNetColumns && (
                                     <VStack
                                       style={{
-                                        width: 45,
+                                        width: colNetWidth,
                                         alignItems: "center",
                                       }}
                                     >
                                       <ThemedText
                                         style={{
                                           fontWeight: "700",
-                                          color: isDark ? "#fff" : "#000",
+                                          color: isDark ? "#8BC34A" : "#198754",
                                         }}
                                       >
-                                        {showPtsColumns ? t.stableford : t.net}
+                                        {t.net}
+                                      </ThemedText>
+                                    </VStack>
+                                  )}
+                                  {showPtsColumns && (
+                                    <VStack
+                                      style={{
+                                        width: colPtsWidth,
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "700",
+                                          color: isDark ? "#f59e0b" : "#d97706",
+                                        }}
+                                      >
+                                        {t.stableford}
                                       </ThemedText>
                                     </VStack>
                                   )}
@@ -2736,7 +2740,7 @@ const ScoreCard: React.FC = () => {
                         <View key={p.playerId} style={{ flexDirection: "row" }}>
                           <VStack
                             style={{
-                              width: hasSubColumn ? 50 : 95,
+                              width: colScoreWidth,
                               alignItems: "center",
                             }}
                           >
@@ -2749,15 +2753,27 @@ const ScoreCard: React.FC = () => {
                               {t.gross}
                             </ThemedText>
                           </VStack>
-                          {hasSubColumn && (
-                            <VStack style={{ width: 45, alignItems: "center" }}>
+                          {showNetColumns && (
+                            <VStack style={{ width: colNetWidth, alignItems: "center" }}>
                               <ThemedText
                                 style={{
                                   fontWeight: "800",
                                   color: "#fff",
                                 }}
                               >
-                                {showPtsColumns ? t.stableford : t.net}
+                                {t.net}
+                              </ThemedText>
+                            </VStack>
+                          )}
+                          {showPtsColumns && (
+                            <VStack style={{ width: colPtsWidth, alignItems: "center" }}>
+                              <ThemedText
+                                style={{
+                                  fontWeight: "800",
+                                  color: "#fff",
+                                }}
+                              >
+                                {t.stableford}
                               </ThemedText>
                             </VStack>
                           )}
