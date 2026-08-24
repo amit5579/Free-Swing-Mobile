@@ -1258,6 +1258,7 @@ export default function PlayScoreCard() {
                                     ...colStyle,
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    flexDirection: "row",
                                   } as any
                                 }
                               >
@@ -1268,11 +1269,11 @@ export default function PlayScoreCard() {
                                   onPress={() =>
                                     setActiveRangefinderHole(h.holeId)
                                   }
-                                  style={{ marginTop: 2 }}
+                                  style={{ marginLeft: 4 }}
                                 >
                                   <Ionicons
-                                    name="location-outline"
-                                    size={16}
+                                    name="locate-outline"
+                                    size={14}
                                     color={isDark ? "#8BC34A" : "#198754"}
                                   />
                                 </TouchableOpacity>

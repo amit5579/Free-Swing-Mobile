@@ -2157,11 +2157,21 @@ const TournamentHistory: React.FC = () => {
                               : "rgba(255, 255, 255, 0.7)",
                           }}
                         >
-                          <ThemedText
-                            style={{ width: 50, textAlign: "center" }}
-                          >
-                            {h.holeNumber}
-                          </ThemedText>
+                          <View style={{ width: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {h.holeNumber}
+                            </ThemedText>
+                            <TouchableOpacity
+                              onPress={() => setActiveRangefinderHole(h.holeId)}
+                              style={{ marginLeft: 2 }}
+                            >
+                              <Ionicons
+                                name="locate-outline"
+                                size={12}
+                                color={isDark ? "#8BC34A" : "#198754"}
+                              />
+                            </TouchableOpacity>
+                          </View>
                           {isDetailsVisible && (
                             <>
                               <ThemedText

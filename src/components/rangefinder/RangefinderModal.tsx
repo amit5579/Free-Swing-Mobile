@@ -11,14 +11,14 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import * as Location from 'expo-location';
+import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { RangefinderMap, ClubDistance } from "./RangefinderMap";
 import { useRangefinder } from "../../hooks/useRangefinder";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import client from "@/api/client";
-import Mapbox from "@rnmapbox/maps";
+import MapView from "react-native-maps";
 import { useRef } from "react";
 import { pinMapLocation } from "@/api/modules/scoreCard.api";
 import { getCourseDetails } from "@/api/modules/subAdmin/tournaments.api";
@@ -103,7 +103,9 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   const [unit, setUnit] = useState<"YD" | "M">("YD");
   const [isFlagMode, setIsFlagMode] = useState(false);
   const [myClubs, setMyClubs] = useState<ClubDistance[]>([]);
-  const [locationPermission, setLocationPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [locationPermission, setLocationPermission] = useState<
+    "unknown" | "granted" | "denied"
+  >("unknown");
   const [fetchedCourseName, setFetchedCourseName] = useState<string>("");
 
   useEffect(() => {
@@ -115,42 +117,44 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             setFetchedCourseName(response.name);
           }
         })
-        .catch((error) => console.error("Failed to fetch course details for rangefinder", error));
+        .catch((error) =>
+          console.error(
+            "Failed to fetch course details for rangefinder",
+            error,
+          ),
+        );
     }
   }, [visible, holes]);
 
-  // Check location permission when modal becomes visible
+  // Check location permission when modal mounts (so it prompts on screen open)
   useEffect(() => {
-    if (visible) {
-      (async () => {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status === 'granted') {
-          setLocationPermission('granted');
-        } else {
-          // Try requesting
-          const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
-          setLocationPermission(newStatus === 'granted' ? 'granted' : 'denied');
-        }
-      })();
-    } else {
-      setLocationPermission('unknown');
-    }
-  }, [visible]);
+    (async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === "granted") {
+        setLocationPermission("granted");
+      } else {
+        // Try requesting
+        const { status: newStatus } =
+          await Location.requestForegroundPermissionsAsync();
+        setLocationPermission(newStatus === "granted" ? "granted" : "denied");
+      }
+    })();
+  }, []);
 
   const handleRetryPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') {
-      setLocationPermission('granted');
+    if (status === "granted") {
+      setLocationPermission("granted");
       startTracking();
     } else {
-      setLocationPermission('denied');
+      setLocationPermission("denied");
     }
   };
 
   useEffect(() => {
     const loadClubs = async () => {
       try {
-        const saved = await AsyncStorage.getItem('rangefinder_clubs');
+        const saved = await AsyncStorage.getItem("rangefinder_clubs");
         if (saved) {
           setMyClubs(JSON.parse(saved));
         }
@@ -162,45 +166,10 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   }, []);
   const [isAimMode, setIsAimMode] = useState(false);
   const [isSavingPin, setIsSavingPin] = useState(false);
-  const cameraRef = useRef<Mapbox.Camera>(null);
+  const cameraRef = useRef<MapView>(null);
 
   const [isUiVisible, setIsUiVisible] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  const toggleUiVisibility = () => {
-    const toValue = isUiVisible ? 0 : 1;
-    Animated.timing(fadeAnim, {
-      toValue,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-    setIsUiVisible(!isUiVisible);
-  };
-
-  // Track if we've already set the initial hole for this session
-  const hasInitializedHole = useRef(false);
-  // Reset the tracker when the modal is closed
-  useEffect(() => {
-    if (!visible) {
-      hasInitializedHole.current = false;
-    }
-  }, [visible]);
-  // Only set the initial hole once when the modal opens and data is ready
-  useEffect(() => {
-    if (visible && !hasInitializedHole.current && initialHoleId && holes.length > 0) {
-      const index = holes.findIndex((h) => h.holeId === initialHoleId);
-      if (index !== -1) {
-        setCurrentHoleIndex(index);
-        hasInitializedHole.current = true;
-      }
-    }
-  }, [visible, initialHoleId, holes]);
-
-  const currentHole = holes[currentHoleIndex];
-
-  // Parse pin coordinates if available from API (default to some fallback if missing for now)
-  const pinLat = currentHole?.pinLat || currentHole?.latitude || 0;
-  const pinLng = currentHole?.pinLng || currentHole?.longitude || 0;
 
   const {
     playerLocation,
@@ -216,6 +185,68 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     startTracking,
     stopTracking,
   } = useRangefinder();
+
+  const toggleUiVisibility = () => {
+    const toValue = isUiVisible ? 0 : 1;
+    Animated.timing(fadeAnim, {
+      toValue,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    setIsUiVisible(!isUiVisible);
+  };
+
+  // Track if we've already set the initial hole for this session
+  const hasInitializedHole = useRef(false);
+  const hasAutoCentered = useRef(false);
+
+  // Reset the tracker when the modal is closed
+  useEffect(() => {
+    if (!visible) {
+      hasInitializedHole.current = false;
+      hasAutoCentered.current = false;
+    }
+  }, [visible]);
+  // Only set the initial hole once when the modal opens and data is ready
+  useEffect(() => {
+    if (
+      visible &&
+      !hasInitializedHole.current &&
+      initialHoleId &&
+      holes.length > 0
+    ) {
+      const index = holes.findIndex((h) => h.holeId === initialHoleId);
+      if (index !== -1) {
+        setCurrentHoleIndex(index);
+        hasInitializedHole.current = true;
+      }
+    }
+  }, [visible, initialHoleId, holes]);
+
+  // Auto-center map when location first becomes available
+  useEffect(() => {
+    if (
+      visible &&
+      !hasAutoCentered.current &&
+      playerLocation &&
+      cameraRef.current
+    ) {
+      cameraRef.current.animateCamera(
+        {
+          center: { latitude: playerLocation[1], longitude: playerLocation[0] },
+          zoom: 17,
+        },
+        { duration: 1000 },
+      );
+      hasAutoCentered.current = true;
+    }
+  }, [visible, playerLocation]);
+
+  const currentHole = holes[currentHoleIndex];
+
+  // Parse pin coordinates if available from API (default to some fallback if missing for now)
+  const pinLat = currentHole?.pinLat || currentHole?.latitude || 0;
+  const pinLng = currentHole?.pinLng || currentHole?.longitude || 0;
 
   useEffect(() => {
     if (visible) {
@@ -276,7 +307,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     try {
       setIsSavingPin(true);
       const payload = { pinLat: pinLocation[1], pinLng: pinLocation[0] };
-      if(!payload) {
+      if (!payload) {
         Alert.alert("Error", "Pin location is required");
         return;
       }
@@ -300,11 +331,13 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
 
   const handleGpsPress = () => {
     if (playerLocation && cameraRef.current) {
-      cameraRef.current.setCamera({
-        centerCoordinate: playerLocation,
-        zoomLevel: 18,
-        animationDuration: 1000,
-      });
+      cameraRef.current.animateCamera(
+        {
+          center: { latitude: playerLocation[1], longitude: playerLocation[0] },
+          zoom: 18,
+        },
+        { duration: 1000 },
+      );
     }
   };
 
@@ -349,33 +382,79 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
         ]}
       >
         {/* Location Permission Denied Screen */}
-        {locationPermission === 'denied' && (
-          <View style={[styles.permissionOverlay, { backgroundColor: isDark ? '#161618' : '#F9FAFB' }]}>
+        {locationPermission === "denied" && (
+          <View
+            style={[
+              styles.permissionOverlay,
+              { backgroundColor: isDark ? "#161618" : "#F9FAFB" },
+            ]}
+          >
             <View style={styles.permissionCloseRow}>
               <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-                <Ionicons name="close" size={24} color={isDark ? '#fff' : '#000'} />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={isDark ? "#fff" : "#000"}
+                />
               </TouchableOpacity>
             </View>
             <View style={styles.permissionContent}>
               <View style={styles.permissionIconCircle}>
                 <Ionicons name="location-outline" size={48} color="#8BC34A" />
               </View>
-              <Text style={[styles.permissionTitle, { color: isDark ? '#fff' : '#000' }]}>
+              <Text
+                style={[
+                  styles.permissionTitle,
+                  { color: isDark ? "#fff" : "#000" },
+                ]}
+              >
                 Location Permission Required
               </Text>
-              <Text style={[styles.permissionDesc, { color: isDark ? '#aaa' : '#666' }]}>
-                The GPS Rangefinder needs access to your location to show distances to the pin and track your position on the course.
+              <Text
+                style={[
+                  styles.permissionDesc,
+                  { color: isDark ? "#aaa" : "#666" },
+                ]}
+              >
+                The GPS Rangefinder needs access to your location to show
+                distances to the pin and track your position on the course.
               </Text>
-              <TouchableOpacity style={styles.permissionBtn} onPress={handleRetryPermission}>
-                <Ionicons name="refresh" size={18} color="#fff" style={{ marginRight: 6 }} />
+              <TouchableOpacity
+                style={styles.permissionBtn}
+                onPress={handleRetryPermission}
+              >
+                <Ionicons
+                  name="refresh"
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
                 <Text style={styles.permissionBtnText}>Grant Permission</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.permissionBtn, { backgroundColor: isDark ? '#333' : '#e5e7eb', marginTop: 10 }]}
+                style={[
+                  styles.permissionBtn,
+                  {
+                    backgroundColor: isDark ? "#333" : "#e5e7eb",
+                    marginTop: 10,
+                  },
+                ]}
                 onPress={() => Linking.openSettings()}
               >
-                <Ionicons name="settings-outline" size={18} color={isDark ? '#fff' : '#000'} style={{ marginRight: 6 }} />
-                <Text style={[styles.permissionBtnText, { color: isDark ? '#fff' : '#000' }]}>Open Settings</Text>
+                <Ionicons
+                  name="settings-outline"
+                  size={18}
+                  color={isDark ? "#fff" : "#000"}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.permissionBtnText,
+                    { color: isDark ? "#fff" : "#000" },
+                  ]}
+                >
+                  Open Settings
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -422,7 +501,10 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
                   ]}
                   numberOfLines={1}
                 >
-                  {courseName || fetchedCourseName || currentHole?.courseName || "Course"}
+                  {courseName ||
+                    fetchedCourseName ||
+                    currentHole?.courseName ||
+                    "Course"}
                 </Text>
                 <Text
                   style={[
@@ -508,7 +590,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             isAimMode={isAimMode}
             onPinDragEnd={handlePinDragEnd}
             onAimDragEnd={handleAimDragEnd}
-            cameraRef={cameraRef as any}
+            cameraRef={cameraRef}
             clubDistances={myClubs}
           />
 
@@ -821,53 +903,53 @@ const styles = StyleSheet.create({
   permissionOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   permissionCloseRow: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     left: 16,
     zIndex: 101,
   },
   permissionContent: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: 32,
   },
   permissionIconCircle: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(139, 195, 74, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(139, 195, 74, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 24,
   },
   permissionTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 12,
   },
   permissionDesc: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
     marginBottom: 28,
   },
   permissionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#8BC34A',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#8BC34A",
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 12,
-    width: '100%',
+    width: "100%",
   },
   permissionBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
