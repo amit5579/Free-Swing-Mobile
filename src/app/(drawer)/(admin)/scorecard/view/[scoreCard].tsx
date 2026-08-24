@@ -126,13 +126,6 @@ const ScoreCard: React.FC = () => {
   const [handicap, setHandicap] = useState<any>();
   const isNassau = isNassauBest || isNassauCombined;
 
-  const isSystem36Hole = (h: any) =>
-    h.matchScoringType === "system-36" ||
-    h.scoringType === "system-36" ||
-    h.scoring_type === "system-36" ||
-    h.isSystem36 === true ||
-    h.IsSystem36 === true;
-
   const getDisplayHandicap = useCallback(
     (value: any) => {
       if (value && typeof value === "object") {
@@ -144,6 +137,14 @@ const ScoreCard: React.FC = () => {
   );
 
   const isExcluded = holes.length > 0 && holes.some((h: any) => h.isExcluded);
+
+  const isSystem36Hole = (h: any) =>
+    h.matchScoringType === "system-36" ||
+    h.scoringType === "system-36" ||
+    h.scoring_type === "system-36" ||
+    h.isSystem36 === true ||
+    h.IsSystem36 === true;
+
   const isSystem36 =
     holes.length > 0 && holes.some((h: any) => isSystem36Hole(h));
   const showPtsColumns = isStableford || isSystem36;
@@ -166,7 +167,6 @@ const ScoreCard: React.FC = () => {
       !isNassau
     )
       return "Net Score • Include Par 3";
-    if (isExcluded && isStableford) return "Stableford • Exclude Par 3";
     if (
       isGross &&
       !isExcluded &&
@@ -187,7 +187,7 @@ const ScoreCard: React.FC = () => {
 
   const shouldShowSandyXControls = () => {
     const label = getScoringLabel();
-    return !label.startsWith("Net Score") && !label.startsWith("Stableford");
+    return !label.startsWith("Net Score") && !label.startsWith("Stableford") && label !== "System 36";
   };
 
   useEffect(() => {
@@ -319,6 +319,7 @@ const ScoreCard: React.FC = () => {
             for (const p of parsedPartners) {
               if (!p.isPrimary) {
                 const directHc =
+                  p.playingHandicap ??
                   p.appliedHandicap ??
                   p.courseHandicap ??
                   p.handicap ??
@@ -505,6 +506,7 @@ const ScoreCard: React.FC = () => {
     }
 
     const directHc =
+      partner.playingHandicap ??
       partner.appliedHandicap ??
       partner.courseHandicap ??
       partner.handicap ??
