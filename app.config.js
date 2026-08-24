@@ -1,0 +1,65 @@
+import "dotenv/config";
+
+export default ({ config }) => {
+  const customConfig = {
+    ...config,
+    name: "Freeswing",
+    slug: "freeswing",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/FreeSwing.png",
+    scheme: "freeswing",
+    userInterfaceStyle: "automatic",
+    ios: {},
+    android: {
+      ...config.android,
+      adaptiveIcon: {
+        backgroundColor: "#ffffff",
+        foregroundImage: "./assets/FreeSwing.png",
+      },
+      predictiveBackGestureEnabled: false,
+      package: "com.kolves18freeswing.freeswing",
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_DEV_KEY || "",
+        },
+      },
+    },
+    web: {
+      output: "static",
+      favicon: "./assets/FreeSwing.png",
+    },
+    plugins: [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          backgroundColor: "#ffffff",
+          resizeMode: "cover",
+          android: {
+            image: "./assets/FreeSwing.png",
+            imageWidth: 300,
+          },
+        },
+      ],
+      "expo-font",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      "expo-sharing",
+      "expo-asset",
+      "expo-image",
+    ],
+    experiments: {
+      typedRoutes: true,
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: "c558d4f9-a896-4489-9c71-9caad58eb32c",
+      },
+    },
+    owner: "kolves18freeswing",
+  };
+
+  return customConfig;
+};

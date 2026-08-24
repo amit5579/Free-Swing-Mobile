@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
-import { createGeoJSONCircle, createLineString, createFeatureCollection } from '../../utils/rangefinder/geojson';
+import MapView, { Marker, Polyline, Circle, MAP_TYPES } from 'react-native-maps';
 
 export interface ClubDistance {
   name: string;
@@ -9,23 +8,17 @@ export interface ClubDistance {
 }
 
 interface RangefinderMapProps {
-  playerLocation: [number, number] | null;
-  pinLocation: [number, number] | null;
-  aimLocation: [number, number] | null;
+  playerLocation: [number, number] | null; // [longitude, latitude]
+  pinLocation: [number, number] | null;    // [longitude, latitude]
+  aimLocation: [number, number] | null;    // [longitude, latitude]
   onMapPress: (feature: any) => void;
   isDark?: boolean;
   isFlagMode?: boolean;
   isAimMode?: boolean;
   onPinDragEnd?: (coords: [number, number]) => void;
   onAimDragEnd?: (coords: [number, number]) => void;
-  cameraRef?: React.RefObject<Mapbox.Camera>;
+  cameraRef?: React.RefObject<MapView | null>;
   clubDistances?: ClubDistance[];
-}
-
-// Ensure Mapbox gets initialized with public token in the main app layout.
-// The public token is passed via EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN.
-if (process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN) {
-  Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 }
 
 export const RangefinderMap: React.FC<RangefinderMapProps> = ({
@@ -41,142 +34,136 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   cameraRef,
   clubDistances,
 }) => {
+  // Convert [lng, lat] to { latitude, longitude }
+  const toCoord = (loc: [number, number] | null) => 
+    loc ? { latitude: loc[1], longitude: loc[0] } : null;
 
-  const mapStyle = Mapbox.StyleURL.Satellite;
+  const playerCoord = toCoord(playerLocation);
+  const pinCoord = toCoord(pinLocation);
+  const aimCoord = toCoord(aimLocation);
 
-  // Create connecting lines
-  const lineGeoJSON = useMemo(() => {
-    if (!playerLocation || !pinLocation) return null;
-    
-    // Line: Player -> Aim -> Pin (if aim exists), else Player -> Pin
-    const coords = aimLocation 
-      ? [playerLocation, aimLocation, pinLocation]
-      : [playerLocation, pinLocation];
+  // Connecting lines
+  const lineCoords = useMemo(() => {
+    if (!playerCoord || !pinCoord) return null;
+    return aimCoord 
+      ? [playerCoord, aimCoord, pinCoord]
+      : [playerCoord, pinCoord];
+  }, [playerCoord, pinCoord, aimCoord]);
 
-    return createLineString(coords);
-  }, [playerLocation, pinLocation, aimLocation]);
-
-  // Create club distance arcs dynamically
-  const arcsGeoJSON = useMemo(() => {
-    if (!playerLocation) return null;
-    
-    // Fallback to default distances if none are provided
-    const distances = clubDistances && clubDistances.length > 0 ? clubDistances : [
+  // Club distances
+  const distances = useMemo(() => {
+    return clubDistances && clubDistances.length > 0 ? clubDistances : [
       { name: 'Driver', distanceYards: 250 },
       { name: '3-Wood', distanceYards: 225 },
       { name: '5-Iron', distanceYards: 185 },
       { name: '7-Iron', distanceYards: 160 },
       { name: 'Pitching Wedge', distanceYards: 125 }
     ];
+  }, [clubDistances]);
 
-    const arcs = distances.map((club) => {
-      // Using distanceYards as radius for the utility
-      const radius = club.distanceYards; 
-      
-      return createGeoJSONCircle(
-        playerLocation[1], // longitude
-        playerLocation[0], // latitude
-        radius
-      );
-    });
-    
-    return createFeatureCollection(arcs);
-  }, [playerLocation, clubDistances]);
+  const initialRegion = useMemo(() => {
+    const center = playerCoord || pinCoord || { latitude: 0, longitude: 0 };
+    return {
+      ...center,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
+    };
+  }, [playerCoord, pinCoord]);
 
-  const centerCoordinate = playerLocation || pinLocation || [0,0];
+  const handleMapPress = (e: any) => {
+    const coord = e.nativeEvent.coordinate;
+    if (coord) {
+      // react-native-maps returns { latitude, longitude }
+      // The parent expects a feature-like object with coordinates: [lng, lat]
+      onMapPress({
+        geometry: {
+          coordinates: [coord.longitude, coord.latitude]
+        }
+      });
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Mapbox.MapView 
+      <MapView
+        ref={cameraRef}
         style={styles.map}
-        styleURL={mapStyle}
-        onPress={onMapPress}
-        logoEnabled={false}
-        attributionEnabled={false}
-        scaleBarEnabled={true}
-        scaleBarPosition={{ top: 195, left: 16 }}
+        provider="google"
+        mapType={MAP_TYPES.SATELLITE}
+        onPress={handleMapPress}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        showsScale={true}
+        initialRegion={initialRegion}
       >
-        <Mapbox.Camera 
-          ref={cameraRef}
-          zoomLevel={16}
-          centerCoordinate={centerCoordinate}
-          animationMode="flyTo"
-          animationDuration={1000}
-        />
-
         {/* Club Arcs */}
-        {arcsGeoJSON && (
-          <Mapbox.ShapeSource id="clubArcsSource" shape={arcsGeoJSON}>
-            <Mapbox.LineLayer 
-              id="clubArcsLayer" 
-              style={{
-                lineColor: '#ffffff',
-                lineWidth: 1,
-                lineOpacity: 0.5,
-                lineDasharray: [2, 2]
-              }} 
-            />
-          </Mapbox.ShapeSource>
-        )}
+        {playerCoord && distances.map((club, index) => (
+          <Circle
+            key={index}
+            center={playerCoord}
+            radius={club.distanceYards * 0.9144} // Convert yards to meters for Circle radius
+            strokeColor="rgba(255, 255, 255, 0.5)"
+            strokeWidth={1}
+            lineDashPattern={[5, 5]}
+          />
+        ))}
 
         {/* Connecting Lines */}
-        {lineGeoJSON && (
-          <Mapbox.ShapeSource id="lineSource" shape={lineGeoJSON}>
-            <Mapbox.LineLayer 
-              id="lineLayer" 
-              style={{
-                lineColor: '#FFA500',
-                lineWidth: 3,
-                lineOpacity: 0.8
-              }} 
-            />
-          </Mapbox.ShapeSource>
+        {lineCoords && (
+          <Polyline
+            coordinates={lineCoords}
+            strokeColor="#FFA500"
+            strokeWidth={3}
+            lineDashPattern={[0]} // solid
+          />
         )}
 
         {/* Player Marker */}
-        {playerLocation && (
-          <Mapbox.PointAnnotation id="playerMarker" coordinate={playerLocation}>
+        {playerCoord && (
+          <Marker coordinate={playerCoord} anchor={{ x: 0.5, y: 0.5 }}>
             <View style={[styles.marker, { backgroundColor: '#4285F4' }]} />
-          </Mapbox.PointAnnotation>
+          </Marker>
         )}
 
         {/* Aim Marker */}
-        {aimLocation && (
-          <Mapbox.PointAnnotation 
-            id="aimMarker" 
-            coordinate={aimLocation}
+        {aimCoord && (
+          <Marker
+            coordinate={aimCoord}
             draggable={isAimMode}
-            onDragEnd={(e: any) => {
-              if (onAimDragEnd && e?.geometry?.coordinates) {
-                onAimDragEnd(e.geometry.coordinates as [number, number]);
+            onDragEnd={(e) => {
+              if (onAimDragEnd) {
+                const coord = e.nativeEvent.coordinate;
+                onAimDragEnd([coord.longitude, coord.latitude]);
               }
             }}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
             <View style={[styles.marker, { backgroundColor: '#FFA500' }]} />
-          </Mapbox.PointAnnotation>
+          </Marker>
         )}
 
         {/* Pin Marker */}
-        {pinLocation && (
-          <Mapbox.PointAnnotation 
-            id="pinMarker" 
-            coordinate={pinLocation}
+        {pinCoord && (
+          <Marker
+            coordinate={pinCoord}
             draggable={isFlagMode}
-            onDragEnd={(e: any) => {
-              if (onPinDragEnd && e?.geometry?.coordinates) {
-                onPinDragEnd(e.geometry.coordinates as [number, number]);
+            onDragEnd={(e) => {
+              if (onPinDragEnd) {
+                const coord = e.nativeEvent.coordinate;
+                onPinDragEnd([coord.longitude, coord.latitude]);
               }
             }}
-            anchor={{ x: 0.5, y: 1 }}
+            anchor={{ x: 0.5, y: 1 }} // Bottom center
           >
             <View style={styles.flagMarker}>
                <View style={styles.flagPole} />
                <View style={styles.flagTriangle} />
                <View style={styles.flagBase} />
             </View>
-          </Mapbox.PointAnnotation>
+          </Marker>
         )}
-      </Mapbox.MapView>
+      </MapView>
     </View>
   );
 };

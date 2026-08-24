@@ -2940,14 +2940,21 @@ export default function ResumeScorecard() {
                               backgroundColor: isDark ? "#020617" : "#ffffff",
                             }}
                           >
-                            <ThemedText
-                              style={{
-                                width: colHoleWidth,
-                                textAlign: "center",
-                              }}
-                            >
+                          <View style={{ width: colHoleWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <ThemedText style={{ textAlign: "center" }}>
                               {h.holeNumber}
                             </ThemedText>
+                            <TouchableOpacity
+                              onPress={() => setActiveRangefinderHole(h.holeId)}
+                              style={{ marginLeft: 2 }}
+                            >
+                              <Ionicons
+                                name="locate-outline"
+                                size={12}
+                                color={isDark ? "#8BC34A" : "#198754"}
+                              />
+                            </TouchableOpacity>
+                          </View>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
@@ -3618,14 +3625,21 @@ export default function ResumeScorecard() {
                               backgroundColor: isDark ? "#020617" : "#ffffff",
                             }}
                           >
-                            <ThemedText
-                              style={{
-                                width: colHoleWidth,
-                                textAlign: "center",
-                              }}
-                            >
+                          <View style={{ width: colHoleWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <ThemedText style={{ textAlign: "center" }}>
                               {h.holeNumber}
                             </ThemedText>
+                            <TouchableOpacity
+                              onPress={() => setActiveRangefinderHole(h.holeId)}
+                              style={{ marginLeft: 2 }}
+                            >
+                              <Ionicons
+                                name="locate-outline"
+                                size={12}
+                                color={isDark ? "#8BC34A" : "#198754"}
+                              />
+                            </TouchableOpacity>
+                          </View>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
