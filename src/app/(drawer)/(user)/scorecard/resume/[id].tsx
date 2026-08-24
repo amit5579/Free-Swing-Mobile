@@ -235,8 +235,19 @@ export default function ResumeScorecard() {
     holes.find((h: any) => h.groupName)?.groupName ||
     holes[0]?.groupName ||
     null;
+  const isSystem36 =
+    holes.length > 0 &&
+    holes.some(
+      (h: any) =>
+        h.matchScoringType === "system-36" ||
+        h.scoringType === "system-36" ||
+        h.scoring_type === "system-36" ||
+        h.isSystem36 === true ||
+        h.IsSystem36 === true,
+    );
 
   const renderScoringType = (() => {
+    if (isSystem36) return "System 36";
     if (isSplit6) return "Split Six";
     if (isHighLow) return "High - Low";
     if (isGross) return "Gross Score";
@@ -864,14 +875,12 @@ export default function ResumeScorecard() {
     const netScore = rawScore - strokesReceived;
 
     let stablefordPoints = null;
-    if (isStableford) {
+    if (isSystem36 && rawScore > 0) {
+      stablefordPoints =
+        rawScore <= hole.par ? 2 : rawScore === hole.par + 1 ? 1 : 0;
+    } else if (isStableford) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
-    } else if (isSystem36 && rawScore !== null && rawScore > 0) {
-      // System 36: 2 pts for par or better, 1 pt for bogey, 0 otherwise
-      if (rawScore <= hole.par) stablefordPoints = 2;
-      else if (rawScore === hole.par + 1) stablefordPoints = 1;
-      else stablefordPoints = 0;
     }
 
     return {
@@ -942,18 +951,11 @@ export default function ResumeScorecard() {
   };
 
   const isExcluded = holes.length > 0 ? holes[0].isExcluded : false;
-  const isSystem36 =
-    holes.length > 0 &&
-    holes.some(
-      (h: any) =>
-        h.matchScoringType === "system-36" ||
-        h.scoringType === "system-36" ||
-        h.scoring_type === "system-36" ||
-        h.isSystem36 === true ||
-        h.IsSystem36 === true,
-    );
 
   const getScoringLabel = () => {
+    if (holes.length === 0) return "";
+
+    if (isSystem36) return "System 36";
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
     if (!isExcluded && isStableford) return "Stableford";
     if (
@@ -981,16 +983,11 @@ export default function ResumeScorecard() {
       return "Net Score • High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
-    if (isSystem36) return "System 36";
     return "";
   };
 
   const showNetColumns =
-    getScoringLabel() === "Net Score • Include Par 3" ||
-    getScoringLabel() === "Net Score • Exclude Par 3" ||
-    isStableford ||
-    getScoringLabel() === "Stableford" ||
-    getScoringLabel() === "Stableford • Exclude Par 3";
+    !isGross && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -3110,8 +3107,9 @@ export default function ResumeScorecard() {
                                       />
                                     </View>
 
-                                    {getScoringLabel() !==
-                                      "Net Score • Include Par 3" &&
+                                    {getScoringLabel() !== "System 36" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Include Par 3" &&
                                       getScoringLabel() !==
                                         "Net Score • Exclude Par 3" &&
                                       getScoringLabel() !== "Stableford" &&
@@ -3787,8 +3785,9 @@ export default function ResumeScorecard() {
                                       />
                                     </View>
 
-                                    {getScoringLabel() !==
-                                      "Net Score • Include Par 3" &&
+                                    {getScoringLabel() !== "System 36" &&
+                                      getScoringLabel() !==
+                                        "Net Score • Include Par 3" &&
                                       getScoringLabel() !==
                                         "Net Score • Exclude Par 3" &&
                                       getScoringLabel() !== "Stableford" &&

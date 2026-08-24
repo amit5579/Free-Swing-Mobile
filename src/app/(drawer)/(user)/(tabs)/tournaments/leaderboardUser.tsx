@@ -27,6 +27,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "@/components/Skeleton";
 import { Box } from "@/components/box";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LeaderboardUser() {
   const colorScheme = useColorScheme();
@@ -40,10 +41,16 @@ export default function LeaderboardUser() {
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    // fetchData(true);
-      fetchData(true);
+    const initUserId = async () => {
+      const id = await AsyncStorage.getItem("userId");
+      if (id) setCurrentUserId(Number(id));
+    };
+    initUserId();
+    
+    fetchData(true);
   }, []);
 
   const getScoringLabel = (scoringType: string) => {
@@ -85,6 +92,7 @@ export default function LeaderboardUser() {
       const teebox = await getTeeboxDetails(Number(teeboxId));
 
       setLeaderboard(lb);
+      console.log("lllbbb",lb);
       setHoles(teebox);
     } catch (err) {
       console.log("Error:", err);
@@ -934,7 +942,7 @@ export default function LeaderboardUser() {
                 Verified
               </ThemedText>
             </View>
-          ) : (
+          ) : player.userId !== currentUserId ? (
             <Pressable
               disabled={!player.scorecardId}
               onPress={() => handleAuthenticate(player)}
@@ -962,6 +970,8 @@ export default function LeaderboardUser() {
                 Auth
               </ThemedText>
             </Pressable>
+          ) : (
+            <View style={{ width: 60, height: 32 }} />
           )}
         </HStack>
       </HStack>
