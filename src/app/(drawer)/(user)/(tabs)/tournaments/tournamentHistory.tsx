@@ -201,7 +201,7 @@ const TournamentHistory: React.FC = () => {
 
   const shouldShowSandyXControls = () => {
     const label = getScoringLabel();
-    return !label.startsWith("Net Score") && !label.startsWith("Stableford");
+    return !label.startsWith("Net Score") && !label.startsWith("Stableford") && label !== "System 36";
   };
 
   useEffect(() => {
