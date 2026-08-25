@@ -1530,7 +1530,7 @@ export default function ResumeScorecard() {
                   }
                 : {}),
             }));
-            console.log("pppp", payload);
+            // console.log("pppp", payload);
 
             await updateHoleScoresApi(id!, payload);
             await deleteDraft(id!);

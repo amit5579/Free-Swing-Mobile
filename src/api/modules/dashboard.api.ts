@@ -249,7 +249,7 @@ export const getScorecardDetails = async (scorecardId: string | number): Promise
   try {
     // console.log("scorecardid", scorecardId);
     const response = await client.get(`scorecard/details/${scorecardId}`);
-    console.log("ddddd", response.data);
+    // console.log("ddddd", response.data);
 
     return response.data as ScorecardHole[];
   } catch (error) {
