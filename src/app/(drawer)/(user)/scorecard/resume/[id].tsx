@@ -300,6 +300,7 @@ export default function ResumeScorecard() {
                     : h.matchScoringType || null,
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
+          companionRsJson: h.companionRsJson || null,
           nassauStartingNine: nassauStartingNine,
           NassauStartingNine: nassauStartingNine,
           groupName: h.groupName || (h as any).GroupName || null,
@@ -345,7 +346,7 @@ export default function ResumeScorecard() {
 
       try {
         const serverHoles = await getScorecardDetails(id!);
-        console.log("ssvvrrhhll", serverHoles);
+        // console.log("ssvvrrhhll", serverHoles);
 
         if (serverHoles && serverHoles.length > 0) {
           const normalizedServerHoles = serverHoles.map((h: any) => ({
@@ -364,6 +365,11 @@ export default function ResumeScorecard() {
               h.companionSandysJson !== null
                 ? h.companionSandysJson
                 : h.CompanionSandysJson,
+            companionRsJson:
+              h.companionRsJson !== undefined &&
+              h.companionRsJson !== null
+                ? h.companionRsJson
+                : h.CompanionRsJson,
             playingPartnersJson:
               h.playingPartnersJson !== undefined &&
               h.playingPartnersJson !== null
@@ -389,7 +395,7 @@ export default function ResumeScorecard() {
                 : h.GroupName,
           }));
 
-          console.log("normalizedServerHoles", normalizedServerHoles);
+          // console.log("normalizedServerHoles", normalizedServerHoles);
 
           const state = getLatestRoundState(
             localDraft,
@@ -737,6 +743,7 @@ export default function ResumeScorecard() {
                 : h.matchScoringType || null,
       companionScoresJson: h.companionScoresJson || null,
       companionSandysJson: h.companionSandysJson || null,
+      companionRsJson: h.companionRsJson || null,
       nassauStartingNine: nassauStartingNine,
       NassauStartingNine: nassauStartingNine,
       groupName: h.groupName || (h as any).GroupName || null,
@@ -822,6 +829,19 @@ export default function ResumeScorecard() {
       }
     }
 
+    let companionRs: Record<string, boolean> = {};
+    const rawRsJson = hole.companionRsJson || hole.CompanionRsJson;
+    if (rawRsJson) {
+      try {
+        companionRs =
+          typeof rawRsJson === "string"
+            ? JSON.parse(rawRsJson)
+            : (rawRsJson as any);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     let rawScore = null;
     if (isPrimary) {
       rawScore =
@@ -844,6 +864,7 @@ export default function ResumeScorecard() {
     }
 
     const sandy = companionSandys[playerId] === true;
+    const r = companionRs[playerId] === true;
 
     if (rawScore === null) {
       return {
@@ -851,6 +872,7 @@ export default function ResumeScorecard() {
         netScore: null,
         stablefordPoints: null,
         sandy,
+        r,
       };
     }
 
@@ -888,6 +910,7 @@ export default function ResumeScorecard() {
       netScore,
       stablefordPoints,
       sandy,
+      r,
     };
   };
 
@@ -927,6 +950,7 @@ export default function ResumeScorecard() {
     score: number | null,
     par: number,
     isSandy: boolean,
+    isRegulation?: boolean,
   ) => {
     if (score === null || score < 0) return 0;
     const diff = score - par;
@@ -944,10 +968,16 @@ export default function ResumeScorecard() {
     }
 
     let sandyBonus = 0;
-    if (isSandy && diff <= 0) {
+    if (isSandy && (score === 1 || diff <= 0)) {
       sandyBonus = 1;
     }
-    return basePoints + sandyBonus;
+
+    let rBonus = 0;
+    if (isRegulation && (score === 1 || diff <= 0)) {
+      rBonus = 1;
+    }
+
+    return basePoints + sandyBonus + rBonus;
   };
 
   const isExcluded = holes.length > 0 ? holes[0].isExcluded : false;
@@ -1309,7 +1339,18 @@ export default function ResumeScorecard() {
             console.error(e);
           }
         }
-        companionSandys[playerId] = !companionSandys[playerId];
+        const nextVal = !companionSandys[playerId];
+        companionSandys[playerId] = nextVal;
+
+        if (nextVal) {
+          const pObj = partners.find((p: any) => p.playerId === playerId);
+          const name = pObj ? (pObj.isPrimary ? "You" : pObj.name) : "Player";
+          Toast.show({
+            type: "success",
+            text1: `${name} got a Sandy!`,
+          });
+        }
+
         return {
           ...h,
           companionSandysJson: JSON.stringify(companionSandys),
@@ -1321,12 +1362,49 @@ export default function ResumeScorecard() {
     holesRef.current = updatedHoles;
 
     triggerSaveDraft(updatedHoles, textScoresRef.current);
-
     saveToServer(updatedHoles);
-    Toast.show({
-      type: "success",
-      text1: "You got a sandy!",
+  };
+
+  const handleRegulationToggle = (holeId: number, playerId: string) => {
+    if (isReadOnly) return;
+    const updatedHoles = holes.map((h) => {
+      if (h.holeId === holeId) {
+        let companionRs: Record<string, boolean> = {};
+        const rawRsJson = h.companionRsJson || h.CompanionRsJson;
+        if (rawRsJson) {
+          try {
+            companionRs =
+              typeof rawRsJson === "string"
+                ? JSON.parse(rawRsJson)
+                : (rawRsJson as any);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        const nextVal = !companionRs[playerId];
+        companionRs[playerId] = nextVal;
+
+        if (nextVal) {
+          const pObj = partners.find((p: any) => p.playerId === playerId);
+          const name = pObj ? (pObj.isPrimary ? "You" : pObj.name) : "Player";
+          Toast.show({
+            type: "success",
+            text1: `${name} got a Regulation!`,
+          });
+        }
+
+        return {
+          ...h,
+          companionRsJson: JSON.stringify(companionRs),
+        };
+      }
+      return h;
     });
+    setHoles(updatedHoles);
+    holesRef.current = updatedHoles;
+
+    triggerSaveDraft(updatedHoles, textScoresRef.current);
+    saveToServer(updatedHoles);
   };
 
   const handleScoreChange = (holeId: number, text: string) => {
@@ -1459,6 +1537,7 @@ export default function ResumeScorecard() {
                 : h.matchScoringType || null,
         companionScoresJson: h.companionScoresJson || null,
         companionSandysJson: h.companionSandysJson || null,
+        companionRsJson: h.companionRsJson || null,
         nassauStartingNine: nassauStartingNine,
         NassauStartingNine: nassauStartingNine,
         ...(playingGroupRoundKey
@@ -1517,6 +1596,7 @@ export default function ResumeScorecard() {
               nassauStartingNine: nassauStartingNine,
               companionScoresJson: h.companionScoresJson || null,
               companionSandysJson: h.companionSandysJson || null,
+              companionRsJson: h.companionRsJson || null,
               ...(playingGroupRoundKey
                 ? {
                     playingGroupRoundKey,
@@ -3114,7 +3194,8 @@ export default function ResumeScorecard() {
                                       />
                                     </View>
 
-                                    {getScoringLabel() !== "System 36" &&
+                                    {!isPending &&
+                                      getScoringLabel() !== "System 36" &&
                                       getScoringLabel() !==
                                         "Net Score • Include Par 3" &&
                                       getScoringLabel() !==
@@ -3122,50 +3203,97 @@ export default function ResumeScorecard() {
                                       getScoringLabel() !== "Stableford" &&
                                       getScoringLabel() !==
                                         "Stableford • Exclude Par 3" && (
-                                        <HStack
+                                        <VStack
                                           style={{
                                             alignItems: "center",
-                                            gap: 4,
+                                            justifyContent: "center",
                                             marginTop: 4,
+                                            gap: 2,
                                           }}
                                         >
-                                          <TouchableOpacity
-                                            disabled={isReadOnly}
-                                            onPress={() => {
-                                              if (isReadOnly) return;
-                                              handleSandyToggle(
-                                                h.holeId,
-                                                p.playerId,
-                                              );
-                                            }}
+                                          <HStack
                                             style={{
-                                              width: 18,
-                                              height: 18,
-                                              borderRadius: 9,
-                                              backgroundColor: info.sandy
-                                                ? "#2e7d32"
-                                                : isDark
-                                                  ? "#333"
-                                                  : "#e5e5e5",
                                               alignItems: "center",
                                               justifyContent: "center",
-                                              opacity: isReadOnly ? 0.6 : 1,
+                                              gap: 4,
                                             }}
                                           >
-                                            <Text
+                                            <TouchableOpacity
+                                              disabled={isReadOnly}
+                                              onPress={() => {
+                                                if (isReadOnly) return;
+                                                handleSandyToggle(
+                                                  h.holeId,
+                                                  p.playerId,
+                                                );
+                                              }}
                                               style={{
-                                                fontSize: 9,
-                                                fontWeight: "bold",
-                                                color: info.sandy
-                                                  ? "#fff"
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: 9,
+                                                backgroundColor: info.sandy
+                                                  ? "#2e7d32"
                                                   : isDark
-                                                    ? "#aaa"
-                                                    : "#666",
+                                                    ? "#333"
+                                                    : "#e5e5e5",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                opacity: isReadOnly ? 0.6 : 1,
                                               }}
                                             >
-                                              S
-                                            </Text>
-                                          </TouchableOpacity>
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  fontWeight: "bold",
+                                                  color: info.sandy
+                                                    ? "#fff"
+                                                    : isDark
+                                                      ? "#aaa"
+                                                      : "#666",
+                                                }}
+                                              >
+                                                S
+                                              </Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                              disabled={isReadOnly}
+                                              onPress={() => {
+                                                if (isReadOnly) return;
+                                                handleRegulationToggle(
+                                                  h.holeId,
+                                                  p.playerId,
+                                                );
+                                              }}
+                                              style={{
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: 9,
+                                                backgroundColor: info.r
+                                                  ? "#0284c7"
+                                                  : isDark
+                                                    ? "#333"
+                                                    : "#e5e5e5",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                opacity: isReadOnly ? 0.6 : 1,
+                                              }}
+                                            >
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  fontWeight: "bold",
+                                                  color: info.r
+                                                    ? "#fff"
+                                                    : isDark
+                                                      ? "#aaa"
+                                                      : "#666",
+                                                }}
+                                              >
+                                                R
+                                              </Text>
+                                            </TouchableOpacity>
+                                          </HStack>
 
                                           {info.score !== null &&
                                             (() => {
@@ -3174,6 +3302,7 @@ export default function ResumeScorecard() {
                                                   info.score,
                                                   h.par,
                                                   info.sandy,
+                                                  info.r,
                                                 );
                                               if (badgeVal > 0) {
                                                 return (
@@ -3182,6 +3311,7 @@ export default function ResumeScorecard() {
                                                       fontSize: 9,
                                                       color: "#f59e0b",
                                                       fontWeight: "bold",
+                                                      textAlign: "center",
                                                     }}
                                                   >
                                                     {badgeVal}x
@@ -3190,7 +3320,7 @@ export default function ResumeScorecard() {
                                               }
                                               return null;
                                             })()}
-                                        </HStack>
+                                        </VStack>
                                       )}
                                   </View>
 
@@ -3799,7 +3929,8 @@ export default function ResumeScorecard() {
                                       />
                                     </View>
 
-                                    {getScoringLabel() !== "System 36" &&
+                                    {!isPending &&
+                                      getScoringLabel() !== "System 36" &&
                                       getScoringLabel() !==
                                         "Net Score • Include Par 3" &&
                                       getScoringLabel() !==
@@ -3807,50 +3938,97 @@ export default function ResumeScorecard() {
                                       getScoringLabel() !== "Stableford" &&
                                       getScoringLabel() !==
                                         "Stableford • Exclude Par 3" && (
-                                        <HStack
+                                        <VStack
                                           style={{
                                             alignItems: "center",
-                                            gap: 4,
+                                            justifyContent: "center",
                                             marginTop: 4,
+                                            gap: 2,
                                           }}
                                         >
-                                          <TouchableOpacity
-                                            disabled={isReadOnly}
-                                            onPress={() => {
-                                              if (isReadOnly) return;
-                                              handleSandyToggle(
-                                                h.holeId,
-                                                p.playerId,
-                                              );
-                                            }}
+                                          <HStack
                                             style={{
-                                              width: 18,
-                                              height: 18,
-                                              borderRadius: 9,
-                                              backgroundColor: info.sandy
-                                                ? "#2e7d32"
-                                                : isDark
-                                                  ? "#333"
-                                                  : "#e5e5e5",
                                               alignItems: "center",
                                               justifyContent: "center",
-                                              opacity: isReadOnly ? 0.6 : 1,
+                                              gap: 4,
                                             }}
                                           >
-                                            <Text
+                                            <TouchableOpacity
+                                              disabled={isReadOnly}
+                                              onPress={() => {
+                                                if (isReadOnly) return;
+                                                handleSandyToggle(
+                                                  h.holeId,
+                                                  p.playerId,
+                                                );
+                                              }}
                                               style={{
-                                                fontSize: 9,
-                                                fontWeight: "bold",
-                                                color: info.sandy
-                                                  ? "#fff"
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: 9,
+                                                backgroundColor: info.sandy
+                                                  ? "#2e7d32"
                                                   : isDark
-                                                    ? "#aaa"
-                                                    : "#666",
+                                                    ? "#333"
+                                                    : "#e5e5e5",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                opacity: isReadOnly ? 0.6 : 1,
                                               }}
                                             >
-                                              S
-                                            </Text>
-                                          </TouchableOpacity>
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  fontWeight: "bold",
+                                                  color: info.sandy
+                                                    ? "#fff"
+                                                    : isDark
+                                                      ? "#aaa"
+                                                      : "#666",
+                                                }}
+                                              >
+                                                S
+                                              </Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                              disabled={isReadOnly}
+                                              onPress={() => {
+                                                if (isReadOnly) return;
+                                                handleRegulationToggle(
+                                                  h.holeId,
+                                                  p.playerId,
+                                                );
+                                              }}
+                                              style={{
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: 9,
+                                                backgroundColor: info.r
+                                                  ? "#0284c7"
+                                                  : isDark
+                                                    ? "#333"
+                                                    : "#e5e5e5",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                opacity: isReadOnly ? 0.6 : 1,
+                                              }}
+                                            >
+                                              <Text
+                                                style={{
+                                                  fontSize: 9,
+                                                  fontWeight: "bold",
+                                                  color: info.r
+                                                    ? "#fff"
+                                                    : isDark
+                                                      ? "#aaa"
+                                                      : "#666",
+                                                }}
+                                              >
+                                                R
+                                              </Text>
+                                            </TouchableOpacity>
+                                          </HStack>
 
                                           {info.score !== null &&
                                             (() => {
@@ -3859,6 +4037,7 @@ export default function ResumeScorecard() {
                                                   info.score,
                                                   h.par,
                                                   info.sandy,
+                                                  info.r,
                                                 );
                                               if (badgeVal > 0) {
                                                 return (
@@ -3867,6 +4046,7 @@ export default function ResumeScorecard() {
                                                       fontSize: 9,
                                                       color: "#f59e0b",
                                                       fontWeight: "bold",
+                                                      textAlign: "center",
                                                     }}
                                                   >
                                                     {badgeVal}x
@@ -3875,7 +4055,7 @@ export default function ResumeScorecard() {
                                               }
                                               return null;
                                             })()}
-                                        </HStack>
+                                        </VStack>
                                       )}
                                   </View>
 

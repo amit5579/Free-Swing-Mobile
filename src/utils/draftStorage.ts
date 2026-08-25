@@ -23,7 +23,11 @@ export interface ScorecardHole {
   userId?: number;
   handicap?: number;
   companionScoresJson?: string | null;
+  CompanionScoresJson?: string | null;
   companionSandysJson?: string | null;
+  CompanionSandysJson?: string | null;
+  companionRsJson?: string | null;
+  CompanionRsJson?: string | null;
   playingPartnersJson?: string | null;
   playingGroupRoundKey?: string | null;
   PlayingGroupRoundKey?: string | null;

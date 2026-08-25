@@ -196,31 +196,54 @@ export function computeSplitSixSummary(
 // ─────────────────────────────────────────────
 
 /**
- * Compute raw X points for a single player across all holes.
+ * Computes hole-level X-Points / Multiplier badge for a player
  */
-export function computePlayerXPoints(
-  holes: { score: number | null; par: number; sandy: boolean }[],
+export function getHoleXPoints(
+  score: number | null | undefined,
+  par: number,
+  isSandy: boolean,
+  isRegulation?: boolean
 ): number {
-  let total = 0;
-  holes.forEach((h) => {
-    if (h.score === null || h.score < 0) return;
-    const diff = h.score - h.par;
-    if (h.score === 1) {
-      total += 25; // Hole-in-One
-    } else if (diff <= -3) {
-      total += 15; // Albatross
-    } else if (diff === -2) {
-      total += 5; // Eagle
-    } else if (diff === -1) {
-      total += 2; // Birdie
-    }
-    // Sandy save on par-or-better hole
-    if (h.sandy && diff <= 0) {
-      total += 1;
-    }
-  });
-  return total;
+  if (score === null || score === undefined || score <= 0) return 0;
+  const diff = score - par;
+  let basePoints = 0;
+  if (score === 1) {
+    basePoints = 25; // Hole-in-One
+  } else if (diff <= -3) {
+    basePoints = 15; // Albatross
+  } else if (diff === -2) {
+    basePoints = 5;  // Eagle
+  } else if (diff === -1) {
+    basePoints = 2;  // Birdie
+  }
+  // Sandy bonus: +1 point ONLY if score is Par or better (diff <= 0 or hole-in-one)
+  let sandyBonus = 0;
+  if (isSandy && (score === 1 || diff <= 0)) {
+    sandyBonus = 1;
+  }
+  // Regulation bonus: +1 point ONLY if score is Par or better (diff <= 0 or hole-in-one)
+  let rBonus = 0;
+  if (isRegulation && (score === 1 || diff <= 0)) {
+    rBonus = 1;
+  }
+  return basePoints + sandyBonus + rBonus;
 }
+
+/**
+ * Computes raw total X-Points for a player across all 18 holes
+ */
+export function computePlayerTotalXPoints(
+  holes: { score: number | null; par: number; sandy: boolean; regulation?: boolean }[],
+): number {
+  return holes.reduce((total, h) => {
+    return total + getHoleXPoints(h.score, h.par, h.sandy, h.regulation);
+  }, 0);
+}
+
+/**
+ * Compute raw X points for a single player across all holes (alias for computePlayerTotalXPoints).
+ */
+export const computePlayerXPoints = computePlayerTotalXPoints;
 
 // ─────────────────────────────────────────────
 // Patiala X

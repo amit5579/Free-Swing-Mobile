@@ -737,6 +737,19 @@ const ScoreCard: React.FC = () => {
       }
     }
 
+    let companionRs: Record<string, boolean> = {};
+    const rawRsJson = (hole as any).companionRsJson || (hole as any).CompanionRsJson;
+    if (rawRsJson) {
+      try {
+        companionRs =
+          typeof rawRsJson === "string"
+            ? JSON.parse(rawRsJson)
+            : (rawRsJson as any);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     let rawScore = null;
     if (isPrimary) {
       rawScore =
@@ -759,6 +772,7 @@ const ScoreCard: React.FC = () => {
     }
 
     const sandy = companionSandys[playerId] === true;
+    const r = companionRs[playerId] === true;
 
     if (rawScore === null) {
       return {
@@ -766,6 +780,7 @@ const ScoreCard: React.FC = () => {
         netScore: null,
         stablefordPoints: null,
         sandy,
+        r,
       };
     }
 
@@ -805,6 +820,7 @@ const ScoreCard: React.FC = () => {
       netScore,
       stablefordPoints,
       sandy,
+      r,
     };
   };
 
@@ -812,6 +828,7 @@ const ScoreCard: React.FC = () => {
     score: number | null,
     par: number,
     isSandy: boolean,
+    isRegulation?: boolean,
   ) => {
     if (score === null || score < 0) return 0;
     const diff = score - par;
@@ -829,10 +846,16 @@ const ScoreCard: React.FC = () => {
     }
 
     let sandyBonus = 0;
-    if (isSandy && diff <= 0) {
+    if (isSandy && (score === 1 || diff <= 0)) {
       sandyBonus = 1;
     }
-    return basePoints + sandyBonus;
+
+    let rBonus = 0;
+    if (isRegulation && (score === 1 || diff <= 0)) {
+      rBonus = 1;
+    }
+
+    return basePoints + sandyBonus + rBonus;
   };
 
   const getPlayerTotals = (holesList: any[], partner: any) => {
@@ -2302,6 +2325,29 @@ const ScoreCard: React.FC = () => {
                                       </View>
                                     )}
 
+                                    {info.r && shouldShowSandyXControls() && (
+                                      <View
+                                        style={{
+                                          width: 18,
+                                          height: 18,
+                                          borderRadius: 9,
+                                          backgroundColor: "#0284c7",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <Text
+                                          style={{
+                                            fontSize: 9,
+                                            fontWeight: "bold",
+                                            color: "#fff",
+                                          }}
+                                        >
+                                          R
+                                        </Text>
+                                      </View>
+                                    )}
+
                                     {info.score !== null &&
                                       shouldShowSandyXControls() &&
                                       (() => {
@@ -2309,6 +2355,7 @@ const ScoreCard: React.FC = () => {
                                           info.score,
                                           h.par,
                                           info.sandy,
+                                          info.r,
                                         );
                                         if (badgeVal > 0) {
                                           return (
