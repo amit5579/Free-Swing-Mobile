@@ -176,6 +176,7 @@ export interface ScoreHistoryItem {
   netScore: number | null;
   par: number;
   isDQ: boolean;
+  isDisqualified: boolean;
   tournamentId: number | null;
 }
 

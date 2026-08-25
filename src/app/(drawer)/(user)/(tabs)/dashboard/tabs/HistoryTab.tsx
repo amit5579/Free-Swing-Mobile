@@ -80,7 +80,7 @@ export function HistoryTab({
         net: item.netScore,
         par: item.par,
         isTournament: !!item.tournamentId,
-        isDQ: Boolean(item.isDQ ?? item.IsDQ ?? item.isDisqualified ?? item.IsDisqualified ?? false),
+        isDQ: Boolean(item.isDQ ?? item.isDisqualified ?? false),
       }));
 
       setHistory(mapped);
