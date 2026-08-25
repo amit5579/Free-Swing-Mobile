@@ -40,10 +40,10 @@ export default function PlayScoreCard() {
 
   const { tournamentId, teeBoxId, courseId, scoringType } =
     useLocalSearchParams();
-  console.log("tournamentId", tournamentId);
-  console.log("teeBoxId", teeBoxId);
-  console.log("courseId", courseId);
-  console.log("scoringType", scoringType);
+  // console.log("tournamentId", tournamentId);
+  // console.log("teeBoxId", teeBoxId);
+  // console.log("courseId", courseId);
+  // console.log("scoringType", scoringType);
 
   const dispatch = useAppDispatch();
 
@@ -446,11 +446,11 @@ export default function PlayScoreCard() {
         matchScoringType: matchScoringType || h.matchScoringType || null,
         nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
       }));
-      console.log(
-        "Triggering debounced save for new round tournamentId:",
-        tournamentId,
-      );
-      console.log("Payload is ", payload);
+      // console.log(
+      //   "Triggering debounced save for new round tournamentId:",
+      //   tournamentId,
+      // );
+      // console.log("Payload is ", payload);
       updateHoleScoresApi(
         tournamentId
           ? Number(tournamentId)
@@ -589,7 +589,7 @@ export default function PlayScoreCard() {
       matchScoringType: matchScoringType || h.matchScoringType || null,
       nassauStartingNine: nassauStartingNine || h.nassauStartingNine || null,
     }));
-    console.log("pplldd", payload);
+    // console.log("pplldd", payload);
     try {
       await updateHoleScoresApi(
         tournamentId
@@ -640,7 +640,7 @@ export default function PlayScoreCard() {
             nassauStartingNine:
               nassauStartingNine || h.nassauStartingNine || null,
           }));
-        console.log("finishPayload", finishPayload);
+        // console.log("finishPayload", finishPayload);
         await updateHoleScoresApi(
           tournamentId
             ? Number(tournamentId)
@@ -698,7 +698,7 @@ export default function PlayScoreCard() {
 
   const handleFinishRound = async () => {
     setVisible(false);
-    await saveRound(true);
+    await saveRound(true, false);
     Toast.show({
       type: "success",
       text1: "Round Finished",
@@ -1088,7 +1088,7 @@ export default function PlayScoreCard() {
     }
     return 0;
   };
-// playerid , isprimary
+  // playerid , isprimary
   const getPlayerNetScore = (h: any, p: any) => {
     const raw = getPlayerScore(h, p);
     if (raw === null || raw === undefined || raw < 0) return null;
@@ -1123,11 +1123,12 @@ export default function PlayScoreCard() {
     isPrimary: boolean,
     type: "score" | "net" | "pts",
   ) => {
-    const playerObj =
-      roundPlayers.find((rp: any) => rp.playerId === playerId) || {
-        playerId,
-        isPrimary,
-      };
+    const playerObj = roundPlayers.find(
+      (rp: any) => rp.playerId === playerId,
+    ) || {
+      playerId,
+      isPrimary,
+    };
     return holes.reduce((sum, h) => {
       let s;
       if (type === "score") s = getPlayerScore(h, playerObj);

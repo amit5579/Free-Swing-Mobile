@@ -1,12 +1,8 @@
 import {
+  getScorecardDetails,
   ScorecardHoleApi as ScorecardHole,
   saveScorecardApi,
 } from "@/api/modules/admin/dashboard.api";
-import {
-  getScorecardDetails,
-  getDelegationStatuses,
-  updateHoleScoresApi,
-} from "@/api/modules/dashboard.api";
 import {
   calculateSplitSixPoints,
   computeHighLowSummary,
@@ -16,8 +12,8 @@ import {
   formatNassauHousesSpaced,
   computeSplitSixSummary,
 } from "@/utils/scoringEngine";
-import { useLocalSearchParams, useNavigation, useFocusEffect, useRouter } from "expo-router";
-import React, { useEffect, useState, useLayoutEffect, useRef, useCallback } from "react";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -30,6 +26,8 @@ import {
   BackHandler,
   TouchableOpacity,
 } from "react-native";
+import { useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   SafeAreaView,
@@ -40,6 +38,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { updateScorecardApi } from "@/api/modules/admin/dashboard.api";
 import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
+import { useRouter } from "expo-router";
 import { HStack } from "@/components/hstack";
 import { VStack } from "@/components/vstack";
 import { ThemedText } from "@/components/themed-text";
@@ -88,229 +87,7 @@ const TournamentHistory: React.FC = () => {
     fetchRole();
   }, []);
 
-  const [holes, setHoles] = useState<ScorecardHole[]>([]);
-  const [textScores, setTextScores] = useState<Record<number, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isStableford, setIsStableford] = useState(false);
-  const [displayFront9, setDisplayFront9] = useState(true);
-  const [displayBack9, setDisplayBack9] = useState(true);
-  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
-  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
-    number | null
-  >(null);
-
-  const [delegationStatuses, setDelegationStatuses] = useState<Record<number, string>>({});
-  const [userId, setUserId] = useState<number | null>(null);
-
-  const textScoresRef = useRef<Record<number, string>>({});
-  const holesRef = useRef<ScorecardHole[]>([]);
-  const inputRefs = useRef<any[]>([]);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentScorecardIdRef = useRef<number | string | null>(
-    scorecardId ? Number(scorecardId) : null,
-  );
-
-  useEffect(() => {
-    textScoresRef.current = textScores;
-  }, [textScores]);
-
-  useEffect(() => {
-    holesRef.current = holes;
-  }, [holes]);
-
-  useEffect(() => {
-    const fetchUserId = async () => {
-      const stored = await AsyncStorage.getItem("userId");
-      if (stored) setUserId(Number(stored));
-    };
-    fetchUserId();
-  }, []);
-
-  // Multiplayer layout state variables
-  const [partners, setPartners] = useState<any[]>([]);
-  const [companionHandicaps, setCompanionHandicaps] = useState<
-    Record<number, number>
-  >({});
-  const [isHighLow, setIsHighLow] = useState(false);
-  const [isSplit6, setIsSplit6] = useState(false);
-  const [isNassauBest, setIsNassauBest] = useState(false);
-  const [isNassauCombined, setIsNassauCombined] = useState(false);
-  const [isGross, setIsGross] = useState(false);
-  const [handicap, setHandicap] = useState<any>();
-  const isNassau = isNassauBest || isNassauCombined;
-
-  const roundContextId =
-    holes.length > 0
-      ? (holes[0] as any)?.playingGroupRoundKey ||
-        (holes[0] as any)?.PlayingGroupRoundKey ||
-        null
-      : null;
-
-  const groupScorerId = (() => {
-    if (!roundContextId) return null;
-    const parts = String(roundContextId).split("_");
-    if (parts.length >= 2) {
-      const parsed = parseInt(parts[1], 10);
-      return isNaN(parsed) ? null : parsed;
-    }
-    return null;
-  })();
-
-  const isCompanionView = Boolean(
-    roundContextId &&
-    groupScorerId !== null &&
-    userId !== null &&
-    groupScorerId !== userId,
-  );
-
-  const isRoundCompleted = Boolean(
-    holes.length > 0 && (holes[0].isCompleted || (holes[0] as any).IsCompleted),
-  );
-
-  const isReadOnly = isRoundCompleted || isCompanionView;
-
-  // Polling for live scoring and delegation statuses
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    const fetchDelegationStatuses = async () => {
-      if (roundContextId) {
-        try {
-          const statuses = await getDelegationStatuses(String(roundContextId));
-          const newStatuses: Record<number, string> = {};
-          if (Array.isArray(statuses)) {
-            statuses.forEach((s: any) => {
-              newStatuses[s.targetUserId] = s.status;
-            });
-          }
-          setDelegationStatuses(newStatuses);
-        } catch (e) {
-          console.error("Polling delegation statuses error:", e);
-        }
-      }
-    };
-
-    fetchDelegationStatuses(); // Fetch immediately on mount
-
-    const pollIntervalTime = isCompanionView ? 5000 : 10000;
-
-    interval = setInterval(async () => {
-      // 1. Poll delegation statuses
-      await fetchDelegationStatuses();
-
-      // 2. Poll live scorecard data (silent load)
-      const activeId =
-        currentScorecardIdRef.current ||
-        scorecardId ||
-        (holesRef.current[0] as any)?.scorecardId ||
-        tournamentId;
-
-      if (activeId) {
-        try {
-          const liveData = await getScorecardDetails(Number(activeId));
-          if (liveData && liveData.length > 0) {
-            setHoles(liveData as any);
-            holesRef.current = liveData as any;
-            setTextScores((prev: any) => {
-              const newScores = isReadOnly ? {} : { ...prev };
-              liveData.forEach((h: any) => {
-                if (h.score !== null && h.score !== undefined && h.score >= 0) {
-                  if (isReadOnly || newScores[h.holeId] === undefined) {
-                    newScores[h.holeId] = String(h.score);
-                  }
-                }
-              });
-              textScoresRef.current = newScores;
-              return newScores;
-            });
-          }
-        } catch (e) {
-          console.error("Polling live tournament scorecard error:", e);
-        }
-      }
-    }, pollIntervalTime);
-
-    return () => clearInterval(interval);
-  }, [scorecardId, tournamentId, roundContextId, isReadOnly, isCompanionView]);
-
-  const handleBack = useCallback(async () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
-    const activeId =
-      currentScorecardIdRef.current ||
-      scorecardId ||
-      (holesRef.current[0] as any)?.scorecardId ||
-      tournamentId;
-
-    if (holesRef.current && holesRef.current.length > 0 && activeId) {
-      const firstHole = holesRef.current[0] as any;
-      const playingGroupRoundKey =
-        firstHole?.playingGroupRoundKey ||
-        firstHole?.PlayingGroupRoundKey ||
-        undefined;
-      const playingPartnersJson =
-        partners.length > 0 ? JSON.stringify(partners) : undefined;
-      const storedUserId = await AsyncStorage.getItem("userId");
-      const currentUserId =
-        firstHole?.userId || (storedUserId ? Number(storedUserId) : null);
-      const startingNine =
-        firstHole?.nassauStartingNine ||
-        firstHole?.NassauStartingNine ||
-        null;
-
-      const payload = holesRef.current.map((h: any) => ({
-        userId: currentUserId ? Number(currentUserId) : h.userId || null,
-        courseId: h.courseId || null,
-        courseHalf: h.courseHalf || null,
-        teeBoxId: h.teeBoxId || null,
-        tournamentId: h.tournamentId || Number(tournamentId) || null,
-        holeId: h.holeId,
-        score: h.score === undefined || h.score === null ? null : h.score,
-        stablefordPoints: h.stablefordPoints ?? null,
-        roundNumber: h.roundNumber || 1,
-        isCompleted: h.isCompleted || false,
-        isExcluded: h.isExcluded || false,
-        matchScoringType: isSplit6
-          ? "split-six"
-          : isHighLow
-            ? "high-low"
-            : isNassauBest
-              ? "nassau-best"
-              : isNassauCombined
-                ? "nassau-combined"
-                : isGross
-                  ? "gross"
-                  : h.matchScoringType || null,
-        companionScoresJson: h.companionScoresJson || null,
-        companionSandysJson:
-          h.companionSandysJson || h.CompanionSandysJson || null,
-        nassauStartingNine: startingNine,
-        NassauStartingNine: startingNine,
-        groupName: h.groupName || h.GroupName || null,
-        ...(playingGroupRoundKey
-          ? {
-              playingGroupRoundKey,
-              PlayingGroupRoundKey: playingGroupRoundKey,
-            }
-          : {}),
-        ...(playingPartnersJson
-          ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
-          : {}),
-      }));
-
-      try {
-        await updateHoleScoresApi(activeId, payload);
-      } catch (err) {
-        console.error("Final tournament save failed:", err);
-      }
-    }
-
+  const handleBack = useCallback(() => {
     const normalizedRole = role?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
     if (normalizedRole === "subadmin") {
       router.back();
@@ -319,18 +96,7 @@ const TournamentHistory: React.FC = () => {
     } else {
       router.back();
     }
-  }, [
-    role,
-    router,
-    scorecardId,
-    tournamentId,
-    partners,
-    isSplit6,
-    isHighLow,
-    isNassauBest,
-    isNassauCombined,
-    isGross,
-  ]);
+  }, [role, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -347,6 +113,32 @@ const TournamentHistory: React.FC = () => {
       return () => backHandler.remove();
     }, [handleBack]),
   );
+
+  const [holes, setHoles] = useState<ScorecardHole[]>([]);
+  const [textScores, setTextScores] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isStableford, setIsStableford] = useState(false);
+  const [displayFront9, setDisplayFront9] = useState(true);
+  const [displayBack9, setDisplayBack9] = useState(true);
+  const [isDetailsVisible, setIsDetailsVisible] = useState(true);
+  const [activeRangefinderHole, setActiveRangefinderHole] = useState<
+    number | null
+  >(null);
+
+  // Multiplayer layout state variables
+  const [partners, setPartners] = useState<any[]>([]);
+  const [companionHandicaps, setCompanionHandicaps] = useState<
+    Record<number, number>
+  >({});
+  const [isHighLow, setIsHighLow] = useState(false);
+  const [isSplit6, setIsSplit6] = useState(false);
+  const [isNassauBest, setIsNassauBest] = useState(false);
+  const [isNassauCombined, setIsNassauCombined] = useState(false);
+  const [isGross, setIsGross] = useState(false);
+  const [handicap, setHandicap] = useState<any>();
+  const isNassau = isNassauBest || isNassauCombined;
 
   const isSystem36Hole = (h: any) =>
     h.matchScoringType === "system-36" ||
@@ -409,7 +201,11 @@ const TournamentHistory: React.FC = () => {
 
   const shouldShowSandyXControls = () => {
     const label = getScoringLabel();
-    return !label.startsWith("Net Score") && !label.startsWith("Stableford") && label !== "System 36";
+    return (
+      !label.startsWith("Net Score") &&
+      !label.startsWith("Stableford") &&
+      label !== "System 36"
+    );
   };
 
   useEffect(() => {
@@ -436,8 +232,8 @@ const TournamentHistory: React.FC = () => {
         if (data.length > 0) {
           try {
             const hc = await getHandicapDetails(
-              data[0].userId!,
-              data[0].teeBoxId!,
+              data[0].userId,
+              data[0].teeBoxId,
             );
             setHandicap(getDisplayHandicap(hc));
           } catch (e) {
@@ -475,7 +271,6 @@ const TournamentHistory: React.FC = () => {
         });
 
         setHoles(normalizedData);
-        holesRef.current = normalizedData;
 
         const hasStablefordPoints = data.some(
           (h) =>
@@ -490,7 +285,6 @@ const TournamentHistory: React.FC = () => {
           }
         });
         setTextScores(initialText);
-        textScoresRef.current = initialText;
 
         // Parse partners
         let parsedPartners: any[] = [];
@@ -1045,86 +839,6 @@ const TournamentHistory: React.FC = () => {
     return { p1Total, p2Total, p3Total };
   };
 
-  const saveToServer = async (holesToSave: ScorecardHole[]) => {
-    const activeId =
-      currentScorecardIdRef.current ||
-      scorecardId ||
-      (holesToSave[0] as any)?.scorecardId ||
-      tournamentId;
-    if (!activeId) return;
-
-    const performSave = async () => {
-      try {
-        const firstHole = holesToSave[0] as any;
-        const playingGroupRoundKey =
-          firstHole?.playingGroupRoundKey ||
-          firstHole?.PlayingGroupRoundKey ||
-          undefined;
-        const playingPartnersJson =
-          partners.length > 0 ? JSON.stringify(partners) : undefined;
-        const storedUserId = await AsyncStorage.getItem("userId");
-        const currentUserId =
-          firstHole?.userId || (storedUserId ? Number(storedUserId) : null);
-        const startingNine =
-          firstHole?.nassauStartingNine ||
-          firstHole?.NassauStartingNine ||
-          null;
-
-        const payload = holesToSave.map((h: any) => ({
-          userId: currentUserId ? Number(currentUserId) : h.userId || null,
-          courseId: h.courseId || null,
-          courseHalf: h.courseHalf || null,
-          teeBoxId: h.teeBoxId || null,
-          tournamentId: h.tournamentId || Number(tournamentId) || null,
-          holeId: h.holeId,
-          score: h.score === undefined || h.score === null ? null : h.score,
-          stablefordPoints: h.stablefordPoints ?? null,
-          roundNumber: h.roundNumber || 1,
-          isCompleted: h.isCompleted || false,
-          isExcluded: h.isExcluded || false,
-          matchScoringType: isSplit6
-            ? "split-six"
-            : isHighLow
-              ? "high-low"
-              : isNassauBest
-                ? "nassau-best"
-                : isNassauCombined
-                  ? "nassau-combined"
-                  : isGross
-                    ? "gross"
-                    : h.matchScoringType || null,
-          companionScoresJson: h.companionScoresJson || null,
-          companionSandysJson:
-            h.companionSandysJson || h.CompanionSandysJson || null,
-          nassauStartingNine: startingNine,
-          NassauStartingNine: startingNine,
-          groupName: h.groupName || h.GroupName || null,
-          ...(playingGroupRoundKey
-            ? {
-                playingGroupRoundKey,
-                PlayingGroupRoundKey: playingGroupRoundKey,
-              }
-            : {}),
-          ...(playingPartnersJson
-            ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
-            : {}),
-        }));
-
-        await updateHoleScoresApi(activeId, payload);
-        return true;
-      } catch (err) {
-        console.error("Sync failed for tournament scorecard:", activeId, err);
-        return false;
-      }
-    };
-
-    const success = await performSave();
-    if (!success) {
-      console.log("API failed, will retry in 2 seconds...");
-      setTimeout(() => saveToServer(holesToSave), 2000);
-    }
-  };
-
   const handleScoreChange = (holeId: number, text: string) => {
     let formattedText = text.replace(/[^0-9]/g, "");
 
@@ -1134,224 +848,65 @@ const TournamentHistory: React.FC = () => {
       formattedText = num.toString();
     }
 
-    textScoresRef.current[holeId] = formattedText;
     setTextScores((prev) => ({ ...prev, [holeId]: formattedText }));
-    const score = formattedText === "" ? null : parseInt(formattedText, 10);
+    const score = formattedText === "" ? -1 : parseInt(formattedText, 10);
 
-    const updatedHoles = holesRef.current.map((h: any) => {
-      if (h.holeId === holeId) {
-        const strokes = calculateStrokes(displayHandicap, h.strokeIndex);
-        const validScore = score;
-        const netScore =
-          validScore !== null && validScore >= 0 ? validScore - strokes : 0;
-        const stablefordPoints =
-          validScore !== null && validScore > 0
-            ? isSystem36
-              ? validScore <= h.par
-                ? 2
-                : validScore === h.par + 1
-                  ? 1
-                  : 0
-              : isStableford
-                ? Math.max(0, h.par - netScore + 2)
-                : h.stablefordPoints
-            : isSystem36 || isStableford
-              ? 0
-              : null;
-
-        let companionScores: Record<string, number | null> = {};
-        if (h.companionScoresJson) {
-          try {
-            companionScores =
-              typeof h.companionScoresJson === "string"
-                ? JSON.parse(h.companionScoresJson)
-                : h.companionScoresJson;
-          } catch (e) {}
+    setHoles((prev) =>
+      prev.map((h: any) => {
+        if (h.holeId === holeId) {
+          const strokes = calculateStrokes(displayHandicap, h.strokeIndex);
+          const netScore = score > 0 ? score - strokes : 0;
+          const stablefordPoints =
+            score > 0
+              ? isSystem36
+                ? score <= h.par
+                  ? 2
+                  : score === h.par + 1
+                    ? 1
+                    : 0
+                : Math.max(0, h.par - netScore + 2)
+              : 0;
+          return {
+            ...h,
+            score: score >= 0 ? score : 0,
+            netScore,
+            stablefordPoints,
+          };
         }
-        const primaryPartner = partners.find((p) => p.isPrimary);
-        if (primaryPartner) {
-          companionScores[primaryPartner.playerId] = validScore;
-        } else {
-          companionScores["p1"] = validScore;
-        }
-
-        return {
-          ...h,
-          score: validScore,
-          netScore,
-          stablefordPoints,
-          companionScoresJson: JSON.stringify(companionScores),
-        };
-      }
-      return h;
-    });
-
-    setHoles(updatedHoles);
-    holesRef.current = updatedHoles;
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      saveToServer(updatedHoles);
-    }, 500);
-
-    if (formattedText.length >= 2) {
-      const flatHoles = holesRef.current;
-      const currentIndex = flatHoles.findIndex((h: any) => h.holeId === holeId);
-      const nextIndex = currentIndex + 1;
-      if (nextIndex < flatHoles.length) {
-        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-        inputRefs.current[nextIndex]?.focus();
-      }
-    }
-
-    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-    if (formattedText !== "") {
-      focusTimeoutRef.current = setTimeout(() => {
-        const flatHoles = holesRef.current;
-        const currentIndex = flatHoles.findIndex((h: any) => h.holeId === holeId);
-        const nextIndex = currentIndex + 1;
-        if (nextIndex < flatHoles.length) {
-          inputRefs.current[nextIndex]?.focus();
-        }
-      }, 1500);
-    }
+        return h;
+      }),
+    );
   };
 
-  const handleMultiplayerScoreChange = (
-    holeId: number,
-    playerId: string,
-    value: string,
-    flatIndex: number,
-  ) => {
-    let finalVal: number | null = null;
-    if (value !== "") {
-      if (!/^\d+$/.test(value)) {
-        return;
-      }
-      finalVal = Number(value);
-      if (finalVal > 15) {
-        return;
-      }
-    }
+  const handleSandyToggle = (holeId: number, playerId: string) => {
+    setHoles((prev) =>
+      prev.map((h: any) => {
+        if (h.holeId !== holeId) return h;
 
-    const partner = partners.find((p) => p.playerId === playerId);
-    const isPrimary = partner ? !!partner.isPrimary : playerId === "p1";
-
-    const updatedHoles = holesRef.current.map((h: any) => {
-      if (h.holeId === holeId) {
-        let companionScores: Record<string, number | null> = {};
-        if (h.companionScoresJson) {
+        const rawCompanionSandys =
+          h.companionSandysJson ?? h.CompanionSandysJson;
+        let companionSandys: Record<string, boolean> = {};
+        if (rawCompanionSandys) {
           try {
-            companionScores =
-              typeof h.companionScoresJson === "string"
-                ? JSON.parse(h.companionScoresJson)
-                : h.companionScoresJson;
+            companionSandys =
+              typeof rawCompanionSandys === "string"
+                ? JSON.parse(rawCompanionSandys)
+                : rawCompanionSandys;
           } catch (e) {
             console.error(e);
           }
         }
-        companionScores[playerId] = finalVal;
 
-        const newHole = {
+        companionSandys[playerId] = !companionSandys[playerId];
+        const companionSandysJson = JSON.stringify(companionSandys);
+
+        return {
           ...h,
-          companionScoresJson: JSON.stringify(companionScores),
+          companionSandysJson,
+          CompanionSandysJson: companionSandysJson,
         };
-
-        if (isPrimary) {
-          newHole.score = finalVal;
-          const strokes = calculateStrokes(
-            Number(displayHandicap || 0),
-            h.strokeIndex,
-          );
-          newHole.netScore =
-            finalVal !== null && finalVal >= 0 ? finalVal - strokes : 0;
-          if (isStableford) {
-            const pts = h.par - newHole.netScore + 2;
-            newHole.stablefordPoints =
-              finalVal !== null && finalVal > 0 ? (pts > 0 ? pts : 0) : null;
-          } else if (isSystem36) {
-            newHole.stablefordPoints =
-              finalVal !== null && finalVal > 0
-                ? finalVal <= h.par
-                  ? 2
-                  : finalVal === h.par + 1
-                    ? 1
-                    : 0
-                : null;
-          }
-        }
-
-        return newHole;
-      }
-      return h;
-    });
-
-    setHoles(updatedHoles);
-    holesRef.current = updatedHoles;
-
-    const newTextScores = { ...textScoresRef.current };
-    if (isPrimary) {
-      newTextScores[holeId] = value;
-      setTextScores(newTextScores);
-      textScoresRef.current = newTextScores;
-    }
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      saveToServer(updatedHoles);
-    }, 500);
-
-    let nextIndex = flatIndex + 1;
-    const totalInputs = holesRef.current.length * partners.length;
-
-    if (value.length >= 2) {
-      if (nextIndex < totalInputs) {
-        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-        inputRefs.current[nextIndex]?.focus();
-      }
-    }
-
-    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-    if (value !== "") {
-      focusTimeoutRef.current = setTimeout(() => {
-        if (nextIndex < totalInputs) {
-          inputRefs.current[nextIndex]?.focus();
-        }
-      }, 1500);
-    }
-  };
-
-  const handleSandyToggle = (holeId: number, playerId: string) => {
-    const updatedHoles = holesRef.current.map((h: any) => {
-      if (h.holeId !== holeId) return h;
-
-      const rawCompanionSandys =
-        h.companionSandysJson ?? h.CompanionSandysJson;
-      let companionSandys: Record<string, boolean> = {};
-      if (rawCompanionSandys) {
-        try {
-          companionSandys =
-            typeof rawCompanionSandys === "string"
-              ? JSON.parse(rawCompanionSandys)
-              : rawCompanionSandys;
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      companionSandys[playerId] = !companionSandys[playerId];
-      const companionSandysJson = JSON.stringify(companionSandys);
-
-      return {
-        ...h,
-        companionSandysJson,
-        CompanionSandysJson: companionSandysJson,
-      };
-    });
-
-    setHoles(updatedHoles);
-    holesRef.current = updatedHoles;
-    saveToServer(updatedHoles);
+      }),
+    );
   };
 
   const handleSave = async () => {
@@ -2002,7 +1557,10 @@ const TournamentHistory: React.FC = () => {
                     >
                       {h.par}
                     </Text>
-                    <View className="flex-1 items-center justify-center relative">
+                    <View
+                      className="flex-1 items-center justify-center relative"
+                      pointerEvents="none"
+                    >
                       {renderScoreIndicator(
                         h.score ?? null,
                         h.par,
@@ -2010,9 +1568,6 @@ const TournamentHistory: React.FC = () => {
                         textScores[h.holeId] || "",
                       )}
                       <TextInput
-                        ref={(el) => {
-                          inputRefs.current[index] = el;
-                        }}
                         style={{
                           width: 50,
                           height: 36,
@@ -2028,14 +1583,8 @@ const TournamentHistory: React.FC = () => {
                           fontWeight: "bold",
                           fontSize: 14,
                         }}
-                        editable={true}
-                        keyboardType="numeric"
+                        editable={false}
                         value={textScores[h.holeId] || ""}
-                        onChangeText={(val) => handleScoreChange(h.holeId, val)}
-                        onBlur={() => {
-                          if (focusTimeoutRef.current)
-                            clearTimeout(focusTimeoutRef.current);
-                        }}
                         placeholder="-"
                         placeholderTextColor={isDark ? "#666" : "#999"}
                       />
@@ -2151,7 +1700,10 @@ const TournamentHistory: React.FC = () => {
                     >
                       {h.par}
                     </Text>
-                    <View className="flex-1 items-center justify-center relative">
+                    <View
+                      className="flex-1 items-center justify-center relative"
+                      pointerEvents="none"
+                    >
                       {renderScoreIndicator(
                         h.score ?? null,
                         h.par,
@@ -2159,9 +1711,6 @@ const TournamentHistory: React.FC = () => {
                         textScores[h.holeId] || "",
                       )}
                       <TextInput
-                        ref={(el) => {
-                          inputRefs.current[front9.length + index] = el;
-                        }}
                         style={{
                           width: 50,
                           height: 36,
@@ -2177,14 +1726,8 @@ const TournamentHistory: React.FC = () => {
                           fontWeight: "bold",
                           fontSize: 14,
                         }}
-                        editable={true}
-                        keyboardType="numeric"
+                        editable={false}
                         value={textScores[h.holeId] || ""}
-                        onChangeText={(val) => handleScoreChange(h.holeId, val)}
-                        onBlur={() => {
-                          if (focusTimeoutRef.current)
-                            clearTimeout(focusTimeoutRef.current);
-                        }}
                         placeholder="-"
                         placeholderTextColor={isDark ? "#666" : "#999"}
                       />
@@ -2618,7 +2161,14 @@ const TournamentHistory: React.FC = () => {
                               : "rgba(255, 255, 255, 0.7)",
                           }}
                         >
-                          <View style={{ width: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <View
+                            style={{
+                              width: 50,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
                             <ThemedText style={{ textAlign: "center" }}>
                               {h.holeNumber}
                             </ThemedText>
@@ -2659,39 +2209,6 @@ const TournamentHistory: React.FC = () => {
 
                           {partners.map((p, pIndex) => {
                             const info = getPlayerHoleInfo(h, p);
-                            const flatIndex = index * partners.length + pIndex;
-                            let textVal = "";
-                            let companionScores: Record<
-                              string,
-                              number | null
-                            > = {};
-                            if (h.companionScoresJson) {
-                              try {
-                                companionScores =
-                                  typeof h.companionScoresJson === "string"
-                                    ? JSON.parse(h.companionScoresJson)
-                                    : h.companionScoresJson;
-                              } catch (e) {}
-                            }
-                            if (p.isPrimary) {
-                              textVal =
-                                textScores[h.holeId] !== undefined
-                                  ? textScores[h.holeId]
-                                  : h.score !== null && h.score !== undefined
-                                    ? String(h.score)
-                                    : companionScores[p.playerId] !==
-                                          undefined &&
-                                        companionScores[p.playerId] !== null
-                                      ? String(companionScores[p.playerId])
-                                      : "";
-                            } else {
-                              textVal =
-                                companionScores[p.playerId] !== undefined &&
-                                companionScores[p.playerId] !== null
-                                  ? String(companionScores[p.playerId])
-                                  : "";
-                            }
-
                             return (
                               <View
                                 key={p.playerId}
@@ -2717,43 +2234,21 @@ const TournamentHistory: React.FC = () => {
                                       info.score,
                                       h.par,
                                       isDark,
-                                      textVal,
+                                      info.score !== null
+                                        ? String(info.score)
+                                        : "",
                                     )}
-                                    <TextInput
-                                      ref={(el) => {
-                                        inputRefs.current[flatIndex] = el;
-                                      }}
-                                      editable={true}
-                                      keyboardType="numeric"
-                                      value={textVal}
-                                      onChangeText={(val) => {
-                                        handleMultiplayerScoreChange(
-                                          h.holeId,
-                                          p.playerId,
-                                          val,
-                                          flatIndex,
-                                        );
-                                      }}
-                                      onBlur={() => {
-                                        if (focusTimeoutRef.current)
-                                          clearTimeout(focusTimeoutRef.current);
-                                      }}
-                                      placeholder="-"
-                                      placeholderTextColor={
-                                        isDark ? "#666" : "#999"
-                                      }
+                                    <Text
                                       style={{
-                                        width: 30,
-                                        height: 30,
-                                        textAlign: "center",
                                         color: isDark ? "#fff" : "#000",
                                         fontWeight: "700",
                                         fontSize: 13,
+                                        textAlign: "center",
                                         zIndex: 10,
-                                        backgroundColor: "transparent",
-                                        padding: 0,
                                       }}
-                                    />
+                                    >
+                                      {info.score !== null ? info.score : "-"}
+                                    </Text>
                                   </View>
 
                                   {shouldShowSandyXControls() && (
@@ -2764,41 +2259,6 @@ const TournamentHistory: React.FC = () => {
                                         marginTop: 4,
                                       }}
                                     >
-                                      <TouchableOpacity
-                                        onPress={() => {
-                                          handleSandyToggle(
-                                            h.holeId,
-                                            p.playerId,
-                                          );
-                                        }}
-                                        style={{
-                                          width: 18,
-                                          height: 18,
-                                          borderRadius: 9,
-                                          backgroundColor: info.sandy
-                                            ? "#2e7d32"
-                                            : isDark
-                                              ? "#333"
-                                              : "#e5e5e5",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                        }}
-                                      >
-                                        <Text
-                                          style={{
-                                            fontSize: 10,
-                                            fontWeight: "bold",
-                                            color: info.sandy
-                                              ? "#fff"
-                                              : isDark
-                                                ? "#888"
-                                                : "#666",
-                                          }}
-                                        >
-                                          S
-                                        </Text>
-                                      </TouchableOpacity>
-
                                       {info.score !== null &&
                                         (() => {
                                           const badgeVal = getBadgeMultiplier(
