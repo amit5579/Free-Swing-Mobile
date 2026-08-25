@@ -394,6 +394,18 @@ export default function ScoreCardUserPage() {
       }
     }
 
+    let companionRs: Record<string, boolean> = {};
+    if (hole.companionRsJson || hole.CompanionRsJson) {
+      try {
+        companionRs =
+          typeof (hole.companionRsJson || hole.CompanionRsJson) === "string"
+            ? JSON.parse(hole.companionRsJson || hole.CompanionRsJson)
+            : (hole.companionRsJson || hole.CompanionRsJson);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     let rawScore = null;
     if (isPrimary) {
       rawScore =
@@ -416,6 +428,7 @@ export default function ScoreCardUserPage() {
     }
 
     const sandy = companionSandys[playerId] === true;
+    const r = companionRs[playerId] === true;
 
     if (rawScore === null) {
       return {
@@ -423,6 +436,7 @@ export default function ScoreCardUserPage() {
         netScore: null,
         stablefordPoints: null,
         sandy,
+        r,
       };
     }
 
@@ -456,6 +470,7 @@ export default function ScoreCardUserPage() {
       netScore,
       stablefordPoints,
       sandy,
+      r,
     };
   };
 
@@ -644,6 +659,7 @@ export default function ScoreCardUserPage() {
             userId: Number(userId),
             companionScoresJson: h.companionScoresJson || null,
             companionSandysJson: h.companionSandysJson || null,
+            companionRsJson: h.companionRsJson || null,
             nassauStartingNine: nassauStartingNine,
             NassauStartingNine: nassauStartingNine,
             ...(playingGroupRoundKey
@@ -736,6 +752,7 @@ export default function ScoreCardUserPage() {
       userId: Number(userId),
       companionScoresJson: h.companionScoresJson || null,
       companionSandysJson: h.companionSandysJson || null,
+      companionRsJson: h.companionRsJson || null,
       nassauStartingNine: nassauStartingNine,
       NassauStartingNine: nassauStartingNine,
       ...(playingGroupRoundKey
@@ -983,6 +1000,7 @@ export default function ScoreCardUserPage() {
           userId: Number(currentUserId),
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
+          companionRsJson: h.companionRsJson || null,
           nassauStartingNine: nassauStartingNine,
           NassauStartingNine: nassauStartingNine,
           ...(playingGroupRoundKey
@@ -1143,6 +1161,7 @@ export default function ScoreCardUserPage() {
         userId: Number(userId),
         companionScoresJson: h.companionScoresJson || null,
         companionSandysJson: h.companionSandysJson || null,
+        companionRsJson: h.companionRsJson || null,
         nassauStartingNine: nassauStartingNine,
         NassauStartingNine: nassauStartingNine,
         ...(playingGroupRoundKey
@@ -1313,6 +1332,45 @@ export default function ScoreCardUserPage() {
     triggerAutoSave(updatedDetails);
   };
 
+  const handleRegulationToggle = (holeId: number, playerId: string) => {
+    const updatedDetails = scoreCardDetails.map((h: any) => {
+      if (h.holeId === holeId) {
+        let companionRs: Record<string, boolean> = {};
+        if (h.companionRsJson || h.CompanionRsJson) {
+          try {
+            companionRs =
+              typeof (h.companionRsJson || h.CompanionRsJson) === "string"
+                ? JSON.parse(h.companionRsJson || h.CompanionRsJson)
+                : (h.companionRsJson || h.CompanionRsJson);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        const nextVal = !companionRs[playerId];
+        companionRs[playerId] = nextVal;
+
+        if (nextVal) {
+          const pObj = partners.find((p: any) => p.playerId === playerId);
+          const name = pObj ? (pObj.isPrimary ? "You" : pObj.name) : "Player";
+          Toast.show({
+            type: "success",
+            text1: `${name} got a Regulation!`,
+          });
+        }
+
+        return {
+          ...h,
+          companionRsJson: JSON.stringify(companionRs),
+        };
+      }
+      return h;
+    });
+
+    setScoreCardDetails(updatedDetails);
+    triggerAutoSave(updatedDetails);
+  };
+
   const getBaseMultiplier = (score: number | null, par: number) => {
     if (score === null || score <= 0) return 1;
     if (score === 1) return 25;
@@ -1326,6 +1384,7 @@ export default function ScoreCardUserPage() {
     score: number | null,
     par: number,
     isSandy: boolean,
+    isRegulation?: boolean,
   ) => {
     if (score === null || score < 0) return 0;
     const diff = score - par;
@@ -1343,10 +1402,16 @@ export default function ScoreCardUserPage() {
     }
 
     let sandyBonus = 0;
-    if (isSandy && diff <= 0) {
+    if (isSandy && (score === 1 || diff <= 0)) {
       sandyBonus = 1;
     }
-    return basePoints + sandyBonus;
+
+    let rBonus = 0;
+    if (isRegulation && (score === 1 || diff <= 0)) {
+      rBonus = 1;
+    }
+
+    return basePoints + sandyBonus + rBonus;
   };
 
   const getHighLowHoleStats = (h: any) => {
@@ -2736,71 +2801,110 @@ export default function ScoreCardUserPage() {
                                             />
                                           </View>
 
-                                          {getScoringLabel() !==
-                                            "Net Score • Include Par 3" &&
+                                          {!isPending &&
+                                            getScoringLabel() !==
+                                              "Net Score • Include Par 3" &&
                                             getScoringLabel() !==
                                               "Net Score • Exclude Par 3" &&
                                             getScoringLabel() !==
                                               "Stableford" &&
                                             getScoringLabel() !==
                                               "Stableford • Exclude Par 3" && (
-                                              <HStack
+                                              <VStack
                                                 style={{
                                                   alignItems: "center",
-                                                  gap: 4,
+                                                  justifyContent: "center",
                                                   marginTop: 4,
+                                                  gap: 2,
                                                 }}
                                               >
-                                                <Pressable
-                                                  onPress={() =>
-                                                    handleSandyToggle(
-                                                      h.holeId,
-                                                      p.playerId,
-                                                    )
-                                                  }
+                                                <HStack
                                                   style={{
-                                                    width: 18,
-                                                    height: 18,
-                                                    borderRadius: 9,
-                                                    backgroundColor: info.sandy
-                                                      ? "#2e7d32"
-                                                      : isDark
-                                                        ? "#334155"
-                                                        : "#e2e8f0",
                                                     alignItems: "center",
                                                     justifyContent: "center",
+                                                    gap: 4,
                                                   }}
                                                 >
-                                                  <Text
+                                                  <Pressable
+                                                    onPress={() =>
+                                                      handleSandyToggle(
+                                                        h.holeId,
+                                                        p.playerId,
+                                                      )
+                                                    }
                                                     style={{
-                                                      fontSize: 9,
-                                                      fontWeight: "bold",
-                                                      color: info.sandy
-                                                        ? "#fff"
-                                                        : isDark
-                                                          ? "#94a3b8"
-                                                          : "#64748b",
+                                                      width: 18,
+                                                      height: 18,
+                                                      borderRadius: 9,
+                                                      backgroundColor:
+                                                        info.sandy
+                                                          ? "#2e7d32"
+                                                          : isDark
+                                                            ? "#334155"
+                                                            : "#e2e8f0",
+                                                      alignItems: "center",
+                                                      justifyContent: "center",
                                                     }}
                                                   >
-                                                    S
-                                                  </Text>
-                                                </Pressable>
+                                                    <Text
+                                                      style={{
+                                                        fontSize: 9,
+                                                        fontWeight: "bold",
+                                                        color: info.sandy
+                                                          ? "#fff"
+                                                          : isDark
+                                                            ? "#94a3b8"
+                                                            : "#64748b",
+                                                      }}
+                                                    >
+                                                      S
+                                                    </Text>
+                                                  </Pressable>
+
+                                                  <Pressable
+                                                    onPress={() =>
+                                                      handleRegulationToggle(
+                                                        h.holeId,
+                                                        p.playerId,
+                                                      )
+                                                    }
+                                                    style={{
+                                                      width: 18,
+                                                      height: 18,
+                                                      borderRadius: 9,
+                                                      backgroundColor: info.r
+                                                        ? "#0284c7"
+                                                        : isDark
+                                                          ? "#334155"
+                                                          : "#e2e8f0",
+                                                      alignItems: "center",
+                                                      justifyContent: "center",
+                                                    }}
+                                                  >
+                                                    <Text
+                                                      style={{
+                                                        fontSize: 9,
+                                                        fontWeight: "bold",
+                                                        color: info.r
+                                                          ? "#fff"
+                                                          : isDark
+                                                            ? "#94a3b8"
+                                                            : "#64748b",
+                                                      }}
+                                                    >
+                                                      R
+                                                    </Text>
+                                                  </Pressable>
+                                                </HStack>
 
                                                 {info.score !== null &&
-                                                  getScoringLabel() !==
-                                                    "Net Score • Include Par 3" &&
-                                                  getScoringLabel() !==
-                                                    "Net Score • Exclude Par 3" &&
-                                                  getScoringLabel() !==
-                                                    "Stableford" &&
-                                                  getScoringLabel() !==
-                                                    "Stableford • Exclude Par 3" &&
                                                   (() => {
                                                     const badgeVal =
                                                       getBadgeMultiplier(
                                                         info.score,
                                                         h.par,
                                                         info.sandy,
+                                                        info.r,
                                                       );
                                                     if (badgeVal > 0) {
                                                       return (
@@ -2809,6 +2913,7 @@ export default function ScoreCardUserPage() {
                                                             fontSize: 9,
                                                             color: "#f59e0b",
                                                             fontWeight: "bold",
+                                                            textAlign: "center",
                                                           }}
                                                         >
                                                           {badgeVal}x
@@ -2817,7 +2922,7 @@ export default function ScoreCardUserPage() {
                                                     }
                                                     return null;
                                                   })()}
-                                              </HStack>
+                                              </VStack>
                                             )}
                                         </View>
                                       );
