@@ -149,24 +149,21 @@ const ScoreCard: React.FC = () => {
 
   const isSystem36 =
     holes.length > 0 && holes.some((h: any) => isSystem36Hole(h));
-  const showPtsColumns = isStableford || isSystem36;
-  const showNetColumns =
-    !isGross && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
-  const hasSubColumn = showPtsColumns || showNetColumns;
-
   const getScoringLabel = () => {
     if (holes.length === 0) return "";
 
     if (isSystem36) return "System 36";
     if (isExcluded && !isStableford) return "Net Score • Exclude Par 3";
     if (!isExcluded && isStableford) return "Stableford";
+    if (isExcluded && isStableford) return "Stableford • Exclude Par 3";
     if (
       !isExcluded &&
       !isStableford &&
       !isSplit6 &&
       !isHighLow &&
       !isGross &&
-      !isNassau
+      !isNassau &&
+      !isSystem36
     )
       return "Net Score • Include Par 3";
     if (
@@ -175,17 +172,25 @@ const ScoreCard: React.FC = () => {
       !isStableford &&
       !isSplit6 &&
       !isHighLow &&
-      !isNassau
+      !isNassau &&
+      !isSystem36
     )
       return "Gross Score";
     if (!isExcluded && !isStableford && isSplit6 && !isHighLow)
-      return "Split Six";
+      return "Split 6";
     if (!isExcluded && !isStableford && !isSplit6 && isHighLow)
       return "High-Low";
     if (isNassauBest) return "Nassau • Best Score";
     if (isNassauCombined) return "Nassau • Combined Score";
     return "";
   };
+
+  const showPtsColumns = isStableford || isSystem36;
+  const showNetColumns =
+    getScoringLabel() === "Net Score • Include Par 3" ||
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    isStableford;
+  const hasSubColumn = showPtsColumns || showNetColumns;
 
   const shouldShowSandyXControls = () => {
     const label = getScoringLabel();
@@ -292,27 +297,39 @@ const ScoreCard: React.FC = () => {
             mode === "gross";
           setIsGross(isGr);
 
-          const pLength = parsedPartners.length;
           const isNB =
             mode.includes("nassau_best") || mode.includes("nassau-best");
           const isNC =
             mode.includes("nassau_combined") ||
             mode.includes("nassau-combined");
           const isHL =
-            (mode.includes("high_low") ||
-              mode.includes("high-low") ||
-              (pLength === 4 &&
-                !isGr &&
-                !dataIsSystem36 &&
-                !hasStablefordPoints)) &&
+            (mode.includes("high_low") || mode.includes("high-low")) &&
             !(isNB || isNC);
           const isS6 =
             (mode.includes("split_six") ||
               mode.includes("split-six") ||
-              (pLength === 3 &&
-                !isGr &&
-                !dataIsSystem36 &&
-                !hasStablefordPoints)) &&
+              mode.includes("split 6") ||
+              mode.includes("split6") ||
+              mode.includes("split_6") ||
+              data.some((h: any) => {
+                const m = (
+                  h.scoringType ||
+                  h.scoring_type ||
+                  h.matchScoringType ||
+                  h.match_scoring_type ||
+                  h.matchScoringMode ||
+                  ""
+                ).toLowerCase();
+                return (
+                  m.includes("split_six") ||
+                  m.includes("split-six") ||
+                  m.includes("split 6") ||
+                  m.includes("split6") ||
+                  m.includes("split_6") ||
+                  h.isSplit6 === true ||
+                  h.split_six === true
+                );
+              })) &&
             !(isNB || isNC);
 
           setIsHighLow(isHL);
