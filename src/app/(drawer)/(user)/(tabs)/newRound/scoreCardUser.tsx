@@ -10,7 +10,6 @@ import {
 import { getScoreCardDetails } from "@/api/modules/newRound.api";
 import {
   saveScoreCard,
-  getSubScorecardHandicap,
 } from "@/api/modules/scoreCard.api";
 import {
   getDelegationStatuses,
@@ -28,7 +27,7 @@ import { Skeleton } from "@/components/Skeleton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RangefinderModal } from "@/components/rangefinder/RangefinderModal";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Modal,
   Pressable,
@@ -136,9 +135,6 @@ export default function ScoreCardUserPage() {
     number | null
   >(null);
   const [scoreCardDetails, setScoreCardDetails] = useState<any>([]);
-  const [companionHandicaps, setCompanionHandicaps] = useState<
-    Record<number, number>
-  >({});
   const [delegationStatuses, setDelegationStatuses] = useState<
     Record<number, string>
   >({});
@@ -149,37 +145,6 @@ export default function ScoreCardUserPage() {
       const teamB = b.team ?? 1;
       return teamA - teamB;
     });
-
-  useEffect(() => {
-    if (pendingRoundContext && pendingRoundContext.players && teeBoxId) {
-      const fetchCompanionHandicaps = async () => {
-        const handicapsMap: Record<number, number> = {};
-        for (const p of pendingRoundContext.players) {
-          if (!p.isPrimary && p.userId) {
-            try {
-              const hData = await getSubScorecardHandicap(
-                p.userId,
-                Number(teeBoxId),
-              );
-              const hc =
-                typeof hData === "object" && hData !== null
-                  ? (hData.handicap ?? 0)
-                  : Number(hData) || 0;
-              handicapsMap[p.userId] = hc;
-            } catch (e) {
-              console.error(
-                "Error fetching companion handicap for userId",
-                p.userId,
-                e,
-              );
-            }
-          }
-        }
-        setCompanionHandicaps(handicapsMap);
-      };
-      fetchCompanionHandicaps();
-    }
-  }, [pendingRoundContext, teeBoxId]);
 
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<any[]>([]);
@@ -261,7 +226,8 @@ export default function ScoreCardUserPage() {
 
   const showNetColumns =
     getScoringLabel() === "Net Score • Include Par 3" ||
-    getScoringLabel() === "Net Score • Exclude Par 3";
+    getScoringLabel() === "Net Score • Exclude Par 3" ||
+    isStableford;
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -297,21 +263,14 @@ export default function ScoreCardUserPage() {
     holes === "9";
 
   const calculateStrokes = (playerHandicap: number, strokeIndex: number) => {
-    const rawHc = Math.round(Number(playerHandicap) || 0);
-    const hc = is9Hole ? Math.round(rawHc / 2) : rawHc;
-
-    if (hc >= 0) {
-      const base = Math.floor(hc / 18);
-      const remainder = hc % 18;
-      // Positive handicap: Receives strokes on hardest holes (lowest index)
+    if (!playerHandicap || playerHandicap === 0) return 0;
+    const absoluteHandicap = Math.abs(playerHandicap);
+    const base = Math.floor(absoluteHandicap / 18);
+    const remainder = absoluteHandicap % 18;
+    if (playerHandicap > 0) {
       return base + (strokeIndex <= remainder ? 1 : 0);
-    } else {
-      const absHandicap = Math.abs(hc);
-      const base = Math.floor(absHandicap / 18);
-      const remainder = absHandicap % 18;
-      // Plus handicap: Gives strokes back on easiest holes (highest index)
-      return -(base + (strokeIndex > 18 - remainder ? 1 : 0));
     }
+    return -(base + (remainder > 0 && strokeIndex > 18 - remainder ? 1 : 0));
   };
 
   const calculateHole = (hole: any) => {
@@ -322,14 +281,20 @@ export default function ScoreCardUserPage() {
         stablefordPoints: null,
       };
     }
-    const strokeIndex = hole.strokeIndex;
+    const strokeIndex = Number(
+      hole.strokeIndex ??
+        hole.StrokeIndex ??
+        hole.handicap ??
+        hole.Handicap ??
+        0,
+    );
 
     let score = Number(hole.score);
 
     // REAL strokes calculation
     let strokesReceived = calculateStrokes(
       parseInt(String(handicap)) || 0, // from params
-      hole.strokeIndex, // stroke index
+      strokeIndex, // stroke index
     );
 
     // Excluded logic
@@ -400,7 +365,7 @@ export default function ScoreCardUserPage() {
         companionRs =
           typeof (hole.companionRsJson || hole.CompanionRsJson) === "string"
             ? JSON.parse(hole.companionRsJson || hole.CompanionRsJson)
-            : (hole.companionRsJson || hole.CompanionRsJson);
+            : hole.companionRsJson || hole.CompanionRsJson;
       } catch (e) {
         console.error(e);
       }
@@ -441,21 +406,32 @@ export default function ScoreCardUserPage() {
     }
 
     const isDP = isDoublePeoria || hole.isDoublePeoria === true;
-    const playerHandicap = isPrimary
-      ? parseInt(String(handicap)) || 0
-      : companionHandicaps[userId] || 0;
-    let strokesReceived = calculateStrokes(playerHandicap, hole.strokeIndex);
-    if (isExcluded && hole.par === 3) {
-      strokesReceived = 0;
+    let netScore: number = rawScore;
+    if (isPrimary) {
+      const playerHandicap = parseInt(String(handicap)) || 0;
+      const strokeIndex = Number(
+        hole.strokeIndex ??
+          hole.StrokeIndex ??
+          hole.handicap ??
+          hole.Handicap ??
+          0,
+      );
+      let strokesReceived = calculateStrokes(playerHandicap, strokeIndex);
+      if (isExcluded && hole.par === 3) {
+        strokesReceived = 0;
+      }
+      netScore = isSystem36
+        ? (hole.netScore ?? rawScore)
+        : isDP
+          ? rawScore
+          : rawScore - strokesReceived;
+    } else {
+      // For companion players, net = rawScore (matches web implementation)
+      netScore = rawScore;
     }
-    const netScore = isSystem36
-      ? hole.netScore
-      : isDP
-        ? rawScore
-        : rawScore - strokesReceived;
 
     let stablefordPoints = null;
-    if (isStableford) {
+    if (isStableford && netScore !== null) {
       const pts = hole.par - netScore + 2;
       stablefordPoints = pts > 0 ? pts : 0;
     } else if (isSystem36 && rawScore !== null && rawScore > 0) {
@@ -1341,7 +1317,7 @@ export default function ScoreCardUserPage() {
             companionRs =
               typeof (h.companionRsJson || h.CompanionRsJson) === "string"
                 ? JSON.parse(h.companionRsJson || h.CompanionRsJson)
-                : (h.companionRsJson || h.CompanionRsJson);
+                : h.companionRsJson || h.CompanionRsJson;
           } catch (e) {
             console.error(e);
           }
@@ -1991,11 +1967,30 @@ export default function ScoreCardUserPage() {
                               borderColor: isDark ? "#1e293b" : "#e5e7eb",
                             }}
                           >
-                            <ThemedText
-                              style={{ flex: 1, textAlign: "center" }}
+                            <View
+                              style={{
+                                flex: 1,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
                             >
-                              {h.holeNumber}
-                            </ThemedText>
+                              <ThemedText style={{ textAlign: "center" }}>
+                                {h.holeNumber}
+                              </ThemedText>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  setActiveRangefinderHole(h.holeId)
+                                }
+                                style={{ marginLeft: 3 }}
+                              >
+                                <Ionicons
+                                  name="locate-outline"
+                                  size={14}
+                                  color={isDark ? "#8BC34A" : "#198754"}
+                                />
+                              </TouchableOpacity>
+                            </View>
                             {isDetailsVisible && (
                               <>
                                 <ThemedText
@@ -2290,7 +2285,7 @@ export default function ScoreCardUserPage() {
                       const pScoreWidth = 65;
                       const pNetWidth = 60;
                       const pPtsWidth = 60;
-                      const colHoleWidth = 40;
+                      const colHoleWidth = 45;
                       const colParWidth = 40;
                       const colSIWidth = 40;
                       const colYardsWidth = 45;
@@ -2385,7 +2380,7 @@ export default function ScoreCardUserPage() {
                               >
                                 Par
                               </ThemedText>
-                              {/* Score Input Headers (LHS) */}
+                              {/* Per-Player Columns (Score + Net + Pts) */}
                               {partners.map((p: any, idx: number) => {
                                 let badgeText = "";
                                 let badgeColor = "";
@@ -2403,99 +2398,114 @@ export default function ScoreCardUserPage() {
                                 }
                                 const pName = p.isPrimary ? "You" : p.name;
                                 return (
-                                  <VStack
-                                    key={`score-col-hdr-${p.playerId}`}
-                                    style={{
-                                      width: pScoreWidth,
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <ThemedText
+                                  <React.Fragment key={`p-hdr-group-${p.playerId}`}>
+                                    <VStack
+                                      key={`score-col-hdr-${p.playerId}`}
                                       style={{
-                                        textAlign: "center",
-                                        fontWeight: "700",
-                                        fontSize: 12,
+                                        width: pScoreWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
                                     >
-                                      {pName}
-                                    </ThemedText>
-                                    {badgeText !== "" && (
-                                      <View
+                                      <ThemedText
                                         style={{
-                                          backgroundColor: badgeColor,
-                                          borderRadius: 4,
-                                          paddingHorizontal: 6,
-                                          paddingVertical: 1,
-                                          marginTop: 2,
+                                          textAlign: "center",
+                                          fontWeight: "700",
+                                          fontSize: 12,
                                         }}
+                                        numberOfLines={1}
                                       >
-                                        <Text
+                                        {pName}
+                                      </ThemedText>
+                                      {badgeText !== "" && (
+                                        <View
                                           style={{
-                                            color: "#fff",
-                                            fontSize: 8,
-                                            fontWeight: "700",
+                                            backgroundColor: badgeColor,
+                                            borderRadius: 4,
+                                            paddingHorizontal: 6,
+                                            paddingVertical: 1,
+                                            marginTop: 2,
                                           }}
                                         >
-                                          {badgeText}
-                                        </Text>
-                                      </View>
+                                          <Text
+                                            style={{
+                                              color: "#fff",
+                                              fontSize: 8,
+                                              fontWeight: "700",
+                                            }}
+                                          >
+                                            {badgeText}
+                                          </Text>
+                                        </View>
+                                      )}
+                                    </VStack>
+
+                                    {showNetColumns && (
+                                      <VStack
+                                        key={`net-col-hdr-${p.playerId}`}
+                                        style={{
+                                          width: pNetWidth,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <ThemedText
+                                          style={{
+                                            textAlign: "center",
+                                            fontSize: 10,
+                                            color: isDark ? "#94a3b8" : "#64748b",
+                                          }}
+                                          numberOfLines={1}
+                                        >
+                                          {`(${pName})`}
+                                        </ThemedText>
+                                        <ThemedText
+                                          style={{
+                                            textAlign: "center",
+                                            fontWeight: "700",
+                                            fontSize: 11,
+                                            color: "#2563eb",
+                                          }}
+                                        >
+                                          Net
+                                        </ThemedText>
+                                      </VStack>
                                     )}
-                                  </VStack>
+
+                                    {showPtsColumns && (
+                                      <VStack
+                                        key={`pts-hdr-${p.playerId}`}
+                                        style={{
+                                          width: pPtsWidth,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <ThemedText
+                                          style={{
+                                            textAlign: "center",
+                                            fontSize: 10,
+                                            color: isDark ? "#94a3b8" : "#64748b",
+                                          }}
+                                          numberOfLines={1}
+                                        >
+                                          {`(${pName})`}
+                                        </ThemedText>
+                                        <ThemedText
+                                          style={{
+                                            textAlign: "center",
+                                            fontWeight: "700",
+                                            fontSize: 11,
+                                            color: "#f59e0b",
+                                          }}
+                                        >
+                                          Pts
+                                        </ThemedText>
+                                      </VStack>
+                                    )}
+                                  </React.Fragment>
                                 );
                               })}
-
-                              {/* Calculated Net Points Headers (RHS) */}
-                              {showPtsColumns &&
-                                partners.map((p: any) => {
-                                  const pName = p.isPrimary ? "You" : p.name;
-                                  return (
-                                    <VStack
-                                      key={`pts-hdr-${p.playerId}`}
-                                      style={{
-                                        width: pPtsWidth,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          textAlign: "center",
-                                          fontWeight: "700",
-                                          fontSize: 11,
-                                          color: "#f59e0b",
-                                        }}
-                                      >
-                                        {`Pts(${pName})`}
-                                      </ThemedText>
-                                    </VStack>
-                                  );
-                                })}
-                              {showNetColumns &&
-                                partners.map((p: any) => {
-                                  const pName = p.isPrimary ? "You" : p.name;
-                                  return (
-                                    <VStack
-                                      key={`net-col-hdr-${p.playerId}`}
-                                      style={{
-                                        width: pNetWidth,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          textAlign: "center",
-                                          fontWeight: "700",
-                                          fontSize: 11,
-                                          color: "#8BC34A",
-                                        }}
-                                      >
-                                        {`Net(${pName})`}
-                                      </ThemedText>
-                                    </VStack>
-                                  );
-                                })}
 
                               {isSplit6 &&
                                 partners.length >= 3 &&
@@ -2619,14 +2629,34 @@ export default function ScoreCardUserPage() {
                                         : "#ffffff",
                                     }}
                                   >
-                                    <ThemedText
+                                    <View
                                       style={{
                                         width: colHoleWidth,
-                                        textAlign: "center",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
                                     >
-                                      {h.holeNumber}
-                                    </ThemedText>
+                                      <ThemedText
+                                        style={{
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        {h.holeNumber}
+                                      </ThemedText>
+                                      <TouchableOpacity
+                                        onPress={() =>
+                                          setActiveRangefinderHole(h.holeId)
+                                        }
+                                        style={{ marginLeft: 2 }}
+                                      >
+                                        <Ionicons
+                                          name="locate-outline"
+                                          size={12}
+                                          color={isDark ? "#8BC34A" : "#198754"}
+                                        />
+                                      </TouchableOpacity>
+                                    </View>
                                     {isDetailsVisible && (
                                       <>
                                         <ThemedText
@@ -2657,13 +2687,13 @@ export default function ScoreCardUserPage() {
                                       {h.par}
                                     </ThemedText>
 
-                                    {/* Score Input Columns (LHS) */}
+                                    {/* Per-Player Cells (Score Input + Net + Pts) */}
                                     {partners.map((p: any, pIndex: number) => {
                                       const info = getPlayerHoleInfo(h, p);
                                       const isPending =
                                         !p.isPrimary &&
-                                        delegationStatuses[p.userId] ===
-                                          "Pending";
+                                        delegationStatuses[p.userId] !==
+                                          "Approved";
 
                                       let bgColor = "transparent";
                                       if (
@@ -2683,325 +2713,302 @@ export default function ScoreCardUserPage() {
                                       }
 
                                       return (
-                                        <View
-                                          key={`score-cell-${p.playerId}`}
-                                          style={{
-                                            width: pScoreWidth,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            paddingVertical: 4,
-                                            backgroundColor: bgColor,
-                                          }}
-                                        >
+                                        <React.Fragment key={`p-cell-group-${p.playerId}`}>
+                                          {/* Score Input Column */}
                                           <View
+                                            key={`score-cell-${p.playerId}`}
                                             style={{
-                                              position: "relative",
+                                              width: pScoreWidth,
                                               alignItems: "center",
                                               justifyContent: "center",
-                                            }}
-                                          >
-                                            {renderScoreIndicator(
-                                              info.score,
-                                              h.par,
-                                              isDark,
-                                            )}
-                                            <TextInput
-                                              editable={!isPending}
-                                              value={
-                                                info.score !== null
-                                                  ? String(info.score)
-                                                  : ""
-                                              }
-                                              onChangeText={(val) =>
-                                                handleMultiplayerScoreChange(
-                                                  h.holeId,
-                                                  p.playerId,
-                                                  val,
-                                                  index,
-                                                  pIndex,
-                                                )
-                                              }
-                                              onBlur={() => {
-                                                if (focusTimeoutRef.current)
-                                                  clearTimeout(
-                                                    focusTimeoutRef.current,
-                                                  );
-                                              }}
-                                              ref={(el: any) =>
-                                                (inputRefs.current[
-                                                  index * partners.length +
-                                                    pIndex
-                                                ] = el)
-                                              }
-                                              onSubmitEditing={() => {
-                                                let nextIdx =
-                                                  index * partners.length +
-                                                  pIndex +
-                                                  1;
-                                                const totalInputs =
-                                                  processedHoles.length *
-                                                  partners.length;
-
-                                                while (nextIdx < totalInputs) {
-                                                  const nextPIndex =
-                                                    nextIdx % partners.length;
-                                                  const nextPlayer =
-                                                    partners[nextPIndex];
-                                                  const isPending =
-                                                    !nextPlayer.isPrimary &&
-                                                    delegationStatuses[
-                                                      nextPlayer.userId
-                                                    ] === "Pending";
-                                                  if (!isPending) break;
-                                                  nextIdx++;
-                                                }
-
-                                                if (nextIdx < totalInputs) {
-                                                  inputRefs.current[
-                                                    nextIdx
-                                                  ]?.focus();
-                                                }
-                                              }}
-                                              returnKeyType={
-                                                index ===
-                                                  processedHoles.length - 1 &&
-                                                pIndex === partners.length - 1
-                                                  ? "done"
-                                                  : "next"
-                                              }
-                                              keyboardType="numeric"
-                                              style={{
-                                                width: 36,
-                                                height: 36,
-                                                borderRadius: borderDisplay
-                                                  ? 8
-                                                  : 0,
-                                                borderWidth: borderDisplay
-                                                  ? 1
-                                                  : 0,
-                                                borderColor: isDark
-                                                  ? "#444"
-                                                  : "#ccc",
-                                                backgroundColor: isPending
-                                                  ? isDark
-                                                    ? "#333"
-                                                    : "#e5e7eb"
-                                                  : "transparent",
-                                                textAlign: "center",
-                                                color: isPending
-                                                  ? isDark
-                                                    ? "#777"
-                                                    : "#9ca3af"
-                                                  : isDark
-                                                    ? "#fff"
-                                                    : "#000",
-                                                fontWeight: "700",
-                                                padding: 0,
-                                              }}
-                                            />
-                                          </View>
-
-                                          {!isPending &&
-                                            getScoringLabel() !==
-                                              "Net Score • Include Par 3" &&
-                                            getScoringLabel() !==
-                                              "Net Score • Exclude Par 3" &&
-                                            getScoringLabel() !==
-                                              "Stableford" &&
-                                            getScoringLabel() !==
-                                              "Stableford • Exclude Par 3" && (
-                                              <VStack
-                                                style={{
-                                                  alignItems: "center",
-                                                  justifyContent: "center",
-                                                  marginTop: 4,
-                                                  gap: 2,
-                                                }}
-                                              >
-                                                <HStack
-                                                  style={{
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    gap: 4,
-                                                  }}
-                                                >
-                                                  <Pressable
-                                                    onPress={() =>
-                                                      handleSandyToggle(
-                                                        h.holeId,
-                                                        p.playerId,
-                                                      )
-                                                    }
-                                                    style={{
-                                                      width: 18,
-                                                      height: 18,
-                                                      borderRadius: 9,
-                                                      backgroundColor:
-                                                        info.sandy
-                                                          ? "#2e7d32"
-                                                          : isDark
-                                                            ? "#334155"
-                                                            : "#e2e8f0",
-                                                      alignItems: "center",
-                                                      justifyContent: "center",
-                                                    }}
-                                                  >
-                                                    <Text
-                                                      style={{
-                                                        fontSize: 9,
-                                                        fontWeight: "bold",
-                                                        color: info.sandy
-                                                          ? "#fff"
-                                                          : isDark
-                                                            ? "#94a3b8"
-                                                            : "#64748b",
-                                                      }}
-                                                    >
-                                                      S
-                                                    </Text>
-                                                  </Pressable>
-
-                                                  <Pressable
-                                                    onPress={() =>
-                                                      handleRegulationToggle(
-                                                        h.holeId,
-                                                        p.playerId,
-                                                      )
-                                                    }
-                                                    style={{
-                                                      width: 18,
-                                                      height: 18,
-                                                      borderRadius: 9,
-                                                      backgroundColor: info.r
-                                                        ? "#0284c7"
-                                                        : isDark
-                                                          ? "#334155"
-                                                          : "#e2e8f0",
-                                                      alignItems: "center",
-                                                      justifyContent: "center",
-                                                    }}
-                                                  >
-                                                    <Text
-                                                      style={{
-                                                        fontSize: 9,
-                                                        fontWeight: "bold",
-                                                        color: info.r
-                                                          ? "#fff"
-                                                          : isDark
-                                                            ? "#94a3b8"
-                                                            : "#64748b",
-                                                      }}
-                                                    >
-                                                      R
-                                                    </Text>
-                                                  </Pressable>
-                                                </HStack>
-
-                                                {info.score !== null &&
-                                                  (() => {
-                                                    const badgeVal =
-                                                      getBadgeMultiplier(
-                                                        info.score,
-                                                        h.par,
-                                                        info.sandy,
-                                                        info.r,
-                                                      );
-                                                    if (badgeVal > 0) {
-                                                      return (
-                                                        <Text
-                                                          style={{
-                                                            fontSize: 9,
-                                                            color: "#f59e0b",
-                                                            fontWeight: "bold",
-                                                            textAlign: "center",
-                                                          }}
-                                                        >
-                                                          {badgeVal}x
-                                                        </Text>
-                                                      );
-                                                    }
-                                                    return null;
-                                                  })()}
-                                              </VStack>
-                                            )}
-                                        </View>
-                                      );
-                                    })}
-
-                                    {/* Stableford Points Columns (RHS) */}
-                                    {showPtsColumns &&
-                                      partners.map((p: any) => {
-                                        const info = getPlayerHoleInfo(h, p);
-                                        return (
-                                          <View
-                                            key={`pts-cell-${p.playerId}`}
-                                            style={{
-                                              width: pPtsWidth,
-                                              alignItems: "center",
-                                              justifyContent: "center",
-                                            }}
-                                          >
-                                            <ThemedText
-                                              style={{
-                                                fontWeight: "bold",
-                                                color: "#f59e0b",
-                                                fontSize: 13,
-                                              }}
-                                            >
-                                              {info.score !== null &&
-                                              info.score >= 0
-                                                ? (info.stablefordPoints ?? "-")
-                                                : "-"}
-                                            </ThemedText>
-                                          </View>
-                                        );
-                                      })}
-
-                                    {/* Net Score Columns (RHS) */}
-                                    {showNetColumns &&
-                                      partners.map((p: any, pIndex: number) => {
-                                        const info = getPlayerHoleInfo(h, p);
-
-                                        let bgColor = "transparent";
-                                        if (
-                                          isNassau &&
-                                          ns &&
-                                          ns.holeResults[h.holeNumber]
-                                        ) {
-                                          const winner =
-                                            ns.holeResults[h.holeNumber].winner;
-                                          const isTeamA =
-                                            pIndex <
-                                            (partners.length >= 4 ? 2 : 1);
-                                          if (winner === "teamA" && isTeamA)
-                                            bgColor = "rgba(25, 135, 84, 0.15)";
-                                          if (winner === "teamB" && !isTeamA)
-                                            bgColor =
-                                              "rgba(13, 110, 253, 0.15)";
-                                        }
-
-                                        return (
-                                          <View
-                                            key={`net-cell-${p.playerId}`}
-                                            style={{
-                                              width: pNetWidth,
-                                              alignItems: "center",
-                                              justifyContent: "center",
+                                              paddingVertical: 4,
                                               backgroundColor: bgColor,
                                             }}
                                           >
-                                            <ThemedText
+                                            <View
                                               style={{
-                                                fontWeight: "bold",
-                                                color: "#8BC34A",
-                                                fontSize: 13,
+                                                position: "relative",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                               }}
                                             >
-                                              {info.netScore ?? "-"}
-                                            </ThemedText>
+                                              {renderScoreIndicator(
+                                                info.score,
+                                                h.par,
+                                                isDark,
+                                              )}
+                                              <TextInput
+                                                editable={!isPending}
+                                                value={
+                                                  info.score !== null
+                                                    ? String(info.score)
+                                                    : ""
+                                                }
+                                                onChangeText={(val) =>
+                                                  handleMultiplayerScoreChange(
+                                                    h.holeId,
+                                                    p.playerId,
+                                                    val,
+                                                    index,
+                                                    pIndex,
+                                                  )
+                                                }
+                                                onBlur={() => {
+                                                  if (focusTimeoutRef.current)
+                                                    clearTimeout(
+                                                      focusTimeoutRef.current,
+                                                    );
+                                                }}
+                                                ref={(el: any) =>
+                                                  (inputRefs.current[
+                                                    index * partners.length +
+                                                      pIndex
+                                                  ] = el)
+                                                }
+                                                onSubmitEditing={() => {
+                                                  let nextIdx =
+                                                    index * partners.length +
+                                                    pIndex +
+                                                    1;
+                                                  const totalInputs =
+                                                    processedHoles.length *
+                                                    partners.length;
+
+                                                  while (nextIdx < totalInputs) {
+                                                    const nextPIndex =
+                                                      nextIdx % partners.length;
+                                                    const nextPlayer =
+                                                      partners[nextPIndex];
+                                                    const isPending =
+                                                      !nextPlayer.isPrimary &&
+                                                      delegationStatuses[
+                                                        nextPlayer.userId
+                                                      ] !== "Approved";
+                                                    if (!isPending) break;
+                                                    nextIdx++;
+                                                  }
+
+                                                  if (nextIdx < totalInputs) {
+                                                    inputRefs.current[
+                                                      nextIdx
+                                                    ]?.focus();
+                                                  }
+                                                }}
+                                                returnKeyType={
+                                                  index ===
+                                                    processedHoles.length - 1 &&
+                                                  pIndex === partners.length - 1
+                                                    ? "done"
+                                                    : "next"
+                                                }
+                                                keyboardType="numeric"
+                                                style={{
+                                                  width: 36,
+                                                  height: 36,
+                                                  borderRadius: borderDisplay
+                                                    ? 8
+                                                    : 0,
+                                                  borderWidth: borderDisplay
+                                                    ? 1
+                                                    : 0,
+                                                  borderColor: isDark
+                                                    ? "#444"
+                                                    : "#ccc",
+                                                  backgroundColor: isPending
+                                                    ? isDark
+                                                      ? "#333"
+                                                      : "#e5e7eb"
+                                                    : "transparent",
+                                                  textAlign: "center",
+                                                  color: isPending
+                                                    ? isDark
+                                                      ? "#777"
+                                                      : "#9ca3af"
+                                                    : isDark
+                                                      ? "#fff"
+                                                      : "#000",
+                                                  fontWeight: "700",
+                                                  padding: 0,
+                                                }}
+                                              />
+                                            </View>
+
+                                            {!isPending &&
+                                              getScoringLabel() !==
+                                                "Net Score • Include Par 3" &&
+                                              getScoringLabel() !==
+                                                "Net Score • Exclude Par 3" &&
+                                              getScoringLabel() !==
+                                                "Stableford" &&
+                                              getScoringLabel() !==
+                                                "Stableford • Exclude Par 3" && (
+                                                <VStack
+                                                  style={{
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    marginTop: 4,
+                                                    gap: 2,
+                                                  }}
+                                                >
+                                                  <HStack
+                                                    style={{
+                                                      alignItems: "center",
+                                                      justifyContent: "center",
+                                                      gap: 4,
+                                                    }}
+                                                  >
+                                                    <Pressable
+                                                      onPress={() =>
+                                                        handleSandyToggle(
+                                                          h.holeId,
+                                                          p.playerId,
+                                                        )
+                                                      }
+                                                      style={{
+                                                        width: 18,
+                                                        height: 18,
+                                                        borderRadius: 9,
+                                                        backgroundColor:
+                                                          info.sandy
+                                                            ? "#2e7d32"
+                                                            : isDark
+                                                              ? "#334155"
+                                                              : "#e2e8f0",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                      }}
+                                                    >
+                                                      <Text
+                                                        style={{
+                                                          fontSize: 9,
+                                                          fontWeight: "bold",
+                                                          color: info.sandy
+                                                            ? "#fff"
+                                                            : isDark
+                                                              ? "#94a3b8"
+                                                              : "#64748b",
+                                                        }}
+                                                      >
+                                                        S
+                                                      </Text>
+                                                    </Pressable>
+
+                                                    <Pressable
+                                                      onPress={() =>
+                                                        handleRegulationToggle(
+                                                          h.holeId,
+                                                          p.playerId,
+                                                        )
+                                                      }
+                                                      style={{
+                                                        width: 18,
+                                                        height: 18,
+                                                        borderRadius: 9,
+                                                        backgroundColor: info.r
+                                                          ? "#0284c7"
+                                                          : isDark
+                                                            ? "#334155"
+                                                            : "#e2e8f0",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                      }}
+                                                    >
+                                                      <Text
+                                                        style={{
+                                                          fontSize: 9,
+                                                          fontWeight: "bold",
+                                                          color: info.r
+                                                            ? "#fff"
+                                                            : isDark
+                                                              ? "#94a3b8"
+                                                              : "#64748b",
+                                                        }}
+                                                      >
+                                                        R
+                                                      </Text>
+                                                    </Pressable>
+                                                  </HStack>
+
+                                                  {info.score !== null &&
+                                                    (() => {
+                                                      const badgeVal =
+                                                        getBadgeMultiplier(
+                                                          info.score,
+                                                          h.par,
+                                                          info.sandy,
+                                                          info.r,
+                                                        );
+                                                      if (badgeVal > 0) {
+                                                        return (
+                                                          <Text
+                                                            style={{
+                                                              fontSize: 9,
+                                                              color: "#f59e0b",
+                                                              fontWeight: "bold",
+                                                              textAlign: "center",
+                                                            }}
+                                                          >
+                                                            {badgeVal}x
+                                                          </Text>
+                                                        );
+                                                      }
+                                                      return null;
+                                                    })()}
+                                                </VStack>
+                                              )}
                                           </View>
-                                        );
-                                      })}
+
+                                          {/* Net Score Column */}
+                                          {showNetColumns && (
+                                            <View
+                                              key={`net-cell-${p.playerId}`}
+                                              style={{
+                                                width: pNetWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                backgroundColor: bgColor,
+                                              }}
+                                            >
+                                              <ThemedText
+                                                style={{
+                                                  fontWeight: "bold",
+                                                  color: "#2563eb",
+                                                  fontSize: 13,
+                                                }}
+                                              >
+                                                {info.netScore ?? "-"}
+                                              </ThemedText>
+                                            </View>
+                                          )}
+
+                                          {/* Stableford Points Column */}
+                                          {showPtsColumns && (
+                                            <View
+                                              key={`pts-cell-${p.playerId}`}
+                                              style={{
+                                                width: pPtsWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                              }}
+                                            >
+                                              <ThemedText
+                                                style={{
+                                                  fontWeight: "bold",
+                                                  color: "#f59e0b",
+                                                  fontSize: 13,
+                                                }}
+                                              >
+                                                {info.score !== null &&
+                                                info.score >= 0
+                                                  ? (info.stablefordPoints ?? "-")
+                                                  : "-"}
+                                              </ThemedText>
+                                            </View>
+                                          )}
+                                        </React.Fragment>
+                                      );
+                                    })}
+
                                     {isSplit6 &&
                                       partners.length >= 3 &&
                                       (() => {
@@ -3214,88 +3221,74 @@ export default function ScoreCardUserPage() {
                                       >
                                         {frontTotals.par}
                                       </ThemedText>
-                                      {/* Front 9 Gross Totals (LHS) */}
+                                      {/* Front 9 Totals per Player (Gross + Net + Pts) */}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedFront9,
                                           p,
                                         );
                                         return (
-                                          <VStack
-                                            key={`gross-front-${p.playerId}`}
-                                            style={{
-                                              width: pScoreWidth,
-                                              alignItems: "center",
-                                              justifyContent: "center",
-                                            }}
-                                          >
-                                            <ThemedText
+                                          <React.Fragment key={`front-totals-group-${p.playerId}`}>
+                                            <VStack
+                                              key={`gross-front-${p.playerId}`}
                                               style={{
-                                                fontWeight: "800",
-                                                color: isDark ? "#fff" : "#000",
+                                                width: pScoreWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                               }}
                                             >
-                                              {t.gross}
-                                            </ThemedText>
-                                          </VStack>
+                                              <ThemedText
+                                                style={{
+                                                  fontWeight: "800",
+                                                  color: isDark ? "#fff" : "#000",
+                                                }}
+                                              >
+                                                {t.gross}
+                                              </ThemedText>
+                                            </VStack>
+
+                                            {showNetColumns && (
+                                              <VStack
+                                                key={`net-front-${p.playerId}`}
+                                                style={{
+                                                  width: pNetWidth,
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                }}
+                                              >
+                                                <ThemedText
+                                                  style={{
+                                                    fontWeight: "800",
+                                                    color: "#2563eb",
+                                                  }}
+                                                >
+                                                  {t.net}
+                                                </ThemedText>
+                                              </VStack>
+                                            )}
+
+                                            {showPtsColumns && (
+                                              <VStack
+                                                key={`pts-front-${p.playerId}`}
+                                                style={{
+                                                  width: pPtsWidth,
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                }}
+                                              >
+                                                <ThemedText
+                                                  style={{
+                                                    fontWeight: "800",
+                                                    color: "#f59e0b",
+                                                  }}
+                                                >
+                                                  {t.stableford}
+                                                </ThemedText>
+                                              </VStack>
+                                            )}
+                                          </React.Fragment>
                                         );
                                       })}
-
-                                      {/* Front 9 Net Totals (RHS) */}
-                                      {showNetColumns &&
-                                        partners.map((p: any) => {
-                                          const t = getPlayerTotals(
-                                            processedFront9,
-                                            p,
-                                          );
-                                          return (
-                                            <VStack
-                                              key={`net-front-${p.playerId}`}
-                                              style={{
-                                                width: pNetWidth,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                              }}
-                                            >
-                                              <ThemedText
-                                                style={{
-                                                  fontWeight: "800",
-                                                  color: "#8BC34A",
-                                                }}
-                                              >
-                                                {t.net}
-                                              </ThemedText>
-                                            </VStack>
-                                          );
-                                        })}
-
-                                      {/* Front 9 Stableford Totals (RHS) */}
-                                      {showPtsColumns &&
-                                        partners.map((p: any) => {
-                                          const t = getPlayerTotals(
-                                            processedFront9,
-                                            p,
-                                          );
-                                          return (
-                                            <VStack
-                                              key={`pts-front-${p.playerId}`}
-                                              style={{
-                                                width: pPtsWidth,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                              }}
-                                            >
-                                              <ThemedText
-                                                style={{
-                                                  fontWeight: "800",
-                                                  color: "#f59e0b",
-                                                }}
-                                              >
-                                                {t.stableford}
-                                              </ThemedText>
-                                            </VStack>
-                                          );
-                                        })}
                                       {isSplit6 &&
                                         partners.length >= 3 &&
                                         (() => {
@@ -3497,88 +3490,74 @@ export default function ScoreCardUserPage() {
                                       >
                                         {backTotals.par}
                                       </ThemedText>
-                                      {/* Back 9 Gross Totals (LHS) */}
+                                      {/* Back 9 Totals per Player (Gross + Net + Pts) */}
                                       {partners.map((p: any) => {
                                         const t = getPlayerTotals(
                                           processedBack9,
                                           p,
                                         );
                                         return (
-                                          <VStack
-                                            key={`gross-back-${p.playerId}`}
-                                            style={{
-                                              width: pScoreWidth,
-                                              alignItems: "center",
-                                              justifyContent: "center",
-                                            }}
-                                          >
-                                            <ThemedText
+                                          <React.Fragment key={`back-totals-group-${p.playerId}`}>
+                                            <VStack
+                                              key={`gross-back-${p.playerId}`}
                                               style={{
-                                                fontWeight: "700",
-                                                color: isDark ? "#fff" : "#000",
+                                                width: pScoreWidth,
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                               }}
                                             >
-                                              {t.gross}
-                                            </ThemedText>
-                                          </VStack>
+                                              <ThemedText
+                                                style={{
+                                                  fontWeight: "700",
+                                                  color: isDark ? "#fff" : "#000",
+                                                }}
+                                              >
+                                                {t.gross}
+                                              </ThemedText>
+                                            </VStack>
+
+                                            {showNetColumns && (
+                                              <VStack
+                                                key={`net-back-${p.playerId}`}
+                                                style={{
+                                                  width: pNetWidth,
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                }}
+                                              >
+                                                <ThemedText
+                                                  style={{
+                                                    fontWeight: "700",
+                                                    color: "#2563eb",
+                                                  }}
+                                                >
+                                                  {t.net}
+                                                </ThemedText>
+                                              </VStack>
+                                            )}
+
+                                            {showPtsColumns && (
+                                              <VStack
+                                                key={`pts-back-${p.playerId}`}
+                                                style={{
+                                                  width: pPtsWidth,
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                }}
+                                              >
+                                                <ThemedText
+                                                  style={{
+                                                    fontWeight: "700",
+                                                    color: "#f59e0b",
+                                                  }}
+                                                >
+                                                  {t.stableford}
+                                                </ThemedText>
+                                              </VStack>
+                                            )}
+                                          </React.Fragment>
                                         );
                                       })}
-
-                                      {/* Back 9 Net Totals (RHS) */}
-                                      {showNetColumns &&
-                                        partners.map((p: any) => {
-                                          const t = getPlayerTotals(
-                                            processedBack9,
-                                            p,
-                                          );
-                                          return (
-                                            <VStack
-                                              key={`net-back-${p.playerId}`}
-                                              style={{
-                                                width: pNetWidth,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                              }}
-                                            >
-                                              <ThemedText
-                                                style={{
-                                                  fontWeight: "700",
-                                                  color: "#8BC34A",
-                                                }}
-                                              >
-                                                {t.net}
-                                              </ThemedText>
-                                            </VStack>
-                                          );
-                                        })}
-
-                                      {/* Back 9 Stableford Totals (RHS) */}
-                                      {showPtsColumns &&
-                                        partners.map((p: any) => {
-                                          const t = getPlayerTotals(
-                                            processedBack9,
-                                            p,
-                                          );
-                                          return (
-                                            <VStack
-                                              key={`pts-back-${p.playerId}`}
-                                              style={{
-                                                width: pPtsWidth,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                              }}
-                                            >
-                                              <ThemedText
-                                                style={{
-                                                  fontWeight: "700",
-                                                  color: "#f59e0b",
-                                                }}
-                                              >
-                                                {t.stableford}
-                                              </ThemedText>
-                                            </VStack>
-                                          );
-                                        })}
                                       {isSplit6 &&
                                         partners.length >= 3 &&
                                         (() => {
@@ -3776,79 +3755,71 @@ export default function ScoreCardUserPage() {
                               >
                                 {grandTotals.par}
                               </ThemedText>
-                              {/* Grand Gross Totals (LHS) */}
+                              {/* Grand Totals per Player (Gross + Net + Pts) */}
                               {partners.map((p: any) => {
                                 const t = getPlayerTotals(processedHoles, p);
                                 return (
-                                  <VStack
-                                    key={`gross-grand-${p.playerId}`}
-                                    style={{
-                                      width: pScoreWidth,
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <ThemedText
+                                  <React.Fragment key={`grand-totals-group-${p.playerId}`}>
+                                    <VStack
+                                      key={`gross-grand-${p.playerId}`}
                                       style={{
-                                        fontWeight: "800",
-                                        color: "#fff",
+                                        width: pScoreWidth,
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
                                     >
-                                      {t.gross}
-                                    </ThemedText>
-                                  </VStack>
+                                      <ThemedText
+                                        style={{
+                                          fontWeight: "800",
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        {t.gross}
+                                      </ThemedText>
+                                    </VStack>
+
+                                    {showNetColumns && (
+                                      <VStack
+                                        key={`net-grand-${p.playerId}`}
+                                        style={{
+                                          width: pNetWidth,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <ThemedText
+                                          style={{
+                                            fontWeight: "800",
+                                            color: "#fff",
+                                          }}
+                                        >
+                                          {t.net}
+                                        </ThemedText>
+                                      </VStack>
+                                    )}
+
+                                    {showPtsColumns && (
+                                      <VStack
+                                        key={`pts-grand-${p.playerId}`}
+                                        style={{
+                                          width: pPtsWidth,
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <ThemedText
+                                          style={{
+                                            fontWeight: "800",
+                                            color: "#fff",
+                                          }}
+                                        >
+                                          {t.stableford}
+                                        </ThemedText>
+                                      </VStack>
+                                    )}
+                                  </React.Fragment>
                                 );
                               })}
-
-                              {/* Grand Net Totals (RHS) */}
-                              {showNetColumns &&
-                                partners.map((p: any) => {
-                                  const t = getPlayerTotals(processedHoles, p);
-                                  return (
-                                    <VStack
-                                      key={`net-grand-${p.playerId}`}
-                                      style={{
-                                        width: pNetWidth,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "800",
-                                          color: "#fff",
-                                        }}
-                                      >
-                                        {t.net}
-                                      </ThemedText>
-                                    </VStack>
-                                  );
-                                })}
-
-                              {/* Grand Stableford Totals (RHS) */}
-                              {showPtsColumns &&
-                                partners.map((p: any) => {
-                                  const t = getPlayerTotals(processedHoles, p);
-                                  return (
-                                    <VStack
-                                      key={`pts-grand-${p.playerId}`}
-                                      style={{
-                                        width: pPtsWidth,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <ThemedText
-                                        style={{
-                                          fontWeight: "800",
-                                          color: "#fff",
-                                        }}
-                                      >
-                                        {t.stableford}
-                                      </ThemedText>
-                                    </VStack>
-                                  );
-                                })}
                               {isSplit6 &&
                                 partners.length >= 3 &&
                                 (() => {

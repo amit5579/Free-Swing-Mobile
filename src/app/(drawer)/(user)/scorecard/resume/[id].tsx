@@ -350,7 +350,7 @@ export default function ResumeScorecard() {
 
         if (serverHoles && serverHoles.length > 0) {
           const normalizedServerHoles = serverHoles.map((h: any) => ({
-            ...h,
+            ...h, 
             courseHalf:
               h.courseHalf !== undefined && h.courseHalf !== null
                 ? h.courseHalf
@@ -1301,7 +1301,7 @@ export default function ResumeScorecard() {
       const nextPlayer = partners[nextPIndex];
       const isPending =
         !nextPlayer.isPrimary &&
-        delegationStatuses[nextPlayer.userId] === "Pending";
+        delegationStatuses[nextPlayer.userId] !== "Approved";
       if (!isPending) break;
       nextIndex++;
     }
@@ -3071,7 +3071,7 @@ export default function ResumeScorecard() {
                                 index * partners.length + pIndex;
                               const isPending =
                                 !p.isPrimary &&
-                                delegationStatuses[p.userId] === "Pending";
+                                delegationStatuses[p.userId] !== "Approved";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
@@ -3806,7 +3806,7 @@ export default function ResumeScorecard() {
                                 front9Offset + index * partners.length + pIndex;
                               const isPending =
                                 !p.isPrimary &&
-                                delegationStatuses[p.userId] === "Pending";
+                                delegationStatuses[p.userId] !== "Approved";
                               let textVal = "";
                               let companionScores: Record<
                                 string,
