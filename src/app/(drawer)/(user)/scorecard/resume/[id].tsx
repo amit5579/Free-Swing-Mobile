@@ -3071,8 +3071,8 @@ export default function ResumeScorecard() {
                                 index * partners.length + pIndex;
                               const isPending =
                                 !p.isPrimary &&
-                                delegationStatuses[p.userId] !== "Approved";
-                              let textVal = "";
+                                delegationStatuses[p.userId] === "Pending";                              
+                                let textVal = "";
                               let companionScores: Record<
                                 string,
                                 number | null
@@ -3806,8 +3806,8 @@ export default function ResumeScorecard() {
                                 front9Offset + index * partners.length + pIndex;
                               const isPending =
                                 !p.isPrimary &&
-                                delegationStatuses[p.userId] !== "Approved";
-                              let textVal = "";
+                                delegationStatuses[p.userId] === "Pending";
+                                let textVal = "";
                               let companionScores: Record<
                                 string,
                                 number | null
