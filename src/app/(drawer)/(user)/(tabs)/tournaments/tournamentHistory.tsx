@@ -2128,7 +2128,7 @@ const TournamentHistory: React.FC = () => {
                           fontSize: 12,
                         }}
                       >
-                        Nassau
+                        {`Nassau\nPTS`}
                       </ThemedText>
                     )}
                   </HStack>

@@ -832,7 +832,13 @@ export default function PlayScoreCard() {
 
   const renderHeader = () => {
     return (
-      <View>
+      <View
+        style={{
+          backgroundColor: isDark ? "#000" : "#fff",
+          zIndex: 10,
+          elevation: 10,
+        }}
+      >
         {/* Main Header */}
         <View
           style={{
@@ -1146,7 +1152,7 @@ export default function PlayScoreCard() {
         {renderHeader()}
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-2 pb-20">
             <VStack className="gap-4">
               {loading ? (

@@ -1887,6 +1887,8 @@ export default function ResumeScorecard() {
         borderBottomWidth: 1,
         marginBottom: 7,
         borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        zIndex: 10,
+        elevation: 10,
       }}
     >
       <VStack
@@ -2169,49 +2171,56 @@ export default function ResumeScorecard() {
       <Watermark />
       {renderHeader()}
 
-      <ScrollView className="px-4 flex-1" showsVerticalScrollIndicator={false}>
-        {partners.length < 2 ? (
-          <>
+      <ScrollView
+        className="px-4 flex-1"
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={partners.length < 2 ? [0] : undefined}
+      >
+        {partners.length < 2 && (
+          <View
+            className="z-10 shadow-sm"
+            style={{
+              backgroundColor: isDark ? "#020617" : "#FFFFFF",
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              borderWidth: 1,
+              borderBottomWidth: 0,
+              borderColor: isDark ? "#1e293b" : "#e5e7eb",
+              overflow: "hidden",
+            }}
+          >
             <View
-              className="z-10 shadow-sm"
+              className={`flex-row p-3 ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
               style={{
-                backgroundColor: isDark ? "#020617" : "#FFFFFF",
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                borderWidth: 1,
-                borderBottomWidth: 0,
-                borderColor: isDark ? "#1e293b" : "#e5e7eb",
-                overflow: "hidden",
+                borderBottomWidth: 1,
+                borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
               }}
             >
-              <View
-                className={`flex-row p-3 ${isDark ? "bg-[#111827]" : "bg-slate-50"}`}
-                style={{
-                  borderBottomWidth: 1,
-                  borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
-                }}
-              >
-                {[
-                  "Hole",
-                  isDetailsVisible && "SI",
-                  isDetailsVisible && "Yards",
-                  "Par",
-                  "Score",
-                  showNetColumns && "Net",
-                  showPtsColumns && "Pts",
-                ]
-                  .filter(Boolean)
-                  .map((h) => (
-                    <Text
-                      key={h as string}
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                    >
-                      {h as string}
-                    </Text>
-                  ))}
-              </View>
+              {[
+                "Hole",
+                isDetailsVisible && "SI",
+                isDetailsVisible && "Yards",
+                "Par",
+                "Score",
+                showNetColumns && "Net",
+                showPtsColumns && "Pts",
+              ]
+                .filter(Boolean)
+                .map((h) => (
+                  <Text
+                    key={h as string}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
+                  >
+                    {h as string}
+                  </Text>
+                ))}
             </View>
+          </View>
+        )}
 
+        {partners.length < 2 && (
+          <View>
             <View
               className={`${isDark ? "bg-[#020617]" : "bg-white"} rounded-b-xl overflow-hidden mb-4`}
               style={{
@@ -2675,8 +2684,10 @@ export default function ResumeScorecard() {
                 )}
               </View>
             </View>
-          </>
-        ) : (
+          </View>
+        )}
+
+        {partners.length >= 2 &&
           (() => {
             const mode = isNassauBest ? "best" : "combined";
             const teamAPartners =
@@ -2973,7 +2984,7 @@ export default function ResumeScorecard() {
                         fontSize: 11,
                       }}
                     >
-                      Nassau Pts
+                      {`Nassau\nPTS`}
                     </ThemedText>
                   </VStack>
                 )}
@@ -4689,8 +4700,7 @@ export default function ResumeScorecard() {
                 </VStack>
               </ScrollView>
             );
-          })()
-        )}
+          })()}
 
         {/* 🔹 SUMMARY TABLES FOR SIDE GAMES */}
         {partners.length >= 2 && (isSplit6 || isHighLow || isNassau) && (
