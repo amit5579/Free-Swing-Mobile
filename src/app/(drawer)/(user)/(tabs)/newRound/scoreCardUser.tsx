@@ -180,8 +180,9 @@ export default function ScoreCardUserPage() {
   const [displayFront9, setDisplayFront9] = useState(true);
   const [displayBack9, setDisplayBack9] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+ 
   const scoreCardRef = useRef<any>([]);
 
   useEffect(() => {
@@ -1034,7 +1035,7 @@ export default function ScoreCardUserPage() {
 
   // Polling for live scoring and delegation statuses
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
 
     const fetchDelegationStatuses = async () => {
       if (roundContextId) {
@@ -1264,7 +1265,7 @@ export default function ScoreCardUserPage() {
           if (nextFlatIndex < totalInputs) {
             inputRefs.current[nextFlatIndex]?.focus();
           }
-        }, 1500);
+        }, 500);
       }
     }
   };
@@ -1503,7 +1504,7 @@ export default function ScoreCardUserPage() {
         if (nextIndex < processedHoles.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 1500);
+      }, 500);
     }
   };
 
