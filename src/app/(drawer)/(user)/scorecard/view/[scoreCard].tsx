@@ -1376,6 +1376,8 @@ const ScoreCard: React.FC = () => {
         style={{
           backgroundColor: isDark ? "#161618" : "#FFFFFF",
           paddingTop: Math.max(insets.top, 16),
+          zIndex: 10,
+          elevation: 10,
         }}
       >
         {/* Top Row */}
@@ -1524,50 +1526,58 @@ const ScoreCard: React.FC = () => {
 
       {renderHeader()}
 
-      <ScrollView className="px-4 flex-1" showsVerticalScrollIndicator={false}>
-        {partners.length < 2 ? (
+      <ScrollView
+        className="px-4 flex-1"
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={partners.length < 2 ? [0] : undefined}
+      >
+        {partners.length < 2 && (
           <View
-            className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden`}
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
+            className="z-10 shadow-sm"
+            style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
           >
             <View
-              className="z-10 shadow-sm"
-              style={{ backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+              className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: isDark ? "#444" : "#ddd",
+              }}
             >
-              <View
-                className={`flex-row items-center p-3 rounded-t-xl ${isDark ? "bg-[#262626]" : "bg-gray-200"}`}
-                style={{
-                  borderBottomWidth: 1,
-                  borderBottomColor: isDark ? "#444" : "#ddd",
-                }}
-              >
-                {[
-                  "Hole",
-                  isDetailsVisible && "Stroke\nIndex",
-                  isDetailsVisible && "Yards",
-                  "Par",
-                  "Score",
-                  !isGross && showNetColumns && "Net",
-                  showPtsColumns && (isSystem36 ? "Sys36\nPts" : "Pts"),
-                ]
-                  .filter(Boolean)
-                  .map((h) => (
-                    <Text
-                      key={h as string}
-                      className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
-                      style={{ textAlignVertical: "center" }}
-                    >
-                      {h as string}
-                    </Text>
-                  ))}
-              </View>
+              {[
+                "Hole",
+                isDetailsVisible && "Stroke\nIndex",
+                isDetailsVisible && "Yards",
+                "Par",
+                "Score",
+                !isGross && showNetColumns && "Net",
+                showPtsColumns && (isSystem36 ? "Sys36\nPts" : "Pts"),
+              ]
+                .filter(Boolean)
+                .map((h) => (
+                  <Text
+                    key={h as string}
+                    className={`flex-1 text-center font-bold text-xs ${isDark ? "text-white" : "text-black"}`}
+                    style={{ textAlignVertical: "center" }}
+                  >
+                    {h as string}
+                  </Text>
+                ))}
             </View>
+          </View>
+        )}
+
+        {partners.length < 2 && (
+          <View
+            className={`${isDark ? "bg-[#1f1f1f]" : "bg-white"} rounded-b-xl overflow-hidden mb-4`}
+            style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
 
             {front9.length > 0 &&
               front9.map((h, index) => (
@@ -1898,7 +1908,9 @@ const ScoreCard: React.FC = () => {
               )}
             </View>
           </View>
-        ) : (
+        )}
+
+        {partners.length >= 2 &&
           (() => {
             const mode = isNassauBest ? "best" : "combined";
             const teamAPartners =
@@ -2194,7 +2206,7 @@ const ScoreCard: React.FC = () => {
                             fontSize: 12,
                           }}
                         >
-                          Nassau Pts
+                          {`Nassau\nPTS`}
                         </ThemedText>
                       </VStack>
                     )}
@@ -3363,8 +3375,7 @@ const ScoreCard: React.FC = () => {
                 </VStack>
               </ScrollView>
             );
-          })()
-        )}
+          })()}
 
         {/* 🔹 SUMMARY TABLES FOR SIDE GAMES */}
         {(isHighLow || isSplit6 || isNassauBest || isNassauCombined) &&

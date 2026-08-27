@@ -1644,6 +1644,8 @@ export default function ScoreCardUserPage() {
           backgroundColor: isDark ? "#020617" : "#ffffff",
           borderBottomWidth: 1,
           borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          zIndex: 10,
+          elevation: 10,
         }}
       >
         <VStack
@@ -1827,7 +1829,7 @@ export default function ScoreCardUserPage() {
 
         <Watermark />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <VStack className="px-4 pt-6 pb-20">
             <VStack className="gap-4">
               {loading ? (
@@ -2575,7 +2577,7 @@ export default function ScoreCardUserPage() {
                                       fontSize: 11,
                                     }}
                                   >
-                                    Nassau Pts
+                                    {`Nassau\nPTS`}
                                   </ThemedText>
                                 </VStack>
                               )}
