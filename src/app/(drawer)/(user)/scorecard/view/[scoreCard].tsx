@@ -2108,9 +2108,7 @@ const ScoreCard: React.FC = () => {
                                   fontSize: 10,
                                 }}
                               >
-                                {isSystem36
-                                  ? `${getPlayerName(p)}\nSys36`
-                                  : `${getPlayerName(p)}\nPts`}
+                                {getPlayerName(p)}
                               </ThemedText>
                             </VStack>
                           )}
@@ -2135,7 +2133,7 @@ const ScoreCard: React.FC = () => {
                               fontSize: 12,
                             }}
                           >
-                            {`${getPlayerName(p)} PTS`}
+                            {getPlayerName(p)}
                           </ThemedText>
                         </VStack>
                       ))}
@@ -2157,7 +2155,7 @@ const ScoreCard: React.FC = () => {
                               color: teamAColor,
                             }}
                           >
-                            Team A Pts
+                            Team A
                           </ThemedText>
                         </VStack>
                         <VStack
@@ -2176,7 +2174,7 @@ const ScoreCard: React.FC = () => {
                               color: teamBColor,
                             }}
                           >
-                            Team B Pts
+                            Team B
                           </ThemedText>
                         </VStack>
                       </>
@@ -3975,7 +3973,8 @@ const ScoreCard: React.FC = () => {
             </VStack>
           )}
 
-        {(() => {
+        {partners.length < 2 &&
+          (() => {
           const scoreCounts: Record<string, number> = {
             holeInOne: 0,
             albatross: 0,

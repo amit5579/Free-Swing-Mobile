@@ -11,7 +11,7 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Pressable, useColorScheme, View, Modal, Linking } from "react-native";
+import { Pressable, useColorScheme, View, Modal, Linking, TouchableOpacity } from "react-native";
 import ImageCropPicker from "react-native-image-crop-picker";
 import QRCode from "react-native-qrcode-svg";
 
@@ -25,6 +25,8 @@ import {
   getSubAdminCourses,
   getTeeTimeSeats,
 } from "@/api/modules/teeTime.api";
+import { getProfile } from "@/api/modules/profile.api";
+import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -112,24 +114,105 @@ export default function TeeTimeBookingPage() {
     }
   };
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [clubMemberCourseIds, setClubMemberCourseIds] = useState<number[]>([]);
+
   useEffect(() => {
-    const getUserId = async () => {
+    const loadUserAndClubData = async () => {
       try {
         const id = await AsyncStorage.getItem("userId");
         if (id) {
           setUserId(Number(id));
         }
+        const user = await getProfile();
+        setCurrentUser(user);
+
+        const userSubAdminId =
+          user?.invitedBySubAdminId ?? user?.subAdminId;
+        if (userSubAdminId) {
+          const subAdmins = await getSubAdminList();
+          const club = subAdmins?.find(
+            (sa: any) => Number(sa.id) === Number(userSubAdminId),
+          );
+          const cIds: number[] = [];
+          if (club?.courses && Array.isArray(club.courses)) {
+            club.courses.forEach((c: any) => {
+              const cid = Number(c.courseId ?? c.id);
+              if (!isNaN(cid)) cIds.push(cid);
+            });
+          }
+          if (club?.courseIds && Array.isArray(club.courseIds)) {
+            club.courseIds.forEach((cid: any) => {
+              const n = Number(cid);
+              if (!isNaN(n) && !cIds.includes(n)) cIds.push(n);
+            });
+          }
+          setClubMemberCourseIds(cIds);
+        }
       } catch (err) {
-        console.error("Error fetching userId:", err);
+        console.error("Error loading user or club data:", err);
       }
     };
-    getUserId();
+    loadUserAndClubData();
   }, []);
 
-  // export const bookSeat = async (courseId: number, date: string, seatNumber: number, tee: number, timeSlot: string) => {
+  const currentCourseObj = courses.find(
+    (c: any) => c.value === selectedCourse || c.courseId === selectedCourse,
+  );
+
+  const userSubAdminId =
+    currentUser?.invitedBySubAdminId ?? currentUser?.subAdminId;
+
+  const isClubMemberForSelectedCourse = Boolean(
+    selectedCourse &&
+      userSubAdminId &&
+      (clubMemberCourseIds.includes(Number(selectedCourse)) ||
+        (currentCourseObj?.subAdminId &&
+          Number(currentCourseObj.subAdminId) === Number(userSubAdminId))),
+  );
+
+  const getSelectedDateRate = (category: "Affiliated" | "Non-Affiliated") => {
+    if (!currentCourseObj) return 0;
+    const dateStr = availableDates[selectedDateIndex];
+    const isWeekend = (() => {
+      if (!dateStr) return false;
+      const day = new Date(dateStr).getDay();
+      return day === 0 || day === 6; // Sunday = 0, Saturday = 6
+    })();
+
+    if (category === "Affiliated") {
+      if (isWeekend && currentCourseObj.affiliatedMemberWeekendRate != null) {
+        return currentCourseObj.affiliatedMemberWeekendRate;
+      }
+      return (
+        currentCourseObj.affiliatedMemberRate ??
+        currentCourseObj.affiliatedMemberWeekdayRate ??
+        currentCourseObj.affiliatedPrice ??
+        0
+      );
+    } else {
+      if (isWeekend && currentCourseObj.nonAffiliatedMemberWeekendRate != null) {
+        return currentCourseObj.nonAffiliatedMemberWeekendRate;
+      }
+      return (
+        currentCourseObj.nonAffiliatedMemberRate ??
+        currentCourseObj.nonAffiliatedMemberWeekdayRate ??
+        currentCourseObj.nonAffiliatedPrice ??
+        0
+      );
+    }
+  };
 
   const initiateBooking = (timeSlot: string, seatNumber: number) => {
     setSelectedSeatInfo({ timeSlot, seatNumber });
+
+    // Auto-confirm if Club Member
+    if (isClubMemberForSelectedCourse) {
+      bookSeatHandler("Club Member");
+      return;
+    }
+
+    // Otherwise open modal for guest categories
     setMemberCategoryModalVisible(true);
   };
 
@@ -202,31 +285,24 @@ export default function TeeTimeBookingPage() {
       setBookingResponse(resp);
       setScreenshotUri(null);
       setScreenshotUploaded(false);
-      if (resp?.amountToPay > 0 || resp?.paymentStatus === "Pending") {
+
+      if (resp?.amountToPay > 0 && resp?.paymentStatus === "Pending") {
         setPaymentModalVisible(true);
       }
+
       Toast.show({
         type: "success",
         text1: "Seat Booked",
-        text2: "Seat booked successfully",
+        text2:
+          memberCategory === "Club Member" || resp?.amountToPay === 0
+            ? "Complimentary club member seat confirmed."
+            : "Seat booked successfully. Please complete payment.",
       });
     } catch (error: any) {
       console.error(error);
-      
-      const apiMessage = error?.response?.data?.message || error?.message || "Booking failed";
-      // const nextAvailableTime = error?.response?.data?.availableAfter;
-      
-      // let text2Message = apiMessage;
-      // if (nextAvailableTime) {
-      //   const d = new Date(nextAvailableTime);
-      //   if (!isNaN(d.getTime())) {
-      //     const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      //     const timeStr = d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' });
-      //     // Add a space if apiMessage doesn't end with one
-      //     const prefix = text2Message.endsWith(" ") ? "" : " ";
-      //     text2Message += `${prefix}(Available after ${dateStr} at ${timeStr})`;
-      //   }
-      // }
+
+      const apiMessage =
+        error?.response?.data?.message || error?.message || "Booking failed";
 
       Toast.show({
         type: "error",
@@ -1038,15 +1114,17 @@ export default function TeeTimeBookingPage() {
           </VStack>
         </ScrollView>
 
+        {/* SELECT MEMBER CATEGORY MODAL */}
         <Modal
           visible={memberCategoryModalVisible}
           transparent={true}
           animationType="fade"
+          onRequestClose={() => setMemberCategoryModalVisible(false)}
         >
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(0,0,0,0.5)",
+              backgroundColor: "rgba(0,0,0,0.6)",
               justifyContent: "center",
               alignItems: "center",
               padding: 20,
@@ -1054,164 +1132,360 @@ export default function TeeTimeBookingPage() {
           >
             <View
               style={{
-                backgroundColor: isDark ? "#1e293b" : "#fff",
+                backgroundColor: isDark ? "#0f172a" : "#ffffff",
                 padding: 20,
-                borderRadius: 12,
+                borderRadius: 20,
                 width: "100%",
+                maxWidth: 420,
+                borderWidth: 1,
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.25,
+                shadowRadius: 20,
+                elevation: 10,
               }}
             >
-              <HStack
+              {/* Header */}
+              <View
                 style={{
+                  flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: 15,
+                  marginBottom: 8,
                 }}
               >
                 <Text
                   style={{
                     fontSize: 18,
-                    fontWeight: "700",
-                    color: isDark ? "#fff" : "#000",
+                    fontWeight: "800",
+                    color: isDark ? "#ffffff" : "#0f172a",
                   }}
                 >
                   Select Member Category
                 </Text>
-                <Pressable onPress={() => setMemberCategoryModalVisible(false)}>
+                <TouchableOpacity
+                  onPress={() => setMemberCategoryModalVisible(false)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
                   <Ionicons
                     name="close"
-                    size={24}
-                    color={isDark ? "#fff" : "#000"}
+                    size={20}
+                    color={isDark ? "#94a3b8" : "#64748b"}
                   />
-                </Pressable>
-              </HStack>
+                </TouchableOpacity>
+              </View>
+
               <Text
                 style={{
-                  textAlign: "center",
-                  color: isDark ? "#ccc" : "#555",
-                  marginBottom: 20,
+                  fontSize: 13,
+                  color: isDark ? "#94a3b8" : "#64748b",
+                  marginBottom: 18,
+                  lineHeight: 18,
                 }}
               >
-                Please select your category for this course. Club members are
-                not charged.
+                Please select your category for this course. Club members are not charged.
               </Text>
 
-              <Pressable
-                onPress={() => bookSeatHandler("ClubMember")}
-                style={{
-                  padding: 15,
-                  borderWidth: 1,
-                  borderColor: "#8BC34A",
-                  borderRadius: 10,
-                  marginBottom: 10,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: isDark
-                    ? "rgba(139,195,74,0.1)"
-                    : "rgba(139,195,74,0.05)",
-                }}
-              >
-                <Ionicons
-                  name="star"
-                  size={20}
-                  color="#8BC34A"
-                  style={{ marginRight: 10 }}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: "#8BC34A", fontWeight: "600" }}>
-                    Club Member (₹0)
-                  </Text>
-                  <Text
-                    style={{ fontSize: 12, color: isDark ? "#aaa" : "#777" }}
-                  >
-                    Only available if invited by the club's admin.
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => bookSeatHandler("Affiliated")}
-                style={{
-                  padding: 15,
-                  borderWidth: 1,
-                  borderColor: "#3b82f6",
-                  borderRadius: 10,
-                  marginBottom: 10,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <HStack style={{ alignItems: "center" }}>
-                  <Ionicons
-                    name="business"
-                    size={20}
-                    color="#3b82f6"
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text style={{ color: "#3b82f6", fontWeight: "600" }}>
-                    Affiliated Club / Serving / Retired
-                  </Text>
-                </HStack>
-                <View
+              <View style={{ gap: 12 }}>
+                {/* 1. CLUB MEMBER OPTION */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (isClubMemberForSelectedCourse) {
+                      bookSeatHandler("Club Member");
+                    }
+                  }}
+                  disabled={!isClubMemberForSelectedCourse}
                   style={{
-                    backgroundColor: "#8BC34A",
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 12,
+                    padding: 14,
+                    borderRadius: 14,
+                    borderWidth: 1.5,
+                    borderColor: isClubMemberForSelectedCourse
+                      ? "#8BC34A"
+                      : isDark
+                        ? "#1e293b"
+                        : "#e2e8f0",
+                    backgroundColor: isClubMemberForSelectedCourse
+                      ? isDark
+                        ? "rgba(139,195,74,0.12)"
+                        : "rgba(139,195,74,0.06)"
+                      : isDark
+                        ? "rgba(30,41,59,0.3)"
+                        : "#f8fafc",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    opacity: isClubMemberForSelectedCourse ? 1 : 0.6,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "700" }}>
-                    ₹
-                    {courses.find((c: any) => c.value === selectedCourse)
-                      ?.affiliatedMemberRate || 1}
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => bookSeatHandler("NonAffiliated")}
-                style={{
-                  padding: 15,
-                  borderWidth: 1,
-                  borderColor: "#64748b",
-                  borderRadius: 10,
-                  marginBottom: 10,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <HStack style={{ alignItems: "center" }}>
-                  <Ionicons
-                    name="person"
-                    size={20}
-                    color="#64748b"
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text
+                  <View
                     style={{
-                      color: isDark ? "#cbd5e1" : "#64748b",
-                      fontWeight: "600",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                      marginRight: 10,
                     }}
                   >
-                    Non-Affiliated Member
-                  </Text>
-                </HStack>
-                <View
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        backgroundColor: isClubMemberForSelectedCourse
+                          ? "rgba(139,195,74,0.2)"
+                          : isDark
+                            ? "#1e293b"
+                            : "#e2e8f0",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <Ionicons
+                        name="star"
+                        size={20}
+                        color={
+                          isClubMemberForSelectedCourse
+                            ? "#8BC34A"
+                            : "#94a3b8"
+                        }
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: isClubMemberForSelectedCourse
+                            ? "#8BC34A"
+                            : isDark
+                              ? "#94a3b8"
+                              : "#64748b",
+                        }}
+                      >
+                        Club Member (₹0)
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: isClubMemberForSelectedCourse
+                            ? isDark
+                              ? "#a3e635"
+                              : "#65a30d"
+                            : "#ef4444",
+                          marginTop: 2,
+                        }}
+                      >
+                        {isClubMemberForSelectedCourse
+                          ? "Complimentary access for club members"
+                          : "Only available if this course belongs to your club."}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      backgroundColor: isClubMemberForSelectedCourse
+                        ? "#8BC34A"
+                        : isDark
+                          ? "#334155"
+                          : "#cbd5e1",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isClubMemberForSelectedCourse
+                          ? "#ffffff"
+                          : isDark
+                            ? "#94a3b8"
+                            : "#475569",
+                        fontWeight: "800",
+                        fontSize: 13,
+                      }}
+                    >
+                      ₹0
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* 2. AFFILIATED CLUB OPTION */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => bookSeatHandler("Affiliated")}
                   style={{
-                    backgroundColor: "#64748b",
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 12,
+                    padding: 14,
+                    borderRadius: 14,
+                    borderWidth: 1.5,
+                    borderColor: "#3b82f6",
+                    backgroundColor: isDark
+                      ? "rgba(59,130,246,0.12)"
+                      : "rgba(59,130,246,0.06)",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "700" }}>
-                    ₹
-                    {courses.find((c: any) => c.value === selectedCourse)
-                      ?.nonAffiliatedMemberRate || 2}
-                  </Text>
-                </View>
-              </Pressable>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                      marginRight: 10,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        backgroundColor: "rgba(59,130,246,0.2)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <Ionicons name="business" size={20} color="#3b82f6" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: isDark ? "#60a5fa" : "#2563eb",
+                        }}
+                      >
+                        Affiliated Club / Serving / Retired
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: isDark ? "#94a3b8" : "#64748b",
+                          marginTop: 2,
+                        }}
+                      >
+                        Defence / Retired / Affiliated club rates
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      backgroundColor: "#3b82f6",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#ffffff",
+                        fontWeight: "800",
+                        fontSize: 13,
+                      }}
+                    >
+                      ₹{getSelectedDateRate("Affiliated")}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* 3. NON-AFFILIATED OPTION */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => bookSeatHandler("NonAffiliated")}
+                  style={{
+                    padding: 14,
+                    borderRadius: 14,
+                    borderWidth: 1.5,
+                    borderColor: isDark ? "#475569" : "#94a3b8",
+                    backgroundColor: isDark
+                      ? "rgba(100,116,139,0.12)"
+                      : "rgba(100,116,139,0.06)",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                      marginRight: 10,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        backgroundColor: isDark
+                          ? "rgba(148,163,184,0.2)"
+                          : "rgba(100,116,139,0.15)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <Ionicons
+                        name="person"
+                        size={20}
+                        color={isDark ? "#cbd5e1" : "#475569"}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: isDark ? "#e2e8f0" : "#334155",
+                        }}
+                      >
+                        Non-Affiliated Member
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: isDark ? "#94a3b8" : "#64748b",
+                          marginTop: 2,
+                        }}
+                      >
+                        Civil / Non-affiliated guest rates
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      backgroundColor: isDark ? "#475569" : "#64748b",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#ffffff",
+                        fontWeight: "800",
+                        fontSize: 13,
+                      }}
+                    >
+                      ₹{getSelectedDateRate("Non-Affiliated")}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
