@@ -292,107 +292,53 @@ export type HighLowFullSummary = {
 /**
  * Compute High-Low points for a single hole.
  *
- * 1. Lowest ball among all 4 scores → +2 (sole team at that score only)
- * 2. Remove one instance of that lowest score
- * 3. Lowest ball among remaining 3 → +1 (sole team at that score only)
- * 4. Multiple teams sharing the minimum at a position → no points for that position
+ * In High-Low match play (3 points per hole):
+ * 1. Low ball (2 points):
+ *    - Compare the lowest score of Team A with the lowest score of Team B.
+ *    - If Team A has a lower (better) score than Team B, Team A receives 2 points.
+ *    - If Team B has a lower (better) score than Team A, Team B receives 2 points.
+ *    - If tied, neither team receives the 2 points (0 points).
  *
- * When the 2-point position is tied across teams, the 1-point award uses the
- * lowest score strictly above that tied minimum (if exactly one team owns it).
- * Otherwise it falls back to the lowest score in the remaining pool of 3.
+ * 2. High ball (1 point):
+ *    - Compare the highest (second) score of Team A with the highest (second) score of Team B.
+ *    - If Team A has a lower (better) score than Team B, Team A receives 1 point.
+ *    - If Team B has a lower (better) score than Team A, Team B receives 1 point.
+ *    - If tied, neither team receives the 1 point (0 points).
  */
 export function computeHighLowHolePoints(
-  teamAScores: [number | null, number | null],
-  teamBScores: [number | null, number | null],
+  teamAScores: [number | null, number | null] | (number | null)[],
+  teamBScores: [number | null, number | null] | (number | null)[],
 ): { teamA: number; teamB: number } {
   let teamAPoints = 0;
   let teamBPoints = 0;
 
-  const validA = teamAScores.filter((s): s is number => s !== null);
-  const validB = teamBScores.filter((s): s is number => s !== null);
+  const validA = teamAScores.filter((s): s is number => s !== null && s !== undefined);
+  const validB = teamBScores.filter((s): s is number => s !== null && s !== undefined);
 
   if (validA.length === 0 || validB.length === 0) {
     return { teamA: 0, teamB: 0 };
   }
 
-  // Step 1: Create four balls
-  const all: { score: number; team: string }[] = [
-    ...validA.map(score => ({ team: 'A', score })),
-    ...validB.map(score => ({ team: 'B', score }))
-  ];
-  // console.log("INPUT", teamAScores, teamBScores);
-  // console.log("ALL BEFORE", JSON.stringify(all));
-  // Step 2: Determine the 2-point winner
-  const lowest = Math.min(...all.map(b => b.score));
-  const lowestBalls = all.filter(b => b.score === lowest);
-  const aHasLowest = lowestBalls.some(b => b.team === 'A');
-  const bHasLowest = lowestBalls.some(b => b.team === 'B');
+  // Low ball comparison (2 points)
+  const teamALow = Math.min(...validA);
+  const teamBLow = Math.min(...validB);
 
-  //   console.log("LOWEST", lowest);
-  // console.log("LOWEST BALLS", lowestBalls);
-  //   console.log("aHasLowest",aHasLowest);
-  //   console.log("bHasLowest",bHasLowest);
-
-
-  if (aHasLowest && !bHasLowest) {
-    // Case A: All minimum-score balls belong to Team A → +2 to A, remove ONE
+  if (teamALow < teamBLow) {
     teamAPoints += 2;
-    const idx = all.findIndex(b => b.team === 'A' && b.score === lowest);
-    all.splice(idx, 1);
-  } else if (bHasLowest && !aHasLowest) {
-    // Case A: All minimum-score balls belong to Team B → +2 to B, remove ONE
+  } else if (teamBLow < teamALow) {
     teamBPoints += 2;
-    const idx = all.findIndex(b => b.team === 'B' && b.score === lowest);
-    all.splice(idx, 1);
-  }
-  else if (aHasLowest && bHasLowest) {
-
-    const idxA = all.findIndex(
-      b => b.team === 'A' && b.score === lowest
-    );
-
-    if (idxA !== -1) {
-      all.splice(idxA, 1);
-    }
-
-    const idxB = all.findIndex(
-      b => b.team === 'B' && b.score === lowest
-    );
-
-    if (idxB !== -1) {
-      all.splice(idxB, 1);
-    }
   }
 
-  else {
-    // Case B: Minimum-score balls belong to both teams → no 2-point bonus
-    // Remove ONE minimum-score ball from Team A and ONE from Team B
-    const idxA = all.findIndex(b => b.team === 'A' && b.score === lowest);
-    all.splice(idxA, 1);
-    const idxB = all.findIndex(b => b.team === 'B' && b.score === lowest);
-    all.splice(idxB, 1);
-  }
-  // console.log("ALL AFTER STEP 2", JSON.stringify(all));
-  // Step 3: Determine the 1-point winner from remaining balls
-  if (all.length > 0) {
-    const nextLowest = Math.min(...all.map(b => b.score));
-    const nextBalls = all.filter(b => b.score === nextLowest);
-    const aHasNext = nextBalls.some(b => b.team === 'A');
-    const bHasNext = nextBalls.some(b => b.team === 'B');
+  // High ball comparison (1 point)
+  const teamAHigh = Math.max(...validA);
+  const teamBHigh = Math.max(...validB);
 
-    if (aHasNext && !bHasNext) {
-      teamAPoints += 1;
-    } else if (bHasNext && !aHasNext) {
-      teamBPoints += 1;
-    }
-    //     console.log("NEXT LOWEST", nextLowest);
-    // console.log("NEXT BALLS", nextBalls);
-    // Tied between teams → nobody gets the point
+  if (teamAHigh < teamBHigh) {
+    teamAPoints += 1;
+  } else if (teamBHigh < teamAHigh) {
+    teamBPoints += 1;
   }
-  // console.log("RESULT", {
-  //   teamA: teamAPoints,
-  //   teamB: teamBPoints
-  // });
+
   return { teamA: teamAPoints, teamB: teamBPoints };
 }
 

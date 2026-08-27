@@ -299,7 +299,7 @@ const ScoreCard: React.FC = () => {
 
   // Polling for live scoring and delegation statuses
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
 
     const fetchDelegationStatuses = async () => {
       if (roundContextId) {
@@ -1467,6 +1467,30 @@ const ScoreCard: React.FC = () => {
                 </Text>
               </Box>
 
+          {/* GPS Button */}
+          <Pressable
+            onPress={() => setActiveRangefinderHole(holes[0]?.holeId || null)}
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              backgroundColor: "#198754",
+              borderRadius: 6,
+              marginLeft: 8,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons
+              name="map"
+              size={14}
+              color="#fff"
+              style={{ marginRight: 4 }}
+            />
+            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+              GPS
+            </Text>
+          </Pressable>
+
           {/* Toggle Button */}
           <Pressable
             onPress={() => setIsDetailsVisible(!isDetailsVisible)}
@@ -1477,7 +1501,7 @@ const ScoreCard: React.FC = () => {
               justifyContent: "center",
               alignItems: "center",
               backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-              marginLeft: 12,
+              marginLeft: 8,
             }}
             android_ripple={{ color: "rgba(0,0,0,0.1)" }}
           >
@@ -2201,11 +2225,28 @@ const ScoreCard: React.FC = () => {
                               : "rgba(255, 255, 255, 0.7)",
                           }}
                         >
-                          <ThemedText
-                            style={{ width: colHoleWidth, textAlign: "center" }}
+                          <View
+                            style={{
+                              width: colHoleWidth,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                           >
-                            {h.holeNumber}
-                          </ThemedText>
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {h.holeNumber}
+                            </ThemedText>
+                            <TouchableOpacity
+                              onPress={() => setActiveRangefinderHole(h.holeId)}
+                              style={{ marginLeft: 2 }}
+                            >
+                              <Ionicons
+                                name="locate-outline"
+                                size={12}
+                                color={isDark ? "#8BC34A" : "#198754"}
+                              />
+                            </TouchableOpacity>
+                          </View>
                           {isDetailsVisible && (
                             <>
                               <ThemedText
@@ -2302,7 +2343,7 @@ const ScoreCard: React.FC = () => {
                                       marginTop: 4,
                                     }}
                                   >
-                                    {info.sandy && shouldShowSandyXControls() && (
+                                    {/* {info.sandy && shouldShowSandyXControls() && (
                                       <View
                                         style={{
                                           width: 18,
@@ -2323,9 +2364,9 @@ const ScoreCard: React.FC = () => {
                                           S
                                         </Text>
                                       </View>
-                                    )}
+                                    )} */}
 
-                                    {info.r && shouldShowSandyXControls() && (
+                                    {/* {info.r && shouldShowSandyXControls() && (
                                       <View
                                         style={{
                                           width: 18,
@@ -2346,7 +2387,7 @@ const ScoreCard: React.FC = () => {
                                           R
                                         </Text>
                                       </View>
-                                    )}
+                                    )} */}
 
                                     {info.score !== null &&
                                       shouldShowSandyXControls() &&

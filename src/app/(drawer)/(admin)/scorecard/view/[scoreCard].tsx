@@ -643,6 +643,7 @@ const ScoreCard: React.FC = () => {
   const getHighLowHoleStats = (h: any) => {
     if (partners.length < 4) {
       return {
+        isComplete: false,
         teamALow: null,
         teamBLow: null,
         teamAHigh: null,
@@ -660,13 +661,14 @@ const ScoreCard: React.FC = () => {
     const info3 = getPlayerHoleInfo(h, partners[2]);
     const info4 = getPlayerHoleInfo(h, partners[3]);
 
-    const s1 = info1.score !== null ? info1.netScore : null;
-    const s2 = info2.score !== null ? info2.netScore : null;
-    const s3 = info3.score !== null ? info3.netScore : null;
-    const s4 = info4.score !== null ? info4.netScore : null;
+    const s1 = info1.score !== null ? info1.score : null;
+    const s2 = info2.score !== null ? info2.score : null;
+    const s3 = info3.score !== null ? info3.score : null;
+    const s4 = info4.score !== null ? info4.score : null;
 
     if (s1 === null || s2 === null || s3 === null || s4 === null) {
       return {
+        isComplete: false,
         teamALow: null,
         teamBLow: null,
         teamAHigh: null,
@@ -703,6 +705,7 @@ const ScoreCard: React.FC = () => {
     const teamBMult = baseMultB + teamBSandys;
 
     return {
+      isComplete: true,
       teamALow,
       teamBLow,
       teamAHigh,
@@ -2550,8 +2553,17 @@ const ScoreCard: React.FC = () => {
                             {isHighLow &&
                               partners.length >= 4 &&
                               (() => {
-                                const fh = front9[front9.length - 1] || {};
-                                const st = getHighLowHoleStats(fh);
+                                let f9A = 0,
+                                  f9B = 0;
+                                let hasAny = false;
+                                front9.forEach((fh: any) => {
+                                  const st = getHighLowHoleStats(fh);
+                                  if (st && st.isComplete) {
+                                    f9A += st.teamAMatchPts;
+                                    f9B += st.teamBMatchPts;
+                                    hasAny = true;
+                                  }
+                                });
                                 return (
                                   <>
                                     <View
@@ -2568,7 +2580,7 @@ const ScoreCard: React.FC = () => {
                                           fontSize: 13,
                                         }}
                                       >
-                                        {st.teamAMatchPts ?? "-"}
+                                        {hasAny ? f9A : "-"}
                                       </ThemedText>
                                     </View>
                                     <View
@@ -2585,7 +2597,7 @@ const ScoreCard: React.FC = () => {
                                           fontSize: 13,
                                         }}
                                       >
-                                        {st.teamBMatchPts ?? "-"}
+                                        {hasAny ? f9B : "-"}
                                       </ThemedText>
                                     </View>
                                   </>
@@ -2709,8 +2721,17 @@ const ScoreCard: React.FC = () => {
                             {isHighLow &&
                               partners.length >= 4 &&
                               (() => {
-                                const bh = back9[back9.length - 1] || {};
-                                const st = getHighLowHoleStats(bh);
+                                let b9A = 0,
+                                  b9B = 0;
+                                let hasAny = false;
+                                back9.forEach((bh: any) => {
+                                  const st = getHighLowHoleStats(bh);
+                                  if (st && st.isComplete) {
+                                    b9A += st.teamAMatchPts;
+                                    b9B += st.teamBMatchPts;
+                                    hasAny = true;
+                                  }
+                                });
                                 return (
                                   <>
                                     <View
@@ -2727,7 +2748,7 @@ const ScoreCard: React.FC = () => {
                                           fontSize: 13,
                                         }}
                                       >
-                                        {st.teamAMatchPts ?? "-"}
+                                        {hasAny ? b9A : "-"}
                                       </ThemedText>
                                     </View>
                                     <View
@@ -2744,7 +2765,7 @@ const ScoreCard: React.FC = () => {
                                           fontSize: 13,
                                         }}
                                       >
-                                        {st.teamBMatchPts ?? "-"}
+                                        {hasAny ? b9B : "-"}
                                       </ThemedText>
                                     </View>
                                   </>
@@ -2873,7 +2894,7 @@ const ScoreCard: React.FC = () => {
                         let hasAny = false;
                         displayHoles.forEach((th: any) => {
                           const st = getHighLowHoleStats(th);
-                          if (st && st.teamALow !== null) {
+                          if (st && st.isComplete) {
                             totalA += st.teamAMatchPts;
                             totalB += st.teamBMatchPts;
                             hasAny = true;
