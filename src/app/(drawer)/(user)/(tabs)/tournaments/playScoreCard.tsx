@@ -466,7 +466,7 @@ export default function PlayScoreCard() {
         if (nextFlatIndex < inputRefs.current.length) {
           inputRefs.current[nextFlatIndex]?.focus();
         }
-      }, 1500);
+      }, 500);
     }
   };
   const getScoreLegendCounts = (holes: any[]) => {

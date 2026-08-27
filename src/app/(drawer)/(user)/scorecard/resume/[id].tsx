@@ -642,7 +642,7 @@ export default function ResumeScorecard() {
 
   // Polling for live scoring and delegation statuses
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
 
     const fetchDelegationStatuses = async () => {
       if (roundContextId) {
@@ -1017,7 +1017,12 @@ export default function ResumeScorecard() {
   };
 
   const showNetColumns =
-    !isGross && !isSystem36 && !isHighLow && !isNassauBest && !isNassauCombined;
+    !isGross &&
+    !isSystem36 &&
+    !isHighLow &&
+    !isNassauBest &&
+    !isNassauCombined &&
+    !isSplit6;
 
   const showPtsColumns = isStableford || isSystem36;
 
@@ -1320,7 +1325,7 @@ export default function ResumeScorecard() {
         if (nextIndex < totalInputs) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 1500);
+      }, 500);
     }
   };
 
@@ -1500,7 +1505,7 @@ export default function ResumeScorecard() {
         if (nextIndex < flatHoles.length) {
           inputRefs.current[nextIndex]?.focus();
         }
-      }, 1500);
+      }, 500);
     }
   };
 
