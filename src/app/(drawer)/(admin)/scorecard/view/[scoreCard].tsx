@@ -2103,9 +2103,7 @@ const ScoreCard: React.FC = () => {
                                   fontSize: 10,
                                 }}
                               >
-                                {isSystem36
-                                  ? `${p.name}\nSys36`
-                                  : `${p.name}\nPts`}
+                                {p.name}
                               </ThemedText>
                             </VStack>
                           )}
@@ -3602,7 +3600,8 @@ const ScoreCard: React.FC = () => {
             </VStack>
           )}
 
-        {(() => {
+        {partners.length < 2 &&
+          (() => {
           const scoreCounts: Record<string, number> = {
             holeInOne: 0,
             albatross: 0,

@@ -2485,22 +2485,12 @@ export default function ScoreCardUserPage() {
                                         <ThemedText
                                           style={{
                                             textAlign: "center",
-                                            fontSize: 10,
-                                            color: isDark ? "#94a3b8" : "#64748b",
+                                            fontWeight: "700",
+                                            fontSize: 12,
                                           }}
                                           numberOfLines={1}
                                         >
-                                          {`(${pName})`}
-                                        </ThemedText>
-                                        <ThemedText
-                                          style={{
-                                            textAlign: "center",
-                                            fontWeight: "700",
-                                            fontSize: 11,
-                                            color: "#f59e0b",
-                                          }}
-                                        >
-                                          Pts
+                                          {pName}
                                         </ThemedText>
                                       </VStack>
                                     )}
@@ -2526,7 +2516,7 @@ export default function ScoreCardUserPage() {
                                         fontSize: 12,
                                       }}
                                     >
-                                      {`${p.isPrimary ? "You" : p.name} PTS`}
+                                      {p.isPrimary ? "You" : p.name}
                                     </ThemedText>
                                   </VStack>
                                 ))}
@@ -4853,177 +4843,149 @@ export default function ScoreCardUserPage() {
                   </Pressable>
 
                   {/* Scorecard legend */}
-                  <VStack
-                    style={{
-                      marginTop: 25,
-                      padding: 16,
-                      borderRadius: 14,
-                      borderWidth: 1,
-                      backgroundColor: isDark
-                        ? "rgba(15, 23, 42, 0.7)"
-                        : "rgba(255, 255, 255, 0.7)",
-                      borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                    }}
-                  >
-                    <ThemedText
+                  {partners.length < 2 && (
+                    <VStack
                       style={{
-                        textAlign: "left",
-                        fontWeight: "700",
-                        fontSize: 14,
-                        marginBottom: 16,
+                        marginTop: 25,
+                        padding: 16,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        backgroundColor: isDark
+                          ? "rgba(15, 23, 42, 0.7)"
+                          : "rgba(255, 255, 255, 0.7)",
+                        borderColor: isDark ? "#1e293b" : "#e2e8f0",
                       }}
                     >
-                      Scorecard Legend
-                    </ThemedText>
+                      <ThemedText
+                        style={{
+                          textAlign: "left",
+                          fontWeight: "700",
+                          fontSize: 14,
+                          marginBottom: 16,
+                        }}
+                      >
+                        Scorecard Legend
+                      </ThemedText>
 
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        flexWrap: "wrap",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      {/* 🟡 Hole-in-One */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleCircle,
-                            {
-                              borderColor: "#fbc02d",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.holeInOne > 0
-                              ? legendCounts.holeInOne
-                              : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>
-                          Hole-in-One
-                        </ThemedText>
-                      </View>
-
-                      {/* 🔵 Albatross */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleCircle,
-                            {
-                              borderColor: "#00838f",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.albatross > 0
-                              ? legendCounts.albatross
-                              : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>
-                          Albatross
-                        </ThemedText>
-                      </View>
-
-                      {/* 🟢 Eagle */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleCircle,
-                            {
-                              borderColor: "#2e7d32",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.eagle > 0 ? legendCounts.eagle : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>Eagle</ThemedText>
-                      </View>
-
-                      {/* 🟢 Birdie */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleCircle,
-                            {
-                              borderColor: "#66bb6a",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.birdie > 0 ? legendCounts.birdie : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>
-                          Birdie
-                        </ThemedText>
-                      </View>
-
-                      {/* ⚪ Par (dashed square) */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderWidth: 1,
-                            borderStyle: "dashed",
-                            borderColor: "#999",
-                            borderRadius: 4,
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.par > 0 ? legendCounts.par : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>Par</ThemedText>
-                      </View>
-
-                      {/* 🔴 Bogey */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleSquare,
-                            {
-                              borderColor: "#e53935",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.bogey > 0 ? legendCounts.bogey : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.legendText}>Bogey</ThemedText>
-                      </View>
-
-                      {/* 🔴 Double Bogey */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.doubleSquare,
-                            {
-                              borderColor: "#e53935",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        {/* 🟡 Hole-in-One */}
+                        <View style={styles.legendItemStyle}>
                           <View
                             style={[
-                              styles.innerSquare,
+                              styles.singleCircle,
+                              {
+                                borderColor: "#fbc02d",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.holeInOne > 0
+                                ? legendCounts.holeInOne
+                                : ""}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.legendText}>
+                            Hole-in-One
+                          </ThemedText>
+                        </View>
+
+                        {/* 🔵 Albatross */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.singleCircle,
+                              {
+                                borderColor: "#00838f",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.albatross > 0
+                                ? legendCounts.albatross
+                                : ""}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.legendText}>
+                            Albatross
+                          </ThemedText>
+                        </View>
+
+                        {/* 🟢 Eagle */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.singleCircle,
+                              {
+                                borderColor: "#2e7d32",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.eagle > 0 ? legendCounts.eagle : ""}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.legendText}>Eagle</ThemedText>
+                        </View>
+
+                        {/* 🟢 Birdie */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.singleCircle,
+                              {
+                                borderColor: "#66bb6a",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.birdie > 0 ? legendCounts.birdie : ""}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.legendText}>
+                            Birdie
+                          </ThemedText>
+                        </View>
+
+                        {/* ⚪ Par (dashed square) */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderWidth: 1,
+                              borderStyle: "dashed",
+                              borderColor: "#999",
+                              borderRadius: 4,
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <ThemedText style={{ textAlign: "center" }}>
+                              {legendCounts.par > 0 ? legendCounts.par : ""}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.legendText}>Par</ThemedText>
+                        </View>
+
+                        {/* 🔴 Bogey */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.singleSquare,
                               {
                                 borderColor: "#e53935",
                                 justifyContent: "center",
@@ -5032,32 +4994,51 @@ export default function ScoreCardUserPage() {
                             ]}
                           >
                             <ThemedText style={{ textAlign: "center" }}>
-                              {legendCounts.double > 0
-                                ? legendCounts.double
-                                : ""}
+                              {legendCounts.bogey > 0 ? legendCounts.bogey : ""}
                             </ThemedText>
                           </View>
+                          <ThemedText style={styles.legendText}>Bogey</ThemedText>
                         </View>
-                        <ThemedText style={styles.legendText}>
-                          Double Bogey
-                        </ThemedText>
-                      </View>
 
-                      {/* 🟣 Triple Bogey */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.doubleSquare,
-                            {
-                              borderColor: "#8e24aa",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
+                        {/* 🔴 Double Bogey */}
+                        <View style={styles.legendItemStyle}>
                           <View
                             style={[
-                              styles.innerSquare,
+                              styles.doubleSquare,
+                              {
+                                borderColor: "#e53935",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.innerSquare,
+                                {
+                                  borderColor: "#e53935",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                },
+                              ]}
+                            >
+                              <ThemedText style={{ textAlign: "center" }}>
+                                {legendCounts.double > 0
+                                  ? legendCounts.double
+                                  : ""}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <ThemedText style={styles.legendText}>
+                            Double Bogey
+                          </ThemedText>
+                        </View>
+
+                        {/* 🟣 Triple Bogey */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.doubleSquare,
                               {
                                 borderColor: "#8e24aa",
                                 justifyContent: "center",
@@ -5065,42 +5046,53 @@ export default function ScoreCardUserPage() {
                               },
                             ]}
                           >
+                            <View
+                              style={[
+                                styles.innerSquare,
+                                {
+                                  borderColor: "#8e24aa",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                },
+                              ]}
+                            >
+                              <ThemedText style={{ textAlign: "center" }}>
+                                {legendCounts.triple > 0
+                                  ? legendCounts.triple
+                                  : ""}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          <ThemedText style={styles.legendText}>
+                            Triple Bogey
+                          </ThemedText>
+                        </View>
+
+                        {/* ⬛ Quadruple+ */}
+                        <View style={styles.legendItemStyle}>
+                          <View
+                            style={[
+                              styles.singleSquare,
+                              {
+                                borderColor: isDark ? "#fff" : "#000",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
                             <ThemedText style={{ textAlign: "center" }}>
-                              {legendCounts.triple > 0
-                                ? legendCounts.triple
+                              {legendCounts.quadPlus > 0
+                                ? legendCounts.quadPlus
                                 : ""}
                             </ThemedText>
                           </View>
-                        </View>
-                        <ThemedText style={styles.legendText}>
-                          Triple Bogey
-                        </ThemedText>
-                      </View>
-
-                      {/* ⬛ Quadruple+ */}
-                      <View style={styles.legendItemStyle}>
-                        <View
-                          style={[
-                            styles.singleSquare,
-                            {
-                              borderColor: isDark ? "#fff" : "#000",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            },
-                          ]}
-                        >
-                          <ThemedText style={{ textAlign: "center" }}>
-                            {legendCounts.quadPlus > 0
-                              ? legendCounts.quadPlus
-                              : ""}
+                          <ThemedText style={styles.legendText}>
+                            Quadruple Bogey+
                           </ThemedText>
                         </View>
-                        <ThemedText style={styles.legendText}>
-                          Quadruple Bogey+
-                        </ThemedText>
                       </View>
-                    </View>
-                  </VStack>
+                    </VStack>
+                  )}
                 </>
               )}
             </VStack>

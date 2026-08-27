@@ -2881,22 +2881,15 @@ export default function ResumeScorecard() {
                             numberOfLines={1}
                             style={{
                               textAlign: "center",
-                              fontWeight: "600",
-                              fontSize: 10,
-                              color: isDark ? "#94a3b8" : "#64748b",
-                            }}
-                          >
-                            {`(${p.isPrimary ? "You" : p.name ? p.name.split(" ")[0] : "P"})`}
-                          </ThemedText>
-                          <ThemedText
-                            style={{
-                              textAlign: "center",
                               fontWeight: "700",
-                              fontSize: 11,
-                              color: "#f59e0b",
+                              fontSize: 12,
                             }}
                           >
-                            {isSystem36 ? "Sys36\nPts" : "Pts"}
+                            {p.isPrimary
+                              ? "You"
+                              : p.name
+                                ? p.name.split(" ")[0]
+                                : "P"}
                           </ThemedText>
                         </VStack>
                       )}
@@ -2921,7 +2914,7 @@ export default function ResumeScorecard() {
                           fontSize: 12,
                         }}
                       >
-                        {`${p.isPrimary ? "You" : p.name} PTS`}
+                        {p.isPrimary ? "You" : p.name}
                       </ThemedText>
                     </VStack>
                   ))}
@@ -5337,7 +5330,8 @@ export default function ResumeScorecard() {
           </Pressable>
         )}
 
-        {(() => {
+        {partners.length < 2 &&
+          (() => {
           const scoreCounts: Record<string, number> = {
             holeInOne: 0,
             albatross: 0,
