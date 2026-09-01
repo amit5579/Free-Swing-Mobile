@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import MapView, { Marker, Polyline, Circle, MAP_TYPES } from 'react-native-maps';
 
 export interface ClubDistance {
@@ -34,9 +34,14 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   cameraRef,
   clubDistances,
 }) => {
-  // Convert [lng, lat] to { latitude, longitude }
-  const toCoord = (loc: [number, number] | null) => 
-    loc ? { latitude: loc[1], longitude: loc[0] } : null;
+  // Convert [lng, lat] to { latitude, longitude } safely
+  const toCoord = (loc: [number, number] | null) => {
+    if (!loc || !Array.isArray(loc) || loc.length < 2) return null;
+    const [lng, lat] = loc;
+    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return null;
+    if (lat === 0 && lng === 0) return null;
+    return { latitude: lat, longitude: lng };
+  };
 
   const playerCoord = toCoord(playerLocation);
   const pinCoord = toCoord(pinLocation);
@@ -64,15 +69,16 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   const initialRegion = useMemo(() => {
     const center = playerCoord || pinCoord || { latitude: 0, longitude: 0 };
     return {
-      ...center,
+      latitude: center.latitude,
+      longitude: center.longitude,
       latitudeDelta: 0.005,
       longitudeDelta: 0.005,
     };
   }, [playerCoord, pinCoord]);
 
   const handleMapPress = (e: any) => {
-    const coord = e.nativeEvent.coordinate;
-    if (coord) {
+    const coord = e.nativeEvent?.coordinate;
+    if (coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number') {
       // react-native-maps returns { latitude, longitude }
       // The parent expects a feature-like object with coordinates: [lng, lat]
       onMapPress({
@@ -86,9 +92,9 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   return (
     <View style={styles.container}>
       <MapView
-        ref={cameraRef}
+        ref={cameraRef as any}
         style={styles.map}
-        provider="google"
+        provider={Platform.OS === 'android' ? 'google' : undefined}
         mapType={MAP_TYPES.SATELLITE}
         onPress={handleMapPress}
         showsUserLocation={false}

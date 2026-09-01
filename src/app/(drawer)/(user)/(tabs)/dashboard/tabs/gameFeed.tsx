@@ -76,8 +76,12 @@ const FeedCard = ({
 
   const handleViewScorecard = (scorecardId: string) => {
     router.push({
-      pathname: "/(drawer)/(admin)/scorecard/view/[scoreCard]",
-      params: { scoreCard: scorecardId },
+      pathname: "/(drawer)/(user)/scorecard/view/[scoreCard]",
+      params: {
+        scoreCard: scorecardId,
+        username: card.playerName || "",
+        courseName: card.course || "",
+      },
     });
   };
 

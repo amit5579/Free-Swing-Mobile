@@ -35,6 +35,9 @@ export type InProgressGame = {
   date: string;
   holesPlayed: number;
   isDQ: boolean;
+  scoringType?: string;
+  isDoublePeoria?: boolean;
+  tournamentId?: number | null;
   hasLocalDraft?: boolean;
   isLocalDraftOnly?: boolean;
 };
@@ -42,14 +45,21 @@ export type InProgressGame = {
 type InProgressTabProps = {
   playerId: number;
   onDelete?: (id: string) => void;
-  onResume?: (id: string, courseName: string, date?: string) => void;
+  onResume?: (
+    id: string,
+    courseName: string,
+    date?: string,
+    scoringType?: string,
+    tournamentId?: number | null,
+    isDoublePeoria?: boolean,
+  ) => void;
   searchQuery?: string;
 };
 
 export function InProgressTab({
   playerId,
-  onDelete = () => { },
-  onResume = () => { },
+  onDelete = () => {},
+  onResume = () => {},
   searchQuery = "",
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
@@ -59,10 +69,17 @@ export function InProgressTab({
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleResume = (id: string, courseName: string, date?: string) => {
+  const handleResume = (
+    id: string,
+    courseName: string,
+    date?: string,
+    scoringType?: string,
+    tournamentId?: number | null,
+    isDoublePeoria?: boolean,
+  ) => {
     if (resumingId || deletingId) return;
     setResumingId(id);
-    onResume(id, courseName, date);
+    onResume(id, courseName, date, scoringType, tournamentId, isDoublePeoria);
     setTimeout(() => setResumingId(null), 1000);
   };
 
@@ -128,7 +145,27 @@ export function InProgressTab({
         courseName: item.courseName,
         date: item.date,
         holesPlayed: item.holesPlayed,
-        isDQ: Boolean(item.isDQ ?? item.IsDQ ?? item.isDisqualified ?? item.IsDisqualified ?? false),
+        isDQ: Boolean(
+          item.isDQ ??
+          item.IsDQ ??
+          item.isDisqualified ??
+          item.IsDisqualified ??
+          false,
+        ),
+        scoringType:
+          item.scoringType ??
+          item.ScoringType ??
+          item.tournamentScoringType ??
+          item.TournamentScoringType ??
+          item.scoring_type ??
+          undefined,
+        isDoublePeoria: Boolean(
+          item.isDoublePeoria ??
+          item.IsDoublePeoria ??
+          item.is_double_peoria ??
+          false,
+        ),
+        tournamentId: item.tournamentId ?? item.TournamentId ?? null,
         hasLocalDraft: !!item.hasLocalDraft,
         isLocalDraftOnly: !!item.isLocalDraftOnly,
       }));
@@ -195,7 +232,9 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+                  backgroundColor: isDark
+                    ? "rgba(26,26,26,0.6)"
+                    : "rgba(255,255,255,0.6)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
@@ -313,7 +352,13 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: game.isDQ ? (isDark ? "rgba(50, 20, 20, 0.7)" : "#FFF1F2") : (isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)"),
+                  backgroundColor: game.isDQ
+                    ? isDark
+                      ? "rgba(50, 20, 20, 0.7)"
+                      : "#FFF1F2"
+                    : isDark
+                      ? "rgba(26,26,26,0.6)"
+                      : "rgba(255,255,255,0.6)",
                   borderLeftWidth: 6,
                   borderLeftColor: game.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,
@@ -328,7 +373,7 @@ export function InProgressTab({
                   borderRadius: 22,
                   overflow: "hidden",
                   paddingVertical: 9,
-                  paddingHorizontal: 5
+                  paddingHorizontal: 5,
                 }}
               >
                 <Box className="p-4">
@@ -466,7 +511,9 @@ export function InProgressTab({
                       variant="outline"
                       size="sm"
                       disabled={deletingId === game.id}
-                      onPress={() => handleDelete(game.id, !!game.isLocalDraftOnly)}
+                      onPress={() =>
+                        handleDelete(game.id, !!game.isLocalDraftOnly)
+                      }
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         borderColor: isDark ? "#EF4444" : "#FCA5A5",
@@ -503,7 +550,16 @@ export function InProgressTab({
                     <Button
                       size="sm"
                       disabled={resumingId === game.id}
-                      onPress={() => handleResume(game.id, game.courseName, game.date)}
+                      onPress={() =>
+                        handleResume(
+                          game.id,
+                          game.courseName,
+                          game.date,
+                          game.scoringType,
+                          game.tournamentId,
+                          game.isDoublePeoria,
+                        )
+                      }
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         backgroundColor:
@@ -518,7 +574,6 @@ export function InProgressTab({
                           color: "#FFFFFF",
                           fontWeight: "600",
                           marginRight: 6,
-                          
                         }}
                       >
                         {resumingId === game.id ? "Opening..." : "Resume"}

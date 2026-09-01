@@ -999,7 +999,14 @@ export default function DashboardScreen() {
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
               onDelete={() => {}}
-              onResume={(id, courseName, date) => {
+              onResume={(
+                id,
+                courseName,
+                date,
+                scoringType,
+                tournamentId,
+                isDoublePeoria,
+              ) => {
                 router.push({
                   pathname: "/(drawer)/(user)/scorecard/resume/[id]",
                   params: {
@@ -1007,6 +1014,9 @@ export default function DashboardScreen() {
                     handicap: profile?.handicap || 0,
                     courseName,
                     date,
+                    scoringType: scoringType || undefined,
+                    tournamentId: tournamentId ? String(tournamentId) : undefined,
+                    isDoublePeoria: isDoublePeoria ? "true" : undefined,
                   },
                 });
               }}

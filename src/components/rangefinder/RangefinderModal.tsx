@@ -213,9 +213,12 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       visible &&
       !hasInitializedHole.current &&
       initialHoleId &&
+      holes &&
       holes.length > 0
     ) {
-      const index = holes.findIndex((h) => h.holeId === initialHoleId);
+      const index = holes.findIndex(
+        (h) => h.holeId === initialHoleId || h.holeNumber === initialHoleId
+      );
       if (index !== -1) {
         setCurrentHoleIndex(index);
         hasInitializedHole.current = true;
@@ -229,16 +232,23 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       visible &&
       !hasAutoCentered.current &&
       playerLocation &&
-      cameraRef.current
+      playerLocation[0] &&
+      playerLocation[1] &&
+      cameraRef.current &&
+      typeof cameraRef.current.animateCamera === "function"
     ) {
-      cameraRef.current.animateCamera(
-        {
-          center: { latitude: playerLocation[1], longitude: playerLocation[0] },
-          zoom: 17,
-        },
-        { duration: 1000 },
-      );
-      hasAutoCentered.current = true;
+      try {
+        cameraRef.current.animateCamera(
+          {
+            center: { latitude: playerLocation[1], longitude: playerLocation[0] },
+            zoom: 17,
+          },
+          { duration: 1000 },
+        );
+        hasAutoCentered.current = true;
+      } catch (e) {
+        console.warn("animateCamera warning:", e);
+      }
     }
   }, [visible, playerLocation]);
 

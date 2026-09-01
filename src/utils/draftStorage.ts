@@ -16,9 +16,12 @@ export interface ScorecardHole {
   isDQ: boolean;
   tournamentId: number | null;
   isDoublePeoria: boolean;
+  isStableford?: boolean;
+  isSystem36?: boolean;
   courseHalf: string;
   isExcluded: boolean;
   scoringType?: string;
+  tournamentScoringType?: string | null;
   isTournament?: boolean;
   userId?: number;
   handicap?: number;
@@ -50,6 +53,13 @@ export interface ScorecardDraft {
   updatedAt: string;
   holes: ScorecardHole[];
   textScores: Record<number, string>;
+  isStableford?: boolean;
+  isDoublePeoria?: boolean;
+  isExcluded?: boolean;
+  isGross?: boolean;
+  isSystem36?: boolean;
+  scoringType?: string;
+  tournamentId?: number | null;
 }
 
 const STORAGE_KEY = "@scorecard_local_drafts_v1";
