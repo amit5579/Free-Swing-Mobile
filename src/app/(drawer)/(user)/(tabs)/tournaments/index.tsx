@@ -665,7 +665,7 @@ export default function TournamentsScreen() {
                               <Pressable
                                 onPress={() =>
                                   routePage.push(
-                                    `/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}&teeboxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
+                                    `/(drawer)/(user)/(tabs)/tournaments/leaderboardUser?tournamentId=${tournament.tournamentId}&tournamentName=${encodeURIComponent(tournament.name || "")}&teeboxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
                                   )
                                 }
                                 className="flex-1 flex-row justify-center items-center gap-2 border border-[#f59e0b] py-2.5 rounded-xl"
@@ -719,7 +719,7 @@ export default function TournamentsScreen() {
                                 <Pressable
                                   onPress={() =>
                                     routePage.push(
-                                      `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${encodeURIComponent(tournament.name || "")}&maxPlayers=${tournament.maxPlayers || 4}`,
+                                      `/(drawer)/(user)/(tabs)/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${encodeURIComponent(tournament.name || "")}&maxPlayers=${tournament.maxPlayers || 4}`,
                                     )
                                   }
                                   className="flex-1 flex-row justify-center items-center gap-2 border border-[#0d6efd] py-2.5 rounded-xl"

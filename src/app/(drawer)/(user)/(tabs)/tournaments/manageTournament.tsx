@@ -170,7 +170,13 @@ export default function ManageTournament() {
           >
             {/* 🔙 BACK */}
             <Pressable
-              onPress={() => routePage.back()}
+              onPress={() => {
+                if (routePage.canGoBack()) {
+                  routePage.back();
+                } else {
+                  routePage.replace("/(drawer)/(user)/(tabs)/tournaments");
+                }
+              }}
               style={{
                 width: 40,
                 height: 40,

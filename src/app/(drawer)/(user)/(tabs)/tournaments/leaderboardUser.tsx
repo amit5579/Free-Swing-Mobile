@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
+  TouchableOpacity,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   View,
   ViewStyle,
   InteractionManager,
+  BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
@@ -43,14 +45,42 @@ export default function LeaderboardUser() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
+  const isMountedRef = useRef(true);
+  const teeboxLoadedRef = useRef(false);
+
+  const handleBack = useCallback(() => {
+    if (routePage.canGoBack()) {
+      routePage.back();
+    } else {
+      routePage.replace("/(drawer)/(user)/(tabs)/tournaments");
+    }
+  }, [routePage]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+      const sub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
+      return () => sub.remove();
+    }, [handleBack]),
+  );
+
   useEffect(() => {
+    isMountedRef.current = true;
     const initUserId = async () => {
       const id = await AsyncStorage.getItem("userId");
-      if (id) setCurrentUserId(Number(id));
+      if (id && isMountedRef.current) setCurrentUserId(Number(id));
     };
     initUserId();
-    
-    fetchData(true);
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const getScoringLabel = (scoringType: string) => {
@@ -84,38 +114,52 @@ export default function LeaderboardUser() {
     return holes.reduce((total, hole) => total + hole.par, 0);
   };
 
-  const fetchData = async (showSkeleton = true) => {
-    try {
-      if (showSkeleton) setLoading(true);
-      
-      const lb = await getLeaderboard(Number(tournamentId));
-      const teebox = await getTeeboxDetails(Number(teeboxId));
+  const fetchData = useCallback(
+    async (showSkeleton = false) => {
+      if (!tournamentId) return;
+      try {
+        if (showSkeleton && !leaderboard.length) setLoading(true);
 
-      setLeaderboard(lb);
-      console.log("lllbbb",lb);
-      setHoles(teebox);
-    } catch (err) {
-      console.log("Error:", err);
-    } finally {
-      if (showSkeleton) setLoading(false);
-    }
-  };
+        const lbPromise = getLeaderboard(Number(tournamentId));
+        const teeboxPromise =
+          !teeboxLoadedRef.current && teeboxId
+            ? getTeeboxDetails(Number(teeboxId))
+            : Promise.resolve(null);
+
+        const [lb, teebox] = await Promise.all([lbPromise, teeboxPromise]);
+
+        if (isMountedRef.current) {
+          if (Array.isArray(lb)) {
+            setLeaderboard(lb);
+          }
+          if (teebox && Array.isArray(teebox)) {
+            setHoles(teebox);
+            teeboxLoadedRef.current = true;
+          }
+        }
+      } catch (err) {
+        console.warn("Leaderboard fetch error:", err);
+      } finally {
+        if (showSkeleton && isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    },
+    [tournamentId, teeboxId, leaderboard.length],
+  );
 
   useFocusEffect(
     useCallback(() => {
-      let intervalId: NodeJS.Timeout;
-      const task = InteractionManager.runAfterInteractions(() => {
-        fetchData(true);
-        intervalId = setInterval(() => {
-          fetchData(false);        
-        }, 3000);
-      });
+      let intervalId: ReturnType<typeof setInterval>;
+      fetchData(true);
+      intervalId = setInterval(() => {
+        fetchData(false);
+      }, 5000);
 
       return () => {
-        task.cancel();
         if (intervalId) clearInterval(intervalId);
       };
-    }, [tournamentId, teeboxId])
+    }, [fetchData]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -180,8 +224,10 @@ export default function LeaderboardUser() {
             }}
           >
             {/* 🔙 BACK */}
-            <Pressable
-              onPress={() => routePage.back()}
+            <TouchableOpacity
+              onPress={handleBack}
+              activeOpacity={0.7}
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
               style={{
                 width: 40,
                 height: 40,
@@ -190,14 +236,13 @@ export default function LeaderboardUser() {
                 alignItems: "center",
                 backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
               }}
-              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
               <Ionicons
                 name="arrow-back"
                 size={20}
                 color={isDark ? "#fff" : "#020617"}
               />
-            </Pressable>
+            </TouchableOpacity>
 
             {/* 🧠 TITLE BLOCK */}
             <VStack
@@ -552,7 +597,7 @@ export default function LeaderboardUser() {
         <ThemedText style={[styles.headerText, { width: "auto" }]}>
           HCP
         </ThemedText>
-        {isSystem36 && (
+        {/* {isSystem36 && (
           <Pressable
             onPress={() =>
               Alert.alert(
@@ -562,9 +607,8 @@ export default function LeaderboardUser() {
             }
             style={{ marginLeft: 4 }}
           >
-            <Ionicons name="information-circle-outline" size={14} color={isDark ? "#94a3b8" : "#64748b"} />
           </Pressable>
-        )}
+        )} */}
       </HStack>
       {isSystem36 && (
         <ThemedText style={[styles.headerText, { width: SHCP_WIDTH }]}>
