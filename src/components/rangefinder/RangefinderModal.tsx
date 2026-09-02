@@ -217,7 +217,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       holes.length > 0
     ) {
       const index = holes.findIndex(
-        (h) => h.holeId === initialHoleId || h.holeNumber === initialHoleId
+        (h) => h.holeId === initialHoleId || h.holeNumber === initialHoleId,
       );
       if (index !== -1) {
         setCurrentHoleIndex(index);
@@ -240,7 +240,10 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       try {
         cameraRef.current.animateCamera(
           {
-            center: { latitude: playerLocation[1], longitude: playerLocation[0] },
+            center: {
+              latitude: playerLocation[1],
+              longitude: playerLocation[0],
+            },
             zoom: 17,
           },
           { duration: 1000 },

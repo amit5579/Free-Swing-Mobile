@@ -10,6 +10,7 @@ export default function ResumeScorecardPage() {
     date,
     scoringType,
     tournamentId,
+    tournamentName,
     courseId,
     teeBoxId,
     courseHalf,
@@ -22,6 +23,7 @@ export default function ResumeScorecardPage() {
     date?: string;
     scoringType?: string;
     tournamentId?: string;
+    tournamentName?: string;
     courseId?: string;
     teeBoxId?: string;
     courseHalf?: string;
@@ -38,6 +40,7 @@ export default function ResumeScorecardPage() {
       date={date}
       scoringType={scoringType}
       tournamentId={tournamentId}
+      tournamentName={tournamentName}
       courseId={courseId}
       teeBoxId={teeBoxId}
       courseHalf={courseHalf || holesCount}

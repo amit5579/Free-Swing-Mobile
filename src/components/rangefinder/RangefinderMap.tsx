@@ -1,6 +1,11 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
-import MapView, { Marker, Polyline, Circle, MAP_TYPES } from 'react-native-maps';
+import React, { useMemo } from "react";
+import { StyleSheet, View, Platform } from "react-native";
+import MapView, {
+  Marker,
+  Polyline,
+  Circle,
+  MAP_TYPES,
+} from "react-native-maps";
 
 export interface ClubDistance {
   name: string;
@@ -9,8 +14,8 @@ export interface ClubDistance {
 
 interface RangefinderMapProps {
   playerLocation: [number, number] | null; // [longitude, latitude]
-  pinLocation: [number, number] | null;    // [longitude, latitude]
-  aimLocation: [number, number] | null;    // [longitude, latitude]
+  pinLocation: [number, number] | null; // [longitude, latitude]
+  aimLocation: [number, number] | null; // [longitude, latitude]
   onMapPress: (feature: any) => void;
   isDark?: boolean;
   isFlagMode?: boolean;
@@ -38,7 +43,13 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   const toCoord = (loc: [number, number] | null) => {
     if (!loc || !Array.isArray(loc) || loc.length < 2) return null;
     const [lng, lat] = loc;
-    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return null;
+    if (
+      typeof lat !== "number" ||
+      typeof lng !== "number" ||
+      isNaN(lat) ||
+      isNaN(lng)
+    )
+      return null;
     if (lat === 0 && lng === 0) return null;
     return { latitude: lat, longitude: lng };
   };
@@ -50,20 +61,22 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   // Connecting lines
   const lineCoords = useMemo(() => {
     if (!playerCoord || !pinCoord) return null;
-    return aimCoord 
+    return aimCoord
       ? [playerCoord, aimCoord, pinCoord]
       : [playerCoord, pinCoord];
   }, [playerCoord, pinCoord, aimCoord]);
 
   // Club distances
   const distances = useMemo(() => {
-    return clubDistances && clubDistances.length > 0 ? clubDistances : [
-      { name: 'Driver', distanceYards: 250 },
-      { name: '3-Wood', distanceYards: 225 },
-      { name: '5-Iron', distanceYards: 185 },
-      { name: '7-Iron', distanceYards: 160 },
-      { name: 'Pitching Wedge', distanceYards: 125 }
-    ];
+    return clubDistances && clubDistances.length > 0
+      ? clubDistances
+      : [
+          { name: "Driver", distanceYards: 250 },
+          { name: "3-Wood", distanceYards: 225 },
+          { name: "5-Iron", distanceYards: 185 },
+          { name: "7-Iron", distanceYards: 160 },
+          { name: "Pitching Wedge", distanceYards: 125 },
+        ];
   }, [clubDistances]);
 
   const initialRegion = useMemo(() => {
@@ -78,13 +91,17 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
 
   const handleMapPress = (e: any) => {
     const coord = e.nativeEvent?.coordinate;
-    if (coord && typeof coord.latitude === 'number' && typeof coord.longitude === 'number') {
+    if (
+      coord &&
+      typeof coord.latitude === "number" &&
+      typeof coord.longitude === "number"
+    ) {
       // react-native-maps returns { latitude, longitude }
       // The parent expects a feature-like object with coordinates: [lng, lat]
       onMapPress({
         geometry: {
-          coordinates: [coord.longitude, coord.latitude]
-        }
+          coordinates: [coord.longitude, coord.latitude],
+        },
       });
     }
   };
@@ -94,7 +111,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
       <MapView
         ref={cameraRef as any}
         style={styles.map}
-        provider={Platform.OS === 'android' ? 'google' : undefined}
+        provider={Platform.OS === "android" ? "google" : undefined}
         mapType={MAP_TYPES.SATELLITE}
         onPress={handleMapPress}
         showsUserLocation={false}
@@ -104,16 +121,17 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
         initialRegion={initialRegion}
       >
         {/* Club Arcs */}
-        {playerCoord && distances.map((club, index) => (
-          <Circle
-            key={index}
-            center={playerCoord}
-            radius={club.distanceYards * 0.9144} // Convert yards to meters for Circle radius
-            strokeColor="rgba(255, 255, 255, 0.5)"
-            strokeWidth={1}
-            lineDashPattern={[5, 5]}
-          />
-        ))}
+        {playerCoord &&
+          distances.map((club, index) => (
+            <Circle
+              key={index}
+              center={playerCoord}
+              radius={club.distanceYards * 0.9144} // Convert yards to meters for Circle radius
+              strokeColor="rgba(255, 255, 255, 0.5)"
+              strokeWidth={1}
+              lineDashPattern={[5, 5]}
+            />
+          ))}
 
         {/* Connecting Lines */}
         {lineCoords && (
@@ -128,7 +146,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
         {/* Player Marker */}
         {playerCoord && (
           <Marker coordinate={playerCoord} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={[styles.marker, { backgroundColor: '#4285F4' }]} />
+            <View style={[styles.marker, { backgroundColor: "#4285F4" }]} />
           </Marker>
         )}
 
@@ -145,7 +163,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
             }}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.marker, { backgroundColor: '#FFA500' }]} />
+            <View style={[styles.marker, { backgroundColor: "#FFA500" }]} />
           </Marker>
         )}
 
@@ -163,9 +181,9 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
             anchor={{ x: 0.5, y: 1 }} // Bottom center
           >
             <View style={styles.flagMarker}>
-               <View style={styles.flagPole} />
-               <View style={styles.flagTriangle} />
-               <View style={styles.flagBase} />
+              <View style={styles.flagPole} />
+              <View style={styles.flagTriangle} />
+              <View style={styles.flagBase} />
             </View>
           </Marker>
         )}
@@ -186,8 +204,8 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: '#000',
+    borderColor: "#ffffff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 2,
@@ -198,16 +216,16 @@ const styles = StyleSheet.create({
     height: 48,
   },
   flagBase: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 13,
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: '#000',
+    borderColor: "#ffffff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.4,
     shadowRadius: 1,
@@ -215,34 +233,34 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   flagPole: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 6,
     left: 18.5,
     width: 3,
     height: 36,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 1.5,
     zIndex: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 1, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
     elevation: 2,
   },
   flagTriangle: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
     top: 6,
     width: 0,
     height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
+    backgroundColor: "transparent",
+    borderStyle: "solid",
     borderLeftWidth: 16,
     borderTopWidth: 10,
     borderBottomWidth: 10,
-    borderLeftColor: '#4CAF50',
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
+    borderLeftColor: "#4CAF50",
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
     zIndex: 2,
-  }
+  },
 });

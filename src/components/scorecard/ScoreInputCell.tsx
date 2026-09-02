@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   input: {
     width: 38,
     height: 38,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     padding: 0,
     zIndex: 2,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   readOnlyText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
   },
   badgeContainer: {
@@ -284,9 +284,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   miniBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
-    lineHeight: 12,
+    lineHeight: 13,
   },
   sandyBadgeActive: {
     backgroundColor: "#d97706",
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   multiplierText: {
     color: "#ffffff",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "800",
   },
 });

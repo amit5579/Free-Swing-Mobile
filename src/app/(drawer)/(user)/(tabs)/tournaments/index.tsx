@@ -233,7 +233,7 @@ export default function TournamentsScreen() {
       setModalVisible(false);
       resetWaiver();
       routePage.push(
-        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${selectedTournament.tournamentId}&courseId=${selectedTournament.courseId}&teeBoxId=${selectedTournament.teeBoxId}&scoringType=${selectedTournament.scoringType}`,
+        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${selectedTournament.tournamentId}&courseId=${selectedTournament.courseId}&teeBoxId=${selectedTournament.teeBoxId}&scoringType=${selectedTournament.scoringType}&tournamentName=${encodeURIComponent(selectedTournament.name || selectedTournament.tournamentName || "")}&courseName=${encodeURIComponent(selectedTournament.courseName || selectedTournament.course?.name || "")}`,
       );
     } catch (error) {
       console.error("Acceptance Waiver Error:", error);
@@ -273,6 +273,8 @@ export default function TournamentsScreen() {
   const [playLoadingId, setPlayLoadingId] = useState<number | null>(null);
 
   const handlePlayNow = async (tournament: any) => {
+    const tName = encodeURIComponent(tournament.name || tournament.tournamentName || "");
+    const cName = encodeURIComponent(tournament.courseName || tournament.course?.name || "");
     if (tournament.creatorId == null) {
       try {
         setPlayLoadingId(tournament.tournamentId);
@@ -294,7 +296,7 @@ export default function TournamentsScreen() {
 
         if (isAccepted) {
           routePage.push(
-            `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
+            `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}&tournamentName=${tName}&courseName=${cName}`,
           );
         } else {
           setSelectedTournament(tournament);
@@ -309,7 +311,7 @@ export default function TournamentsScreen() {
       }
     } else {
       routePage.push(
-        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}`,
+        `/(drawer)/(user)/(tabs)/tournaments/playScoreCard?tournamentId=${tournament.tournamentId}&courseId=${tournament.courseId}&teeBoxId=${tournament.teeBoxId}&scoringType=${tournament.scoringType}&tournamentName=${tName}&courseName=${cName}`,
       );
     }
   };

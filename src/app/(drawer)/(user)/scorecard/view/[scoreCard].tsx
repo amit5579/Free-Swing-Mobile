@@ -10,6 +10,7 @@ const ScoreCardViewPage: React.FC = () => {
     courseName,
     scoringType,
     tournamentId,
+    tournamentName,
     courseId,
     teeBoxId,
     courseHalf,
@@ -21,6 +22,7 @@ const ScoreCardViewPage: React.FC = () => {
     courseName?: string;
     scoringType?: string;
     tournamentId?: string;
+    tournamentName?: string;
     courseId?: string;
     teeBoxId?: string;
     courseHalf?: string;
@@ -36,6 +38,7 @@ const ScoreCardViewPage: React.FC = () => {
       courseName={courseName}
       scoringType={scoringType}
       tournamentId={tournamentId}
+      tournamentName={tournamentName}
       courseId={courseId}
       teeBoxId={teeBoxId}
       courseHalf={courseHalf || holesCount}

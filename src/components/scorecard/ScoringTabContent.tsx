@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   colHeader: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -290,11 +290,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rowLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
   },
   cellValue: {
-    fontSize: 13,
+    fontSize: 14,
     textAlign: "center",
   },
   bold: {
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   resultBannerText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
   },
   sectionBlock: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#33333822",
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     marginBottom: 6,
   },
@@ -328,11 +328,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   houseLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
   },
   scoreText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
   },
 });

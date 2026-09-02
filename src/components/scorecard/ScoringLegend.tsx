@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { ScoreLegendCounts } from "@/utils/scorecardUtils";
 
 export interface ScoringLegendProps {
@@ -11,13 +11,19 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
   counts,
   isDark = false,
 }) => {
+  const countColor = isDark ? "#ffffff" : "#0f172a";
+
   const items = [
     {
-      label: "HIO",
+      label: "Hole-in-One",
       count: counts.holeInOne,
       icon: (
-        <View style={[styles.doubleCircle, { borderColor: "#ffd700" }]}>
-          <View style={[styles.innerCircle, { borderColor: "#ffd700" }]} />
+        <View style={[styles.squareContainer, styles.doubleSquareOuter, { borderColor: "#ffd700" }]}>
+          <View style={[styles.doubleSquareInner, { borderColor: "#ffd700" }]}>
+            <Text style={[styles.countInside, { color: countColor }]}>
+              {counts.holeInOne}
+            </Text>
+          </View>
         </View>
       ),
     },
@@ -25,8 +31,12 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
       label: "Albatross",
       count: counts.albatross,
       icon: (
-        <View style={[styles.doubleCircle, { borderColor: "#006064" }]}>
-          <View style={[styles.innerCircle, { borderColor: "#006064" }]} />
+        <View style={[styles.squareContainer, styles.doubleSquareOuter, { borderColor: "#006064" }]}>
+          <View style={[styles.doubleSquareInner, { borderColor: "#006064" }]}>
+            <Text style={[styles.countInside, { color: countColor }]}>
+              {counts.albatross}
+            </Text>
+          </View>
         </View>
       ),
     },
@@ -34,15 +44,25 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
       label: "Eagle",
       count: counts.eagle,
       icon: (
-        <View style={[styles.doubleCircle, { borderColor: "#2e7d32" }]}>
-          <View style={[styles.innerCircle, { borderColor: "#2e7d32" }]} />
+        <View style={[styles.squareContainer, styles.doubleSquareOuter, { borderColor: "#2e7d32" }]}>
+          <View style={[styles.doubleSquareInner, { borderColor: "#2e7d32" }]}>
+            <Text style={[styles.countInside, { color: countColor }]}>
+              {counts.eagle}
+            </Text>
+          </View>
         </View>
       ),
     },
     {
       label: "Birdie",
       count: counts.birdie,
-      icon: <View style={[styles.singleCircle, { borderColor: "#2e7d32" }]} />,
+      icon: (
+        <View style={[styles.squareContainer, styles.singleSquare, { borderColor: "#2e7d32" }]}>
+          <Text style={[styles.countInside, { color: countColor }]}>
+            {counts.birdie}
+          </Text>
+        </View>
+      ),
     },
     {
       label: "Par",
@@ -50,47 +70,71 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
       icon: (
         <View
           style={[
+            styles.squareContainer,
             styles.dashedSquare,
-            { borderColor: isDark ? "#666" : "#999" },
+            { borderColor: isDark ? "#71717a" : "#9ca3af" },
           ]}
-        />
+        >
+          <Text style={[styles.countInside, { color: countColor }]}>
+            {counts.par}
+          </Text>
+        </View>
       ),
     },
     {
       label: "Bogey",
       count: counts.bogey,
-      icon: <View style={[styles.singleSquare, { borderColor: "#d32f2f" }]} />,
-    },
-    {
-      label: "Double",
-      count: counts.double,
       icon: (
-        <View style={[styles.doubleSquare, { borderColor: "#d32f2f" }]}>
-          <View style={[styles.innerSquare, { borderColor: "#d32f2f" }]} />
+        <View style={[styles.squareContainer, styles.singleSquare, { borderColor: "#d32f2f" }]}>
+          <Text style={[styles.countInside, { color: countColor }]}>
+            {counts.bogey}
+          </Text>
         </View>
       ),
     },
     {
-      label: "Triple",
-      count: counts.triple,
+      label: "Double Bogey",
+      count: counts.double,
       icon: (
-        <View style={[styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
-          <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a" }]}>
-            <View style={[styles.tripleSquareInner, { borderColor: "#6a1b9a" }]} />
+        <View style={[styles.squareContainer, styles.doubleSquareOuter, { borderColor: "#d32f2f" }]}>
+          <View style={[styles.doubleSquareInner, { borderColor: "#d32f2f" }]}>
+            <Text style={[styles.countInside, { color: countColor }]}>
+              {counts.double}
+            </Text>
           </View>
         </View>
       ),
     },
     {
-      label: "Quad+",
+      label: "Triple Bogey",
+      count: counts.triple,
+      icon: (
+        <View style={[styles.squareContainer, styles.tripleSquareOuter, { borderColor: "#6a1b9a" }]}>
+          <View style={[styles.tripleSquareMid, { borderColor: "#6a1b9a" }]}>
+            <View style={[styles.tripleSquareInner, { borderColor: "#6a1b9a" }]}>
+              <Text style={[styles.countInsideSmall, { color: countColor }]}>
+                {counts.triple}
+              </Text>
+            </View>
+          </View>
+        </View>
+      ),
+    },
+    {
+      label: "Quadruple Bogey+",
       count: counts.quadPlus,
       icon: (
         <View
           style={[
-            styles.singleSquare,
-            { borderColor: isDark ? "#ffffff" : "#1f2937" },
+            styles.squareContainer,
+            styles.thickSquare,
+            { borderColor: isDark ? "#ffffff" : "#111827" },
           ]}
-        />
+        >
+          <Text style={[styles.countInside, { color: countColor }]}>
+            {counts.quadPlus}
+          </Text>
+        </View>
       ),
     },
   ];
@@ -101,8 +145,8 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
         styles.container,
         {
           backgroundColor: isDark
-            ? "rgba(31, 31, 35, 0.35)"
-            : "rgba(248, 250, 252, 0.35)",
+            ? "rgba(31, 31, 35, 0.45)"
+            : "rgba(248, 250, 252, 0.55)",
           borderColor: isDark ? "#333338" : "#e2e8f0",
         },
       ]}
@@ -116,160 +160,120 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
         SCORECARD LEGEND
       </Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <View style={styles.verticalGrid}>
         {items.map((item, idx) => (
-          <View key={idx} style={styles.legendItem}>
-            <View style={styles.iconContainer}>{item.icon}</View>
+          <View key={idx} style={styles.legendRow}>
+            {item.icon}
             <Text
               style={[
                 styles.itemLabel,
-                { color: isDark ? "#d1d5db" : "#475569" },
+                { color: isDark ? "#f3f4f6" : "#334155" },
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
               {item.label}
             </Text>
-            <View
-              style={[
-                styles.countBadge,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(45, 45, 52, 0.40)"
-                    : "rgba(226, 232, 240, 0.40)",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.countText,
-                  { color: isDark ? "#ffffff" : "#0f172a" },
-                ]}
-              >
-                {item.count}
-              </Text>
-            </View>
           </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 14,
     borderWidth: 1,
     marginVertical: 12,
   },
   title: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  scrollContent: {
+  verticalGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 12,
+  },
+  legendRow: {
+    width: "48%",
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 10,
   },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  iconContainer: {
-    width: 22,
-    height: 22,
+  squareContainer: {
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
-  itemLabel: {
-    fontSize: 12,
-    fontWeight: "600",
+  countInside: {
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
-  countBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    minWidth: 20,
-    alignItems: "center",
-  },
-  countText: {
+  countInsideSmall: {
     fontSize: 11,
     fontWeight: "700",
+    textAlign: "center",
   },
-  singleCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-  },
-  doubleCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  innerCircle: {
-    width: 13,
-    height: 13,
-    borderRadius: 6.5,
-    borderWidth: 1,
-  },
-  dashedSquare: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 2,
+  itemLabel: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    flex: 1,
   },
   singleSquare: {
-    width: 18,
-    height: 18,
-    borderWidth: 1.5,
-    borderRadius: 2,
+    borderWidth: 2,
+    borderRadius: 4,
   },
-  doubleSquare: {
-    width: 20,
-    height: 20,
+  dashedSquare: {
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderRadius: 4,
+  },
+  doubleSquareOuter: {
+    borderWidth: 1.5,
+    borderRadius: 5,
+    padding: 1.5,
+  },
+  doubleSquareInner: {
+    width: 24,
+    height: 24,
     borderWidth: 1.5,
     borderRadius: 3,
-    justifyContent: "center",
     alignItems: "center",
-  },
-  innerSquare: {
-    width: 13,
-    height: 13,
-    borderWidth: 1,
-    borderRadius: 1.5,
+    justifyContent: "center",
   },
   tripleSquareOuter: {
-    width: 21,
-    height: 21,
     borderWidth: 1.2,
-    borderRadius: 3,
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 5,
+    padding: 1,
   },
   tripleSquareMid: {
-    width: 16,
-    height: 16,
-    borderWidth: 1,
-    borderRadius: 2,
-    justifyContent: "center",
+    width: 26,
+    height: 26,
+    borderWidth: 1.2,
+    borderRadius: 4,
     alignItems: "center",
+    justifyContent: "center",
+    padding: 1,
   },
   tripleSquareInner: {
-    width: 11,
-    height: 11,
-    borderWidth: 1,
-    borderRadius: 1.5,
+    width: 20,
+    height: 20,
+    borderWidth: 1.2,
+    borderRadius: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thickSquare: {
+    borderWidth: 2.8,
+    borderRadius: 4,
   },
 });

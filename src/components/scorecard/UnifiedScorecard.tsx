@@ -163,6 +163,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     propRoundContextId ? String(propRoundContextId) : null,
   );
   const [groupName, setGroupName] = useState<string | null>(null);
+  const [fetchedTournamentName, setFetchedTournamentName] = useState<
+    string | null
+  >(null);
+  const [fetchedCourseName, setFetchedCourseName] = useState<string | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState<"scorecard" | "scoring">(
     "scorecard",
   );
@@ -390,51 +396,128 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     };
   }, [holes, propScoringType, selectedScore]);
 
-  // Read-only / Companion checks
-  const isCompanionView = useMemo(() => {
-    // If opened in view mode (e.g. from Overview, Game Feed, Game History) or new-round, NOT a live companion
-    if (mode === "view" || mode === "new-round") return false;
-    // Completed rounds are viewed as normal static scorecards
-    if (holes.length > 0 && holes[0]?.isCompleted) return false;
-    if (!roundKey) return false;
+  const displayGroupName = useMemo(() => {
+    const directName =
+      groupName || holes[0]?.groupName || holes[0]?.GroupName || "";
+    return String(directName).trim();
+  }, [groupName, holes]);
 
-    // If current user is primary player, they are the scorer
-    const primaryPlayer = partners.find((p) => p.isPrimary);
-    if (
-      primaryPlayer?.userId &&
-      userId &&
-      Number(primaryPlayer.userId) === Number(userId)
-    ) {
-      return false;
+  const headerTitleText = useMemo(() => {
+    if (tournamentName) return tournamentName;
+    if (fetchedTournamentName) return fetchedTournamentName;
+    if (propCourseName) return propCourseName;
+    if (fetchedCourseName) return fetchedCourseName;
+    const first = holes[0] || {};
+    const holeTournament = first.tournamentName || first.TournamentName;
+    if (holeTournament) return holeTournament;
+    const holeCourse = first.courseName || first.CourseName;
+    if (holeCourse) return holeCourse;
+    if (propTournamentId || first.tournamentId || first.TournamentId)
+      return "Tournament Scorecard";
+    return "Scorecard";
+  }, [
+    tournamentName,
+    fetchedTournamentName,
+    propCourseName,
+    fetchedCourseName,
+    holes,
+    propTournamentId,
+  ]);
+
+  // Designated Scorer ID for multiplayer / tournament grouped games
+  const groupScorerId = useMemo(() => {
+    // 1. Check playingGroupRoundKey / roundKey / propRoundContextId
+    const effectiveKey =
+      roundKey ||
+      propRoundContextId ||
+      holes[0]?.playingGroupRoundKey ||
+      holes[0]?.PlayingGroupRoundKey;
+    if (effectiveKey) {
+      const parts = String(effectiveKey).split("_");
+      if (parts.length >= 2) {
+        const rawId =
+          parts[0].toLowerCase() === "group" ||
+          parts[0].toLowerCase() === "round"
+            ? parts[1]
+            : parts[0];
+        const parsed = parseInt(rawId, 10);
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+      }
     }
 
-    const parts = String(roundKey).split("_");
-    if (parts.length >= 2) {
-      const rawId =
-        parts[0].toLowerCase() === "group" || parts[0].toLowerCase() === "round"
-          ? parts[1]
-          : parts[0];
-      const groupScorerId = parseInt(rawId, 10);
-      if (
-        !isNaN(groupScorerId) &&
-        groupScorerId > 0 &&
-        userId !== null &&
-        groupScorerId !== userId
-      ) {
+    // 2. Check primary partner
+    const primary = partners.find((p) => p.isPrimary);
+    if (primary?.userId && Number(primary.userId) > 0) {
+      return Number(primary.userId);
+    }
+
+    // 3. Check scorecard record owner
+    if (holes.length > 0) {
+      const ownerId = holes[0]?.userId ?? holes[0]?.UserId;
+      if (ownerId && Number(ownerId) > 0) {
+        return Number(ownerId);
+      }
+    }
+
+    return null;
+  }, [roundKey, propRoundContextId, holes, partners]);
+
+  // Read-only / Companion / Spectator checks
+  const isCompanionView = useMemo(() => {
+    // Mode 'view' is a normal static scorecard view
+    if (mode === "view") return false;
+    // Completed rounds are viewed as normal static scorecards
+    if (holes.length > 0 && holes[0]?.isCompleted) return false;
+
+    const currentUserId = userId;
+    if (!currentUserId) return false;
+
+    // Check if this round is a multiplayer/tournament group round
+    const hasGroup =
+      partners.length > 1 ||
+      Boolean(
+        roundKey ||
+        propRoundContextId ||
+        holes.some((h) => h.playingGroupRoundKey || h.PlayingGroupRoundKey),
+      );
+
+    if (hasGroup && groupScorerId !== null) {
+      if (currentUserId === groupScorerId) {
+        // Current user is the designated round scorer -> can edit
+        return false;
+      } else {
+        // Current user is a non-scorer player -> Spectator / Companion Mode (read-only)
         return true;
       }
     }
+
+    // Fallback: In resume mode, if scorecard belongs to another player
+    const ownerId = holes[0]?.userId ?? holes[0]?.UserId;
+    if (ownerId && Number(ownerId) !== currentUserId && mode === "resume") {
+      return true;
+    }
+
     return false;
-  }, [roundKey, userId, mode, partners, holes]);
+  }, [
+    mode,
+    holes,
+    userId,
+    partners,
+    roundKey,
+    propRoundContextId,
+    groupScorerId,
+  ]);
 
   const isRoundCompleted = useMemo(() => {
     return Boolean(holes.length > 0 && holes[0]?.isCompleted);
   }, [holes]);
 
-  const isReadOnly =
-    mode === "view" ||
-    (mode !== "resume" && mode !== "new-round" && isRoundCompleted) ||
-    isCompanionView;
+  const isReadOnly = useMemo(() => {
+    if (mode === "view") return true;
+    if (isRoundCompleted) return true;
+    if (isCompanionView) return true;
+    return false;
+  }, [mode, isRoundCompleted, isCompanionView]);
 
   // ─────────────────────────────────────────────
   // Location Permission & Rangefinder Handler
@@ -811,9 +894,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       // Extract Playing Group Round Key
       const holeWithKey = uniqueRawHoles.find(
         (h: any) =>
-          h.playingGroupRoundKey ||
-          h.PlayingGroupRoundKey ||
-          h.roundContextId,
+          h.playingGroupRoundKey || h.PlayingGroupRoundKey || h.roundContextId,
       );
       const keyFromHole =
         holeWithKey?.playingGroupRoundKey ||
@@ -859,8 +940,38 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
 
       // Extract Group Name
-      if (first.groupName) {
-        setGroupName(first.groupName);
+      const foundGroupName =
+        first.groupName ||
+        first.GroupName ||
+        uniqueRawHoles.find((h: any) => h.groupName || h.GroupName)
+          ?.groupName ||
+        uniqueRawHoles.find((h: any) => h.groupName || h.GroupName)?.GroupName;
+      if (foundGroupName) {
+        setGroupName(String(foundGroupName));
+      }
+
+      // Extract Tournament Name
+      const foundTournamentName =
+        first.tournamentName ||
+        first.TournamentName ||
+        uniqueRawHoles.find((h: any) => h.tournamentName || h.TournamentName)
+          ?.tournamentName ||
+        uniqueRawHoles.find((h: any) => h.tournamentName || h.TournamentName)
+          ?.TournamentName;
+      if (foundTournamentName) {
+        setFetchedTournamentName(String(foundTournamentName));
+      }
+
+      // Extract Course Name
+      const foundCourseName =
+        first.courseName ||
+        first.CourseName ||
+        uniqueRawHoles.find((h: any) => h.courseName || h.CourseName)
+          ?.courseName ||
+        uniqueRawHoles.find((h: any) => h.courseName || h.CourseName)
+          ?.CourseName;
+      if (foundCourseName) {
+        setFetchedCourseName(String(foundCourseName));
       }
 
       // Extract Nassau Start Nine
@@ -1094,9 +1205,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             : h.score;
 
         const effectiveIsExcluded = isDataExcluded || gameConfig.isExcluded;
-        const effectiveIsDoublePeoria = isDataDoublePeoria || gameConfig.isDoublePeoria;
+        const effectiveIsDoublePeoria =
+          isDataDoublePeoria || gameConfig.isDoublePeoria;
         const effectiveIsGross = isDataGross || gameConfig.isGross;
-        const effectiveIsStableford = isDataStableford || gameConfig.isStableford;
+        const effectiveIsStableford =
+          isDataStableford || gameConfig.isStableford;
         const effectiveIsSystem36 = isDataSystem36 || gameConfig.isSystem36;
 
         const strokeIndex = Number(h.strokeIndex || 0);
@@ -2265,25 +2378,55 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.headerTitle,
-                { color: isDark ? "#ffffff" : "#0f172a" },
-              ]}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              {tournamentName ||
-                propCourseName ||
-                (holes[0]?.groupName ? `${holes[0].groupName}` : "Scorecard")}
-            </Text>
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.headerTitle,
+                  { color: isDark ? "#ffffff" : "#0f172a", flexShrink: 1 },
+                ]}
+              >
+                {headerTitleText}
+              </Text>
+            </View>
             <Text
               style={[
                 styles.headerSubtitle,
                 { color: isDark ? "#9ca3af" : "#64748b" },
               ]}
             >
-              {gameConfig.formatLabel} {groupName ? `• ${groupName}` : ""}
+              {gameConfig.formatLabel}
             </Text>
+            {displayGroupName ? (
+              <View
+                style={[
+                  styles.groupBadge,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(139, 195, 74, 0.2)"
+                      : "rgba(139, 195, 74, 0.15)",
+                    borderColor: isDark ? "#8bc34a" : "#689f38",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="people-outline"
+                  size={11}
+                  color={isDark ? "#a3e635" : "#33691e"}
+                  style={{ marginRight: 3 }}
+                />
+                <Text
+                  style={[
+                    styles.groupBadgeText,
+                    { color: isDark ? "#a3e635" : "#33691e" },
+                  ]}
+                >
+                  {displayGroupName}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           {/* Top Right: Completed Status or Finish Button */}
@@ -2464,7 +2607,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               onPress={() => setIsDetailsVisible(!isDetailsVisible)}
               style={[
                 styles.iconActionButton,
-                { backgroundColor: isDark ? "rgba(39, 39, 42, 0.45)" : "rgba(226, 232, 240, 0.45)" },
+                {
+                  backgroundColor: isDark
+                    ? "rgba(39, 39, 42, 0.45)"
+                    : "rgba(226, 232, 240, 0.45)",
+                },
               ]}
             >
               <Ionicons
@@ -2647,7 +2794,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       styles.halfFilterButton,
                       activeCourseHalf === "all"
                         ? styles.halfFilterActive
-                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
                     ]}
                   >
                     <Text
@@ -2673,7 +2824,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       styles.halfFilterButton,
                       activeCourseHalf === "front"
                         ? styles.halfFilterActive
-                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
                     ]}
                   >
                     <Text
@@ -2699,7 +2854,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       styles.halfFilterButton,
                       activeCourseHalf === "back"
                         ? styles.halfFilterActive
-                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
                     ]}
                   >
                     <Text
@@ -2803,27 +2962,27 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             {partners.length === 1 ? "Score" : partner.name}
                           </Text>
                         </View>
-                          {gameConfig.showNetColumns && (
-                            <Text
-                              style={[
-                                styles.subColHeader,
-                                { color: isDark ? "#9ca3af" : "#64748b" },
-                              ]}
-                            >
-                              Net
-                            </Text>
-                          )}
-                          {gameConfig.showPtsColumns && (
-                            <Text
-                              style={[
-                                styles.subColHeader,
-                                { color: isDark ? "#9ca3af" : "#64748b" },
-                              ]}
-                            >
-                              Pts
-                            </Text>
-                          )}
-                        </View>
+                        {gameConfig.showNetColumns && (
+                          <Text
+                            style={[
+                              styles.subColHeader,
+                              { color: isDark ? "#9ca3af" : "#64748b" },
+                            ]}
+                          >
+                            Net
+                          </Text>
+                        )}
+                        {gameConfig.showPtsColumns && (
+                          <Text
+                            style={[
+                              styles.subColHeader,
+                              { color: isDark ? "#9ca3af" : "#64748b" },
+                            ]}
+                          >
+                            Pts
+                          </Text>
+                        )}
+                      </View>
                     ))}
 
                     {gameConfig.isSplit6 && (
@@ -3050,51 +3209,51 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                                       )
                                     }
                                     onDisabledPress={() => {
-                                       if (isReadOnly) return;
-                                       if (partner.userId) {
-                                         const uid = Number(partner.userId);
-                                         const raw = (
-                                           (uid != null
-                                             ? delegationStatuses[uid]
-                                             : "") ||
-                                           (partner.userId != null
-                                             ? (delegationStatuses as any)[
-                                                 partner.userId
-                                               ]
-                                             : "") ||
-                                           (partner.playerId
-                                             ? (delegationStatuses as any)[
-                                                 partner.playerId
-                                               ]
-                                             : "") ||
-                                           ""
-                                         )
-                                           .toString()
-                                           .toLowerCase()
-                                           .trim();
+                                      if (isReadOnly) return;
+                                      if (partner.userId) {
+                                        const uid = Number(partner.userId);
+                                        const raw = (
+                                          (uid != null
+                                            ? delegationStatuses[uid]
+                                            : "") ||
+                                          (partner.userId != null
+                                            ? (delegationStatuses as any)[
+                                                partner.userId
+                                              ]
+                                            : "") ||
+                                          (partner.playerId
+                                            ? (delegationStatuses as any)[
+                                                partner.playerId
+                                              ]
+                                            : "") ||
+                                          ""
+                                        )
+                                          .toString()
+                                          .toLowerCase()
+                                          .trim();
 
-                                         if (
-                                           raw === "rejected" ||
-                                           raw === "declined" ||
-                                           raw.includes("reject") ||
-                                           raw.includes("declin") ||
-                                           raw === "0" ||
-                                           raw === "false"
-                                         ) {
-                                           Toast.show({
-                                             type: "error",
-                                             text1: "Request Declined",
-                                             text2: `${partner.name} declined participation in this round.`,
-                                           });
-                                         } else {
-                                           Toast.show({
-                                             type: "info",
-                                             text1: "Pending Approval",
-                                             text2: `${partner.name} has not approved this round yet.`,
-                                           });
-                                         }
-                                       }
-                                     }}
+                                        if (
+                                          raw === "rejected" ||
+                                          raw === "declined" ||
+                                          raw.includes("reject") ||
+                                          raw.includes("declin") ||
+                                          raw === "0" ||
+                                          raw === "false"
+                                        ) {
+                                          Toast.show({
+                                            type: "error",
+                                            text1: "Request Declined",
+                                            text2: `${partner.name} declined participation in this round.`,
+                                          });
+                                        } else {
+                                          Toast.show({
+                                            type: "info",
+                                            text1: "Pending Approval",
+                                            text2: `${partner.name} has not approved this round yet.`,
+                                          });
+                                        }
+                                      }
+                                    }}
                                     multiplier={multiplier}
                                     showBadges={
                                       gameConfig.isHighLow ||
@@ -3185,7 +3344,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                                     : hole.holeNumber >= 10
                                 }
                                 isDark={isDark}
-                                fontSize={11}
+                                fontSize={12}
                               />
                             </View>
                           )}
@@ -3275,7 +3434,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                               styles.colHole,
                               {
                                 fontWeight: "800",
-                                fontSize: isGrandTotal ? 12 : 11,
+                                fontSize: isGrandTotal ? 13 : 12,
                                 color: isGrandTotal
                                   ? isDark
                                     ? "#ffffff"
@@ -3412,7 +3571,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                                 houses={nassauHouses}
                                 isTotalRow={true}
                                 isDark={isDark}
-                                fontSize={11}
+                                fontSize={12}
                               />
                             </View>
                           )}
@@ -3851,7 +4010,7 @@ const styles = StyleSheet.create({
   colHole: {
     width: 44,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
   },
   colHoleContainer: {
@@ -3862,7 +4021,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   colHoleVal: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
   },
   perHoleGpsButton: {
@@ -3873,37 +4032,37 @@ const styles = StyleSheet.create({
   colSI: {
     width: 28,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
   },
   colSIVal: {
     width: 28,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   colYard: {
     width: 38,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
   },
   colYardVal: {
     width: 38,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
   },
   colPar: {
     width: 30,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
   },
   colParVal: {
     width: 30,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
   },
   colPlayerScores: {
@@ -3919,19 +4078,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   playerScoreHeaderTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
     width: "100%",
   },
   subColHeader: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     width: 32,
     textAlign: "center",
   },
   subColVal: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     width: 32,
     textAlign: "center",
@@ -3939,22 +4098,22 @@ const styles = StyleSheet.create({
   colTeamPts: {
     width: 44,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   colSplitSixPts: {
     width: 46,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   playerSubtotalScore: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
   },
   playerTotalScore: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
     textAlign: "center",
   },
@@ -3963,6 +4122,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
+  },
+  groupBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 7,
+    alignSelf: "flex-start",
+  },
+  groupBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
   companionBanner: {
     flexDirection: "row",

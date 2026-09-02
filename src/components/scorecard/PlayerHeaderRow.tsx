@@ -150,14 +150,14 @@ const styles = StyleSheet.create({
     borderWidth: 0.8,
   },
   teamText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "800",
   },
   statusBadge: {
     marginLeft: 2,
   },
   playerName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   hcText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
   },
 });

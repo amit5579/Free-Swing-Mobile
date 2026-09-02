@@ -10,6 +10,7 @@ export default function PlayScoreCardPage() {
     scoringType,
     handicap,
     tournamentName,
+    courseName,
   } = useLocalSearchParams<{
     tournamentId?: string;
     teeBoxId?: string;
@@ -17,6 +18,7 @@ export default function PlayScoreCardPage() {
     scoringType?: string;
     handicap?: string;
     tournamentName?: string;
+    courseName?: string;
   }>();
 
   return (
@@ -28,6 +30,7 @@ export default function PlayScoreCardPage() {
       scoringType={scoringType}
       handicap={handicap}
       tournamentName={tournamentName}
+      courseName={courseName}
     />
   );
 }

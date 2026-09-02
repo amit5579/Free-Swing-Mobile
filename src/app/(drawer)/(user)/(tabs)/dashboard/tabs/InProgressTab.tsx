@@ -47,6 +47,7 @@ export type InProgressGame = {
   isGroupDelegation?: boolean;
   primaryUserName?: string;
   playingGroupRoundKey?: string;
+  tournamentName?: string;
 };
 
 type InProgressTabProps = {
@@ -61,6 +62,7 @@ type InProgressTabProps = {
     isDoublePeoria?: boolean,
     courseHalf?: string,
     playingGroupRoundKey?: string,
+    tournamentName?: string,
   ) => void;
   searchQuery?: string;
 };
@@ -87,6 +89,7 @@ export function InProgressTab({
     isDoublePeoria?: boolean,
     courseHalf?: string,
     playingGroupRoundKey?: string,
+    tournamentName?: string,
   ) => {
     if (resumingId || deletingId) return;
     setResumingId(id);
@@ -99,6 +102,7 @@ export function InProgressTab({
       isDoublePeoria,
       courseHalf,
       playingGroupRoundKey,
+      tournamentName,
     );
     setTimeout(() => setResumingId(null), 1000);
   };
@@ -200,6 +204,7 @@ export function InProgressTab({
           false,
         ),
         tournamentId: item.tournamentId ?? item.TournamentId ?? null,
+        tournamentName: item.tournamentName ?? item.TournamentName ?? item.tournament?.name ?? undefined,
         hasLocalDraft: !!item.hasLocalDraft,
         isLocalDraftOnly: !!item.isLocalDraftOnly,
         courseHalf: item.courseHalf ?? item.CourseHalf ?? undefined,
@@ -753,6 +758,7 @@ export function InProgressTab({
                           game.isDoublePeoria,
                           game.courseHalf,
                           game.playingGroupRoundKey,
+                          game.tournamentName,
                         )
                       }
                       className="rounded-full flex-row items-center justify-center"
