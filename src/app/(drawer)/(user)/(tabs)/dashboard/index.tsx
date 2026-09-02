@@ -1007,6 +1007,7 @@ export default function DashboardScreen() {
                 tournamentId,
                 isDoublePeoria,
                 courseHalf,
+                playingGroupRoundKey,
               ) => {
                 router.push({
                   pathname: "/(drawer)/(user)/scorecard/resume/[id]",
@@ -1019,6 +1020,7 @@ export default function DashboardScreen() {
                     tournamentId: tournamentId ? String(tournamentId) : undefined,
                     isDoublePeoria: isDoublePeoria ? "true" : undefined,
                     courseHalf: courseHalf || undefined,
+                    roundContextId: playingGroupRoundKey || undefined,
                   },
                 });
               }}

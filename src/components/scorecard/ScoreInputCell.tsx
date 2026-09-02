@@ -27,6 +27,7 @@ export interface ScoreInputCellProps {
   allowPartnerEdit?: boolean;
   hideScoreIndicator?: boolean;
   onDisabledPress?: () => void;
+  cellBackgroundColor?: string;
 }
 
 export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
@@ -48,6 +49,7 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
   allowPartnerEdit = true,
   hideScoreIndicator = false,
   onDisabledPress,
+  cellBackgroundColor,
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const editable = !isReadOnly && allowPartnerEdit;
@@ -63,7 +65,14 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
     onChangeText(clean);
   };
 
-  const parsedScore = valueText !== "" && valueText !== undefined ? Number(valueText) : score;
+  const parsedScore =
+    valueText !== "" && valueText !== undefined ? Number(valueText) : score;
+
+  const hasValidScore =
+    parsedScore !== null &&
+    parsedScore !== undefined &&
+    parsedScore >= 0 &&
+    String(parsedScore) !== "";
 
   return (
     <View style={styles.container}>
@@ -74,15 +83,21 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
             style={[
               styles.input,
               {
-                color: isDark ? "#ffffff" : "#111827",
-                backgroundColor: isDark ? "#202024" : "#ffffff",
+                color: isDark ? "#ffffff" : "#000000",
+                backgroundColor:
+                  cellBackgroundColor ||
+                  (isDark
+                    ? "rgba(32, 32, 36, 0.35)"
+                    : "rgba(255, 255, 255, 0.35)"),
                 borderColor: isFocused
                   ? isDark
                     ? "#4ade80"
                     : "#16a34a"
-                  : isDark
-                    ? "#3f3f46"
-                    : "#cbd5e1",
+                  : cellBackgroundColor
+                    ? "transparent"
+                    : isDark
+                      ? "#3f3f46"
+                      : "#cbd5e1",
               },
             ]}
             keyboardType="number-pad"
@@ -105,21 +120,34 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
             style={[
               styles.readOnlyCell,
               {
-                backgroundColor: isDark ? "#18181b" : "#f1f5f9",
-                borderColor: isDark ? "#27272a" : "#e2e8f0",
-                opacity: 0.7,
+                backgroundColor:
+                  cellBackgroundColor ||
+                  (isDark
+                    ? "rgba(24, 24, 27, 0.30)"
+                    : "rgba(241, 245, 249, 0.30)"),
+                borderColor: cellBackgroundColor
+                  ? "transparent"
+                  : isDark
+                    ? "#27272a"
+                    : "#e2e8f0",
               },
             ]}
           >
             <Text
               style={[
                 styles.readOnlyText,
-                { color: isDark ? "#71717a" : "#94a3b8" },
+                {
+                  color: hasValidScore
+                    ? isDark
+                      ? "#ffffff"
+                      : "#000000"
+                    : isDark
+                      ? "#71717a"
+                      : "#94a3b8",
+                },
               ]}
             >
-              {parsedScore !== null && parsedScore !== undefined && parsedScore >= 0
-                ? String(parsedScore)
-                : "-"}
+              {hasValidScore ? String(parsedScore) : "-"}
             </Text>
           </Pressable>
         )}
@@ -129,62 +157,64 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
 
       {/* Sandy & Regulation Badges */}
       {showBadges && (
-        <View style={styles.badgeRow}>
-          {onToggleSandy && editable ? (
-            <Pressable
-              onPress={onToggleSandy}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              style={[
-                styles.miniBadge,
-                sandy
-                  ? styles.sandyBadgeActive
-                  : isDark
-                    ? styles.badgeInactiveDark
-                    : styles.badgeInactiveLight,
-              ]}
-            >
-              <Text
+        <View style={styles.badgeContainer}>
+          <View style={styles.badgeRow}>
+            {onToggleSandy && editable ? (
+              <Pressable
+                onPress={onToggleSandy}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={[
-                  styles.miniBadgeText,
-                  { color: sandy ? "#ffffff" : isDark ? "#888888" : "#666666" },
+                  styles.miniBadge,
+                  sandy
+                    ? styles.sandyBadgeActive
+                    : isDark
+                      ? styles.badgeInactiveDark
+                      : styles.badgeInactiveLight,
                 ]}
               >
-                S
-              </Text>
-            </Pressable>
-          ) : sandy ? (
-            <View style={[styles.miniBadge, styles.sandyBadgeActive]}>
-              <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>S</Text>
-            </View>
-          ) : null}
+                <Text
+                  style={[
+                    styles.miniBadgeText,
+                    { color: sandy ? "#ffffff" : isDark ? "#888888" : "#666666" },
+                  ]}
+                >
+                  S
+                </Text>
+              </Pressable>
+            ) : sandy ? (
+              <View style={[styles.miniBadge, styles.sandyBadgeActive]}>
+                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>S</Text>
+              </View>
+            ) : null}
 
-          {onToggleR && editable ? (
-            <Pressable
-              onPress={onToggleR}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              style={[
-                styles.miniBadge,
-                r
-                  ? styles.rBadgeActive
-                  : isDark
-                    ? styles.badgeInactiveDark
-                    : styles.badgeInactiveLight,
-              ]}
-            >
-              <Text
+            {onToggleR && editable ? (
+              <Pressable
+                onPress={onToggleR}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={[
-                  styles.miniBadgeText,
-                  { color: r ? "#ffffff" : isDark ? "#888888" : "#666666" },
+                  styles.miniBadge,
+                  r
+                    ? styles.rBadgeActive
+                    : isDark
+                      ? styles.badgeInactiveDark
+                      : styles.badgeInactiveLight,
                 ]}
               >
-                R
-              </Text>
-            </Pressable>
-          ) : r ? (
-            <View style={[styles.miniBadge, styles.rBadgeActive]}>
-              <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>R</Text>
-            </View>
-          ) : null}
+                <Text
+                  style={[
+                    styles.miniBadgeText,
+                    { color: r ? "#ffffff" : isDark ? "#888888" : "#666666" },
+                  ]}
+                >
+                  R
+                </Text>
+              </Pressable>
+            ) : r ? (
+              <View style={[styles.miniBadge, styles.rBadgeActive]}>
+                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>R</Text>
+              </View>
+            ) : null}
+          </View>
 
           {multiplier > 0 && (
             <View style={styles.multiplierBadge}>
@@ -233,25 +263,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+  badgeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 3,
+    gap: 2,
+  },
   badgeRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 3,
-    gap: 4,
+    gap: 3,
   },
   miniBadge: {
-    width: 19,
-    height: 19,
-    borderRadius: 9.5,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
   },
   miniBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
-    lineHeight: 13,
+    lineHeight: 12,
   },
   sandyBadgeActive: {
     backgroundColor: "#d97706",
@@ -271,13 +306,14 @@ const styles = StyleSheet.create({
   },
   multiplierBadge: {
     backgroundColor: "#7c3aed",
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4,
+    alignSelf: "center",
   },
   multiplierText: {
     color: "#ffffff",
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "800",
   },
 });

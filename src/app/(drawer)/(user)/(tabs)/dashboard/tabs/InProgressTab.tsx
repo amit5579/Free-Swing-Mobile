@@ -60,6 +60,7 @@ type InProgressTabProps = {
     tournamentId?: number | null,
     isDoublePeoria?: boolean,
     courseHalf?: string,
+    playingGroupRoundKey?: string,
   ) => void;
   searchQuery?: string;
 };
@@ -75,7 +76,6 @@ export function InProgressTab({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [resumingId, setResumingId] = useState<string | null>(null);
-
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleResume = (
@@ -86,10 +86,20 @@ export function InProgressTab({
     tournamentId?: number | null,
     isDoublePeoria?: boolean,
     courseHalf?: string,
+    playingGroupRoundKey?: string,
   ) => {
     if (resumingId || deletingId) return;
     setResumingId(id);
-    onResume(id, courseName, date, scoringType, tournamentId, isDoublePeoria, courseHalf);
+    onResume(
+      id,
+      courseName,
+      date,
+      scoringType,
+      tournamentId,
+      isDoublePeoria,
+      courseHalf,
+      playingGroupRoundKey,
+    );
     setTimeout(() => setResumingId(null), 1000);
   };
 
@@ -177,7 +187,12 @@ export function InProgressTab({
           item.tournamentScoringType ??
           item.TournamentScoringType ??
           item.scoring_type ??
-          undefined,
+          (item.isStableford ? "stableford" : undefined),
+        isStableford: Boolean(
+          item.isStableford ??
+          item.IsStableford ??
+          String(item.scoringType || "").toLowerCase().includes("stableford"),
+        ),
         isDoublePeoria: Boolean(
           item.isDoublePeoria ??
           item.IsDoublePeoria ??
@@ -737,6 +752,7 @@ export function InProgressTab({
                           game.tournamentId,
                           game.isDoublePeoria,
                           game.courseHalf,
+                          game.playingGroupRoundKey,
                         )
                       }
                       className="rounded-full flex-row items-center justify-center"

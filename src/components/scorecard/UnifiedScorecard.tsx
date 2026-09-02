@@ -166,18 +166,26 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   const [activeTab, setActiveTab] = useState<"scorecard" | "scoring">(
     "scorecard",
   );
-  const [detectedCourseHalf, setDetectedCourseHalf] = useState<string | null>(() => {
-    const raw = propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
-    const norm = String(raw).toLowerCase().replace(/[\s-_]/g, "");
-    if (norm === "front9" || norm === "front") return "Front9";
-    if (norm === "back9" || norm === "back") return "Back9";
-    return null;
-  });
+  const [detectedCourseHalf, setDetectedCourseHalf] = useState<string | null>(
+    () => {
+      const raw =
+        propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
+      const norm = String(raw)
+        .toLowerCase()
+        .replace(/[\s-_]/g, "");
+      if (norm === "front9" || norm === "front") return "Front9";
+      if (norm === "back9" || norm === "back") return "Back9";
+      return null;
+    },
+  );
   const [activeCourseHalf, setActiveCourseHalf] = useState<
     "all" | "front" | "back"
   >(() => {
-    const raw = propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
-    const norm = String(raw).toLowerCase().replace(/[\s-_]/g, "");
+    const raw =
+      propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
+    const norm = String(raw)
+      .toLowerCase()
+      .replace(/[\s-_]/g, "");
     if (norm === "front9" || norm === "front") return "front";
     if (norm === "back9" || norm === "back") return "back";
     return "all";
@@ -253,14 +261,14 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
     const rawType = String(
       propScoringType ||
-      first.scoringType ||
-      first.ScoringType ||
-      first.matchScoringType ||
-      first.tournamentScoringType ||
-      first.TournamentScoringType ||
-      parsedSelectedScore.scoring_type ||
-      parsedSelectedScore.scoringType ||
-      ""
+        first.scoringType ||
+        first.ScoringType ||
+        first.matchScoringType ||
+        first.tournamentScoringType ||
+        first.TournamentScoringType ||
+        parsedSelectedScore.scoring_type ||
+        parsedSelectedScore.scoringType ||
+        "",
     ).toLowerCase();
 
     const hasStablefordType = allScoringStrings.some((s) =>
@@ -290,15 +298,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
     const hasSavedStablefordPoints = holes.some(
       (h) =>
-        h.stablefordPoints !== null &&
-        h.stablefordPoints !== undefined &&
-        (h.score !== null && h.score !== undefined && Number(h.score) > 0),
+        (h.stablefordPoints !== null && h.stablefordPoints !== undefined) ||
+        (h.StablefordPoints !== null && h.StablefordPoints !== undefined),
     );
 
     // Match Web: Detect Stableford if data has points OR type indicates stableford
     const isStableford =
       parsedSelectedScore.stableford === true ||
       parsedSelectedScore.stableford === "true" ||
+      parsedSelectedScore.scoringType === "stableford" ||
+      parsedSelectedScore.scoring_type === "stableford" ||
       hasStablefordType ||
       holes.some(
         (h) =>
@@ -348,8 +357,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
     let formatLabel = "Net Score • Include Par 3";
     if (isSystem36) formatLabel = "System 36";
-    else if (isDoublePeoria && isStableford)
-      formatLabel = "Stableford";
+    else if (isDoublePeoria && isStableford) formatLabel = "Stableford";
     else if (isDoublePeoria) formatLabel = "Net Include Par 3";
     else if (isExcluded && !isStableford)
       formatLabel = "Net Score • Exclude Par 3";
@@ -376,16 +384,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       hasMatchTab,
       formatLabel,
       showNetColumns:
-        !isGross &&
-        !isSystem36 &&
-        !isHighLow &&
-        !isNassau &&
-        !isSplit6,
+        !isGross && !isSystem36 && !isHighLow && !isNassau && !isSplit6,
       showPtsColumns:
-        !isSplit6 &&
-        !isHighLow &&
-        !isNassau &&
-        (isStableford || isSystem36),
+        !isSplit6 && !isHighLow && !isNassau && (isStableford || isSystem36),
     };
   }, [holes, propScoringType, selectedScore]);
 
@@ -481,6 +482,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       const effectiveId = propScorecardId || propTournamentId;
       const storedUserId = await AsyncStorage.getItem("userId");
       const currentUserId = storedUserId ? Number(storedUserId) : userId;
+      if (currentUserId && currentUserId !== userId) {
+        setUserId(currentUserId);
+      }
 
       let rawHoles: any[] = [];
       let initialPartners: RoundPlayer[] = [];
@@ -496,7 +500,10 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           try {
             rawHoles = await getScorecardDetails(effectiveId);
             if (mode === "resume") {
-              console.log("=== SCORECARD RESUME API DATA ===", JSON.stringify(rawHoles, null, 2));
+              console.log(
+                "=== SCORECARD RESUME API DATA ===",
+                JSON.stringify(rawHoles, null, 2),
+              );
             }
           } catch (e) {
             console.warn("Could not fetch details directly:", e);
@@ -510,27 +517,48 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             if (!draft && rawHoles && rawHoles.length > 0) {
               const firstHole = rawHoles[0];
               if (firstHole.courseId && firstHole.teeBoxId) {
-                draft = await getDraft(`draft_${firstHole.courseId}_${firstHole.teeBoxId}`);
+                draft = await getDraft(
+                  `draft_${firstHole.courseId}_${firstHole.teeBoxId}`,
+                );
               }
             }
-            console.log("=== SCORECARD RESUME DRAFT DATA ===", draft ? JSON.stringify(draft, null, 2) : "No Draft Found");
+            console.log(
+              "=== SCORECARD RESUME DRAFT DATA ===",
+              draft ? JSON.stringify(draft, null, 2) : "No Draft Found",
+            );
             if (draft && draft.holes && draft.holes.length > 0) {
               rawHoles = draft.holes.map((h) => {
-                const apiHole = rawHoles.find((rh) => rh.holeNumber === h.holeNumber) || {};
+                const apiHole =
+                  rawHoles.find((rh) => rh.holeNumber === h.holeNumber) || {};
                 return {
                   ...apiHole,
                   ...h,
-                  playingPartnersJson: h.playingPartnersJson ?? apiHole.playingPartnersJson,
+                  playingPartnersJson:
+                    h.playingPartnersJson ?? apiHole.playingPartnersJson,
                   groupName: h.groupName ?? apiHole.groupName,
-                  nassauStartingNine: h.nassauStartingNine ?? apiHole.nassauStartingNine,
-                  matchScoringType: h.matchScoringType ?? apiHole.matchScoringType,
+                  nassauStartingNine:
+                    h.nassauStartingNine ?? apiHole.nassauStartingNine,
+                  matchScoringType:
+                    h.matchScoringType ?? apiHole.matchScoringType,
                   isSystem36: h.isSystem36 ?? apiHole.isSystem36 ?? false,
-                  appliedHandicap: h.appliedHandicap ?? apiHole.appliedHandicap ?? 0,
-                  handicapAllowancePercent: h.handicapAllowancePercent ?? apiHole.handicapAllowancePercent ?? 100,
-                  isDoublePeoria: draft.isDoublePeoria ?? h.isDoublePeoria ?? apiHole.isDoublePeoria,
-                  isStableford: draft.isStableford ?? h.isStableford ?? apiHole.isStableford,
-                  isExcluded: draft.isExcluded ?? h.isExcluded ?? apiHole.isExcluded,
-                  scoringType: draft.scoringType || h.scoringType || apiHole.scoringType,
+                  appliedHandicap:
+                    h.appliedHandicap ?? apiHole.appliedHandicap ?? 0,
+                  handicapAllowancePercent:
+                    h.handicapAllowancePercent ??
+                    apiHole.handicapAllowancePercent ??
+                    100,
+                  isDoublePeoria:
+                    draft.isDoublePeoria ??
+                    h.isDoublePeoria ??
+                    apiHole.isDoublePeoria,
+                  isStableford:
+                    draft.isStableford ??
+                    h.isStableford ??
+                    apiHole.isStableford,
+                  isExcluded:
+                    draft.isExcluded ?? h.isExcluded ?? apiHole.isExcluded,
+                  scoringType:
+                    draft.scoringType || h.scoringType || apiHole.scoringType,
                 };
               });
             }
@@ -558,8 +586,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               const tourIsDoublePeoria =
                 tourFirst?.isDoublePeoria ?? tourFirst?.IsDoublePeoria;
 
-              if (tourScoringType !== undefined || tourIsDoublePeoria !== undefined) {
-                const normTourType = tourScoringType ? String(tourScoringType).toLowerCase() : "";
+              if (
+                tourScoringType !== undefined ||
+                tourIsDoublePeoria !== undefined
+              ) {
+                const normTourType = tourScoringType
+                  ? String(tourScoringType).toLowerCase()
+                  : "";
                 const isTourStableford = normTourType.includes("stableford");
                 const isTourDp =
                   tourIsDoublePeoria === true ||
@@ -569,7 +602,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 rawHoles = rawHoles.map((h) => ({
                   ...h,
                   scoringType: tourScoringType || h.scoringType,
-                  tournamentScoringType: tourScoringType || h.tournamentScoringType,
+                  tournamentScoringType:
+                    tourScoringType || h.tournamentScoringType,
                   isDoublePeoria:
                     isTourDp ||
                     (h.isDoublePeoria !== undefined && h.isDoublePeoria !== null
@@ -696,11 +730,27 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         (propHolesCount && propHolesCount !== "18" ? propHolesCount : null) ||
         first.courseHalf ||
         first.CourseHalf ||
-        (normalizedHoles.some((h) => String(h.courseHalf || "").toLowerCase().includes("front")) ? "Front9" : null) ||
-        (normalizedHoles.some((h) => String(h.courseHalf || "").toLowerCase().includes("back")) ? "Back9" : null) ||
+        (normalizedHoles.some((h) =>
+          String(h.courseHalf || "")
+            .toLowerCase()
+            .includes("front"),
+        )
+          ? "Front9"
+          : null) ||
+        (normalizedHoles.some((h) =>
+          String(h.courseHalf || "")
+            .toLowerCase()
+            .includes("back"),
+        )
+          ? "Back9"
+          : null) ||
         null;
 
-      const normHalf = rawCourseHalf ? String(rawCourseHalf).toLowerCase().replace(/[\s-_]/g, "") : "";
+      const normHalf = rawCourseHalf
+        ? String(rawCourseHalf)
+            .toLowerCase()
+            .replace(/[\s-_]/g, "")
+        : "";
       let filteredHoles = normalizedHoles;
       if (normHalf === "front9" || normHalf === "front") {
         filteredHoles = normalizedHoles.filter((h) => h.holeNumber <= 9);
@@ -730,10 +780,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       );
 
       const ownerName =
-        username ||
-        first.userName ||
-        first.playerName ||
-        "Player 1";
+        username || first.userName || first.playerName || "Player 1";
 
       // Extract Partners
       if (initialPartners.length === 0 && first.playingPartnersJson) {
@@ -762,7 +809,18 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       setPartners(initialPartners);
 
       // Extract Playing Group Round Key
-      const keyFromHole = first.playingGroupRoundKey || (first as any).PlayingGroupRoundKey;
+      const holeWithKey = uniqueRawHoles.find(
+        (h: any) =>
+          h.playingGroupRoundKey ||
+          h.PlayingGroupRoundKey ||
+          h.roundContextId,
+      );
+      const keyFromHole =
+        holeWithKey?.playingGroupRoundKey ||
+        holeWithKey?.PlayingGroupRoundKey ||
+        holeWithKey?.roundContextId ||
+        propRoundContextId;
+
       if (keyFromHole) {
         initialKey = String(keyFromHole);
         setRoundKey(initialKey);
@@ -771,8 +829,24 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           if (Array.isArray(statuses)) {
             const newStatuses: Record<number, string> = {};
             statuses.forEach((s: any) => {
-              const targetUserId = s.targetUserId ?? s.TargetUserId;
-              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              const targetUserId =
+                s.targetUserId ??
+                s.TargetUserId ??
+                s.userId ??
+                s.UserId ??
+                s.target_user_id ??
+                s.playerId;
+              const rawStatus = (
+                s.status ??
+                s.Status ??
+                s.delegationStatus ??
+                s.DelegationStatus ??
+                s.approvalStatus ??
+                ""
+              )
+                .toString()
+                .toLowerCase()
+                .trim();
               if (targetUserId != null) {
                 newStatuses[Number(targetUserId)] = rawStatus;
               }
@@ -877,6 +951,77 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         (holesRef.current || []).map((h) => [h.holeId || h.holeNumber, h]),
       );
 
+      // Determine data-level mode flags from loaded holes and parameters
+      const parsedSelectedScoreObj =
+        typeof selectedScore === "string"
+          ? JSON.parse(selectedScore)
+          : selectedScore || {};
+
+      const allDataScoringStrings = [
+        propScoringType,
+        parsedSelectedScoreObj.scoring_type,
+        parsedSelectedScoreObj.scoringType,
+        ...normalizedHoles.map(
+          (h) =>
+            h.scoringType ||
+            h.ScoringType ||
+            h.tournamentScoringType ||
+            h.TournamentScoringType ||
+            h.matchScoringType ||
+            h.MatchScoringType,
+        ),
+      ]
+        .filter(Boolean)
+        .map((s) => String(s).toLowerCase());
+
+      const isDataStableford =
+        parsedSelectedScoreObj.stableford === true ||
+        parsedSelectedScoreObj.stableford === "true" ||
+        parsedSelectedScoreObj.scoringType === "stableford" ||
+        parsedSelectedScoreObj.scoring_type === "stableford" ||
+        allDataScoringStrings.some((s) => s.includes("stableford")) ||
+        normalizedHoles.some(
+          (h) =>
+            h.isStableford === true ||
+            h.isStableford === "true" ||
+            h.IsStableford === true ||
+            (h.stablefordPoints !== null && h.stablefordPoints !== undefined),
+        );
+
+      const isDataSystem36 =
+        parsedSelectedScoreObj.isSystem36 === true ||
+        allDataScoringStrings.some(
+          (s) => s.includes("system-36") || s.includes("system_36"),
+        ) ||
+        normalizedHoles.some((h) => h.isSystem36);
+
+      const isDataDoublePeoria =
+        parsedSelectedScoreObj.double_peoria === true ||
+        parsedSelectedScoreObj.doublePeoria === true ||
+        allDataScoringStrings.some(
+          (s) =>
+            s.includes("double-peoria") ||
+            s.includes("double_peoria") ||
+            s.includes("doublepeoria") ||
+            s.includes("dp"),
+        ) ||
+        normalizedHoles.some(
+          (h) =>
+            h.isDoublePeoria === true ||
+            h.isDoublePeoria === "true" ||
+            h.IsDoublePeoria === true,
+        );
+
+      const isDataExcluded =
+        parsedSelectedScoreObj.excluded === true ||
+        allDataScoringStrings.some((s) => s.includes("exclude")) ||
+        normalizedHoles.some((h) => h.isExcluded);
+
+      const isDataGross =
+        parsedSelectedScoreObj.gross === true ||
+        allDataScoringStrings.some((s) => s.includes("gross")) ||
+        normalizedHoles.some((h) => h.isGross);
+
       const sanitizedHoles = filteredHoles.map((h) => {
         const inMem = inMemoryHolesMap.get(h.holeId || h.holeNumber);
 
@@ -948,26 +1093,32 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             ? inMem.score
             : h.score;
 
+        const effectiveIsExcluded = isDataExcluded || gameConfig.isExcluded;
+        const effectiveIsDoublePeoria = isDataDoublePeoria || gameConfig.isDoublePeoria;
+        const effectiveIsGross = isDataGross || gameConfig.isGross;
+        const effectiveIsStableford = isDataStableford || gameConfig.isStableford;
+        const effectiveIsSystem36 = isDataSystem36 || gameConfig.isSystem36;
+
         const strokeIndex = Number(h.strokeIndex || 0);
         const strokes =
-          gameConfig.isExcluded && h.par === 3
+          effectiveIsExcluded && h.par === 3
             ? 0
             : calculateStrokes(fetchedPrimaryHc, strokeIndex);
         const netScore = calculateNetScore(effectivePrimaryScore, strokes, {
-          isDoublePeoria: gameConfig.isDoublePeoria,
-          isGross: gameConfig.isGross,
+          isDoublePeoria: effectiveIsDoublePeoria,
+          isGross: effectiveIsGross,
         });
         const isStablefordMode = Boolean(
-          gameConfig.isStableford || gameConfig.isSystem36,
+          effectiveIsStableford || effectiveIsSystem36,
         );
-        const stablefordPoints =
+        const calculatedPoints =
           isStablefordMode &&
           effectivePrimaryScore !== null &&
           effectivePrimaryScore !== undefined
             ? calculateStablefordPoints(
                 netScore,
                 h.par,
-                gameConfig.isSystem36,
+                effectiveIsSystem36,
                 effectivePrimaryScore,
               )
             : null;
@@ -975,6 +1126,10 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         return {
           ...h,
           score: effectivePrimaryScore,
+          isStableford: effectiveIsStableford || h.isStableford,
+          isDoublePeoria: effectiveIsDoublePeoria || h.isDoublePeoria,
+          isExcluded: effectiveIsExcluded || h.isExcluded,
+          isSystem36: effectiveIsSystem36 || h.isSystem36,
           companionScoresJson: mergedCompanionScores,
           companionSandysJson: mergedCompanionSandys,
           companionRsJson: mergedCompanionRs,
@@ -982,9 +1137,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             h.netScore !== null && h.netScore !== undefined && !inMem
               ? h.netScore
               : netScore,
-          stablefordPoints: isStablefordMode
-            ? (h.stablefordPoints ?? stablefordPoints)
-            : null,
+          stablefordPoints:
+            h.stablefordPoints !== null && h.stablefordPoints !== undefined
+              ? h.stablefordPoints
+              : isStablefordMode
+                ? calculatedPoints
+                : null,
         };
       });
 
@@ -1005,11 +1163,14 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     propHolesCount,
     propRoundContextId,
     propHandicap,
+    propScoringType,
+    selectedScore,
     username,
     startFrom,
     gameConfig.isDoublePeoria,
     gameConfig.isExcluded,
     gameConfig.isGross,
+    gameConfig.isStableford,
     gameConfig.isSystem36,
     userId,
   ]);
@@ -1023,20 +1184,37 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // ─────────────────────────────────────────────
   useEffect(() => {
     const effectiveId = propScorecardId || propTournamentId;
-    if (!effectiveId && !roundKey) return;
+    const effectiveKey = roundKey || propRoundContextId;
+    if (!effectiveId && !effectiveKey) return;
 
     const pollIntervalTime = isCompanionView ? 5000 : 10000;
 
     const interval = setInterval(async () => {
       // 1. Delegation Status Poll
-      if (roundKey) {
+      if (effectiveKey) {
         try {
-          const statuses = await getDelegationStatuses(String(roundKey));
+          const statuses = await getDelegationStatuses(String(effectiveKey));
           if (Array.isArray(statuses)) {
             const newStatuses: Record<number, string> = {};
             statuses.forEach((s: any) => {
-              const targetUserId = s.targetUserId ?? s.TargetUserId;
-              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              const targetUserId =
+                s.targetUserId ??
+                s.TargetUserId ??
+                s.userId ??
+                s.UserId ??
+                s.target_user_id ??
+                s.playerId;
+              const rawStatus = (
+                s.status ??
+                s.Status ??
+                s.delegationStatus ??
+                s.DelegationStatus ??
+                s.approvalStatus ??
+                ""
+              )
+                .toString()
+                .toLowerCase()
+                .trim();
               if (targetUserId != null) {
                 newStatuses[Number(targetUserId)] = rawStatus;
               }
@@ -1197,7 +1375,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           roundNumber: h.roundNumber || 1,
           isCompleted: isCompleted,
           isExcluded: gameConfig.isExcluded,
-          isDoublePeoria: gameConfig.isDoublePeoria || h.isDoublePeoria || false,
+          isDoublePeoria:
+            gameConfig.isDoublePeoria || h.isDoublePeoria || false,
           isSystem36: gameConfig.isSystem36 || h.isSystem36 || false,
           scoringType:
             h.scoringType ||
@@ -1239,24 +1418,33 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         }));
         // console.log("ppp", payload);
 
-        const targetId = effectiveId || holes[0]?.scorecardId || holesRef.current[0]?.scorecardId;
+        const targetId =
+          effectiveId ||
+          holes[0]?.scorecardId ||
+          holesRef.current[0]?.scorecardId;
 
         if (mode === "new-round" && !targetId) {
           const res = await saveScoreCard(payload);
-          
+
           let newId = null;
           if (Array.isArray(res) && res.length > 0) {
             newId = res[0].scorecardId || res[0].id;
-          } else if (res && typeof res === 'object') {
+          } else if (res && typeof res === "object") {
             newId = res.scorecardId || res.id;
           }
 
           if (newId) {
             setHoles((prev) => prev.map((h) => ({ ...h, scorecardId: newId })));
-            holesRef.current = holesRef.current.map((h) => ({ ...h, scorecardId: newId }));
+            holesRef.current = holesRef.current.map((h) => ({
+              ...h,
+              scorecardId: newId,
+            }));
           }
         } else if (targetId) {
-          const updatedPayload = payload.map(h => ({ ...h, scorecardId: targetId }));
+          const updatedPayload = payload.map((h) => ({
+            ...h,
+            scorecardId: targetId,
+          }));
           await updateHoleScoresApi(targetId, updatedPayload);
         } else {
           await saveScoreCard(payload);
@@ -1267,7 +1455,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           if (effectiveId) await deleteDraft(effectiveId);
           if (propRoundContextId)
             await deleteDraft(`round_${propRoundContextId}`);
-            
+
           const delCourseId = propCourseId || holes[0]?.courseId;
           const delTeeBoxId = propTeeBoxId || holes[0]?.teeBoxId;
           if (delCourseId && delTeeBoxId) {
@@ -1317,15 +1505,31 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       if (holesRef.current && holesRef.current.length > 0 && mode !== "view") {
         await syncServerAndDraft(holesRef.current, textScoresRef.current || {});
       }
-      await loadScorecardData();
-      if (roundKey) {
+      const effectiveKey = roundKey || propRoundContextId;
+      if (effectiveKey) {
         try {
-          const statuses = await getDelegationStatuses(String(roundKey));
+          const statuses = await getDelegationStatuses(String(effectiveKey));
           if (Array.isArray(statuses)) {
             const newStatuses: Record<number, string> = {};
             statuses.forEach((s: any) => {
-              const targetUserId = s.targetUserId ?? s.TargetUserId;
-              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              const targetUserId =
+                s.targetUserId ??
+                s.TargetUserId ??
+                s.userId ??
+                s.UserId ??
+                s.target_user_id ??
+                s.playerId;
+              const rawStatus = (
+                s.status ??
+                s.Status ??
+                s.delegationStatus ??
+                s.DelegationStatus ??
+                s.approvalStatus ??
+                ""
+              )
+                .toString()
+                .toLowerCase()
+                .trim();
               if (targetUserId != null) {
                 newStatuses[Number(targetUserId)] = rawStatus;
               }
@@ -1386,14 +1590,36 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     (partner: RoundPlayer) => {
       if (partner.isCurrentUser || partner.isPrimary) return true;
       if (propTournamentId) return true;
-      if (partner.userId && roundKey) {
+      const effectiveKey = roundKey || propRoundContextId;
+      if (partner.userId && effectiveKey) {
         const uid = Number(partner.userId);
-        const status = (delegationStatuses[uid] || "").toLowerCase();
-        return status === "approved" || status === "accepted";
+        const raw = (
+          (uid != null ? delegationStatuses[uid] : "") ||
+          (partner.userId != null
+            ? (delegationStatuses as any)[partner.userId]
+            : "") ||
+          (partner.playerId
+            ? (delegationStatuses as any)[partner.playerId]
+            : "") ||
+          ""
+        )
+          .toString()
+          .toLowerCase()
+          .trim();
+
+        const isApproved =
+          raw === "approved" ||
+          raw === "accepted" ||
+          raw.includes("approv") ||
+          raw.includes("accept") ||
+          raw === "true" ||
+          raw === "1";
+
+        return isApproved;
       }
-      return !partner.userId;
+      return true;
     },
-    [delegationStatuses, roundKey, propTournamentId],
+    [delegationStatuses, roundKey, propRoundContextId, propTournamentId],
   );
 
   // Focus navigation / Cursor Auto-Advance Ref
@@ -1529,6 +1755,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   };
 
   const handleToggleSandy = (holeId: number, playerId: string) => {
+    const partnerObj = partners.find((p) => p.playerId === playerId);
+    if (partnerObj && !isPlayerApprovedToScore(partnerObj)) {
+      Toast.show({
+        type: "info",
+        text1: "Pending Approval",
+        text2: `${partnerObj.name} has not approved this round yet.`,
+      });
+      return;
+    }
+
     let nowActive = false;
     const nextHoles = holes.map((h) => {
       if (h.holeId !== holeId) return h;
@@ -1563,6 +1799,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   };
 
   const handleToggleR = (holeId: number, playerId: string) => {
+    const partnerObj = partners.find((p) => p.playerId === playerId);
+    if (partnerObj && !isPlayerApprovedToScore(partnerObj)) {
+      Toast.show({
+        type: "info",
+        text1: "Pending Approval",
+        text2: `${partnerObj.name} has not approved this round yet.`,
+      });
+      return;
+    }
+
     let nowActive = false;
     const nextHoles = holes.map((h) => {
       if (h.holeId !== holeId) return h;
@@ -1632,7 +1878,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       detectedCourseHalf || propCourseHalf || propHolesCount,
       nassauStartNine,
     );
-  }, [holes, detectedCourseHalf, propCourseHalf, propHolesCount, nassauStartNine]);
+  }, [
+    holes,
+    detectedCourseHalf,
+    propCourseHalf,
+    propHolesCount,
+    nassauStartNine,
+  ]);
 
   const displayedHoles = useMemo(() => {
     if (activeCourseHalf === "front") return halvesData.front9;
@@ -1768,14 +2020,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             boolean,
             boolean,
           ],
-          teamARs: [Boolean(t1p1?.r), Boolean(t1p2?.r)] as [
-            boolean,
-            boolean,
-          ],
-          teamBRs: [Boolean(t2p1?.r), Boolean(t2p2?.r)] as [
-            boolean,
-            boolean,
-          ],
+          teamARs: [Boolean(t1p1?.r), Boolean(t1p2?.r)] as [boolean, boolean],
+          teamBRs: [Boolean(t2p1?.r), Boolean(t2p2?.r)] as [boolean, boolean],
         };
       });
       return { highLowSummary: computeHighLowSummary(allHolesData) };
@@ -1841,12 +2087,20 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         nassauState: computeNassauState(
           gameConfig.isNassauBest ? "best" : "combined",
           allHolesData,
+          nassauStartNine,
         ),
       };
     }
 
     return {};
-  }, [holes, partners, primaryHandicap, companionHandicaps, gameConfig]);
+  }, [
+    holes,
+    partners,
+    primaryHandicap,
+    companionHandicaps,
+    gameConfig,
+    nassauStartNine,
+  ]);
 
   // Totals calculations
   const calculateTotalsForPlayer = (player: RoundPlayer, holesList: any[]) => {
@@ -1884,6 +2138,38 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       pts: isPtsMode && hasScore ? pts : "-",
     };
   };
+
+  // Primary player totals for Header Handicap display (DP HC / Sys36 HC)
+  const primaryTotals = useMemo(() => {
+    const primary =
+      partners.find((p) => p.isPrimary || p.isCurrentUser) || partners[0];
+    if (!primary) return { gross: 0, net: 0, pts: 0, hasScore: false };
+    let gross = 0;
+    let net = 0;
+    let pts = 0;
+    let hasScore = false;
+    holes.forEach((h) => {
+      const info = getPlayerHoleInfo(
+        h,
+        primary,
+        primaryHandicap,
+        companionHandicaps,
+        gameConfig,
+      );
+      if (info.score !== null && info.score !== undefined && info.score >= 0) {
+        gross += info.score;
+        net += info.netScore ?? info.score;
+        if (
+          info.stablefordPoints !== null &&
+          info.stablefordPoints !== undefined
+        ) {
+          pts += info.stablefordPoints;
+        }
+        hasScore = true;
+      }
+    });
+    return { gross, net, pts, hasScore };
+  }, [holes, partners, primaryHandicap, companionHandicaps, gameConfig]);
 
   const getSubtotal = (holesList: any[]) => {
     return {
@@ -1954,1076 +2240,1352 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-
-      {/* ── Top Header Bar (Back, Title, Completed / Finish Status) ── */}
-      <View
-        style={[
-          styles.headerBar,
-          {
-            backgroundColor: isDark ? "#121214" : "#ffffff",
-            borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={isDark ? "#ffffff" : "#0f172a"}
-          />
-        </TouchableOpacity>
-
-        <View style={styles.headerTitleContainer}>
-          <Text
-            numberOfLines={1}
-            style={[
-              styles.headerTitle,
-              { color: isDark ? "#ffffff" : "#0f172a" },
-            ]}
-          >
-            {tournamentName ||
-              propCourseName ||
-              (holes[0]?.groupName ? `${holes[0].groupName}` : "Scorecard")}
-          </Text>
-          <Text
-            style={[
-              styles.headerSubtitle,
-              { color: isDark ? "#9ca3af" : "#64748b" },
-            ]}
-          >
-            {gameConfig.formatLabel} {groupName ? `• ${groupName}` : ""}
-          </Text>
-        </View>
-
-        {/* Top Right: Completed Status or Finish Button */}
-        <View style={styles.headerTopRight}>
-          {!isReadOnly ? (
-            <TouchableOpacity
-              onPress={() => setShowFinishModal(true)}
-              style={styles.finishRoundButton}
-            >
-              <Text style={styles.finishRoundText}>Finish</Text>
-            </TouchableOpacity>
-          ) : (isCompanionView &&
-            <View style={styles.readOnlyBadge}>
-              <Text style={styles.readOnlyBadgeText}>
-                Live Viewer
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* ── Subheader Controls Bar (Handicap & Inline Action Buttons) ── */}
-      <View
-        style={[
-          styles.subHeaderControlsBar,
-          {
-            backgroundColor: isDark ? "#18181b" : "#f8fafc",
-            borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
-          },
-        ]}
-      >
-        <View style={styles.subHeaderLeft}>
-          <View
-            style={[
-              styles.handicapBadge,
-              {
-                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#E8F5E9",
-                borderColor: isDark ? "#4d7c0f" : "#8bc34a",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.handicapText,
-                { color: isDark ? "#8bc34a" : "#2e7d32" },
-              ]}
-            >
-              Handicap:{" "}
-              {primaryHandicap !== undefined && primaryHandicap !== null
-                ? primaryHandicap
-                : 0}
-            </Text>
-          </View>
-        </View>
-
-        {/* Inline Actions: GPS and Eye Details Toggle */}
-        <View style={styles.subHeaderRight}>
-          <TouchableOpacity
-            onPress={() => handleOpenRangefinder(holes[0]?.holeNumber || 1)}
-            style={styles.gpsButton}
-          >
-            <Ionicons
-              name="navigate-outline"
-              size={14}
-              color="#ffffff"
-              style={{ marginRight: 4 }}
-            />
-            <Text style={styles.gpsButtonText}>GPS</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-            style={[
-              styles.iconActionButton,
-              { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
-            ]}
-          >
-            <Ionicons
-              name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-              size={18}
-              color={isDark ? "#ffffff" : "#0f172a"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Multiplayer Companion View Banner */}
-      {isCompanionView && (
+        {/* ── Top Header Bar (Back, Title, Completed / Finish Status) ── */}
         <View
           style={[
-            styles.companionBanner,
+            styles.headerBar,
             {
-              backgroundColor: isDark ? "#0c4a6e33" : "#e0f2fe",
-              borderColor: isDark ? "#0284c7" : "#bae6fd",
-            },
-          ]}
-        >
-          <Ionicons
-            name="radio-outline"
-            size={22}
-            color={isDark ? "#38bdf8" : "#0284c7"}
-            style={{ marginRight: 10 }}
-          />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                styles.companionBannerTitle,
-                { color: isDark ? "#38bdf8" : "#0369a1" },
-              ]}
-            >
-              Multiplayer Companion View
-            </Text>
-            <Text
-              style={[
-                styles.companionBannerSub,
-                { color: isDark ? "#94a3b8" : "#475569" },
-              ]}
-            >
-              The round scorer is entering scores for this round. Your scorecard updates in real-time.
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Tab Switcher (Scorecard vs Match Scoring) */}
-      {gameConfig.hasMatchTab && (
-        <View
-          style={[
-            styles.tabBar,
-            {
-              backgroundColor: isDark ? "#18181b" : "#f4f4f5",
+              backgroundColor: isDark
+                ? "rgba(18, 18, 20, 0.55)"
+                : "rgba(255, 255, 255, 0.55)",
               borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
             },
           ]}
         >
-          <Pressable
-            onPress={() => setActiveTab("scorecard")}
-            style={[
-              styles.tabItem,
-              activeTab === "scorecard" && {
-                backgroundColor: isDark ? "#27272a" : "#ffffff",
-                borderRadius: 8,
-              },
-            ]}
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text
-              style={[
-                styles.tabItemText,
-                {
-                  color:
-                    activeTab === "scorecard"
-                      ? isDark
-                        ? "#ffffff"
-                        : "#0f172a"
-                      : isDark
-                        ? "#71717a"
-                        : "#a1a1aa",
-                },
-                activeTab === "scorecard" && styles.tabActiveText,
-              ]}
-            >
-              Scorecard
-            </Text>
-          </Pressable>
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={isDark ? "#ffffff" : "#0f172a"}
+            />
+          </TouchableOpacity>
 
-          <Pressable
-            onPress={() => setActiveTab("scoring")}
-            style={[
-              styles.tabItem,
-              activeTab === "scoring" && {
-                backgroundColor: isDark ? "#27272a" : "#ffffff",
-                borderRadius: 8,
-              },
-            ]}
-          >
+          <View style={styles.headerTitleContainer}>
             <Text
+              numberOfLines={1}
               style={[
-                styles.tabItemText,
-                {
-                  color:
-                    activeTab === "scoring"
-                      ? isDark
-                        ? "#ffffff"
-                        : "#0f172a"
-                      : isDark
-                        ? "#71717a"
-                        : "#a1a1aa",
-                },
-                activeTab === "scoring" && styles.tabActiveText,
+                styles.headerTitle,
+                { color: isDark ? "#ffffff" : "#0f172a" },
               ]}
             >
-            Game Summary
+              {tournamentName ||
+                propCourseName ||
+                (holes[0]?.groupName ? `${holes[0].groupName}` : "Scorecard")}
             </Text>
-          </Pressable>
+            <Text
+              style={[
+                styles.headerSubtitle,
+                { color: isDark ? "#9ca3af" : "#64748b" },
+              ]}
+            >
+              {gameConfig.formatLabel} {groupName ? `• ${groupName}` : ""}
+            </Text>
+          </View>
+
+          {/* Top Right: Completed Status or Finish Button */}
+          <View style={styles.headerTopRight}>
+            {!isReadOnly ? (
+              <TouchableOpacity
+                onPress={() => setShowFinishModal(true)}
+                style={styles.finishRoundButton}
+              >
+                <Text style={styles.finishRoundText}>Finish</Text>
+              </TouchableOpacity>
+            ) : (
+              isCompanionView && (
+                <View style={styles.readOnlyBadge}>
+                  <Text style={styles.readOnlyBadgeText}>Live Viewer</Text>
+                </View>
+              )
+            )}
+          </View>
         </View>
-      )}
 
-      {/* Main Scroll Content */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="none"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#0284c7", "#16a34a"]}
-            tintColor={isDark ? "#38bdf8" : "#0284c7"}
-          />
-        }
-      >
-        {activeTab === "scoring" && gameConfig.hasMatchTab ? (
-          <ScoringTabContent
-            mode={
-              gameConfig.isSplit6
-                ? "split-six"
-                : gameConfig.isHighLow
-                  ? "high-low"
-                  : gameConfig.isNassauBest
-                    ? "nassau-best"
-                    : "nassau-combined"
-            }
-            players={partners}
-            splitSixSummary={sideScoringSummaries.splitSixSummary}
-            highLowSummary={sideScoringSummaries.highLowSummary}
-            nassauState={sideScoringSummaries.nassauState}
-            isDark={isDark}
-          />
-        ) : (
-          <>
-            {/* Player Header Cards (only for multiplayer rounds) */}
-            {partners.length > 1 && (
-              <PlayerHeaderRow
-                players={partners}
-                delegationStatuses={delegationStatuses}
-                isDark={isDark}
-                showTeams={gameConfig.isHighLow || gameConfig.isNassau}
-              />
-            )}
-
-            {/* Halves Selector (Front 9 / Back 9 / All 18) - only for 18-hole rounds */}
-            {!isNineHoleOnly && (
-              <View style={styles.halfFilterRow}>
-                <Pressable
-                  onPress={() => setActiveCourseHalf("all")}
+        {/* ── Subheader Controls Bar (Handicap & Inline Action Buttons) ── */}
+        <View
+          style={[
+            styles.subHeaderControlsBar,
+            {
+              backgroundColor: isDark
+                ? "rgba(24, 24, 27, 0.45)"
+                : "rgba(248, 250, 252, 0.45)",
+              borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
+            },
+          ]}
+        >
+          <View style={styles.subHeaderLeft}>
+            {!gameConfig.isDoublePeoria &&
+              !gameConfig.isSystem36 &&
+              partners.length <= 1 && (
+                <View
                   style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "all"
-                      ? styles.halfFilterActive
-                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
+                    styles.handicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(139,195,74,0.15)"
+                        : "rgba(232, 245, 233, 0.50)",
+                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                    },
                   ]}
                 >
                   <Text
                     style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "all"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
+                      styles.handicapText,
+                      { color: isDark ? "#8bc34a" : "#2e7d32" },
                     ]}
                   >
-                    All 18
+                    Handicap:{" "}
+                    {primaryHandicap !== undefined && primaryHandicap !== null
+                      ? primaryHandicap
+                      : 0}
                   </Text>
-                </Pressable>
+                </View>
+              )}
 
-                <Pressable
-                  onPress={() => setActiveCourseHalf("front")}
+            {gameConfig.isDoublePeoria && (
+              <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+                <View
                   style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "front"
-                      ? styles.halfFilterActive
-                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
+                    styles.handicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(139,195,74,0.15)"
+                        : "rgba(232, 245, 233, 0.50)",
+                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                    },
                   ]}
                 >
                   <Text
                     style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "front"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
+                      styles.handicapText,
+                      { color: isDark ? "#8bc34a" : "#2e7d32" },
                     ]}
                   >
-                    Front 9
+                    Declared HC: {primaryHandicap ?? 0}
                   </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setActiveCourseHalf("back")}
+                </View>
+                <View
                   style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "back"
-                      ? styles.halfFilterActive
-                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
+                    styles.handicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(148,163,184,0.15)"
+                        : "rgba(241, 245, 249, 0.50)",
+                      borderColor: isDark ? "#64748b" : "#94a3b8",
+                    },
                   ]}
                 >
                   <Text
                     style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "back"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
+                      styles.handicapText,
+                      { color: isDark ? "#cbd5e1" : "#475569" },
                     ]}
                   >
-                    Back 9
+                    DP HC:{" "}
+                    {isReadOnly &&
+                    primaryTotals.hasScore &&
+                    primaryTotals.gross > 0
+                      ? primaryTotals.gross - primaryTotals.net
+                      : "NIL"}
                   </Text>
-                </Pressable>
+                </View>
               </View>
             )}
 
-            {/* Scorecard Table */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ minWidth: "100%" }}
+            {gameConfig.isSystem36 && (
+              <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+                <View
+                  style={[
+                    styles.handicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(139,195,74,0.15)"
+                        : "rgba(232, 245, 233, 0.50)",
+                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.handicapText,
+                      { color: isDark ? "#8bc34a" : "#2e7d32" },
+                    ]}
+                  >
+                    Declared HC: {primaryHandicap ?? 0}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.handicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(148,163,184,0.15)"
+                        : "rgba(241, 245, 249, 0.50)",
+                      borderColor: isDark ? "#64748b" : "#94a3b8",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.handicapText,
+                      { color: isDark ? "#cbd5e1" : "#475569" },
+                    ]}
+                  >
+                    Sys36 HC:{" "}
+                    {primaryTotals.hasScore && primaryTotals.gross > 0
+                      ? Math.min(24, Math.max(0, 36 - primaryTotals.pts))
+                      : "NIL"}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Inline Actions: GPS and Eye Details Toggle */}
+          <View style={styles.subHeaderRight}>
+            <TouchableOpacity
+              onPress={() => handleOpenRangefinder(holes[0]?.holeNumber || 1)}
+              style={styles.gpsButton}
             >
-              <View
+              <Ionicons
+                name="navigate-outline"
+                size={14}
+                color="#ffffff"
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.gpsButtonText}>GPS</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+              style={[
+                styles.iconActionButton,
+                { backgroundColor: isDark ? "rgba(39, 39, 42, 0.45)" : "rgba(226, 232, 240, 0.45)" },
+              ]}
+            >
+              <Ionicons
+                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                size={18}
+                color={isDark ? "#ffffff" : "#0f172a"}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Multiplayer Companion View Banner */}
+        {isCompanionView && (
+          <View
+            style={[
+              styles.companionBanner,
+              {
+                backgroundColor: isDark ? "#0c4a6e33" : "#e0f2fe",
+                borderColor: isDark ? "#0284c7" : "#bae6fd",
+              },
+            ]}
+          >
+            <Ionicons
+              name="radio-outline"
+              size={22}
+              color={isDark ? "#38bdf8" : "#0284c7"}
+              style={{ marginRight: 10 }}
+            />
+            <View style={{ flex: 1 }}>
+              <Text
                 style={[
-                  styles.tableContainer,
+                  styles.companionBannerTitle,
+                  { color: isDark ? "#38bdf8" : "#0369a1" },
+                ]}
+              >
+                Multiplayer Companion View
+              </Text>
+              <Text
+                style={[
+                  styles.companionBannerSub,
+                  { color: isDark ? "#94a3b8" : "#475569" },
+                ]}
+              >
+                The round scorer is entering scores for this round. Your
+                scorecard updates in real-time.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Tab Switcher (Scorecard vs Match Scoring) */}
+        {gameConfig.hasMatchTab && (
+          <View
+            style={[
+              styles.tabBar,
+              {
+                backgroundColor: isDark
+                  ? "rgba(24, 24, 27, 0.45)"
+                  : "rgba(244, 244, 245, 0.45)",
+                borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
+              },
+            ]}
+          >
+            <Pressable
+              onPress={() => setActiveTab("scorecard")}
+              style={[
+                styles.tabItem,
+                activeTab === "scorecard" && {
+                  backgroundColor: isDark
+                    ? "rgba(39, 39, 42, 0.60)"
+                    : "rgba(255, 255, 255, 0.60)",
+                  borderRadius: 8,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabItemText,
                   {
-                    backgroundColor: isDark ? "#18181b" : "#ffffff",
-                    borderColor: isDark ? "#27272a" : "#e4e4e7",
-                    minWidth: "100%",
+                    color:
+                      activeTab === "scorecard"
+                        ? isDark
+                          ? "#ffffff"
+                          : "#0f172a"
+                        : isDark
+                          ? "#71717a"
+                          : "#a1a1aa",
                   },
+                  activeTab === "scorecard" && styles.tabActiveText,
                 ]}
               >
-              {/* Table Column Headers */}
-              <View
+                Scorecard
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setActiveTab("scoring")}
+              style={[
+                styles.tabItem,
+                activeTab === "scoring" && {
+                  backgroundColor: isDark
+                    ? "rgba(39, 39, 42, 0.60)"
+                    : "rgba(255, 255, 255, 0.60)",
+                  borderRadius: 8,
+                },
+              ]}
+            >
+              <Text
                 style={[
-                  styles.tableRowHeader,
-                  { backgroundColor: isDark ? "#27272a" : "#f1f5f9" },
+                  styles.tabItemText,
+                  {
+                    color:
+                      activeTab === "scoring"
+                        ? isDark
+                          ? "#ffffff"
+                          : "#0f172a"
+                        : isDark
+                          ? "#71717a"
+                          : "#a1a1aa",
+                  },
+                  activeTab === "scoring" && styles.tabActiveText,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.colHole,
-                    { color: isDark ? "#9ca3af" : "#64748b" },
-                  ]}
-                >
-                  Hole
-                </Text>
-                {isDetailsVisible && (
-                  <>
-                    <Text
-                      style={[
-                        styles.colSI,
-                        { color: isDark ? "#9ca3af" : "#64748b" },
-                      ]}
-                    >
-                      SI
-                    </Text>
-                    <Text
-                      style={[
-                        styles.colYard,
-                        { color: isDark ? "#9ca3af" : "#64748b" },
-                      ]}
-                    >
-                      Yds
-                    </Text>
-                  </>
-                )}
-                <Text
-                  style={[
-                    styles.colPar,
-                    { color: isDark ? "#9ca3af" : "#64748b" },
-                  ]}
-                >
-                  Par
-                </Text>
+                Game Summary
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
-                {partners.map((partner) => (
-                  <View key={partner.playerId} style={styles.colPlayerScores}>
-                    <View style={styles.colScoreInputWrapper}>
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          styles.playerScoreHeaderTitle,
-                          { color: isDark ? "#ffffff" : "#0f172a" },
-                        ]}
-                      >
-                        {partners.length === 1
-                          ? "Score"
-                          : partner.name}
-                      </Text>
-                    </View>
-                    {gameConfig.showNetColumns && (
-                      <Text
-                        style={[
-                          styles.subColHeader,
-                          { color: isDark ? "#9ca3af" : "#64748b" },
-                        ]}
-                      >
-                        Net
-                      </Text>
-                    )}
-                    {gameConfig.showPtsColumns && (
-                      <Text
-                        style={[
-                          styles.subColHeader,
-                          { color: isDark ? "#9ca3af" : "#64748b" },
-                        ]}
-                      >
-                        Pts
-                      </Text>
-                    )}
-                  </View>
-                ))}
+        {/* Main Scroll Content */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#0284c7", "#16a34a"]}
+              tintColor={isDark ? "#38bdf8" : "#0284c7"}
+            />
+          }
+        >
+          {activeTab === "scoring" && gameConfig.hasMatchTab ? (
+            <ScoringTabContent
+              mode={
+                gameConfig.isSplit6
+                  ? "split-six"
+                  : gameConfig.isHighLow
+                    ? "high-low"
+                    : gameConfig.isNassauBest
+                      ? "nassau-best"
+                      : "nassau-combined"
+              }
+              players={partners}
+              splitSixSummary={sideScoringSummaries.splitSixSummary}
+              highLowSummary={sideScoringSummaries.highLowSummary}
+              nassauState={sideScoringSummaries.nassauState}
+              isDark={isDark}
+            />
+          ) : (
+            <>
+              {/* Player Header Cards (only for multiplayer rounds) */}
+              {partners.length > 1 && (
+                <PlayerHeaderRow
+                  players={partners}
+                  delegationStatuses={delegationStatuses}
+                  isDark={isDark}
+                  showTeams={gameConfig.isHighLow || gameConfig.isNassau}
+                />
+              )}
 
-                {gameConfig.isSplit6 && (
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    {partners.slice(0, 3).map((partner) => (
-                      <Text
-                        key={`split6_hdr_${partner.playerId}`}
-                        numberOfLines={2}
-                        style={[
-                          styles.colSplitSixPts,
-                          { color: isDark ? "#9ca3af" : "#64748b" },
-                        ]}
-                      >
-                        {partner.name}
-                        {"\n"}Pts
-                      </Text>
-                    ))}
-                  </View>
-                )}
-
-                {gameConfig.isNassau && (
-                  <Text
+              {/* Halves Selector (Front 9 / Back 9 / All 18) - only for 18-hole rounds */}
+              {!isNineHoleOnly && (
+                <View style={styles.halfFilterRow}>
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("all")}
                     style={[
-                      styles.colNassau,
-                      { color: isDark ? "#9ca3af" : "#64748b", textAlign: "center" },
+                      styles.halfFilterButton,
+                      activeCourseHalf === "all"
+                        ? styles.halfFilterActive
+                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
                     ]}
                   >
-                    Nassau{"\n"}Pts
-                  </Text>
-                )}
-
-                {gameConfig.isHighLow && (
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text style={[styles.colTeamPts, { color: isDark ? "#9ca3af" : "#64748b" }]}>
-                      Team A
-                    </Text>
-                    <Text style={[styles.colTeamPts, { color: isDark ? "#9ca3af" : "#64748b" }]}>
-                      Team B
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Hole Rows & Subtotals */}
-              {(() => {
-                const renderHoleRow = (hole: any, index: number) => {
-                  const isEven = index % 2 === 0;
-                  const holeResult =
-                    sideScoringSummaries.nassauState?.holeResults?.[
-                      hole.holeNumber
-                    ];
-
-                  return (
-                    <View
-                      key={hole.holeId || hole.holeNumber}
+                    <Text
                       style={[
-                        styles.tableRow,
+                        styles.halfFilterText,
                         {
-                          backgroundColor: isEven
-                            ? isDark
-                              ? "#18181b"
-                              : "#ffffff"
-                            : isDark
-                              ? "#202024"
-                              : "#f8fafc",
-                          borderBottomColor: isDark ? "#27272a" : "#f1f5f9",
+                          color:
+                            activeCourseHalf === "all"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
                         },
                       ]}
                     >
-                      <View style={styles.colHoleContainer}>
+                      All 18
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("front")}
+                    style={[
+                      styles.halfFilterButton,
+                      activeCourseHalf === "front"
+                        ? styles.halfFilterActive
+                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.halfFilterText,
+                        {
+                          color:
+                            activeCourseHalf === "front"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
+                        },
+                      ]}
+                    >
+                      Front 9
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("back")}
+                    style={[
+                      styles.halfFilterButton,
+                      activeCourseHalf === "back"
+                        ? styles.halfFilterActive
+                        : { backgroundColor: isDark ? "rgba(39, 39, 42, 0.35)" : "rgba(226, 232, 240, 0.35)" },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.halfFilterText,
+                        {
+                          color:
+                            activeCourseHalf === "back"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
+                        },
+                      ]}
+                    >
+                      Back 9
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {/* Scorecard Table */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ minWidth: "100%" }}
+              >
+                <View
+                  style={[
+                    styles.tableContainer,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(24, 24, 27, 0.30)"
+                        : "rgba(255, 255, 255, 0.30)",
+                      borderColor: isDark ? "#27272a" : "#e4e4e7",
+                      minWidth: "100%",
+                    },
+                  ]}
+                >
+                  {/* Table Column Headers */}
+                  <View
+                    style={[
+                      styles.tableRowHeader,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(39, 39, 42, 0.45)"
+                          : "rgba(241, 245, 249, 0.45)",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.colHole,
+                        { color: isDark ? "#9ca3af" : "#64748b" },
+                      ]}
+                    >
+                      Hole
+                    </Text>
+                    {isDetailsVisible && (
+                      <>
                         <Text
                           style={[
-                            styles.colHoleVal,
-                            { color: isDark ? "#ffffff" : "#0f172a" },
+                            styles.colSI,
+                            { color: isDark ? "#9ca3af" : "#64748b" },
                           ]}
                         >
-                          {hole.holeNumber}
+                          SI
                         </Text>
-                        <TouchableOpacity
-                          onPress={() => handleOpenRangefinder(hole.holeNumber)}
-                          style={styles.perHoleGpsButton}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        <Text
+                          style={[
+                            styles.colYard,
+                            { color: isDark ? "#9ca3af" : "#64748b" },
+                          ]}
                         >
-                          <Ionicons
-                            name="locate-outline"
-                            size={13}
-                            color={isDark ? "#4ade80" : "#16a34a"}
-                          />
-                        </TouchableOpacity>
+                          Yds
+                        </Text>
+                      </>
+                    )}
+                    <Text
+                      style={[
+                        styles.colPar,
+                        { color: isDark ? "#9ca3af" : "#64748b" },
+                      ]}
+                    >
+                      Par
+                    </Text>
+
+                    {partners.map((partner) => (
+                      <View
+                        key={partner.playerId}
+                        style={styles.colPlayerScores}
+                      >
+                        <View style={styles.colScoreInputWrapper}>
+                          <Text
+                            numberOfLines={1}
+                            style={[
+                              styles.playerScoreHeaderTitle,
+                              { color: isDark ? "#ffffff" : "#0f172a" },
+                            ]}
+                          >
+                            {partners.length === 1 ? "Score" : partner.name}
+                          </Text>
+                        </View>
+                          {gameConfig.showNetColumns && (
+                            <Text
+                              style={[
+                                styles.subColHeader,
+                                { color: isDark ? "#9ca3af" : "#64748b" },
+                              ]}
+                            >
+                              Net
+                            </Text>
+                          )}
+                          {gameConfig.showPtsColumns && (
+                            <Text
+                              style={[
+                                styles.subColHeader,
+                                { color: isDark ? "#9ca3af" : "#64748b" },
+                              ]}
+                            >
+                              Pts
+                            </Text>
+                          )}
+                        </View>
+                    ))}
+
+                    {gameConfig.isSplit6 && (
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        {partners.slice(0, 3).map((partner) => (
+                          <Text
+                            key={`split6_hdr_${partner.playerId}`}
+                            numberOfLines={2}
+                            style={[
+                              styles.colSplitSixPts,
+                              { color: isDark ? "#9ca3af" : "#64748b" },
+                            ]}
+                          >
+                            {partner.name}
+                            {"\n"}Pts
+                          </Text>
+                        ))}
                       </View>
+                    )}
 
-                      {isDetailsVisible && (
-                        <>
-                          <Text
-                            style={[
-                              styles.colSIVal,
-                              { color: isDark ? "#9ca3af" : "#64748b" },
-                            ]}
-                          >
-                            {hole.strokeIndex || "-"}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.colYardVal,
-                              { color: isDark ? "#9ca3af" : "#64748b" },
-                            ]}
-                          >
-                            {hole.yardage || "-"}
-                          </Text>
-                        </>
-                      )}
-
+                    {gameConfig.isNassau && (
                       <Text
                         style={[
-                          styles.colParVal,
-                          { color: isDark ? "#ffffff" : "#0f172a" },
+                          styles.colNassau,
+                          {
+                            color: isDark ? "#9ca3af" : "#64748b",
+                            textAlign: "center",
+                          },
                         ]}
                       >
-                        {hole.par}
+                        Nassau{"\n"}Pts
                       </Text>
+                    )}
 
-                      {/* Players Score Cells */}
-                      {partners.map((partner) => {
-                        const holeInfo = getPlayerHoleInfo(
-                          hole,
-                          partner,
-                          primaryHandicap,
-                          companionHandicaps,
-                          gameConfig,
-                        );
-                        const key = `${hole.holeId}_${partner.playerId}`;
-                        const valueText =
-                          textScores[key] ??
-                          (holeInfo.score !== null
-                            ? String(holeInfo.score)
-                            : "");
-                        const multiplier = getHoleXPoints(
-                          holeInfo.score,
-                          hole.par,
-                          holeInfo.sandy,
-                          holeInfo.r,
-                        );
+                    {gameConfig.isHighLow && (
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <Text
+                          style={[
+                            styles.colTeamPts,
+                            { color: isDark ? "#9ca3af" : "#64748b" },
+                          ]}
+                        >
+                          Team A
+                        </Text>
+                        <Text
+                          style={[
+                            styles.colTeamPts,
+                            { color: isDark ? "#9ca3af" : "#64748b" },
+                          ]}
+                        >
+                          Team B
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
-                        return (
-                          <View
-                            key={partner.playerId}
-                            style={styles.colPlayerScores}
+                  {/* Hole Rows & Subtotals */}
+                  {(() => {
+                    const renderHoleRow = (hole: any, index: number) => {
+                      const isEven = index % 2 === 0;
+                      const holeResult =
+                        sideScoringSummaries.nassauState?.holeResults?.[
+                          hole.holeNumber
+                        ];
+
+                      return (
+                        <View
+                          key={hole.holeId || hole.holeNumber}
+                          style={[
+                            styles.tableRow,
+                            {
+                              backgroundColor: isEven
+                                ? isDark
+                                  ? "rgba(24, 24, 27, 0.20)"
+                                  : "rgba(255, 255, 255, 0.20)"
+                                : isDark
+                                  ? "rgba(32, 32, 36, 0.20)"
+                                  : "rgba(248, 250, 252, 0.20)",
+                              borderBottomColor: isDark ? "#27272a" : "#f1f5f9",
+                            },
+                          ]}
+                        >
+                          <View style={styles.colHoleContainer}>
+                            <Text
+                              style={[
+                                styles.colHoleVal,
+                                { color: isDark ? "#ffffff" : "#0f172a" },
+                              ]}
+                            >
+                              {hole.holeNumber}
+                            </Text>
+                            <TouchableOpacity
+                              onPress={() =>
+                                handleOpenRangefinder(hole.holeNumber)
+                              }
+                              style={styles.perHoleGpsButton}
+                              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                            >
+                              <Ionicons
+                                name="locate-outline"
+                                size={13}
+                                color={isDark ? "#4ade80" : "#16a34a"}
+                              />
+                            </TouchableOpacity>
+                          </View>
+
+                          {isDetailsVisible && (
+                            <>
+                              <Text
+                                style={[
+                                  styles.colSIVal,
+                                  { color: isDark ? "#9ca3af" : "#64748b" },
+                                ]}
+                              >
+                                {hole.strokeIndex || "-"}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.colYardVal,
+                                  { color: isDark ? "#9ca3af" : "#64748b" },
+                                ]}
+                              >
+                                {hole.yardage || "-"}
+                              </Text>
+                            </>
+                          )}
+
+                          <Text
+                            style={[
+                              styles.colParVal,
+                              { color: isDark ? "#ffffff" : "#0f172a" },
+                            ]}
                           >
-                            <View style={styles.colScoreInputWrapper}>
-                              <ScoreInputCell
-                                score={holeInfo.score}
-                                par={hole.par}
-                                isReadOnly={isReadOnly}
+                            {hole.par}
+                          </Text>
+
+                          {/* Players Score Cells */}
+                          {partners.map((partner) => {
+                            const holeInfo = getPlayerHoleInfo(
+                              hole,
+                              partner,
+                              primaryHandicap,
+                              companionHandicaps,
+                              gameConfig,
+                            );
+                            const key = `${hole.holeId}_${partner.playerId}`;
+                            const valueText =
+                              textScores[key] ??
+                              (holeInfo.score !== null
+                                ? String(holeInfo.score)
+                                : "");
+                            const multiplier = getHoleXPoints(
+                              holeInfo.score,
+                              hole.par,
+                              holeInfo.sandy,
+                              holeInfo.r,
+                            );
+
+                            const isWinningTeamA =
+                              (holeResult?.winner === "teamA" ||
+                                (holeResult?.winner as any) === 1) &&
+                              (partner.team === 1 ||
+                                partner.team === undefined);
+                            const isWinningTeamB =
+                              (holeResult?.winner === "teamB" ||
+                                (holeResult?.winner as any) === 2) &&
+                              partner.team === 2;
+                            const isWinner = isWinningTeamA || isWinningTeamB;
+
+                            const nassauCellBg =
+                              gameConfig.isNassau && isWinner
+                                ? isWinningTeamA
+                                  ? isDark
+                                    ? "rgba(25, 135, 84, 0.28)"
+                                    : "rgba(25, 135, 84, 0.15)"
+                                  : isDark
+                                    ? "rgba(13, 110, 253, 0.28)"
+                                    : "rgba(13, 110, 253, 0.15)"
+                                : undefined;
+
+                            return (
+                              <View
+                                key={partner.playerId}
+                                style={[
+                                  styles.colPlayerScores,
+                                  !!nassauCellBg && {
+                                    backgroundColor: nassauCellBg,
+                                    borderRadius: 6,
+                                    paddingVertical: 2,
+                                  },
+                                ]}
+                              >
+                                <View style={styles.colScoreInputWrapper}>
+                                  <ScoreInputCell
+                                    score={holeInfo.score}
+                                    par={hole.par}
+                                    isReadOnly={isReadOnly}
+                                    isDark={isDark}
+                                    valueText={valueText}
+                                    cellBackgroundColor={nassauCellBg}
+                                    onChangeText={(t) =>
+                                      handleScoreChange(
+                                        hole.holeId,
+                                        partner.playerId,
+                                        t,
+                                      )
+                                    }
+                                    sandy={holeInfo.sandy}
+                                    onToggleSandy={() =>
+                                      handleToggleSandy(
+                                        hole.holeId,
+                                        partner.playerId,
+                                      )
+                                    }
+                                    r={holeInfo.r}
+                                    onToggleR={() =>
+                                      handleToggleR(
+                                        hole.holeId,
+                                        partner.playerId,
+                                      )
+                                    }
+                                    onDisabledPress={() => {
+                                       if (isReadOnly) return;
+                                       if (partner.userId) {
+                                         const uid = Number(partner.userId);
+                                         const raw = (
+                                           (uid != null
+                                             ? delegationStatuses[uid]
+                                             : "") ||
+                                           (partner.userId != null
+                                             ? (delegationStatuses as any)[
+                                                 partner.userId
+                                               ]
+                                             : "") ||
+                                           (partner.playerId
+                                             ? (delegationStatuses as any)[
+                                                 partner.playerId
+                                               ]
+                                             : "") ||
+                                           ""
+                                         )
+                                           .toString()
+                                           .toLowerCase()
+                                           .trim();
+
+                                         if (
+                                           raw === "rejected" ||
+                                           raw === "declined" ||
+                                           raw.includes("reject") ||
+                                           raw.includes("declin") ||
+                                           raw === "0" ||
+                                           raw === "false"
+                                         ) {
+                                           Toast.show({
+                                             type: "error",
+                                             text1: "Request Declined",
+                                             text2: `${partner.name} declined participation in this round.`,
+                                           });
+                                         } else {
+                                           Toast.show({
+                                             type: "info",
+                                             text1: "Pending Approval",
+                                             text2: `${partner.name} has not approved this round yet.`,
+                                           });
+                                         }
+                                       }
+                                     }}
+                                    multiplier={multiplier}
+                                    showBadges={
+                                      gameConfig.isHighLow ||
+                                      gameConfig.isSplit6 ||
+                                      gameConfig.isNassau
+                                    }
+                                    isPrimary={partner.isPrimary}
+                                    allowPartnerEdit={
+                                      !isReadOnly &&
+                                      isPlayerApprovedToScore(partner)
+                                    }
+                                    inputRef={(el) => {
+                                      inputRefs.current[key] = el;
+                                    }}
+                                  />
+                                </View>
+
+                                {gameConfig.showNetColumns && (
+                                  <Text
+                                    style={[
+                                      styles.subColVal,
+                                      { color: isDark ? "#38bdf8" : "#0284c7" },
+                                    ]}
+                                  >
+                                    {holeInfo.netScore !== null
+                                      ? holeInfo.netScore
+                                      : "-"}
+                                  </Text>
+                                )}
+
+                                {gameConfig.showPtsColumns && (
+                                  <Text
+                                    style={[
+                                      styles.subColVal,
+                                      { color: isDark ? "#fbbf24" : "#d97706" },
+                                    ]}
+                                  >
+                                    {holeInfo.stablefordPoints !== null
+                                      ? holeInfo.stablefordPoints
+                                      : "-"}
+                                  </Text>
+                                )}
+                              </View>
+                            );
+                          })}
+
+                          {/* Split-Six Points Cell */}
+                          {gameConfig.isSplit6 && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              {partners.slice(0, 3).map((partner, pIdx) => {
+                                const pts =
+                                  sideScoringSummaries.splitSixSummary
+                                    ?.holeResults?.[hole.holeNumber]?.[pIdx];
+                                const displayPts =
+                                  pts !== undefined ? String(pts) : "-";
+                                return (
+                                  <Text
+                                    key={`split6_pts_${hole.holeId || hole.holeNumber}_${partner.playerId}`}
+                                    style={[
+                                      styles.colSplitSixPts,
+                                      {
+                                        color: isDark ? "#ffffff" : "#0f172a",
+                                        fontWeight: "700",
+                                      },
+                                    ]}
+                                  >
+                                    {displayPts}
+                                  </Text>
+                                );
+                              })}
+                            </View>
+                          )}
+
+                          {/* Nassau Houses Cell */}
+                          {gameConfig.isNassau && (
+                            <View style={styles.colNassau}>
+                              <NassauHouses
+                                overallHouses={holeResult?.overallHousesDisplay}
+                                halfHouses={holeResult?.housesDisplay}
+                                isSecondNine={
+                                  nassauStartNine === "back"
+                                    ? hole.holeNumber <= 9
+                                    : hole.holeNumber >= 10
+                                }
                                 isDark={isDark}
-                                valueText={valueText}
-                                onChangeText={(t) =>
-                                  handleScoreChange(
-                                    hole.holeId,
-                                    partner.playerId,
-                                    t,
-                                  )
-                                }
-                                sandy={holeInfo.sandy}
-                                onToggleSandy={() =>
-                                  handleToggleSandy(hole.holeId, partner.playerId)
-                                }
-                                r={holeInfo.r}
-                                onToggleR={() =>
-                                  handleToggleR(hole.holeId, partner.playerId)
-                                }
-                                multiplier={multiplier}
-                                showBadges={
-                                  gameConfig.isHighLow ||
-                                  gameConfig.isSplit6 ||
-                                  gameConfig.isNassau
-                                }
-                                isPrimary={partner.isPrimary}
-                                allowPartnerEdit={
-                                  !isReadOnly && isPlayerApprovedToScore(partner)
-                                }
-                                onDisabledPress={() => {
-                                  if (!isPlayerApprovedToScore(partner)) {
-                                    Toast.show({
-                                      type: "info",
-                                      text1: "Pending Approval",
-                                      text2: `${partner.name} has not approved this round yet.`,
-                                    });
-                                  }
-                                }}
-                                inputRef={(el) => {
-                                  inputRefs.current[key] = el;
-                                }}
+                                fontSize={11}
                               />
                             </View>
+                          )}
 
-                            {gameConfig.showNetColumns && (
+                          {/* High-Low Team Points Cell */}
+                          {gameConfig.isHighLow && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
                               <Text
                                 style={[
-                                  styles.subColVal,
-                                  { color: isDark ? "#38bdf8" : "#0284c7" },
-                                ]}
-                              >
-                                {holeInfo.netScore !== null
-                                  ? holeInfo.netScore
-                                  : "-"}
-                              </Text>
-                            )}
-
-                            {gameConfig.showPtsColumns && (
-                              <Text
-                                style={[
-                                  styles.subColVal,
-                                  { color: isDark ? "#fbbf24" : "#d97706" },
-                                ]}
-                              >
-                                {holeInfo.stablefordPoints !== null
-                                  ? holeInfo.stablefordPoints
-                                  : "-"}
-                              </Text>
-                            )}
-                          </View>
-                        );
-                      })}
-
-                      {/* Split-Six Points Cell */}
-                      {gameConfig.isSplit6 && (
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          {partners.slice(0, 3).map((partner, pIdx) => {
-                            const pts =
-                              sideScoringSummaries.splitSixSummary?.holeResults?.[
-                                hole.holeNumber
-                              ]?.[pIdx];
-                            const displayPts =
-                              pts !== undefined ? String(pts) : "-";
-                            return (
-                              <Text
-                                key={`split6_pts_${hole.holeId || hole.holeNumber}_${partner.playerId}`}
-                                style={[
-                                  styles.colSplitSixPts,
+                                  styles.colTeamPts,
                                   {
                                     color: isDark ? "#ffffff" : "#0f172a",
                                     fontWeight: "700",
                                   },
                                 ]}
                               >
-                                {displayPts}
+                                {sideScoringSummaries.highLowSummary
+                                  ?.holeResults?.[hole.holeNumber]?.teamA ??
+                                  "-"}
                               </Text>
-                            );
-                          })}
+                              <Text
+                                style={[
+                                  styles.colTeamPts,
+                                  {
+                                    color: isDark ? "#ffffff" : "#0f172a",
+                                    fontWeight: "700",
+                                  },
+                                ]}
+                              >
+                                {sideScoringSummaries.highLowSummary
+                                  ?.holeResults?.[hole.holeNumber]?.teamB ??
+                                  "-"}
+                              </Text>
+                            </View>
+                          )}
                         </View>
-                      )}
+                      );
+                    };
 
-                      {/* Nassau Houses Cell */}
-                      {gameConfig.isNassau && (
-                        <View style={styles.colNassau}>
-                          <NassauHouses
-                            overallHouses={holeResult?.overallHousesDisplay}
-                            halfHouses={holeResult?.housesDisplay}
-                            isSecondNine={
-                              nassauStartNine === "back"
-                                ? hole.holeNumber <= 9
-                                : hole.holeNumber >= 10
-                            }
-                            isDark={isDark}
-                            fontSize={11}
-                          />
-                        </View>
-                      )}
+                    const renderTotalRow = (
+                      label: string,
+                      holesSubset: any[],
+                      nassauHouses?: number[],
+                      isGrandTotal: boolean = false,
+                    ) => {
+                      const subtotal = getSubtotal(holesSubset);
 
-                      {/* High-Low Team Points Cell */}
-                      {gameConfig.isHighLow && (
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "700" }]}>
-                            {sideScoringSummaries.highLowSummary?.holeResults?.[hole.holeNumber]?.teamA ?? "-"}
-                          </Text>
-                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "700" }]}>
-                            {sideScoringSummaries.highLowSummary?.holeResults?.[hole.holeNumber]?.teamB ?? "-"}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  );
-                };
-
-                const renderTotalRow = (
-                  label: string,
-                  holesSubset: any[],
-                  nassauHouses?: number[],
-                  isGrandTotal: boolean = false,
-                ) => {
-                  const subtotal = getSubtotal(holesSubset);
-
-                  return (
-                    <View
-                      key={`subtotal_${label}`}
-                      style={[
-                        isGrandTotal
-                          ? styles.tableTotalRow
-                          : styles.tableSubtotalRow,
-                        {
-                          backgroundColor: isGrandTotal
-                            ? isDark
-                              ? "#27272a"
-                              : "#e2e8f0"
-                            : isDark
-                              ? "#202025"
-                              : "#f1f5f9",
-                          borderTopColor: isGrandTotal
-                            ? isDark
-                              ? "#3f3f46"
-                              : "#cbd5e1"
-                            : isDark
-                              ? "#27272a"
-                              : "#e2e8f0",
-                          borderBottomColor: isGrandTotal
-                            ? undefined
-                            : isDark
-                              ? "#27272a"
-                              : "#e2e8f0",
-                          borderBottomWidth: isGrandTotal ? 0 : 1,
-                        },
-                      ]}
-                    >
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          styles.colHole,
-                          {
-                            fontWeight: "800",
-                            fontSize: isGrandTotal ? 12 : 11,
-                            color: isGrandTotal
-                              ? isDark
-                                ? "#ffffff"
-                                : "#0f172a"
-                              : isDark
-                                ? "#4ade80"
-                                : "#16a34a",
-                          },
-                        ]}
-                      >
-                        {label}
-                      </Text>
-
-                      {isDetailsVisible && (
-                        <>
-                          <Text style={styles.colSI}>-</Text>
+                      return (
+                        <View
+                          key={`subtotal_${label}`}
+                          style={[
+                            isGrandTotal
+                              ? styles.tableTotalRow
+                              : styles.tableSubtotalRow,
+                            {
+                              backgroundColor: isGrandTotal
+                                ? isDark
+                                  ? "rgba(39, 39, 42, 0.45)"
+                                  : "rgba(226, 232, 240, 0.45)"
+                                : isDark
+                                  ? "rgba(32, 32, 37, 0.35)"
+                                  : "rgba(241, 245, 249, 0.35)",
+                              borderTopColor: isGrandTotal
+                                ? isDark
+                                  ? "#3f3f46"
+                                  : "#cbd5e1"
+                                : isDark
+                                  ? "#27272a"
+                                  : "#e2e8f0",
+                              borderBottomColor: isGrandTotal
+                                ? undefined
+                                : isDark
+                                  ? "#27272a"
+                                  : "#e2e8f0",
+                              borderBottomWidth: isGrandTotal ? 0 : 1,
+                            },
+                          ]}
+                        >
                           <Text
+                            numberOfLines={1}
                             style={[
-                              styles.colYard,
+                              styles.colHole,
                               {
-                                fontWeight: "700",
-                                color: isDark ? "#d1d5db" : "#334155",
+                                fontWeight: "800",
+                                fontSize: isGrandTotal ? 12 : 11,
+                                color: isGrandTotal
+                                  ? isDark
+                                    ? "#ffffff"
+                                    : "#0f172a"
+                                  : isDark
+                                    ? "#4ade80"
+                                    : "#16a34a",
                               },
                             ]}
                           >
-                            {subtotal.yards}
+                            {label}
                           </Text>
-                        </>
-                      )}
 
-                      <Text
-                        style={[
-                          styles.colPar,
-                          {
-                            fontWeight: "800",
-                            color: isDark ? "#ffffff" : "#0f172a",
-                          },
-                        ]}
-                      >
-                        {subtotal.par}
-                      </Text>
+                          {isDetailsVisible && (
+                            <>
+                              <Text style={styles.colSI}>-</Text>
+                              <Text
+                                style={[
+                                  styles.colYard,
+                                  {
+                                    fontWeight: "700",
+                                    color: isDark ? "#d1d5db" : "#334155",
+                                  },
+                                ]}
+                              >
+                                {subtotal.yards}
+                              </Text>
+                            </>
+                          )}
 
-                      {partners.map((partner) => {
-                        const totals = calculateTotalsForPlayer(
-                          partner,
-                          holesSubset,
-                        );
-                        return (
-                          <View
-                            key={partner.playerId}
-                            style={styles.colPlayerScores}
+                          <Text
+                            style={[
+                              styles.colPar,
+                              {
+                                fontWeight: "800",
+                                color: isDark ? "#ffffff" : "#0f172a",
+                              },
+                            ]}
                           >
-                            <View style={styles.colScoreInputWrapper}>
-                              <Text
-                                style={[
-                                  isGrandTotal
-                                    ? styles.playerTotalScore
-                                    : styles.playerSubtotalScore,
-                                  { color: isDark ? "#ffffff" : "#0f172a" },
-                                ]}
-                              >
-                                {totals.gross}
-                              </Text>
-                            </View>
-                            {gameConfig.showNetColumns && (
-                              <Text
-                                style={[
-                                  styles.subColVal,
-                                  {
-                                    fontWeight: "700",
-                                    color: isDark ? "#38bdf8" : "#0284c7",
-                                  },
-                                ]}
-                              >
-                                {totals.net}
-                              </Text>
-                            )}
-                            {gameConfig.showPtsColumns && (
-                              <Text
-                                style={[
-                                  styles.subColVal,
-                                  {
-                                    fontWeight: "700",
-                                    color: isDark ? "#fbbf24" : "#d97706",
-                                  },
-                                ]}
-                              >
-                                {totals.pts}
-                              </Text>
-                            )}
-                          </View>
-                        );
-                      })}
+                            {subtotal.par}
+                          </Text>
 
-                      {/* Split-Six Points Total Cell */}
-                      {gameConfig.isSplit6 && (
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          {partners.slice(0, 3).map((partner, pIdx) => {
-                            let totalPts = 0;
-                            holesSubset.forEach((h) => {
-                              const pts =
-                                sideScoringSummaries.splitSixSummary?.holeResults?.[
-                                  h.holeNumber
-                                ]?.[pIdx];
-                              if (pts !== undefined) totalPts += pts;
-                            });
+                          {partners.map((partner) => {
+                            const totals = calculateTotalsForPlayer(
+                              partner,
+                              holesSubset,
+                            );
                             return (
-                              <Text
-                                key={`split6_tot_${label}_${partner.playerId}`}
-                                style={[
-                                  styles.colSplitSixPts,
-                                  {
-                                    color: isDark ? "#ffffff" : "#0f172a",
-                                    fontWeight: isGrandTotal ? "800" : "700",
-                                  },
-                                ]}
+                              <View
+                                key={partner.playerId}
+                                style={styles.colPlayerScores}
                               >
-                                {totalPts}
-                              </Text>
+                                <View style={styles.colScoreInputWrapper}>
+                                  <Text
+                                    style={[
+                                      isGrandTotal
+                                        ? styles.playerTotalScore
+                                        : styles.playerSubtotalScore,
+                                      { color: isDark ? "#ffffff" : "#0f172a" },
+                                    ]}
+                                  >
+                                    {totals.gross}
+                                  </Text>
+                                </View>
+                                {gameConfig.showNetColumns && (
+                                  <Text
+                                    style={[
+                                      styles.subColVal,
+                                      {
+                                        fontWeight: "700",
+                                        color: isDark ? "#38bdf8" : "#0284c7",
+                                      },
+                                    ]}
+                                  >
+                                    {totals.net}
+                                  </Text>
+                                )}
+                                {gameConfig.showPtsColumns && (
+                                  <Text
+                                    style={[
+                                      styles.subColVal,
+                                      {
+                                        fontWeight: "700",
+                                        color: isDark ? "#fbbf24" : "#d97706",
+                                      },
+                                    ]}
+                                  >
+                                    {totals.pts}
+                                  </Text>
+                                )}
+                              </View>
                             );
                           })}
+
+                          {/* Split-Six Points Total Cell */}
+                          {gameConfig.isSplit6 && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              {partners.slice(0, 3).map((partner, pIdx) => {
+                                let totalPts = 0;
+                                holesSubset.forEach((h) => {
+                                  const pts =
+                                    sideScoringSummaries.splitSixSummary
+                                      ?.holeResults?.[h.holeNumber]?.[pIdx];
+                                  if (pts !== undefined) totalPts += pts;
+                                });
+                                return (
+                                  <Text
+                                    key={`split6_tot_${label}_${partner.playerId}`}
+                                    style={[
+                                      styles.colSplitSixPts,
+                                      {
+                                        color: isDark ? "#ffffff" : "#0f172a",
+                                        fontWeight: isGrandTotal
+                                          ? "800"
+                                          : "700",
+                                      },
+                                    ]}
+                                  >
+                                    {totalPts}
+                                  </Text>
+                                );
+                              })}
+                            </View>
+                          )}
+
+                          {gameConfig.isNassau && (
+                            <View style={styles.colNassau}>
+                              <NassauHouses
+                                houses={nassauHouses}
+                                isTotalRow={true}
+                                isDark={isDark}
+                                fontSize={11}
+                              />
+                            </View>
+                          )}
+
+                          {gameConfig.isHighLow && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.colTeamPts,
+                                  {
+                                    color: isDark ? "#ffffff" : "#0f172a",
+                                    fontWeight: "800",
+                                  },
+                                ]}
+                              >
+                                {isGrandTotal
+                                  ? sideScoringSummaries.highLowSummary
+                                      ?.overallMatchPts?.teamA || 0
+                                  : (holesSubset === halvesData.front9
+                                      ? sideScoringSummaries.highLowSummary
+                                          ?.front9MatchPts?.teamA
+                                      : sideScoringSummaries.highLowSummary
+                                          ?.back9MatchPts?.teamA) || 0}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.colTeamPts,
+                                  {
+                                    color: isDark ? "#ffffff" : "#0f172a",
+                                    fontWeight: "800",
+                                  },
+                                ]}
+                              >
+                                {isGrandTotal
+                                  ? sideScoringSummaries.highLowSummary
+                                      ?.overallMatchPts?.teamB || 0
+                                  : (holesSubset === halvesData.front9
+                                      ? sideScoringSummaries.highLowSummary
+                                          ?.front9MatchPts?.teamB
+                                      : sideScoringSummaries.highLowSummary
+                                          ?.back9MatchPts?.teamB) || 0}
+                              </Text>
+                            </View>
+                          )}
                         </View>
-                      )}
+                      );
+                    };
 
-                      {gameConfig.isNassau && (
-                        <View style={styles.colNassau}>
-                          <NassauHouses
-                            houses={nassauHouses}
-                            isTotalRow={true}
-                            isDark={isDark}
-                            fontSize={11}
-                          />
-                        </View>
-                      )}
+                    if (
+                      activeCourseHalf === "all" &&
+                      halvesData.front9.length > 0 &&
+                      halvesData.back9.length > 0
+                    ) {
+                      const firstHalf = halvesData.isBackStart
+                        ? halvesData.back9
+                        : halvesData.front9;
+                      const firstLabel = halvesData.isBackStart
+                        ? "Back 9"
+                        : "Front 9";
+                      const firstNassauHouses = halvesData.isBackStart
+                        ? sideScoringSummaries.nassauState?.back9Houses
+                        : sideScoringSummaries.nassauState?.front9Houses;
 
-                      {gameConfig.isHighLow && (
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "800" }]}>
-                            {isGrandTotal
-                              ? sideScoringSummaries.highLowSummary?.overallMatchPts?.teamA || 0
-                              : (holesSubset === halvesData.front9 
-                                  ? sideScoringSummaries.highLowSummary?.front9MatchPts?.teamA 
-                                  : sideScoringSummaries.highLowSummary?.back9MatchPts?.teamA) || 0}
-                          </Text>
-                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "800" }]}>
-                            {isGrandTotal
-                              ? sideScoringSummaries.highLowSummary?.overallMatchPts?.teamB || 0
-                              : (holesSubset === halvesData.front9 
-                                  ? sideScoringSummaries.highLowSummary?.front9MatchPts?.teamB 
-                                  : sideScoringSummaries.highLowSummary?.back9MatchPts?.teamB) || 0}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  );
-                };
+                      const secondHalf = halvesData.isBackStart
+                        ? halvesData.front9
+                        : halvesData.back9;
+                      const secondLabel = halvesData.isBackStart
+                        ? "Front 9"
+                        : "Back 9";
+                      const secondNassauHouses = halvesData.isBackStart
+                        ? sideScoringSummaries.nassauState?.front9Houses
+                        : sideScoringSummaries.nassauState?.back9Houses;
 
-                if (
-                  activeCourseHalf === "all" &&
-                  halvesData.front9.length > 0 &&
-                  halvesData.back9.length > 0
-                ) {
-                  const firstHalf = halvesData.isBackStart
-                    ? halvesData.back9
-                    : halvesData.front9;
-                  const firstLabel = halvesData.isBackStart
-                    ? "Back 9"
-                    : "Front 9";
-                  const firstNassauHouses = halvesData.isBackStart
-                    ? sideScoringSummaries.nassauState?.back9Houses
-                    : sideScoringSummaries.nassauState?.front9Houses;
+                      return (
+                        <>
+                          {/* First 9 Holes (Back 9 if isBackStart, else Front 9) */}
+                          {firstHalf.map((hole, index) =>
+                            renderHoleRow(hole, index),
+                          )}
 
-                  const secondHalf = halvesData.isBackStart
-                    ? halvesData.front9
-                    : halvesData.back9;
-                  const secondLabel = halvesData.isBackStart
-                    ? "Front 9"
-                    : "Back 9";
-                  const secondNassauHouses = halvesData.isBackStart
-                    ? sideScoringSummaries.nassauState?.front9Houses
-                    : sideScoringSummaries.nassauState?.back9Houses;
+                          {/* First 9 Subtotal */}
+                          {renderTotalRow(
+                            firstLabel,
+                            firstHalf,
+                            firstNassauHouses,
+                            false,
+                          )}
 
-                  return (
-                    <>
-                      {/* First 9 Holes (Back 9 if isBackStart, else Front 9) */}
-                      {firstHalf.map((hole, index) =>
-                        renderHoleRow(hole, index),
-                      )}
+                          {/* Second 9 Holes */}
+                          {secondHalf.map((hole, index) =>
+                            renderHoleRow(hole, index + firstHalf.length),
+                          )}
 
-                      {/* First 9 Subtotal */}
-                      {renderTotalRow(
-                        firstLabel,
-                        firstHalf,
-                        firstNassauHouses,
-                        false,
-                      )}
+                          {/* Second 9 Subtotal */}
+                          {renderTotalRow(
+                            secondLabel,
+                            secondHalf,
+                            secondNassauHouses,
+                            false,
+                          )}
 
-                      {/* Second 9 Holes */}
-                      {secondHalf.map((hole, index) =>
-                        renderHoleRow(hole, index + firstHalf.length),
-                      )}
+                          {/* Grand Total */}
+                          {renderTotalRow(
+                            "Total",
+                            halvesData.allSorted,
+                            sideScoringSummaries.nassauState?.overallHouses,
+                            true,
+                          )}
+                        </>
+                      );
+                    }
 
-                      {/* Second 9 Subtotal */}
-                      {renderTotalRow(
-                        secondLabel,
-                        secondHalf,
-                        secondNassauHouses,
-                        false,
-                      )}
+                    if (activeCourseHalf === "front") {
+                      return (
+                        <>
+                          {halvesData.front9.map((hole, index) =>
+                            renderHoleRow(hole, index),
+                          )}
+                          {renderTotalRow(
+                            "Front 9",
+                            halvesData.front9,
+                            sideScoringSummaries.nassauState?.front9Houses,
+                            true,
+                          )}
+                        </>
+                      );
+                    }
 
-                      {/* Grand Total */}
-                      {renderTotalRow(
-                        "Total",
-                        halvesData.allSorted,
-                        sideScoringSummaries.nassauState?.overallHouses,
-                        true,
-                      )}
-                    </>
-                  );
-                }
+                    if (activeCourseHalf === "back") {
+                      return (
+                        <>
+                          {halvesData.back9.map((hole, index) =>
+                            renderHoleRow(hole, index),
+                          )}
+                          {renderTotalRow(
+                            "Back 9",
+                            halvesData.back9,
+                            sideScoringSummaries.nassauState?.back9Houses,
+                            true,
+                          )}
+                        </>
+                      );
+                    }
 
-                if (activeCourseHalf === "front") {
-                  return (
-                    <>
-                      {halvesData.front9.map((hole, index) =>
-                        renderHoleRow(hole, index),
-                      )}
-                      {renderTotalRow(
-                        "Front 9",
-                        halvesData.front9,
-                        sideScoringSummaries.nassauState?.front9Houses,
-                        true,
-                      )}
-                    </>
-                  );
-                }
+                    return (
+                      <>
+                        {displayedHoles.map((hole, index) =>
+                          renderHoleRow(hole, index),
+                        )}
+                        {renderTotalRow(
+                          "Total",
+                          displayedHoles,
+                          sideScoringSummaries.nassauState?.overallHouses,
+                          true,
+                        )}
+                      </>
+                    );
+                  })()}
+                </View>
+              </ScrollView>
 
-                if (activeCourseHalf === "back") {
-                  return (
-                    <>
-                      {halvesData.back9.map((hole, index) =>
-                        renderHoleRow(hole, index),
-                      )}
-                      {renderTotalRow(
-                        "Back 9",
-                        halvesData.back9,
-                        sideScoringSummaries.nassauState?.back9Houses,
-                        true,
-                      )}
-                    </>
-                  );
-                }
-
-                return (
-                  <>
-                    {displayedHoles.map((hole, index) =>
-                      renderHoleRow(hole, index),
-                    )}
-                    {renderTotalRow(
-                      "Total",
-                      displayedHoles,
-                      sideScoringSummaries.nassauState?.overallHouses,
-                      true,
-                    )}
-                  </>
-                );
-              })()}
-              </View>
-            </ScrollView>
-
-            {/* Scorecard Legend (only for single player rounds) */}
-            {partners.length <= 1 && (
-              <ScoringLegend counts={legendCounts} isDark={isDark} />
-            )}
-          </>
-        )}
-      </ScrollView>
+              {/* Scorecard Legend (only for single player rounds) */}
+              {partners.length <= 1 && (
+                <ScoringLegend counts={legendCounts} isDark={isDark} />
+              )}
+            </>
+          )}
+        </ScrollView>
       </KeyboardAvoidingView>
 
       {/* GPS Rangefinder Modal */}
@@ -3348,7 +3910,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     gap: 8,
   },
   colScoreInputWrapper: {

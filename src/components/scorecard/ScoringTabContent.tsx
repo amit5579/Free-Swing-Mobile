@@ -28,9 +28,13 @@ export const ScoringTabContent: React.FC<ScoringTabContentProps> = ({
   nassauState,
   isDark = false,
 }) => {
-  const cardBg = isDark ? "#18181b" : "#ffffff";
+  const cardBg = isDark
+    ? "rgba(24, 24, 27, 0.35)"
+    : "rgba(255, 255, 255, 0.35)";
   const borderColor = isDark ? "#27272a" : "#e4e4e7";
-  const subHeaderBg = isDark ? "#27272a" : "#f4f4f5";
+  const subHeaderBg = isDark
+    ? "rgba(39, 39, 42, 0.45)"
+    : "rgba(244, 244, 245, 0.45)";
   const textPrimary = isDark ? "#fafafa" : "#09090b";
   const textSecondary = isDark ? "#a1a1aa" : "#71717a";
 
@@ -199,10 +203,10 @@ export const ScoringTabContent: React.FC<ScoringTabContentProps> = ({
             MATCH
           </Text>
           <Text style={[styles.colHeader, { flex: 2, color: isDark ? "#4ade80" : "#16a34a" }]}>
-            TEAM A ({team1Players.toUpperCase()})
+            TEAM A{"\n"}({team1Players.toUpperCase()})
           </Text>
           <Text style={[styles.colHeader, { flex: 2, color: isDark ? "#60a5fa" : "#2563eb" }]}>
-            TEAM B ({team2Players.toUpperCase()})
+            TEAM B{"\n"}({team2Players.toUpperCase()})
           </Text>
         </View>
 

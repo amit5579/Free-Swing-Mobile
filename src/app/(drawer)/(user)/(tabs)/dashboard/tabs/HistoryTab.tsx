@@ -30,6 +30,8 @@ export type GameHistory = {
   net: number | null;
   par: number;
   isTournament: boolean;
+  tournamentId?: number | null;
+  scoringType?: string;
   isDQ: boolean;
 };
 
@@ -53,10 +55,7 @@ export function HistoryTab({
 
   useFocusEffect(
     useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(() => {
-        fetchHistory(true);
-      });
-      return () => task.cancel();
+      fetchHistory(true);
     }, [playerId]),
   );
 
@@ -71,7 +70,7 @@ export function HistoryTab({
       if (showSkeleton) setLoading(true);
       const data: ScoreHistoryItem[] = await getScoreHistory(playerId);
 
-      const mapped: GameHistory[] = data.map((item) => ({
+      const mapped: GameHistory[] = (data as any[]).map((item) => ({
         id: item.scorecardId.toString(),
         date: new Date(item.date).toLocaleDateString(),
         time: new Date(item.date).toLocaleTimeString(),
@@ -80,6 +79,11 @@ export function HistoryTab({
         net: item.netScore,
         par: item.par,
         isTournament: !!item.tournamentId,
+        tournamentId: item.tournamentId ?? null,
+        scoringType:
+          item.scoringType ??
+          item.ScoringType ??
+          (item.isStableford ? "stableford" : undefined),
         isDQ: Boolean(item.isDQ ?? item.isDisqualified ?? false),
       }));
 
@@ -220,10 +224,20 @@ export function HistoryTab({
     );
   }
 
-  const handleViewScorecard = (id: string, course: string) => {
+  const handleViewScorecard = (
+    id: string,
+    course: string,
+    scoringType?: string,
+    tournamentId?: number | null,
+  ) => {
     router.push({
       pathname: "/(drawer)/(user)/scorecard/view/[scoreCard]",
-      params: { scoreCard: id, courseName: course },
+      params: {
+        scoreCard: id,
+        courseName: course,
+        scoringType: scoringType || undefined,
+        tournamentId: tournamentId ? String(tournamentId) : undefined,
+      },
     });
   };
 
@@ -440,19 +454,26 @@ export function HistoryTab({
                     ))}
                   </HStack>
 
-                  <HStack className="mt-4 w-full">
-                    <Button
-                      size="sm"
-                      className="w-full rounded-2xl h-10 flex-row items-center justify-center"
-                      style={{ backgroundColor: "#8BC34A" }}
-                      onPress={() => handleViewScorecard(item.id, item.course)}
-                    >
-                      <Ionicons name="eye-outline" size={14} color="white" />
-                      <ButtonText className="text-white text-md font-bold ml-1.5">
-                        View
-                      </ButtonText>
-                    </Button>
-                  </HStack>
+                    <HStack className="mt-4 w-full">
+                      <Button
+                        size="sm"
+                        className="w-full rounded-2xl h-10 flex-row items-center justify-center"
+                        style={{ backgroundColor: "#8BC34A" }}
+                        onPress={() =>
+                          handleViewScorecard(
+                            item.id,
+                            item.course,
+                            item.scoringType,
+                            item.tournamentId,
+                          )
+                        }
+                      >
+                        <Ionicons name="eye-outline" size={14} color="white" />
+                        <ButtonText className="text-white text-md font-bold ml-1.5">
+                          View
+                        </ButtonText>
+                      </Button>
+                    </HStack>
                 </Box>
               </Box>
             </Pressable>

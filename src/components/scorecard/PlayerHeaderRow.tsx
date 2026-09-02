@@ -20,34 +20,6 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
   onSelectPlayer,
   showTeams = false,
 }) => {
-  const renderDelegationIcon = (player: RoundPlayer) => {
-    if (player.isPrimary || !player.userId) return null;
-    const status = (delegationStatuses[player.userId] || "").toLowerCase();
-
-    if (status === "approved" || status === "accepted") {
-      return (
-        <View style={styles.statusBadge}>
-          <Ionicons name="checkmark-circle" size={13} color="#22c55e" />
-        </View>
-      );
-    }
-    if (status === "pending") {
-      return (
-        <View style={styles.statusBadge}>
-          <Ionicons name="time" size={13} color="#eab308" />
-        </View>
-      );
-    }
-    if (status === "rejected" || status === "declined") {
-      return (
-        <View style={styles.statusBadge}>
-          <Ionicons name="close-circle" size={13} color="#ef4444" />
-        </View>
-      );
-    }
-    return null;
-  };
-
   return (
     <View style={styles.container}>
       {players.map((player) => {
@@ -69,11 +41,11 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
               {
                 backgroundColor: isSelected
                   ? isDark
-                    ? "#2d3748"
-                    : "#e0f2fe"
+                    ? "rgba(45, 55, 72, 0.45)"
+                    : "rgba(224, 242, 254, 0.45)"
                   : isDark
-                    ? "#1e2124"
-                    : "#f1f5f9",
+                    ? "rgba(30, 33, 36, 0.35)"
+                    : "rgba(241, 245, 249, 0.35)",
                 borderColor: isSelected
                   ? "#0284c7"
                   : isDark
@@ -82,8 +54,8 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
               },
             ]}
           >
-            <View style={styles.headerTop}>
-              {showTeams && (
+            {showTeams && (
+              <View style={styles.headerTop}>
                 <View
                   style={[
                     styles.teamPill,
@@ -108,10 +80,8 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
                     Team {player.team ?? 1}
                   </Text>
                 </View>
-              )}
-
-              {renderDelegationIcon(player)}
-            </View>
+              </View>
+            )}
 
             <Text
               numberOfLines={1}
@@ -127,7 +97,11 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
               <View
                 style={[
                   styles.hcBadge,
-                  { backgroundColor: isDark ? "#2a2e33" : "#e2e8f0" },
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(42, 46, 51, 0.45)"
+                      : "rgba(226, 232, 240, 0.45)",
+                  },
                 ]}
               >
                 <Text

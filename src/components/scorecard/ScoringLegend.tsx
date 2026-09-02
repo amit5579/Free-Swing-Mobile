@@ -100,7 +100,9 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? "#1f1f23" : "#f8fafc",
+          backgroundColor: isDark
+            ? "rgba(31, 31, 35, 0.35)"
+            : "rgba(248, 250, 252, 0.35)",
           borderColor: isDark ? "#333338" : "#e2e8f0",
         },
       ]}
@@ -134,7 +136,9 @@ export const ScoringLegend: React.FC<ScoringLegendProps> = ({
               style={[
                 styles.countBadge,
                 {
-                  backgroundColor: isDark ? "#2d2d34" : "#e2e8f0",
+                  backgroundColor: isDark
+                    ? "rgba(45, 45, 52, 0.40)"
+                    : "rgba(226, 232, 240, 0.40)",
                 },
               ]}
             >

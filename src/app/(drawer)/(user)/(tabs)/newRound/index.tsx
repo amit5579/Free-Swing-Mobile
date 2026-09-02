@@ -528,6 +528,29 @@ function CourseCard({
   const holesToPlay = watch("holesToPlay");
   const startFromVal = watch("startFrom");
 
+  const isTeeBoxSelected = Boolean(
+    selectedTeeBoxId && Number(selectedTeeBoxId) > 0,
+  );
+
+  const arePlayersSelected =
+    numberOfPlayers === "solo"
+      ? true
+      : numberOfPlayers === "2"
+        ? Boolean(player2)
+        : numberOfPlayers === "3"
+          ? Boolean(player2 && player3)
+          : numberOfPlayers === "4"
+            ? Boolean(player2 && player3 && player4)
+            : false;
+
+  const isNassauStartSelected =
+    scoreType === "nassau_best" || scoreType === "nassau_combined"
+      ? Boolean(startFromVal)
+      : true;
+
+  const isStartDisabled =
+    !isTeeBoxSelected || !arePlayersSelected || !isNassauStartSelected;
+
   // Auto-set numberOfPlayers and handle dropdown logic based on scoring mode
   useEffect(() => {
     if (scoreType === "split_six") {
@@ -537,11 +560,7 @@ function CourseCard({
     } else if (scoreType === "nassau_best" || scoreType === "nassau_combined") {
       setValue("holesToPlay", "18");
       if (numberOfPlayers !== "2" && numberOfPlayers !== "4") {
-        Alert.alert(
-          "Invalid Player Count",
-          "You can select 2 or 4 players for this scoring mode.",
-          [{ text: "OK", onPress: () => setNumberOfPlayers("2") }],
-        );
+        setNumberOfPlayers("2");
       }
     }
   }, [scoreType]);
@@ -1122,12 +1141,24 @@ function CourseCard({
                     backgroundColor: isDark ? "#333" : "#eee",
                   }}
                   activeColor={isDark ? "#333" : "#eee"}
-                  data={[
-                    { label: "Solo", value: "solo" },
-                    { label: "2 Players", value: "2" },
-                    { label: "3 Players", value: "3" },
-                    { label: "4 Players", value: "4" },
-                  ]}
+                  data={
+                    scoreType === "split_six"
+                      ? [{ label: "3 Players", value: "3" }]
+                      : scoreType === "high_low"
+                        ? [{ label: "4 Players", value: "4" }]
+                        : scoreType === "nassau_best" ||
+                            scoreType === "nassau_combined"
+                          ? [
+                              { label: "2 Players", value: "2" },
+                              { label: "4 Players", value: "4" },
+                            ]
+                          : [
+                              { label: "Solo", value: "solo" },
+                              { label: "2 Players", value: "2" },
+                              { label: "3 Players", value: "3" },
+                              { label: "4 Players", value: "4" },
+                            ]
+                  }
                   labelField="label"
                   valueField="value"
                   mode="modal"
@@ -1159,7 +1190,8 @@ function CourseCard({
                     } else if (
                       (scoreType === "nassau_best" ||
                         scoreType === "nassau_combined") &&
-                      (item.value === "solo" || item.value === "3")
+                      item.value !== "2" &&
+                      item.value !== "4"
                     ) {
                       Alert.alert(
                         "Invalid Player Count",
@@ -1824,6 +1856,24 @@ function CourseCard({
               )}
             </ScrollView>
 
+            {/* Bottom Error Notification */}
+            {!isTeeBoxSelected && (
+              <View style={{ marginTop: 8, marginBottom: 2, alignItems: "center" }}>
+                <Text
+                  style={[
+                    styles.errorText,
+                    {
+                      textAlign: "center",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    },
+                  ]}
+                >
+                  Please select a tee box
+                </Text>
+              </View>
+            )}
+
             {/* BUTTONS */}
             <HStack style={styles.buttonRow}>
               <Pressable
@@ -1844,6 +1894,7 @@ function CourseCard({
               </Pressable>
 
               <Pressable
+                disabled={isStartDisabled}
                 onPress={handleSubmit(async (data) => {
                   // Validate players selection
                   if (numberOfPlayers === "2" && !player2) {
@@ -1956,7 +2007,7 @@ function CourseCard({
                               team:
                                 isNassau || data.scoreType === "high_low"
                                   ? isNassau && numberOfPlayers === "4"
-                                    ? 2
+                                    ? 1
                                     : data.scoreType === "high_low"
                                       ? 1
                                       : 2
@@ -2027,9 +2078,14 @@ function CourseCard({
 
                   routePage.push(url as any);
                 })}
-                style={styles.createBtn}
+                style={[
+                  styles.createBtn,
+                  isStartDisabled && {
+                    opacity: 0.45,
+                  },
+                ]}
               >
-                <Text style={{ color: "#fff" }}>Start Game</Text>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Start Game</Text>
               </Pressable>
             </HStack>
           </View>

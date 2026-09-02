@@ -75,12 +75,15 @@ const FeedCard = ({
   const [imageError, setImageError] = useState(false);
 
   const handleViewScorecard = (scorecardId: string) => {
+    const isStablefordCard =
+      card.points !== null && card.points !== undefined && Number(card.points) > 0;
     router.push({
       pathname: "/(drawer)/(user)/scorecard/view/[scoreCard]",
       params: {
         scoreCard: scorecardId,
         username: card.playerName || "",
         courseName: card.course || "",
+        scoringType: isStablefordCard ? "stableford" : undefined,
       },
     });
   };

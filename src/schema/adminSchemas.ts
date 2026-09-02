@@ -46,7 +46,7 @@ export const teeBoxSchema = z.object({
 
 export const tournamentSchema = z
   .object({
-    name: z.string().min(3, "Tournament Name must be at least 3 characters"),
+    name: z.string().min(1, "Tournament Name must be at least 1 character1"),
     courseId: z.array(z.number()).min(1, "Select a course"),
     teeColor: z.array(z.number()).min(1, "Select a tee color"),
     scoringType: z.array(z.number()).min(1, "Select a scoring type"),
@@ -80,7 +80,7 @@ export const acceptanceWeiverSchema = z.object({
 export type AcceptanceWeiverType = z.infer<typeof acceptanceWeiverSchema>;
 
 export const miniTournamentSchema = z.object({
-  name: z.string().min(3, "Tournament Name must be at least 3 characters"),
+  name: z.string().min(1, "Tournament Name must be at least 1 characters"),
   courseId: z.number({ message: "Select a course" }).min(1, "Select a course"),
   teeBox: z.number({ message: "Select a tee box" }).min(1, "Select a tee box"),
   scoringType: z.string().min(1, "Select a scoring type"),

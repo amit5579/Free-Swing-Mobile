@@ -712,13 +712,12 @@ export default function TournamentsScreen() {
                             )} */}
                             </HStack>
 
-                            {/* Manage & Delete Row for Mini Tournament Creator */}
                             {userId === String(tournament.creatorId) && (
                               <HStack className="gap-2">
                                 <Pressable
                                   onPress={() =>
                                     routePage.push(
-                                      `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${tournament.name}`,
+                                      `/tournaments/manageTournament?tournamentId=${tournament.tournamentId}&tournamentName=${encodeURIComponent(tournament.name || "")}&maxPlayers=${tournament.maxPlayers || 4}`,
                                     )
                                   }
                                   className="flex-1 flex-row justify-center items-center gap-2 border border-[#0d6efd] py-2.5 rounded-xl"
@@ -1802,7 +1801,6 @@ export default function TournamentsScreen() {
                     data={[
                       { label: "4 Players", value: 4 },
                       { label: "8 Players", value: 8 },
-                      { label: "16 Players", value: 16 },
                     ]}
                     labelField="label"
                     valueField="value"

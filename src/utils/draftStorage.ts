@@ -166,6 +166,14 @@ export const applyDraftToRound = (apiRound: any, draft: ScorecardDraft) => {
     par: draft.par,
     holesPlayed: draft.holesPlayed,
     courseHalf: draft.courseHalf,
+    scoringType:
+      draft.scoringType ||
+      (draft.isStableford ? "stableford" : undefined) ||
+      apiRound.scoringType,
+    isStableford: draft.isStableford ?? apiRound.isStableford,
+    isDoublePeoria: draft.isDoublePeoria ?? apiRound.isDoublePeoria,
+    isExcluded: draft.isExcluded ?? apiRound.isExcluded,
+    isSystem36: draft.isSystem36 ?? apiRound.isSystem36,
     updatedAt: draft.updatedAt,
     hasLocalDraft: true,
   };
@@ -182,6 +190,13 @@ export const mapDraftToHistoryItem = (draft: ScorecardDraft) => {
     netScore: draft.netScore,
     par: draft.par,
     holesPlayed: draft.holesPlayed,
+    courseHalf: draft.courseHalf,
+    scoringType:
+      draft.scoringType || (draft.isStableford ? "stableford" : undefined),
+    isStableford: draft.isStableford,
+    isDoublePeoria: draft.isDoublePeoria,
+    isExcluded: draft.isExcluded,
+    isSystem36: draft.isSystem36,
     updatedAt: draft.updatedAt,
     date: draft.date || draft.updatedAt,
     hasLocalDraft: true,
