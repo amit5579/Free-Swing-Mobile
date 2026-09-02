@@ -36,6 +36,7 @@ export default function ScoreCardUserPage() {
   return (
     <UnifiedScorecard
       mode="new-round"
+      isTabScreen={true}
       selectedScore={selectedScore}
       holesCount={holes}
       handicap={handicap}

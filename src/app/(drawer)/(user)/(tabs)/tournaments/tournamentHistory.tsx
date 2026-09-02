@@ -22,6 +22,7 @@ export default function TournamentHistoryPage() {
   return (
     <UnifiedScorecard
       mode="view"
+      isTabScreen={true}
       scorecardId={scorecardId}
       tournamentId={tournamentId}
       tournamentName={tournamentName}

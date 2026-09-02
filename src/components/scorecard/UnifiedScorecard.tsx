@@ -105,6 +105,8 @@ export interface UnifiedScorecardProps {
   scoringType?: string;
   forceNew?: string | boolean;
   onFinishRound?: () => void;
+  isTabScreen?: boolean;
+  disableTopInset?: boolean;
 }
 
 export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
@@ -126,10 +128,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   scoringType: propScoringType,
   forceNew,
   onFinishRound,
+  isTabScreen,
+  disableTopInset,
 }) => {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const isInsideTabs =
+    isTabScreen || mode === "new-round" || mode === "tournament-play";
+  const effectiveTopInset =
+    disableTopInset || isInsideTabs ? 0 : insets.top;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -2288,7 +2296,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // ─────────────────────────────────────────────
   if (loading) {
     return (
-      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <ThemedView
+        style={[styles.container, { paddingTop: effectiveTopInset }]}
+      >
         <Watermark />
         <View className="px-4 py-4">
           <View className="flex-row items-center mb-6">
@@ -2337,7 +2347,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // Main Render View
   // ─────────────────────────────────────────────
   return (
-    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+    <ThemedView style={[styles.container, { paddingTop: effectiveTopInset }]}>
       <Watermark />
 
       <KeyboardAvoidingView
@@ -2354,6 +2364,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 ? "rgba(18, 18, 20, 0.55)"
                 : "rgba(255, 255, 255, 0.55)",
               borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
+              paddingVertical: isInsideTabs ? 6 : 12,
             },
           ]}
         >

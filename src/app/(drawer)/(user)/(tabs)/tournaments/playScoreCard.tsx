@@ -24,6 +24,7 @@ export default function PlayScoreCardPage() {
   return (
     <UnifiedScorecard
       mode="tournament-play"
+      isTabScreen={true}
       tournamentId={tournamentId}
       teeBoxId={teeBoxId}
       courseId={courseId}
