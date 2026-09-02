@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { StyleSheet, View, Platform } from "react-native";
 import MapView, {
   Marker,
@@ -6,6 +6,7 @@ import MapView, {
   Circle,
   MAP_TYPES,
 } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
 
 export interface ClubDistance {
   name: string;
@@ -58,6 +59,26 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   const pinCoord = toCoord(pinLocation);
   const aimCoord = toCoord(aimLocation);
 
+  // Controlled tracksViewChanges to allow initial native snapshot without continuous GPU overhead
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  useEffect(() => {
+    setTracksViewChanges(true);
+    const timer = setTimeout(() => {
+      setTracksViewChanges(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [
+    pinCoord?.latitude,
+    pinCoord?.longitude,
+    aimCoord?.latitude,
+    aimCoord?.longitude,
+    playerCoord?.latitude,
+    playerCoord?.longitude,
+    isFlagMode,
+    isAimMode,
+  ]);
+
   // Connecting lines
   const lineCoords = useMemo(() => {
     if (!playerCoord || !pinCoord) return null;
@@ -79,15 +100,13 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
         ];
   }, [clubDistances]);
 
-  const initialRegion = useMemo(() => {
-    const center = playerCoord || pinCoord || { latitude: 0, longitude: 0 };
-    return {
-      latitude: center.latitude,
-      longitude: center.longitude,
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.005,
-    };
-  }, [playerCoord, pinCoord]);
+  // Static initial region - set once so Android MapView doesn't reset on GPS ticks
+  const initialRegionRef = useRef({
+    latitude: pinCoord?.latitude || playerCoord?.latitude || 37.78825,
+    longitude: pinCoord?.longitude || playerCoord?.longitude || -122.4324,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  });
 
   const handleMapPress = (e: any) => {
     const coord = e.nativeEvent?.coordinate;
@@ -96,8 +115,6 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
       typeof coord.latitude === "number" &&
       typeof coord.longitude === "number"
     ) {
-      // react-native-maps returns { latitude, longitude }
-      // The parent expects a feature-like object with coordinates: [lng, lat]
       onMapPress({
         geometry: {
           coordinates: [coord.longitude, coord.latitude],
@@ -118,15 +135,17 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
         showsMyLocationButton={false}
         showsCompass={false}
         showsScale={true}
-        initialRegion={initialRegion}
+        loadingEnabled={true}
+        loadingIndicatorColor="#8BC34A"
+        initialRegion={initialRegionRef.current}
       >
         {/* Club Arcs */}
         {playerCoord &&
           distances.map((club, index) => (
             <Circle
-              key={index}
+              key={`club_${index}`}
               center={playerCoord}
-              radius={club.distanceYards * 0.9144} // Convert yards to meters for Circle radius
+              radius={club.distanceYards * 0.9144} // Convert yards to meters
               strokeColor="rgba(255, 255, 255, 0.5)"
               strokeWidth={1}
               lineDashPattern={[5, 5]}
@@ -134,19 +153,25 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
           ))}
 
         {/* Connecting Lines */}
-        {lineCoords && (
+        {lineCoords && lineCoords.length >= 2 && (
           <Polyline
             coordinates={lineCoords}
             strokeColor="#FFA500"
             strokeWidth={3}
-            lineDashPattern={[0]} // solid
           />
         )}
 
         {/* Player Marker */}
         {playerCoord && (
-          <Marker coordinate={playerCoord} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={[styles.marker, { backgroundColor: "#4285F4" }]} />
+          <Marker
+            coordinate={playerCoord}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={4}
+          >
+            <View style={[styles.marker, { backgroundColor: "#4285F4" }]}>
+              <View style={styles.innerPlayerDot} />
+            </View>
           </Marker>
         )}
 
@@ -162,12 +187,16 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
               }
             }}
             anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={5}
           >
-            <View style={[styles.marker, { backgroundColor: "#FFA500" }]} />
+            <View style={[styles.marker, { backgroundColor: "#FFA500" }]}>
+              <View style={styles.innerAimDot} />
+            </View>
           </Marker>
         )}
 
-        {/* Pin Marker */}
+        {/* Pin / Flag Marker */}
         {pinCoord && (
           <Marker
             coordinate={pinCoord}
@@ -178,12 +207,21 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
                 onPinDragEnd([coord.longitude, coord.latitude]);
               }
             }}
-            anchor={{ x: 0.5, y: 1 }} // Bottom center
+            anchor={{ x: 0.5, y: 1 }}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={10}
           >
-            <View style={styles.flagMarker}>
+            <View style={styles.flagMarkerContainer}>
+              <View
+                style={[
+                  styles.flagBadge,
+                  isFlagMode && styles.flagBadgeActive,
+                ]}
+              >
+                <Ionicons name="flag" size={16} color="#ffffff" />
+              </View>
               <View style={styles.flagPole} />
-              <View style={styles.flagTriangle} />
-              <View style={styles.flagBase} />
+              <View style={styles.flagBaseDot} />
             </View>
           </Marker>
         )}
@@ -200,67 +238,74 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   marker: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2.5,
+    borderColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  innerPlayerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ffffff",
+  },
+  innerAimDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ffffff",
+  },
+  flagMarkerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 36,
+    height: 48,
+  },
+  flagBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#22c55e",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: "#ffffff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
-    shadowRadius: 2,
-    elevation: 4,
+    shadowRadius: 3,
+    elevation: 6,
   },
-  flagMarker: {
-    width: 40,
-    height: 48,
-  },
-  flagBase: {
-    position: "absolute",
-    bottom: 0,
-    left: 13,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: "#4CAF50",
-    borderWidth: 2,
-    borderColor: "#ffffff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 1,
-    elevation: 3,
-    zIndex: 2,
+  flagBadgeActive: {
+    backgroundColor: "#15803d",
+    borderColor: "#fbbf24",
+    borderWidth: 2.5,
+    transform: [{ scale: 1.15 }],
   },
   flagPole: {
-    position: "absolute",
-    bottom: 6,
-    left: 18.5,
-    width: 3,
-    height: 36,
-    backgroundColor: "#fff",
-    borderRadius: 1.5,
-    zIndex: 1,
+    width: 2.5,
+    height: 10,
+    backgroundColor: "#ffffff",
     shadowColor: "#000",
-    shadowOffset: { width: 1, height: 1 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
     elevation: 2,
   },
-  flagTriangle: {
-    position: "absolute",
-    left: 20,
-    top: 6,
-    width: 0,
-    height: 0,
-    backgroundColor: "transparent",
-    borderStyle: "solid",
-    borderLeftWidth: 16,
-    borderTopWidth: 10,
-    borderBottomWidth: 10,
-    borderLeftColor: "#4CAF50",
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-    zIndex: 2,
+  flagBaseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#22c55e",
+    borderWidth: 1.5,
+    borderColor: "#ffffff",
   },
 });

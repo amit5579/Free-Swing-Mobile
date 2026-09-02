@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  Modal,
   StyleSheet,
   View,
   Text,
@@ -10,6 +9,8 @@ import {
   Animated,
   Alert,
   Linking,
+  BackHandler,
+  StatusBar,
 } from "react-native";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
@@ -108,9 +109,13 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   >("unknown");
   const [fetchedCourseName, setFetchedCourseName] = useState<string>("");
 
+  // Stable courseId ref to avoid re-triggering API on holes array reference changes
+  const courseIdRef = useRef<number | null>(null);
+
   useEffect(() => {
     const courseId = holes[0]?.courseId;
-    if (visible && courseId) {
+    if (visible && courseId && courseId !== courseIdRef.current) {
+      courseIdRef.current = courseId;
       getCourseDetails(courseId)
         .then((response) => {
           if (response?.name) {
@@ -124,16 +129,18 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
           ),
         );
     }
-  }, [visible, holes]);
+    if (!visible) {
+      courseIdRef.current = null;
+    }
+  }, [visible, holes[0]?.courseId]);
 
-  // Check location permission when modal mounts (so it prompts on screen open)
+  // Check location permission when component mounts
   useEffect(() => {
     (async () => {
       const { status } = await Location.getForegroundPermissionsAsync();
       if (status === "granted") {
         setLocationPermission("granted");
       } else {
-        // Try requesting
         const { status: newStatus } =
           await Location.requestForegroundPermissionsAsync();
         setLocationPermission(newStatus === "granted" ? "granted" : "denied");
@@ -164,6 +171,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     };
     loadClubs();
   }, []);
+
   const [isAimMode, setIsAimMode] = useState(false);
   const [isSavingPin, setIsSavingPin] = useState(false);
   const cameraRef = useRef<MapView>(null);
@@ -186,6 +194,21 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     stopTracking,
   } = useRangefinder();
 
+  // Handle Android hardware back button (replaces Modal's onRequestClose)
+  useEffect(() => {
+    if (!visible) return;
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onClose();
+        return true; // Prevent default back navigation
+      },
+    );
+
+    return () => backHandler.remove();
+  }, [visible, onClose]);
+
   const toggleUiVisibility = () => {
     const toValue = isUiVisible ? 0 : 1;
     Animated.timing(fadeAnim, {
@@ -200,14 +223,15 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   const hasInitializedHole = useRef(false);
   const hasAutoCentered = useRef(false);
 
-  // Reset the tracker when the modal is closed
+  // Reset the tracker when the overlay is closed
   useEffect(() => {
     if (!visible) {
       hasInitializedHole.current = false;
       hasAutoCentered.current = false;
     }
   }, [visible]);
-  // Only set the initial hole once when the modal opens and data is ready
+
+  // Only set the initial hole once when the overlay opens and data is ready
   useEffect(() => {
     if (
       visible &&
@@ -261,28 +285,24 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   const pinLat = currentHole?.pinLat || currentHole?.latitude || 0;
   const pinLng = currentHole?.pinLng || currentHole?.longitude || 0;
 
+  // Tracking lifecycle: only start/stop based on visibility
+  const isTrackingStarted = useRef(false);
   useEffect(() => {
-    if (visible) {
+    if (visible && !isTrackingStarted.current) {
+      isTrackingStarted.current = true;
       startTracking();
-      // Update pin location when switching holes
-      if (pinLat && pinLng) {
-        setPinLocation(pinLng, pinLat);
-      } else {
-        // Clear pin if no data
-        // For testing, let's just leave it or you can set a fallback
-      }
-    } else {
+    } else if (!visible && isTrackingStarted.current) {
+      isTrackingStarted.current = false;
       stopTracking();
     }
-  }, [
-    visible,
-    currentHoleIndex,
-    pinLat,
-    pinLng,
-    startTracking,
-    stopTracking,
-    setPinLocation,
-  ]);
+  }, [visible]);
+
+  // Update pin when hole changes (separate from tracking to avoid loop)
+  useEffect(() => {
+    if (visible && pinLat && pinLng) {
+      setPinLocation(pinLng, pinLat);
+    }
+  }, [visible, currentHoleIndex, pinLat, pinLng, setPinLocation]);
 
   const handleMapPress = (feature: any) => {
     const coords = feature?.geometry?.coordinates;
@@ -379,15 +399,13 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     }
   };
 
+  // Don't render anything when not visible (same as web's *ngIf="showGpsModal")
   if (!visible) return null;
 
+  // Full-screen absolute overlay instead of <Modal> to prevent Android Activity restart
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
+    <View style={styles.fullScreenOverlay}>
+      <StatusBar backgroundColor="#161618" barStyle="light-content" />
       <View
         style={[
           styles.container,
@@ -662,14 +680,6 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             >
               <Ionicons name="navigate" size={20} color={"#000"} />
             </TouchableOpacity>
-
-            {/* <TouchableOpacity style={styles.sideButton}>
-              <Ionicons name="people" size={20} color={isDark ? '#fff' : '#000'} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.sideButton}>
-              <Ionicons name="analytics" size={20} color={isDark ? '#fff' : '#000'} />
-            </TouchableOpacity> */}
           </Animated.View>
 
           <Animated.View
@@ -702,11 +712,16 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
           </View>
         )}
       </View>
-    </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  fullScreenOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+    elevation: 9999,
+  },
   container: {
     flex: 1,
   },

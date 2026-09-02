@@ -1204,13 +1204,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             ? inMem.score
             : h.score;
 
-        const effectiveIsExcluded = isDataExcluded || gameConfig.isExcluded;
-        const effectiveIsDoublePeoria =
-          isDataDoublePeoria || gameConfig.isDoublePeoria;
-        const effectiveIsGross = isDataGross || gameConfig.isGross;
-        const effectiveIsStableford =
-          isDataStableford || gameConfig.isStableford;
-        const effectiveIsSystem36 = isDataSystem36 || gameConfig.isSystem36;
+        const effectiveIsExcluded = isDataExcluded;
+        const effectiveIsDoublePeoria = isDataDoublePeoria;
+        const effectiveIsGross = isDataGross;
+        const effectiveIsStableford = isDataStableford;
+        const effectiveIsSystem36 = isDataSystem36;
 
         const strokeIndex = Number(h.strokeIndex || 0);
         const strokes =
@@ -1280,12 +1278,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     selectedScore,
     username,
     startFrom,
-    gameConfig.isDoublePeoria,
-    gameConfig.isExcluded,
-    gameConfig.isGross,
-    gameConfig.isStableford,
-    gameConfig.isSystem36,
-    userId,
   ]);
 
   useEffect(() => {
@@ -3747,16 +3739,21 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* GPS Rangefinder Modal */}
-      {rangefinderHole !== null && (
+      {/* GPS Rangefinder Overlay */}
+      {rangefinderModalVisible && (
         <RangefinderModal
           visible={rangefinderModalVisible}
-          onClose={() => setRangefinderModalVisible(false)}
+          onClose={() => {
+            setRangefinderModalVisible(false);
+            setRangefinderHole(null);
+          }}
           holes={holes}
           initialHoleId={
-            holes.find((h) => h.holeNumber === rangefinderHole)?.holeId ||
-            holes[0]?.holeId ||
-            null
+            rangefinderHole !== null
+              ? holes.find((h) => h.holeNumber === rangefinderHole)?.holeId ||
+                holes[0]?.holeId ||
+                null
+              : holes[0]?.holeId || null
           }
           courseName={propCourseName || holes[0]?.courseName}
         />
