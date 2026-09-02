@@ -12,6 +12,8 @@ export default function ResumeScorecardPage() {
     tournamentId,
     courseId,
     teeBoxId,
+    courseHalf,
+    holesCount,
   } = useLocalSearchParams<{
     id: string;
     handicap?: string;
@@ -21,6 +23,8 @@ export default function ResumeScorecardPage() {
     tournamentId?: string;
     courseId?: string;
     teeBoxId?: string;
+    courseHalf?: string;
+    holesCount?: string;
   }>();
 
   return (
@@ -34,6 +38,8 @@ export default function ResumeScorecardPage() {
       tournamentId={tournamentId}
       courseId={courseId}
       teeBoxId={teeBoxId}
+      courseHalf={courseHalf || holesCount}
+      holesCount={holesCount || courseHalf}
     />
   );
 }

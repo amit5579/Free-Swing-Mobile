@@ -26,6 +26,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import { useRouter } from "expo-router";
 import {
   createMiniTournament,
+  deleteTournament,
   getAllTournaments,
   getWaiverStatus,
   postAcceptanceWeiver,
@@ -64,6 +65,8 @@ export default function TournamentsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [deleteConfirmTournament, setDeleteConfirmTournament] = useState<any>(null);
+  const [deletingTournament, setDeletingTournament] = useState(false);
 
   const {
     control: waiverControl,
@@ -240,6 +243,30 @@ export default function TournamentsScreen() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteTournament = async () => {
+    if (!deleteConfirmTournament) return;
+    try {
+      setDeletingTournament(true);
+      await deleteTournament(Number(deleteConfirmTournament.tournamentId));
+      Toast.show({
+        type: "success",
+        text1: "Tournament Deleted",
+        text2: `${deleteConfirmTournament.name} was successfully deleted.`,
+      });
+      setDeleteConfirmTournament(null);
+      await fetchTournaments(false);
+    } catch (error) {
+      console.error("Error deleting tournament:", error);
+      Toast.show({
+        type: "error",
+        text1: "Delete Failed",
+        text2: "Failed to delete tournament. Please try again.",
+      });
+    } finally {
+      setDeletingTournament(false);
     }
   };
 
@@ -685,10 +712,9 @@ export default function TournamentsScreen() {
                             )} */}
                             </HStack>
 
-                            {/* Manage & Play Row */}
-                            <HStack className="gap-2">
-                              {/* Manage button */}
-                              {userId === String(tournament.creatorId) && (
+                            {/* Manage & Delete Row for Mini Tournament Creator */}
+                            {userId === String(tournament.creatorId) && (
+                              <HStack className="gap-2">
                                 <Pressable
                                   onPress={() =>
                                     routePage.push(
@@ -712,57 +738,77 @@ export default function TournamentsScreen() {
                                     Manage
                                   </ThemedText>
                                 </Pressable>
-                              )}
 
-                              {/* Play Button */}
-                              {!tournament.isPlayed && !tournament.isGroupedAsNonScorer &&
-                                (isEnded ? (
-                                  <View className="flex-1 flex-row justify-center items-center gap-2 bg-gray-400 py-2.5 rounded-xl">
-                                    <Ionicons
-                                      name="checkmark-circle-outline"
-                                      size={18}
-                                      color="white"
-                                    />
-
-                                    <ThemedText
-                                      style={{
-                                        color: "white",
-                                        fontWeight: "700",
-                                        fontSize: 14,
-                                      }}
-                                    >
-                                      Ended
-                                    </ThemedText>
-                                  </View>
-                                ) : (
-                                  <Pressable
-                                    disabled={playLoadingId === tournament.tournamentId}
-                                    onPress={() => handlePlayNow(tournament)}
-                                    className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl"
+                                <Pressable
+                                  onPress={() => setDeleteConfirmTournament(tournament)}
+                                  className="flex-1 flex-row justify-center items-center gap-2 border border-[#ef4444] py-2.5 rounded-xl"
+                                >
+                                  <Ionicons
+                                    name="trash-outline"
+                                    size={18}
+                                    color="#ef4444"
+                                  />
+                                  <ThemedText
+                                    style={{
+                                      color: "#ef4444",
+                                      fontWeight: "700",
+                                      fontSize: 13,
+                                    }}
                                   >
-                                    {playLoadingId === tournament.tournamentId ? (
-                                      <ActivityIndicator size="small" color="white" />
-                                    ) : (
-                                      <>
-                                        <Ionicons
-                                          name="play"
-                                          size={18}
-                                          color="white"
-                                        />
-                                        <ThemedText
-                                          style={{
-                                            color: "white",
-                                            fontWeight: "700",
-                                            fontSize: 14,
-                                          }}
-                                        >
-                                          Play Now
-                                        </ThemedText>
-                                      </>
-                                    )}
-                                  </Pressable>
-                                ))}
-                            </HStack>
+                                    Delete
+                                  </ThemedText>
+                                </Pressable>
+                              </HStack>
+                            )}
+
+                            {/* Play Button Row */}
+                            {!tournament.isPlayed && !tournament.isGroupedAsNonScorer &&
+                              (isEnded ? (
+                                <View className="flex-1 flex-row justify-center items-center gap-2 bg-gray-400 py-2.5 rounded-xl">
+                                  <Ionicons
+                                    name="checkmark-circle-outline"
+                                    size={18}
+                                    color="white"
+                                  />
+
+                                  <ThemedText
+                                    style={{
+                                      color: "white",
+                                      fontWeight: "700",
+                                      fontSize: 14,
+                                    }}
+                                  >
+                                    Ended
+                                  </ThemedText>
+                                </View>
+                              ) : (
+                                <Pressable
+                                  disabled={playLoadingId === tournament.tournamentId}
+                                  onPress={() => handlePlayNow(tournament)}
+                                  className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl"
+                                >
+                                  {playLoadingId === tournament.tournamentId ? (
+                                    <ActivityIndicator size="small" color="white" />
+                                  ) : (
+                                    <>
+                                      <Ionicons
+                                        name="play"
+                                        size={18}
+                                        color="white"
+                                      />
+                                      <ThemedText
+                                        style={{
+                                          color: "white",
+                                          fontWeight: "700",
+                                          fontSize: 14,
+                                        }}
+                                      >
+                                        Play Now
+                                      </ThemedText>
+                                    </>
+                                  )}
+                                </Pressable>
+                              ))}
                           </VStack>
                         </Box>
                       </React.Fragment>
@@ -1260,6 +1306,143 @@ export default function TournamentsScreen() {
               </Pressable>
             </HStack>
           </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={!!deleteConfirmTournament}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!deletingTournament) setDeleteConfirmTournament(null);
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <Box
+            style={{
+              width: "100%",
+              maxWidth: 360,
+              backgroundColor: isDark ? "#18181b" : "#ffffff",
+              borderRadius: 20,
+              padding: 24,
+              borderWidth: 1,
+              borderColor: isDark ? "#27272a" : "#e4e4e7",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
+            <View
+              style={{
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: isDark ? "rgba(239, 68, 68, 0.15)" : "#FEE2E2",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Ionicons name="trash-outline" size={26} color="#EF4444" />
+              </View>
+              <ThemedText
+                style={{
+                  fontSize: 18,
+                  fontWeight: "800",
+                  color: isDark ? "#ffffff" : "#0f172a",
+                  textAlign: "center",
+                  marginBottom: 8,
+                }}
+              >
+                Delete Tournament
+              </ThemedText>
+              <ThemedText
+                style={{
+                  fontSize: 14,
+                  color: isDark ? "#94a3b8" : "#64748b",
+                  textAlign: "center",
+                  lineHeight: 20,
+                }}
+              >
+                Are you sure you want to delete{" "}
+                <Text style={{ fontWeight: "700", color: isDark ? "#ffffff" : "#0f172a" }}>
+                  {deleteConfirmTournament?.name}
+                </Text>{" "}
+                tournament?
+              </ThemedText>
+            </View>
+
+            <HStack style={{ gap: 12, marginTop: 8 }}>
+              <Pressable
+                disabled={deletingTournament}
+                onPress={() => setDeleteConfirmTournament(null)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isDark ? "#3f3f46" : "#e2e8f0",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? "#27272a" : "#f8fafc",
+                }}
+              >
+                <ThemedText
+                  style={{
+                    color: isDark ? "#d4d4d8" : "#475569",
+                    fontWeight: "600",
+                    fontSize: 14,
+                  }}
+                >
+                  Cancel
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
+                disabled={deletingTournament}
+                onPress={handleDeleteTournament}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  backgroundColor: "#EF4444",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {deletingTournament ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text
+                    style={{
+                      color: "#ffffff",
+                      fontWeight: "700",
+                      fontSize: 14,
+                    }}
+                  >
+                    Delete
+                  </Text>
+                )}
+              </Pressable>
+            </HStack>
+          </Box>
         </View>
       </Modal>
 

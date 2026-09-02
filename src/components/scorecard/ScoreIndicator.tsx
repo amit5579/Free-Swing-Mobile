@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
+    zIndex: 10,
   },
   singleCircle: {
     width: 32,

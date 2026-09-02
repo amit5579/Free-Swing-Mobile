@@ -12,6 +12,8 @@ const ScoreCardViewPage: React.FC = () => {
     tournamentId,
     courseId,
     teeBoxId,
+    courseHalf,
+    holesCount,
   } = useLocalSearchParams<{
     scoreCard: string;
     handicap?: string;
@@ -21,6 +23,8 @@ const ScoreCardViewPage: React.FC = () => {
     tournamentId?: string;
     courseId?: string;
     teeBoxId?: string;
+    courseHalf?: string;
+    holesCount?: string;
   }>();
 
   return (
@@ -34,6 +38,8 @@ const ScoreCardViewPage: React.FC = () => {
       tournamentId={tournamentId}
       courseId={courseId}
       teeBoxId={teeBoxId}
+      courseHalf={courseHalf || holesCount}
+      holesCount={holesCount || courseHalf}
     />
   );
 };

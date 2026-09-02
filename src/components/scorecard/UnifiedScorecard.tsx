@@ -23,6 +23,8 @@ import {
   AppStateStatus,
   Modal,
   Linking,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRouter, useFocusEffect } from "expo-router";
@@ -55,6 +57,7 @@ import {
   updateHoleScoresApi,
   getDelegationStatuses,
   deleteScorecardApi,
+  finishScorecardApi,
 } from "@/api/modules/dashboard.api";
 import {
   saveScoreCard,
@@ -95,6 +98,7 @@ export interface UnifiedScorecardProps {
   courseName?: string;
   date?: string;
   holesCount?: string; // "front9", "back9", "18"
+  courseHalf?: string; // "Front9", "Back9", etc.
   selectedScore?: any;
   roundContextId?: string | null;
   startFrom?: "front" | "back" | string | null;
@@ -115,6 +119,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   courseName: propCourseName,
   date: propDate,
   holesCount: propHolesCount = "18",
+  courseHalf: propCourseHalf,
   selectedScore,
   roundContextId: propRoundContextId,
   startFrom,
@@ -161,9 +166,22 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   const [activeTab, setActiveTab] = useState<"scorecard" | "scoring">(
     "scorecard",
   );
+  const [detectedCourseHalf, setDetectedCourseHalf] = useState<string | null>(() => {
+    const raw = propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
+    const norm = String(raw).toLowerCase().replace(/[\s-_]/g, "");
+    if (norm === "front9" || norm === "front") return "Front9";
+    if (norm === "back9" || norm === "back") return "Back9";
+    return null;
+  });
   const [activeCourseHalf, setActiveCourseHalf] = useState<
     "all" | "front" | "back"
-  >("all");
+  >(() => {
+    const raw = propCourseHalf || (propHolesCount !== "18" ? propHolesCount : "") || "";
+    const norm = String(raw).toLowerCase().replace(/[\s-_]/g, "");
+    if (norm === "front9" || norm === "front") return "front";
+    if (norm === "back9" || norm === "back") return "back";
+    return "all";
+  });
   const [nassauStartNine, setNassauStartNine] = useState<"front" | "back">(
     "front",
   );
@@ -361,19 +379,44 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         !isGross &&
         !isSystem36 &&
         !isHighLow &&
-        !isNassau,
-      showPtsColumns: isStableford || isSystem36,
+        !isNassau &&
+        !isSplit6,
+      showPtsColumns:
+        !isSplit6 &&
+        !isHighLow &&
+        !isNassau &&
+        (isStableford || isSystem36),
     };
   }, [holes, propScoringType, selectedScore]);
 
   // Read-only / Companion checks
   const isCompanionView = useMemo(() => {
+    // If opened in view mode (e.g. from Overview, Game Feed, Game History) or new-round, NOT a live companion
+    if (mode === "view" || mode === "new-round") return false;
+    // Completed rounds are viewed as normal static scorecards
+    if (holes.length > 0 && holes[0]?.isCompleted) return false;
     if (!roundKey) return false;
+
+    // If current user is primary player, they are the scorer
+    const primaryPlayer = partners.find((p) => p.isPrimary);
+    if (
+      primaryPlayer?.userId &&
+      userId &&
+      Number(primaryPlayer.userId) === Number(userId)
+    ) {
+      return false;
+    }
+
     const parts = String(roundKey).split("_");
     if (parts.length >= 2) {
-      const groupScorerId = parseInt(parts[1], 10);
+      const rawId =
+        parts[0].toLowerCase() === "group" || parts[0].toLowerCase() === "round"
+          ? parts[1]
+          : parts[0];
+      const groupScorerId = parseInt(rawId, 10);
       if (
         !isNaN(groupScorerId) &&
+        groupScorerId > 0 &&
         userId !== null &&
         groupScorerId !== userId
       ) {
@@ -381,13 +424,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
     }
     return false;
-  }, [roundKey, userId]);
+  }, [roundKey, userId, mode, partners, holes]);
 
   const isRoundCompleted = useMemo(() => {
     return Boolean(holes.length > 0 && holes[0]?.isCompleted);
   }, [holes]);
 
-  const isReadOnly = mode === "view" || isRoundCompleted || isCompanionView;
+  const isReadOnly =
+    mode === "view" ||
+    (mode !== "resume" && mode !== "new-round" && isRoundCompleted) ||
+    isCompanionView;
 
   // ─────────────────────────────────────────────
   // Location Permission & Rangefinder Handler
@@ -449,6 +495,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         if (effectiveId) {
           try {
             rawHoles = await getScorecardDetails(effectiveId);
+            if (mode === "resume") {
+              console.log("=== SCORECARD RESUME API DATA ===", JSON.stringify(rawHoles, null, 2));
+            }
           } catch (e) {
             console.warn("Could not fetch details directly:", e);
           }
@@ -457,15 +506,33 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         // Merge local draft if resuming
         if (mode === "resume" && effectiveId) {
           try {
-            const draft = await getDraft(effectiveId);
+            let draft = await getDraft(effectiveId);
+            if (!draft && rawHoles && rawHoles.length > 0) {
+              const firstHole = rawHoles[0];
+              if (firstHole.courseId && firstHole.teeBoxId) {
+                draft = await getDraft(`draft_${firstHole.courseId}_${firstHole.teeBoxId}`);
+              }
+            }
+            console.log("=== SCORECARD RESUME DRAFT DATA ===", draft ? JSON.stringify(draft, null, 2) : "No Draft Found");
             if (draft && draft.holes && draft.holes.length > 0) {
-              rawHoles = draft.holes.map((h) => ({
-                ...h,
-                isDoublePeoria: draft.isDoublePeoria ?? h.isDoublePeoria,
-                isStableford: draft.isStableford ?? h.isStableford,
-                isExcluded: draft.isExcluded ?? h.isExcluded,
-                scoringType: draft.scoringType || h.scoringType,
-              }));
+              rawHoles = draft.holes.map((h) => {
+                const apiHole = rawHoles.find((rh) => rh.holeNumber === h.holeNumber) || {};
+                return {
+                  ...apiHole,
+                  ...h,
+                  playingPartnersJson: h.playingPartnersJson ?? apiHole.playingPartnersJson,
+                  groupName: h.groupName ?? apiHole.groupName,
+                  nassauStartingNine: h.nassauStartingNine ?? apiHole.nassauStartingNine,
+                  matchScoringType: h.matchScoringType ?? apiHole.matchScoringType,
+                  isSystem36: h.isSystem36 ?? apiHole.isSystem36 ?? false,
+                  appliedHandicap: h.appliedHandicap ?? apiHole.appliedHandicap ?? 0,
+                  handicapAllowancePercent: h.handicapAllowancePercent ?? apiHole.handicapAllowancePercent ?? 100,
+                  isDoublePeoria: draft.isDoublePeoria ?? h.isDoublePeoria ?? apiHole.isDoublePeoria,
+                  isStableford: draft.isStableford ?? h.isStableford ?? apiHole.isStableford,
+                  isExcluded: draft.isExcluded ?? h.isExcluded ?? apiHole.isExcluded,
+                  scoringType: draft.scoringType || h.scoringType || apiHole.scoringType,
+                };
+              });
             }
           } catch (draftErr) {
             console.warn("Draft restore failed:", draftErr);
@@ -623,6 +690,30 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       const normalizedHoles = uniqueRawHoles.map(normalizeHoleFromApi);
       const first = normalizedHoles[0] || {};
 
+      // Detect Course Half (Front9 / Back9 / All 18)
+      const rawCourseHalf =
+        propCourseHalf ||
+        (propHolesCount && propHolesCount !== "18" ? propHolesCount : null) ||
+        first.courseHalf ||
+        first.CourseHalf ||
+        (normalizedHoles.some((h) => String(h.courseHalf || "").toLowerCase().includes("front")) ? "Front9" : null) ||
+        (normalizedHoles.some((h) => String(h.courseHalf || "").toLowerCase().includes("back")) ? "Back9" : null) ||
+        null;
+
+      const normHalf = rawCourseHalf ? String(rawCourseHalf).toLowerCase().replace(/[\s-_]/g, "") : "";
+      let filteredHoles = normalizedHoles;
+      if (normHalf === "front9" || normHalf === "front") {
+        filteredHoles = normalizedHoles.filter((h) => h.holeNumber <= 9);
+        setDetectedCourseHalf("Front9");
+        setActiveCourseHalf("front");
+      } else if (normHalf === "back9" || normHalf === "back") {
+        filteredHoles = normalizedHoles.filter((h) => h.holeNumber >= 10);
+        setDetectedCourseHalf("Back9");
+        setActiveCourseHalf("back");
+      } else {
+        setDetectedCourseHalf(null);
+      }
+
       if (!effectiveTeeBoxId && first.teeBoxId) {
         effectiveTeeBoxId = Number(first.teeBoxId);
       }
@@ -642,7 +733,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         username ||
         first.userName ||
         first.playerName ||
-        (isViewerOwner ? "You" : "Player 1");
+        "Player 1";
 
       // Extract Partners
       if (initialPartners.length === 0 && first.playingPartnersJson) {
@@ -671,9 +762,26 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       setPartners(initialPartners);
 
       // Extract Playing Group Round Key
-      if (first.playingGroupRoundKey) {
-        initialKey = String(first.playingGroupRoundKey);
+      const keyFromHole = first.playingGroupRoundKey || (first as any).PlayingGroupRoundKey;
+      if (keyFromHole) {
+        initialKey = String(keyFromHole);
         setRoundKey(initialKey);
+        try {
+          const statuses = await getDelegationStatuses(initialKey);
+          if (Array.isArray(statuses)) {
+            const newStatuses: Record<number, string> = {};
+            statuses.forEach((s: any) => {
+              const targetUserId = s.targetUserId ?? s.TargetUserId;
+              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              if (targetUserId != null) {
+                newStatuses[Number(targetUserId)] = rawStatus;
+              }
+            });
+            setDelegationStatuses(newStatuses);
+          }
+        } catch (e) {
+          console.error("Initial delegation fetch error:", e);
+        }
       }
 
       // Extract Group Name
@@ -726,7 +834,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       });
       setCompanionHandicaps(hcMap);
 
-      // Map initial Text Scores
+      // Map initial Text Scores from raw API/draft holes
       const initialTextMap: Record<string, string> = {};
       normalizedHoles.forEach((h) => {
         initialPartners.forEach((p) => {
@@ -752,16 +860,100 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           }
         });
       });
-      setTextScores(initialTextMap);
 
-      // Sanitize holes with calculated net / stableford
-      const sanitizedHoles = normalizedHoles.map((h) => {
+      // Preserve in-memory text scores if user had already entered values
+      const inMemoryTextMap = textScoresRef.current || {};
+      const mergedTextMap = { ...initialTextMap };
+      Object.keys(inMemoryTextMap).forEach((k) => {
+        if (inMemoryTextMap[k] !== undefined && inMemoryTextMap[k] !== "") {
+          mergedTextMap[k] = inMemoryTextMap[k];
+        }
+      });
+      setTextScores(mergedTextMap);
+      textScoresRef.current = mergedTextMap;
+
+      // Sanitize holes with calculated net / stableford while preserving in-memory edits
+      const inMemoryHolesMap = new Map(
+        (holesRef.current || []).map((h) => [h.holeId || h.holeNumber, h]),
+      );
+
+      const sanitizedHoles = filteredHoles.map((h) => {
+        const inMem = inMemoryHolesMap.get(h.holeId || h.holeNumber);
+
+        // Merge companion scores JSON
+        let mergedCompanionScores = h.companionScoresJson;
+        if (inMem?.companionScoresJson) {
+          try {
+            const serverComp =
+              typeof h.companionScoresJson === "string"
+                ? JSON.parse(h.companionScoresJson)
+                : h.companionScoresJson || {};
+            const localComp =
+              typeof inMem.companionScoresJson === "string"
+                ? JSON.parse(inMem.companionScoresJson)
+                : inMem.companionScoresJson || {};
+            mergedCompanionScores = JSON.stringify({
+              ...serverComp,
+              ...localComp,
+            });
+          } catch (e) {
+            mergedCompanionScores = inMem.companionScoresJson;
+          }
+        }
+
+        // Merge companion sandys
+        let mergedCompanionSandys = h.companionSandysJson;
+        if (inMem?.companionSandysJson) {
+          try {
+            const serverSandys =
+              typeof h.companionSandysJson === "string"
+                ? JSON.parse(h.companionSandysJson)
+                : h.companionSandysJson || {};
+            const localSandys =
+              typeof inMem.companionSandysJson === "string"
+                ? JSON.parse(inMem.companionSandysJson)
+                : inMem.companionSandysJson || {};
+            mergedCompanionSandys = JSON.stringify({
+              ...serverSandys,
+              ...localSandys,
+            });
+          } catch (e) {
+            mergedCompanionSandys = inMem.companionSandysJson;
+          }
+        }
+
+        // Merge companion Rs
+        let mergedCompanionRs = h.companionRsJson;
+        if (inMem?.companionRsJson) {
+          try {
+            const serverRs =
+              typeof h.companionRsJson === "string"
+                ? JSON.parse(h.companionRsJson)
+                : h.companionRsJson || {};
+            const localRs =
+              typeof inMem.companionRsJson === "string"
+                ? JSON.parse(inMem.companionRsJson)
+                : inMem.companionRsJson || {};
+            mergedCompanionRs = JSON.stringify({
+              ...serverRs,
+              ...localRs,
+            });
+          } catch (e) {
+            mergedCompanionRs = inMem.companionRsJson;
+          }
+        }
+
+        const effectivePrimaryScore =
+          inMem?.score !== undefined && inMem?.score !== null
+            ? inMem.score
+            : h.score;
+
         const strokeIndex = Number(h.strokeIndex || 0);
         const strokes =
           gameConfig.isExcluded && h.par === 3
             ? 0
             : calculateStrokes(fetchedPrimaryHc, strokeIndex);
-        const netScore = calculateNetScore(h.score, strokes, {
+        const netScore = calculateNetScore(effectivePrimaryScore, strokes, {
           isDoublePeoria: gameConfig.isDoublePeoria,
           isGross: gameConfig.isGross,
         });
@@ -769,19 +961,25 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           gameConfig.isStableford || gameConfig.isSystem36,
         );
         const stablefordPoints =
-          isStablefordMode && h.score !== null && h.score !== undefined
+          isStablefordMode &&
+          effectivePrimaryScore !== null &&
+          effectivePrimaryScore !== undefined
             ? calculateStablefordPoints(
                 netScore,
                 h.par,
                 gameConfig.isSystem36,
-                h.score,
+                effectivePrimaryScore,
               )
             : null;
 
         return {
           ...h,
+          score: effectivePrimaryScore,
+          companionScoresJson: mergedCompanionScores,
+          companionSandysJson: mergedCompanionSandys,
+          companionRsJson: mergedCompanionRs,
           netScore:
-            h.netScore !== null && h.netScore !== undefined
+            h.netScore !== null && h.netScore !== undefined && !inMem
               ? h.netScore
               : netScore,
           stablefordPoints: isStablefordMode
@@ -791,6 +989,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       });
 
       setHoles(sanitizedHoles);
+      holesRef.current = sanitizedHoles;
     } catch (err: any) {
       console.error("Scorecard loading error:", err);
       setError("Failed to load scorecard data.");
@@ -819,32 +1018,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     loadScorecardData();
   }, [loadScorecardData]);
 
-  // Pull-to-refresh handler
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await loadScorecardData();
-      if (roundKey) {
-        try {
-          const statuses = await getDelegationStatuses(String(roundKey));
-          if (Array.isArray(statuses)) {
-            const newStatuses: Record<number, string> = {};
-            statuses.forEach((s: any) => {
-              newStatuses[s.targetUserId] = (s.status || "").toLowerCase();
-            });
-            setDelegationStatuses(newStatuses);
-          }
-        } catch (e) {
-          console.error("Delegation refresh error:", e);
-        }
-      }
-    } catch (e) {
-      console.error("Scorecard refresh error:", e);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [loadScorecardData, roundKey]);
-
   // ─────────────────────────────────────────────
   // Universal Polling Engine
   // ─────────────────────────────────────────────
@@ -862,7 +1035,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           if (Array.isArray(statuses)) {
             const newStatuses: Record<number, string> = {};
             statuses.forEach((s: any) => {
-              newStatuses[s.targetUserId] = (s.status || "").toLowerCase();
+              const targetUserId = s.targetUserId ?? s.TargetUserId;
+              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              if (targetUserId != null) {
+                newStatuses[Number(targetUserId)] = rawStatus;
+              }
             });
             setDelegationStatuses(newStatuses);
           }
@@ -939,7 +1116,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             score,
             netScore,
             par,
-            courseHalf: propHolesCount || "",
+            courseHalf:
+              detectedCourseHalf ||
+              propCourseHalf ||
+              (propHolesCount !== "18" ? propHolesCount : "") ||
+              "",
             holes: updatedHoles,
             textScores: updatedTextScores as any,
             isStableford: gameConfig.isStableford,
@@ -978,11 +1159,20 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           partners.length > 0 ? JSON.stringify(partners) : undefined;
 
         const payload = updatedHoles.map((h) => ({
+          scorecardId: h.scorecardId || propScorecardId || undefined,
           courseId: propCourseId ? Number(propCourseId) : h.courseId || null,
           courseHalf:
-            propHolesCount === "front9" || propHolesCount === "Front9"
+            detectedCourseHalf === "Front9" ||
+            propCourseHalf === "Front9" ||
+            propCourseHalf === "front9" ||
+            propHolesCount === "front9" ||
+            propHolesCount === "Front9"
               ? "Front9"
-              : propHolesCount === "back9" || propHolesCount === "Back9"
+              : detectedCourseHalf === "Back9" ||
+                  propCourseHalf === "Back9" ||
+                  propCourseHalf === "back9" ||
+                  propHolesCount === "back9" ||
+                  propHolesCount === "Back9"
                 ? "Back9"
                 : h.courseHalf || null,
           teeBoxId: propTeeBoxId ? Number(propTeeBoxId) : h.teeBoxId || null,
@@ -1047,12 +1237,29 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
             : {}),
         }));
-        console.log("ppp", payload);
+        // console.log("ppp", payload);
 
-        if (mode === "new-round") {
+        const targetId = effectiveId || holes[0]?.scorecardId || holesRef.current[0]?.scorecardId;
+
+        if (mode === "new-round" && !targetId) {
+          const res = await saveScoreCard(payload);
+          
+          let newId = null;
+          if (Array.isArray(res) && res.length > 0) {
+            newId = res[0].scorecardId || res[0].id;
+          } else if (res && typeof res === 'object') {
+            newId = res.scorecardId || res.id;
+          }
+
+          if (newId) {
+            setHoles((prev) => prev.map((h) => ({ ...h, scorecardId: newId })));
+            holesRef.current = holesRef.current.map((h) => ({ ...h, scorecardId: newId }));
+          }
+        } else if (targetId) {
+          const updatedPayload = payload.map(h => ({ ...h, scorecardId: targetId }));
+          await updateHoleScoresApi(targetId, updatedPayload);
+        } else {
           await saveScoreCard(payload);
-        } else if (effectiveId) {
-          await updateHoleScoresApi(effectiveId, payload);
         }
 
         // If round is completed, clear local draft
@@ -1060,8 +1267,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           if (effectiveId) await deleteDraft(effectiveId);
           if (propRoundContextId)
             await deleteDraft(`round_${propRoundContextId}`);
-          if (propCourseId && propTeeBoxId)
-            await deleteDraft(`draft_${propCourseId}_${propTeeBoxId}`);
+            
+          const delCourseId = propCourseId || holes[0]?.courseId;
+          const delTeeBoxId = propTeeBoxId || holes[0]?.teeBoxId;
+          if (delCourseId && delTeeBoxId) {
+            await deleteDraft(`draft_${delCourseId}_${delTeeBoxId}`);
+          }
         }
       } catch (err) {
         console.error("Server sync error:", err);
@@ -1098,6 +1309,39 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       syncServerAndDraft(nextHoles, nextTextScores, false);
     }, 600);
   };
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (holesRef.current && holesRef.current.length > 0 && mode !== "view") {
+        await syncServerAndDraft(holesRef.current, textScoresRef.current || {});
+      }
+      await loadScorecardData();
+      if (roundKey) {
+        try {
+          const statuses = await getDelegationStatuses(String(roundKey));
+          if (Array.isArray(statuses)) {
+            const newStatuses: Record<number, string> = {};
+            statuses.forEach((s: any) => {
+              const targetUserId = s.targetUserId ?? s.TargetUserId;
+              const rawStatus = (s.status ?? s.Status ?? "").toLowerCase();
+              if (targetUserId != null) {
+                newStatuses[Number(targetUserId)] = rawStatus;
+              }
+            });
+            setDelegationStatuses(newStatuses);
+          }
+        } catch (e) {
+          console.error("Delegation refresh error:", e);
+        }
+      }
+    } catch (e) {
+      console.error("Scorecard refresh error:", e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadScorecardData, roundKey, mode, syncServerAndDraft]);
 
   // AppState listener to flush saves when app goes to background
   useEffect(() => {
@@ -1141,15 +1385,15 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   const isPlayerApprovedToScore = useCallback(
     (partner: RoundPlayer) => {
       if (partner.isCurrentUser || partner.isPrimary) return true;
+      if (propTournamentId) return true;
       if (partner.userId && roundKey) {
-        const status = delegationStatuses[partner.userId]?.toLowerCase();
-        if (status) {
-          return status === "approved";
-        }
+        const uid = Number(partner.userId);
+        const status = (delegationStatuses[uid] || "").toLowerCase();
+        return status === "approved" || status === "accepted";
       }
-      return true;
+      return !partner.userId;
     },
-    [delegationStatuses, roundKey],
+    [delegationStatuses, roundKey, propTournamentId],
   );
 
   // Focus navigation / Cursor Auto-Advance Ref
@@ -1202,6 +1446,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     playerId: string,
     text: string,
   ) => {
+    const partnerObj = partners.find((p) => p.playerId === playerId);
+    if (partnerObj && !isPlayerApprovedToScore(partnerObj)) {
+      Toast.show({
+        type: "info",
+        text1: "Pending Approval",
+        text2: `${partnerObj.name} has not approved this round yet.`,
+      });
+      return;
+    }
+
     const key = `${holeId}_${playerId}`;
     const nextTextMap = { ...textScores, [key]: text };
     setTextScores(nextTextMap);
@@ -1275,6 +1529,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   };
 
   const handleToggleSandy = (holeId: number, playerId: string) => {
+    let nowActive = false;
     const nextHoles = holes.map((h) => {
       if (h.holeId !== holeId) return h;
 
@@ -1289,6 +1544,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
 
       companionSandys[playerId] = !companionSandys[playerId];
+      nowActive = companionSandys[playerId];
       return {
         ...h,
         companionSandysJson: JSON.stringify(companionSandys),
@@ -1297,9 +1553,17 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
     setHoles(nextHoles);
     triggerDebouncedSave(nextHoles, textScores);
+
+    if (nowActive) {
+      Toast.show({
+        type: "success",
+        text1: "You got an Sandy.",
+      });
+    }
   };
 
   const handleToggleR = (holeId: number, playerId: string) => {
+    let nowActive = false;
     const nextHoles = holes.map((h) => {
       if (h.holeId !== holeId) return h;
 
@@ -1314,6 +1578,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
 
       companionRs[playerId] = !companionRs[playerId];
+      nowActive = companionRs[playerId];
       return {
         ...h,
         companionRsJson: JSON.stringify(companionRs),
@@ -1322,6 +1587,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
     setHoles(nextHoles);
     triggerDebouncedSave(nextHoles, textScores);
+
+    if (nowActive) {
+      Toast.show({
+        type: "success",
+        text1: "You got an Regulation.",
+      });
+    }
   };
 
   // ─────────────────────────────────────────────
@@ -1355,14 +1627,27 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // Display Calculations & Summaries
   // ─────────────────────────────────────────────
   const halvesData = useMemo(() => {
-    return computeDisplayHalves(holes, propHolesCount, nassauStartNine);
-  }, [holes, propHolesCount, nassauStartNine]);
+    return computeDisplayHalves(
+      holes,
+      detectedCourseHalf || propCourseHalf || propHolesCount,
+      nassauStartNine,
+    );
+  }, [holes, detectedCourseHalf, propCourseHalf, propHolesCount, nassauStartNine]);
 
   const displayedHoles = useMemo(() => {
     if (activeCourseHalf === "front") return halvesData.front9;
     if (activeCourseHalf === "back") return halvesData.back9;
     return halvesData.allSorted;
   }, [activeCourseHalf, halvesData]);
+
+  const isNineHoleOnly = useMemo(() => {
+    return Boolean(
+      detectedCourseHalf === "Front9" ||
+      detectedCourseHalf === "Back9" ||
+      (halvesData.front9.length > 0 && halvesData.back9.length === 0) ||
+      (halvesData.back9.length > 0 && halvesData.front9.length === 0),
+    );
+  }, [detectedCourseHalf, halvesData]);
 
   const legendCounts = useMemo(() => {
     return getScoreLegendCounts(holes, partners);
@@ -1406,6 +1691,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           p1Sandy: p1Info.sandy,
           p2Sandy: p2Info.sandy,
           p3Sandy: p3Info.sandy,
+          p1Regulation: p1Info.r,
+          p2Regulation: p2Info.r,
+          p3Regulation: p3Info.r,
         };
       });
       return { splitSixSummary: computeSplitSixSummary(allHolesData) };
@@ -1456,11 +1744,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         return {
           holeNumber: h.holeNumber,
           par: h.par,
-          teamAScores: [t1p1?.netScore ?? null, t1p2?.netScore ?? null] as [
+          teamAScores: [t1p1?.score ?? null, t1p2?.score ?? null] as [
             number | null,
             number | null,
           ],
-          teamBScores: [t2p1?.netScore ?? null, t2p2?.netScore ?? null] as [
+          teamBScores: [t2p1?.score ?? null, t2p2?.score ?? null] as [
             number | null,
             number | null,
           ],
@@ -1477,6 +1765,14 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             boolean,
           ],
           teamBSandys: [Boolean(t2p1?.sandy), Boolean(t2p2?.sandy)] as [
+            boolean,
+            boolean,
+          ],
+          teamARs: [Boolean(t1p1?.r), Boolean(t1p2?.r)] as [
+            boolean,
+            boolean,
+          ],
+          teamBRs: [Boolean(t2p1?.r), Boolean(t2p2?.r)] as [
             boolean,
             boolean,
           ],
@@ -1536,6 +1832,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           teamBRawScores: [t2p1?.score ?? null, t2p2?.score ?? null],
           teamASandys: [Boolean(t1p1?.sandy), Boolean(t1p2?.sandy)],
           teamBSandys: [Boolean(t2p1?.sandy), Boolean(t2p2?.sandy)],
+          teamARs: [Boolean(t1p1?.r), Boolean(t1p2?.r)],
+          teamBRs: [Boolean(t2p1?.r), Boolean(t2p2?.r)],
         };
       });
 
@@ -1651,6 +1949,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <Watermark />
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+
       {/* ── Top Header Bar (Back, Title, Completed / Finish Status) ── */}
       <View
         style={[
@@ -1704,10 +2008,10 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             >
               <Text style={styles.finishRoundText}>Finish</Text>
             </TouchableOpacity>
-          ) : (
+          ) : (isCompanionView &&
             <View style={styles.readOnlyBadge}>
               <Text style={styles.readOnlyBadgeText}>
-                {isCompanionView ? "Live Viewer" : "Completed"}
+                Live Viewer
               </Text>
             </View>
           )}
@@ -1779,6 +2083,44 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         </View>
       </View>
 
+      {/* Multiplayer Companion View Banner */}
+      {isCompanionView && (
+        <View
+          style={[
+            styles.companionBanner,
+            {
+              backgroundColor: isDark ? "#0c4a6e33" : "#e0f2fe",
+              borderColor: isDark ? "#0284c7" : "#bae6fd",
+            },
+          ]}
+        >
+          <Ionicons
+            name="radio-outline"
+            size={22}
+            color={isDark ? "#38bdf8" : "#0284c7"}
+            style={{ marginRight: 10 }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text
+              style={[
+                styles.companionBannerTitle,
+                { color: isDark ? "#38bdf8" : "#0369a1" },
+              ]}
+            >
+              Multiplayer Companion View
+            </Text>
+            <Text
+              style={[
+                styles.companionBannerSub,
+                { color: isDark ? "#94a3b8" : "#475569" },
+              ]}
+            >
+              The round scorer is entering scores for this round. Your scorecard updates in real-time.
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Tab Switcher (Scorecard vs Match Scoring) */}
       {gameConfig.hasMatchTab && (
         <View
@@ -1846,7 +2188,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 activeTab === "scoring" && styles.tabActiveText,
               ]}
             >
-              Side Game Summary
+            Game Summary
             </Text>
           </Pressable>
         </View>
@@ -1856,6 +2198,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -1894,97 +2238,105 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               />
             )}
 
-            {/* Halves Selector (Front 9 / Back 9 / All 18) */}
-            <View style={styles.halfFilterRow}>
-              <Pressable
-                onPress={() => setActiveCourseHalf("all")}
-                style={[
-                  styles.halfFilterButton,
-                  activeCourseHalf === "all"
-                    ? styles.halfFilterActive
-                    : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
-                ]}
-              >
-                <Text
+            {/* Halves Selector (Front 9 / Back 9 / All 18) - only for 18-hole rounds */}
+            {!isNineHoleOnly && (
+              <View style={styles.halfFilterRow}>
+                <Pressable
+                  onPress={() => setActiveCourseHalf("all")}
                   style={[
-                    styles.halfFilterText,
-                    {
-                      color:
-                        activeCourseHalf === "all"
-                          ? "#ffffff"
-                          : isDark
-                            ? "#a1a1aa"
-                            : "#475569",
-                    },
+                    styles.halfFilterButton,
+                    activeCourseHalf === "all"
+                      ? styles.halfFilterActive
+                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
                   ]}
                 >
-                  All 18
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "all"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    All 18
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                onPress={() => setActiveCourseHalf("front")}
-                style={[
-                  styles.halfFilterButton,
-                  activeCourseHalf === "front"
-                    ? styles.halfFilterActive
-                    : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
-                ]}
-              >
-                <Text
+                <Pressable
+                  onPress={() => setActiveCourseHalf("front")}
                   style={[
-                    styles.halfFilterText,
-                    {
-                      color:
-                        activeCourseHalf === "front"
-                          ? "#ffffff"
-                          : isDark
-                            ? "#a1a1aa"
-                            : "#475569",
-                    },
+                    styles.halfFilterButton,
+                    activeCourseHalf === "front"
+                      ? styles.halfFilterActive
+                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
                   ]}
                 >
-                  Front 9
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "front"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    Front 9
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                onPress={() => setActiveCourseHalf("back")}
-                style={[
-                  styles.halfFilterButton,
-                  activeCourseHalf === "back"
-                    ? styles.halfFilterActive
-                    : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
-                ]}
-              >
-                <Text
+                <Pressable
+                  onPress={() => setActiveCourseHalf("back")}
                   style={[
-                    styles.halfFilterText,
-                    {
-                      color:
-                        activeCourseHalf === "back"
-                          ? "#ffffff"
-                          : isDark
-                            ? "#a1a1aa"
-                            : "#475569",
-                    },
+                    styles.halfFilterButton,
+                    activeCourseHalf === "back"
+                      ? styles.halfFilterActive
+                      : { backgroundColor: isDark ? "#27272a" : "#e2e8f0" },
                   ]}
                 >
-                  Back 9
-                </Text>
-              </Pressable>
-            </View>
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "back"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    Back 9
+                  </Text>
+                </Pressable>
+              </View>
+            )}
 
             {/* Scorecard Table */}
-            <View
-              style={[
-                styles.tableContainer,
-                {
-                  backgroundColor: isDark ? "#18181b" : "#ffffff",
-                  borderColor: isDark ? "#27272a" : "#e4e4e7",
-                },
-              ]}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ minWidth: "100%" }}
             >
+              <View
+                style={[
+                  styles.tableContainer,
+                  {
+                    backgroundColor: isDark ? "#18181b" : "#ffffff",
+                    borderColor: isDark ? "#27272a" : "#e4e4e7",
+                    minWidth: "100%",
+                  },
+                ]}
+              >
               {/* Table Column Headers */}
               <View
                 style={[
@@ -2031,19 +2383,19 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
                 {partners.map((partner) => (
                   <View key={partner.playerId} style={styles.colPlayerScores}>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        styles.playerScoreHeaderTitle,
-                        { color: isDark ? "#ffffff" : "#0f172a" },
-                      ]}
-                    >
-                      {partners.length === 1
-                        ? "Score"
-                        : partner.isCurrentUser
-                          ? "You"
-                          : partner.name || "Score"}
-                    </Text>
+                    <View style={styles.colScoreInputWrapper}>
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.playerScoreHeaderTitle,
+                          { color: isDark ? "#ffffff" : "#0f172a" },
+                        ]}
+                      >
+                        {partners.length === 1
+                          ? "Score"
+                          : partner.name}
+                      </Text>
+                    </View>
                     {gameConfig.showNetColumns && (
                       <Text
                         style={[
@@ -2067,15 +2419,44 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                   </View>
                 ))}
 
+                {gameConfig.isSplit6 && (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {partners.slice(0, 3).map((partner) => (
+                      <Text
+                        key={`split6_hdr_${partner.playerId}`}
+                        numberOfLines={2}
+                        style={[
+                          styles.colSplitSixPts,
+                          { color: isDark ? "#9ca3af" : "#64748b" },
+                        ]}
+                      >
+                        {partner.name}
+                        {"\n"}Pts
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
                 {gameConfig.isNassau && (
                   <Text
                     style={[
                       styles.colNassau,
-                      { color: isDark ? "#9ca3af" : "#64748b" },
+                      { color: isDark ? "#9ca3af" : "#64748b", textAlign: "center" },
                     ]}
                   >
-                    Houses
+                    Nassau{"\n"}Pts
                   </Text>
+                )}
+
+                {gameConfig.isHighLow && (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={[styles.colTeamPts, { color: isDark ? "#9ca3af" : "#64748b" }]}>
+                      Team A
+                    </Text>
+                    <Text style={[styles.colTeamPts, { color: isDark ? "#9ca3af" : "#64748b" }]}>
+                      Team B
+                    </Text>
+                  </View>
                 )}
               </View>
 
@@ -2184,41 +2565,52 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             key={partner.playerId}
                             style={styles.colPlayerScores}
                           >
-                            <ScoreInputCell
-                              score={holeInfo.score}
-                              par={hole.par}
-                              isReadOnly={isReadOnly}
-                              isDark={isDark}
-                              valueText={valueText}
-                              onChangeText={(t) =>
-                                handleScoreChange(
-                                  hole.holeId,
-                                  partner.playerId,
-                                  t,
-                                )
-                              }
-                              sandy={holeInfo.sandy}
-                              onToggleSandy={() =>
-                                handleToggleSandy(hole.holeId, partner.playerId)
-                              }
-                              r={holeInfo.r}
-                              onToggleR={() =>
-                                handleToggleR(hole.holeId, partner.playerId)
-                              }
-                              multiplier={multiplier}
-                              showBadges={
-                                gameConfig.isHighLow ||
-                                gameConfig.isSplit6 ||
-                                gameConfig.isNassau
-                              }
-                              isPrimary={partner.isPrimary}
-                              allowPartnerEdit={
-                                !isReadOnly && isPlayerApprovedToScore(partner)
-                              }
-                              inputRef={(el) => {
-                                inputRefs.current[key] = el;
-                              }}
-                            />
+                            <View style={styles.colScoreInputWrapper}>
+                              <ScoreInputCell
+                                score={holeInfo.score}
+                                par={hole.par}
+                                isReadOnly={isReadOnly}
+                                isDark={isDark}
+                                valueText={valueText}
+                                onChangeText={(t) =>
+                                  handleScoreChange(
+                                    hole.holeId,
+                                    partner.playerId,
+                                    t,
+                                  )
+                                }
+                                sandy={holeInfo.sandy}
+                                onToggleSandy={() =>
+                                  handleToggleSandy(hole.holeId, partner.playerId)
+                                }
+                                r={holeInfo.r}
+                                onToggleR={() =>
+                                  handleToggleR(hole.holeId, partner.playerId)
+                                }
+                                multiplier={multiplier}
+                                showBadges={
+                                  gameConfig.isHighLow ||
+                                  gameConfig.isSplit6 ||
+                                  gameConfig.isNassau
+                                }
+                                isPrimary={partner.isPrimary}
+                                allowPartnerEdit={
+                                  !isReadOnly && isPlayerApprovedToScore(partner)
+                                }
+                                onDisabledPress={() => {
+                                  if (!isPlayerApprovedToScore(partner)) {
+                                    Toast.show({
+                                      type: "info",
+                                      text1: "Pending Approval",
+                                      text2: `${partner.name} has not approved this round yet.`,
+                                    });
+                                  }
+                                }}
+                                inputRef={(el) => {
+                                  inputRefs.current[key] = el;
+                                }}
+                              />
+                            </View>
 
                             {gameConfig.showNetColumns && (
                               <Text
@@ -2249,14 +2641,60 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                         );
                       })}
 
+                      {/* Split-Six Points Cell */}
+                      {gameConfig.isSplit6 && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          {partners.slice(0, 3).map((partner, pIdx) => {
+                            const pts =
+                              sideScoringSummaries.splitSixSummary?.holeResults?.[
+                                hole.holeNumber
+                              ]?.[pIdx];
+                            const displayPts =
+                              pts !== undefined ? String(pts) : "-";
+                            return (
+                              <Text
+                                key={`split6_pts_${hole.holeId || hole.holeNumber}_${partner.playerId}`}
+                                style={[
+                                  styles.colSplitSixPts,
+                                  {
+                                    color: isDark ? "#ffffff" : "#0f172a",
+                                    fontWeight: "700",
+                                  },
+                                ]}
+                              >
+                                {displayPts}
+                              </Text>
+                            );
+                          })}
+                        </View>
+                      )}
+
                       {/* Nassau Houses Cell */}
                       {gameConfig.isNassau && (
                         <View style={styles.colNassau}>
                           <NassauHouses
-                            houses={holeResult?.housesDisplay}
+                            overallHouses={holeResult?.overallHousesDisplay}
+                            halfHouses={holeResult?.housesDisplay}
+                            isSecondNine={
+                              nassauStartNine === "back"
+                                ? hole.holeNumber <= 9
+                                : hole.holeNumber >= 10
+                            }
                             isDark={isDark}
                             fontSize={11}
                           />
+                        </View>
+                      )}
+
+                      {/* High-Low Team Points Cell */}
+                      {gameConfig.isHighLow && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "700" }]}>
+                            {sideScoringSummaries.highLowSummary?.holeResults?.[hole.holeNumber]?.teamA ?? "-"}
+                          </Text>
+                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "700" }]}>
+                            {sideScoringSummaries.highLowSummary?.holeResults?.[hole.holeNumber]?.teamB ?? "-"}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -2361,16 +2799,18 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             key={partner.playerId}
                             style={styles.colPlayerScores}
                           >
-                            <Text
-                              style={[
-                                isGrandTotal
-                                  ? styles.playerTotalScore
-                                  : styles.playerSubtotalScore,
-                                { color: isDark ? "#ffffff" : "#0f172a" },
-                              ]}
-                            >
-                              {totals.gross}
-                            </Text>
+                            <View style={styles.colScoreInputWrapper}>
+                              <Text
+                                style={[
+                                  isGrandTotal
+                                    ? styles.playerTotalScore
+                                    : styles.playerSubtotalScore,
+                                  { color: isDark ? "#ffffff" : "#0f172a" },
+                                ]}
+                              >
+                                {totals.gross}
+                              </Text>
+                            </View>
                             {gameConfig.showNetColumns && (
                               <Text
                                 style={[
@@ -2401,6 +2841,36 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                         );
                       })}
 
+                      {/* Split-Six Points Total Cell */}
+                      {gameConfig.isSplit6 && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          {partners.slice(0, 3).map((partner, pIdx) => {
+                            let totalPts = 0;
+                            holesSubset.forEach((h) => {
+                              const pts =
+                                sideScoringSummaries.splitSixSummary?.holeResults?.[
+                                  h.holeNumber
+                                ]?.[pIdx];
+                              if (pts !== undefined) totalPts += pts;
+                            });
+                            return (
+                              <Text
+                                key={`split6_tot_${label}_${partner.playerId}`}
+                                style={[
+                                  styles.colSplitSixPts,
+                                  {
+                                    color: isDark ? "#ffffff" : "#0f172a",
+                                    fontWeight: isGrandTotal ? "800" : "700",
+                                  },
+                                ]}
+                              >
+                                {totalPts}
+                              </Text>
+                            );
+                          })}
+                        </View>
+                      )}
+
                       {gameConfig.isNassau && (
                         <View style={styles.colNassau}>
                           <NassauHouses
@@ -2409,6 +2879,25 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             isDark={isDark}
                             fontSize={11}
                           />
+                        </View>
+                      )}
+
+                      {gameConfig.isHighLow && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "800" }]}>
+                            {isGrandTotal
+                              ? sideScoringSummaries.highLowSummary?.overallMatchPts?.teamA || 0
+                              : (holesSubset === halvesData.front9 
+                                  ? sideScoringSummaries.highLowSummary?.front9MatchPts?.teamA 
+                                  : sideScoringSummaries.highLowSummary?.back9MatchPts?.teamA) || 0}
+                          </Text>
+                          <Text style={[styles.colTeamPts, { color: isDark ? "#ffffff" : "#0f172a", fontWeight: "800" }]}>
+                            {isGrandTotal
+                              ? sideScoringSummaries.highLowSummary?.overallMatchPts?.teamB || 0
+                              : (holesSubset === halvesData.front9 
+                                  ? sideScoringSummaries.highLowSummary?.front9MatchPts?.teamB 
+                                  : sideScoringSummaries.highLowSummary?.back9MatchPts?.teamB) || 0}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -2420,31 +2909,51 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                   halvesData.front9.length > 0 &&
                   halvesData.back9.length > 0
                 ) {
+                  const firstHalf = halvesData.isBackStart
+                    ? halvesData.back9
+                    : halvesData.front9;
+                  const firstLabel = halvesData.isBackStart
+                    ? "Back 9"
+                    : "Front 9";
+                  const firstNassauHouses = halvesData.isBackStart
+                    ? sideScoringSummaries.nassauState?.back9Houses
+                    : sideScoringSummaries.nassauState?.front9Houses;
+
+                  const secondHalf = halvesData.isBackStart
+                    ? halvesData.front9
+                    : halvesData.back9;
+                  const secondLabel = halvesData.isBackStart
+                    ? "Front 9"
+                    : "Back 9";
+                  const secondNassauHouses = halvesData.isBackStart
+                    ? sideScoringSummaries.nassauState?.front9Houses
+                    : sideScoringSummaries.nassauState?.back9Houses;
+
                   return (
                     <>
-                      {/* Front 9 Holes */}
-                      {halvesData.front9.map((hole, index) =>
+                      {/* First 9 Holes (Back 9 if isBackStart, else Front 9) */}
+                      {firstHalf.map((hole, index) =>
                         renderHoleRow(hole, index),
                       )}
 
-                      {/* Front 9 Subtotal */}
+                      {/* First 9 Subtotal */}
                       {renderTotalRow(
-                        "Front 9",
-                        halvesData.front9,
-                        sideScoringSummaries.nassauState?.front9Houses,
+                        firstLabel,
+                        firstHalf,
+                        firstNassauHouses,
                         false,
                       )}
 
-                      {/* Back 9 Holes */}
-                      {halvesData.back9.map((hole, index) =>
-                        renderHoleRow(hole, index + halvesData.front9.length),
+                      {/* Second 9 Holes */}
+                      {secondHalf.map((hole, index) =>
+                        renderHoleRow(hole, index + firstHalf.length),
                       )}
 
-                      {/* Back 9 Subtotal */}
+                      {/* Second 9 Subtotal */}
                       {renderTotalRow(
-                        "Back 9",
-                        halvesData.back9,
-                        sideScoringSummaries.nassauState?.back9Houses,
+                        secondLabel,
+                        secondHalf,
+                        secondNassauHouses,
                         false,
                       )}
 
@@ -2505,13 +3014,17 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                   </>
                 );
               })()}
-            </View>
+              </View>
+            </ScrollView>
 
-            {/* Scorecard Legend */}
-            <ScoringLegend counts={legendCounts} isDark={isDark} />
+            {/* Scorecard Legend (only for single player rounds) */}
+            {partners.length <= 1 && (
+              <ScoringLegend counts={legendCounts} isDark={isDark} />
+            )}
           </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* GPS Rangefinder Modal */}
       {rangefinderHole !== null && (
@@ -2721,6 +3234,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
+    paddingBottom: 280,
   },
   halfFilterRow: {
     flexDirection: "row",
@@ -2753,7 +3267,7 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 8,
     alignItems: "center",
     borderBottomWidth: 1,
@@ -2831,27 +3345,46 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   colPlayerScores: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    gap: 8,
+  },
+  colScoreInputWrapper: {
+    width: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   playerScoreHeaderTitle: {
     fontSize: 12,
     fontWeight: "700",
     textAlign: "center",
+    width: "100%",
   },
   subColHeader: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
-    width: 24,
+    width: 32,
     textAlign: "center",
   },
   subColVal: {
     fontSize: 12,
     fontWeight: "600",
-    width: 24,
+    width: 32,
     textAlign: "center",
+  },
+  colTeamPts: {
+    width: 44,
+    textAlign: "center",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  colSplitSixPts: {
+    width: 46,
+    textAlign: "center",
+    fontSize: 11,
+    fontWeight: "600",
   },
   playerSubtotalScore: {
     fontSize: 13,
@@ -2864,9 +3397,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   colNassau: {
-    width: 54,
+    minWidth: 70,
+    paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
+  },
+  companionBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 4,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  companionBannerTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  companionBannerSub: {
+    fontSize: 12,
+    marginTop: 2,
   },
   modalOverlay: {
     flex: 1,

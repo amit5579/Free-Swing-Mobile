@@ -40,9 +40,9 @@ export const ScoringTabContent: React.FC<ScoringTabContentProps> = ({
     const p3 = players[2]?.name || "Player 3";
 
     const rows = [
-      { label: "Segment 1 (Holes 1-6)", vals: splitSixSummary.segment1_6 },
-      { label: "Segment 2 (Holes 7-12)", vals: splitSixSummary.segment7_12 },
-      { label: "Segment 3 (Holes 13-18)", vals: splitSixSummary.segment13_18 },
+      { label: "1-6", vals: splitSixSummary.segment1_6 },
+      { label: "7-12", vals: splitSixSummary.segment7_12 },
+      { label: "13-18", vals: splitSixSummary.segment13_18 },
       { label: "Overall Match Points", vals: splitSixSummary.overallMatchPts, isBold: true },
       { label: "Final X Points", vals: splitSixSummary.finalXPoints },
       { label: "Final Score", vals: splitSixSummary.finalScore, isHighlight: true },
@@ -93,12 +93,10 @@ export const ScoringTabContent: React.FC<ScoringTabContentProps> = ({
   }
 
   if (mode === "high-low" && highLowSummary) {
-    const team1Players = players.filter((p) => (p.team ?? 1) === 1).map((p) => p.isPrimary ? "You" : p.name).join(" & ") || "Team 1";
-    const team2Players = players.filter((p) => p.team === 2).map((p) => p.isPrimary ? "You" : p.name).join(" & ") || "Team 2";
+    const team1Players = players.filter((p) => (p.team ?? 1) === 1).map((p) => p.name).join(" & ") || "Team 1";
+    const team2Players = players.filter((p) => p.team === 2).map((p) => p.name).join(" & ") || "Team 2";
 
     const rows = [
-      { label: "Front 9 Match Points", teamA: highLowSummary.front9MatchPts.teamA, teamB: highLowSummary.front9MatchPts.teamB },
-      { label: "Back 9 Match Points", teamA: highLowSummary.back9MatchPts.teamA, teamB: highLowSummary.back9MatchPts.teamB },
       { label: "Overall Match Points", teamA: highLowSummary.overallMatchPts.teamA, teamB: highLowSummary.overallMatchPts.teamB, isBold: true },
       { label: "Patiala X", teamA: highLowSummary.patialaX.teamA, teamB: highLowSummary.patialaX.teamB },
       { label: "Final X Points", teamA: highLowSummary.finalXPoints.teamA, teamB: highLowSummary.finalXPoints.teamB },
@@ -146,77 +144,109 @@ export const ScoringTabContent: React.FC<ScoringTabContentProps> = ({
   }
 
   if ((mode === "nassau-best" || mode === "nassau-combined") && nassauState) {
-    const team1Players = players.filter((p) => (p.team ?? 1) === 1).map((p) => p.isPrimary ? "You" : p.name).join(" & ") || "Team 1";
-    const team2Players = players.filter((p) => p.team === 2).map((p) => p.isPrimary ? "You" : p.name).join(" & ") || "Team 2";
+    const team1Players = players.filter((p) => (p.team ?? 1) === 1).map((p) => p.name).join(" / ") || "Team 1";
+    const team2Players = players.filter((p) => p.team === 2).map((p) => p.name).join(" / ") || "Team 2";
 
-    const getWinnerLabel = () => {
-      if (nassauState.finalResult > 0) return `${team1Players} Wins (+${nassauState.finalResult})`;
-      if (nassauState.finalResult < 0) return `${team2Players} Wins (+${Math.abs(nassauState.finalResult)})`;
-      return "All Square (Tie)";
-    };
+    const rows = [
+      {
+        label: "Front 9 Halfs",
+        teamA: String(nassauState.front9Halfs?.team1 || 0),
+        teamB: String(nassauState.front9Halfs?.team2 || 0),
+      },
+      {
+        label: "Back 9 Halfs",
+        teamA: String(nassauState.back9Halfs?.team1 || 0),
+        teamB: String(nassauState.back9Halfs?.team2 || 0),
+      },
+      {
+        label: "Overall Matches",
+        teamA: String(nassauState.overallMatches?.team1 || 0),
+        teamB: String(nassauState.overallMatches?.team2 || 0),
+        isBold: true,
+        isSuccess: true,
+      },
+      {
+        label: "Patiala X",
+        teamA: `${nassauState.patialaX?.teamA || 0}x`,
+        teamB: `${nassauState.patialaX?.teamB || 0}x`,
+        isBold: true,
+        isYellow: true,
+      },
+      {
+        label: "Final X Points",
+        teamA: `${nassauState.finalXPoints?.teamA || 0}x`,
+        teamB: `${nassauState.finalXPoints?.teamB || 0}x`,
+        isBold: true,
+        isWarning: true,
+      },
+      {
+        label: "Final Result",
+        teamA: `Match - ${nassauState.overallMatches?.team1 || 0}\nHalf - ${(nassauState.front9Halfs?.team1 || 0) + (nassauState.back9Halfs?.team1 || 0)}`,
+        teamB: `Match - ${nassauState.overallMatches?.team2 || 0}\nHalf - ${(nassauState.front9Halfs?.team2 || 0) + (nassauState.back9Halfs?.team2 || 0)}`,
+        isBold: true,
+        isInfo: true,
+      },
+    ];
 
     return (
       <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
         <Text style={[styles.title, { color: textPrimary }]}>
-          {mode === "nassau-best" ? "Nassau (Best Score)" : "Nassau (Combined Score)"} Summary
+          Nassau Summary ({mode === "nassau-best" ? "Best Ball" : "Combined"})
         </Text>
 
-        <View style={[styles.resultBanner, { backgroundColor: isDark ? "#14532d44" : "#dcfce7" }]}>
-          <Text style={[styles.resultBannerText, { color: isDark ? "#4ade80" : "#15803d" }]}>
-            Final Result: {getWinnerLabel()}
+        <View style={[styles.tableHeader, { backgroundColor: subHeaderBg }]}>
+          <Text style={[styles.colHeader, { flex: 1.5, color: textSecondary, textAlign: "left", paddingLeft: 4 }]}>
+            MATCH
+          </Text>
+          <Text style={[styles.colHeader, { flex: 2, color: isDark ? "#4ade80" : "#16a34a" }]}>
+            TEAM A ({team1Players.toUpperCase()})
+          </Text>
+          <Text style={[styles.colHeader, { flex: 2, color: isDark ? "#60a5fa" : "#2563eb" }]}>
+            TEAM B ({team2Players.toUpperCase()})
           </Text>
         </View>
 
-        {/* Front 9 Section */}
-        <View style={styles.sectionBlock}>
-          <Text style={[styles.sectionTitle, { color: textPrimary }]}>Front 9 Match</Text>
-          <View style={styles.houseRow}>
-            <Text style={[styles.houseLabel, { color: textSecondary }]}>Houses:</Text>
-            <NassauHouses houses={nassauState.front9Houses} isDark={isDark} fontSize={14} />
-          </View>
-          <Text style={[styles.scoreText, { color: textPrimary }]}>
-            Halves: <Text style={{ color: isDark ? "#4ade80" : "#16a34a", fontWeight: "bold" }}>{team1Players}: {nassauState.front9Halfs.team1}</Text> | <Text style={{ color: isDark ? "#60a5fa" : "#2563eb", fontWeight: "bold" }}>{team2Players}: {nassauState.front9Halfs.team2}</Text>
-          </Text>
-        </View>
-
-        {/* Back 9 Section */}
-        <View style={styles.sectionBlock}>
-          <Text style={[styles.sectionTitle, { color: textPrimary }]}>Back 9 Match</Text>
-          <View style={styles.houseRow}>
-            <Text style={[styles.houseLabel, { color: textSecondary }]}>Houses:</Text>
-            <NassauHouses houses={nassauState.back9Houses} isDark={isDark} fontSize={14} />
-          </View>
-          <Text style={[styles.scoreText, { color: textPrimary }]}>
-            Halves: <Text style={{ color: isDark ? "#4ade80" : "#16a34a", fontWeight: "bold" }}>{team1Players}: {nassauState.back9Halfs.team1}</Text> | <Text style={{ color: isDark ? "#60a5fa" : "#2563eb", fontWeight: "bold" }}>{team2Players}: {nassauState.back9Halfs.team2}</Text>
-          </Text>
-        </View>
-
-        {/* 18-Hole Match Section */}
-        <View style={styles.sectionBlock}>
-          <Text style={[styles.sectionTitle, { color: textPrimary }]}>18-Hole Match</Text>
-          <View style={styles.houseRow}>
-            <Text style={[styles.houseLabel, { color: textSecondary }]}>Houses:</Text>
-            <NassauHouses houses={nassauState.overallHouses} isDark={isDark} fontSize={14} />
-          </View>
-          <Text style={[styles.scoreText, { color: textPrimary }]}>
-            Matches: <Text style={{ color: isDark ? "#4ade80" : "#16a34a", fontWeight: "bold" }}>{team1Players}: {nassauState.overallMatches.team1}</Text> | <Text style={{ color: isDark ? "#60a5fa" : "#2563eb", fontWeight: "bold" }}>{team2Players}: {nassauState.overallMatches.team2}</Text>
-          </Text>
-        </View>
-
-        {/* Patiala X & X Points */}
-        {nassauState.patialaX && (
-          <View style={[styles.sectionBlock, { borderBottomWidth: 0 }]}>
-            <Text style={[styles.sectionTitle, { color: textPrimary }]}>Bonus Points</Text>
-            <Text style={[styles.scoreText, { color: textPrimary }]}>
-              Patiala X: {team1Players}: {nassauState.patialaX.teamA} | {team2Players}: {nassauState.patialaX.teamB}
+        {rows.map((r, i) => (
+          <View
+            key={i}
+            style={[
+              styles.tableRow,
+              { borderBottomColor: borderColor },
+              r.isSuccess && { backgroundColor: isDark ? "#14532d33" : "#dcfce766" },
+              r.isYellow && { backgroundColor: isDark ? "#713f1222" : "#fef9c388" },
+              r.isWarning && { backgroundColor: isDark ? "#854d0e33" : "#fef3c788" },
+              r.isInfo && { backgroundColor: isDark ? "#1e3a8a33" : "#e0f2fe88" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.rowLabel,
+                { flex: 1.5, color: textPrimary, paddingLeft: 4 },
+                r.isBold && styles.bold,
+              ]}
+            >
+              {r.label}
             </Text>
-            {nassauState.finalXPoints && (
-              <Text style={[styles.scoreText, { color: textPrimary, marginTop: 4 }]}>
-                Final X Points: {team1Players}: {nassauState.finalXPoints.teamA} | {team2Players}: {nassauState.finalXPoints.teamB}
-              </Text>
-            )}
+            <Text
+              style={[
+                styles.cellValue,
+                { flex: 2, color: textPrimary },
+                r.isBold && styles.bold,
+              ]}
+            >
+              {r.teamA}
+            </Text>
+            <Text
+              style={[
+                styles.cellValue,
+                { flex: 2, color: textPrimary },
+                r.isBold && styles.bold,
+              ]}
+            >
+              {r.teamB}
+            </Text>
           </View>
-        )}
+        ))}
       </View>
     );
   }

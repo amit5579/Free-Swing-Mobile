@@ -403,14 +403,10 @@ export function parseRoundPlayers(
 
     let rawName = p.name || p.username || p.nickName || p.firstName || p.fullName;
     if (!rawName || rawName === "You") {
-      if (isCurrentUser) {
-        rawName = "You";
-      } else {
-        rawName =
-          p.isPrimary && fallbackOwnerName && fallbackOwnerName !== "You"
-            ? fallbackOwnerName
-            : p.username || p.playerName || `Player ${index + 1}`;
-      }
+      rawName =
+        p.isPrimary && fallbackOwnerName && fallbackOwnerName !== "You"
+          ? fallbackOwnerName
+          : p.username || p.playerName || (p.isPrimary ? (fallbackOwnerName || "Player 1") : `Player ${index + 1}`);
     }
 
     return {
@@ -464,12 +460,8 @@ export function computeDisplayHalves(
     return a.holeNumber - b.holeNumber;
   });
 
-  const front9 = allSorted.filter((h) =>
-    isBackStart ? h.holeNumber >= 10 : h.holeNumber <= 9
-  );
-  const back9 = allSorted.filter((h) =>
-    isBackStart ? h.holeNumber <= 9 : h.holeNumber >= 10
-  );
+  const front9 = [...holes].filter((h) => h.holeNumber <= 9).sort((a, b) => a.holeNumber - b.holeNumber);
+  const back9 = [...holes].filter((h) => h.holeNumber >= 10).sort((a, b) => a.holeNumber - b.holeNumber);
 
   let showFront9 = true;
   let showBack9 = true;

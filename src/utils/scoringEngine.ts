@@ -117,6 +117,7 @@ export type SplitSixFullSummary = {
   overallMatchPts: [number, number, number];
   finalXPoints: [number, number, number];
   finalScore: [number, number, number];
+  holeResults?: Record<number, [number, number, number]>;
 };
 
 /**
@@ -143,6 +144,13 @@ export function computeSplitSixSummary(
   const seg2 = allHolesData.filter((h) => h.holeNumber >= 7 && h.holeNumber <= 12);
   const seg3 = allHolesData.filter((h) => h.holeNumber >= 13 && h.holeNumber <= 18);
 
+  const holeResults: Record<number, [number, number, number]> = {};
+  allHolesData.forEach((h) => {
+    if (h.p1Score !== null && h.p2Score !== null && h.p3Score !== null) {
+      holeResults[h.holeNumber] = calculateSplitSixPoints(h.p1Score, h.p2Score, h.p3Score);
+    }
+  });
+
   const getSegTotals = (seg: typeof allHolesData): [number, number, number] => {
     let t = [0, 0, 0] as [number, number, number];
     seg.forEach((h) => {
@@ -166,9 +174,9 @@ export function computeSplitSixSummary(
 
   // X Points per player
   const rawX = [
-    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p1Score, par: h.par, sandy: h.p1Sandy }))),
-    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p2Score, par: h.par, sandy: h.p2Sandy }))),
-    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p3Score, par: h.par, sandy: h.p3Sandy }))),
+    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p1Score, par: h.par, sandy: h.p1Sandy, regulation: (h as any).p1Regulation }))),
+    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p2Score, par: h.par, sandy: h.p2Sandy, regulation: (h as any).p2Regulation }))),
+    computePlayerXPoints(allHolesData.map((h) => ({ score: h.p3Score, par: h.par, sandy: h.p3Sandy, regulation: (h as any).p3Regulation }))),
   ];
   const minX = Math.min(...rawX);
   const finalXPoints: [number, number, number] = [rawX[0] - minX, rawX[1] - minX, rawX[2] - minX];
@@ -188,6 +196,7 @@ export function computeSplitSixSummary(
     overallMatchPts,
     finalXPoints,
     finalScore,
+    holeResults,
   };
 }
 
@@ -287,6 +296,7 @@ export type HighLowFullSummary = {
   patialaX: { teamA: number; teamB: number };
   finalXPoints: { teamA: number; teamB: number };
   finalScore: { teamA: number; teamB: number };
+  holeResults?: Record<number, { teamA: number; teamB: number }>;
 };
 
 /**
@@ -355,6 +365,8 @@ export function computeHighLowSummary(
     teamBRawScores: [number | null, number | null]; // raw scores for X pts
     teamASandys: [boolean, boolean];
     teamBSandys: [boolean, boolean];
+    teamARs?: [boolean, boolean];
+    teamBRs?: [boolean, boolean];
   }[],
 ): HighLowFullSummary {
   // Overall Match Pts
@@ -364,24 +376,15 @@ export function computeHighLowSummary(
   let front9TeamB = 0;
   let back9TeamA = 0;
   let back9TeamB = 0;
+  const holeResults: Record<number, { teamA: number; teamB: number }> = {};
 
   allHolesData.forEach((h) => {
-    // console.log("================================");
-    // console.log("HOLE", h.holeNumber);
-
-    // console.log("TEAM A NET", h.teamAScores);
-    // console.log("TEAM B NET", h.teamBScores);
-
-    // console.log("TEAM A RAW", h.teamARawScores);
-    // console.log("TEAM B RAW", h.teamBRawScores);
-
     const pts = computeHighLowHolePoints(
       h.teamAScores,
       h.teamBScores
     );
 
-    // console.log("HIGH LOW POINTS", pts);
-
+    holeResults[h.holeNumber] = pts;
     teamAMatchTotal += pts.teamA;
     teamBMatchTotal += pts.teamB;
 
@@ -393,12 +396,6 @@ export function computeHighLowSummary(
       back9TeamB += pts.teamB;
     }
   });
-
-  // console.log("================================");
-  // console.log("FINAL MATCH TOTALS", {
-  //   teamA: teamAMatchTotal,
-  //   teamB: teamBMatchTotal,
-  // });
 
   // Patiala X
   const patialaA = computeTotalPatialaX(
@@ -418,16 +415,36 @@ export function computeHighLowSummary(
 
   // Final X Points (individual X + Patiala, then normalized)
   const p1X = computePlayerXPoints(
-    allHolesData.map((h) => ({ score: h.teamARawScores[0], par: h.par, sandy: h.teamASandys[0] })),
+    allHolesData.map((h) => ({
+      score: h.teamARawScores[0],
+      par: h.par,
+      sandy: h.teamASandys[0],
+      regulation: h.teamARs ? h.teamARs[0] : false,
+    })),
   );
   const p2X = computePlayerXPoints(
-    allHolesData.map((h) => ({ score: h.teamARawScores[1], par: h.par, sandy: h.teamASandys[1] })),
+    allHolesData.map((h) => ({
+      score: h.teamARawScores[1],
+      par: h.par,
+      sandy: h.teamASandys[1],
+      regulation: h.teamARs ? h.teamARs[1] : false,
+    })),
   );
   const p3X = computePlayerXPoints(
-    allHolesData.map((h) => ({ score: h.teamBRawScores[0], par: h.par, sandy: h.teamBSandys[0] })),
+    allHolesData.map((h) => ({
+      score: h.teamBRawScores[0],
+      par: h.par,
+      sandy: h.teamBSandys[0],
+      regulation: h.teamBRs ? h.teamBRs[0] : false,
+    })),
   );
   const p4X = computePlayerXPoints(
-    allHolesData.map((h) => ({ score: h.teamBRawScores[1], par: h.par, sandy: h.teamBSandys[1] })),
+    allHolesData.map((h) => ({
+      score: h.teamBRawScores[1],
+      par: h.par,
+      sandy: h.teamBSandys[1],
+      regulation: h.teamBRs ? h.teamBRs[1] : false,
+    })),
   );
 
   const rawTeamAX = p1X + p2X + patialaA;
@@ -444,6 +461,7 @@ export function computeHighLowSummary(
     patialaX: { teamA: patialaA, teamB: patialaB },
     finalXPoints: { teamA: rawTeamAX - minTeamX, teamB: rawTeamBX - minTeamX },
     finalScore: { teamA: teamAMatchTotal - minMatchPts, teamB: teamBMatchTotal - minMatchPts },
+    holeResults,
   };
 }
 
@@ -468,95 +486,103 @@ export function determineNassauHoleWinner(
 
   if (validA.length === 0 || validB.length === 0) return 'tie';
 
-  let aVal: number;
-  let bVal: number;
-
   if (mode === 'best') {
-    aVal = Math.min(...validA);
-    bVal = Math.min(...validB);
+    const minA = Math.min(...validA);
+    const minB = Math.min(...validB);
+    if (minA < minB) return 'teamA';
+    if (minB < minA) return 'teamB';
+    return 'tie';
   } else {
-    // combined
-    aVal = validA.reduce((sum, v) => sum + v, 0);
-    bVal = validB.reduce((sum, v) => sum + v, 0);
+    // combined mode
+    const sumA = validA.reduce((a, b) => a + b, 0);
+    const sumB = validB.reduce((a, b) => a + b, 0);
+    if (sumA < sumB) return 'teamA';
+    if (sumB < sumA) return 'teamB';
+    return 'tie';
   }
-
-  let calculatedWinner: 'teamA' | 'teamB' | 'tie' = 'tie';
-  if (aVal < bVal) calculatedWinner = 'teamA';
-  else if (bVal < aVal) calculatedWinner = 'teamB';
-
-  return calculatedWinner;
 }
 
 /**
- * Simulate houses for a sequence of hole winners.
- * Returns the final houses array and per-hole house snapshots.
- * 
- * Rules:
- * 1. Start with [0, 0, 0] and outerActive = false
- * 2. PHASE 1: middle changes by ±2. When |middle| >= 2, outerActive = true.
- * 3. PHASE 2: all change by ±1.
- * 4. Tie → no change
- * 5. After updating, if last house reaches ±2 → spawn new house at 0
+ * Simulate houses (0.5 up/down) for a series of holes (Front 9, Back 9, or Overall 18).
  */
-export function simulateHouses(
-  holeWinners: ('teamA' | 'teamB' | 'tie')[],
-): { finalHouses: number[]; holeSnapshots: number[][] } {
-  let houses = [0, 0, 0];
-  let outerActive = false;
+export function simulateHouses(holeWinners: ('teamA' | 'teamB' | 'tie')[]): {
+  finalHouses: number[];
+  holeSnapshots: number[][];
+} {
+  let houses: number[] = [0];
   const holeSnapshots: number[][] = [];
 
-  holeWinners.forEach((winner) => {
-    if (winner !== 'tie') {
-      if (!outerActive) {
-        if (winner === 'teamA') {
-          houses[1] += 2;
-        } else {
-          houses[1] -= 2;
+  for (const winner of holeWinners) {
+    if (winner === 'teamA') {
+      let lowestIndex = -1;
+      let lowestVal = Infinity;
+      houses.forEach((h, idx) => {
+        if (h <= 0 && h < lowestVal) {
+          lowestVal = h;
+          lowestIndex = idx;
         }
-        if (Math.abs(houses[1]) >= 2) {
-          outerActive = true;
-        }
+      });
+      if (lowestIndex !== -1 && houses[lowestIndex] < 0) {
+        houses[lowestIndex] += 0.5;
       } else {
-        if (winner === 'teamA') {
-          houses = houses.map((h) => h + 1);
-        } else {
-          houses = houses.map((h) => h - 1);
-        }
+        houses.push(0.5);
       }
-
-      if (Math.abs(houses[houses.length - 1]) >= 2) {
-        houses.push(0);
+    } else if (winner === 'teamB') {
+      let highestIndex = -1;
+      let highestVal = -Infinity;
+      houses.forEach((h, idx) => {
+        if (h >= 0 && h > highestVal) {
+          highestVal = h;
+          highestIndex = idx;
+        }
+      });
+      if (highestIndex !== -1 && houses[highestIndex] > 0) {
+        houses[highestIndex] -= 0.5;
+      } else {
+        houses.push(-0.5);
       }
     }
-
     holeSnapshots.push([...houses]);
-  });
+  }
 
   return { finalHouses: houses, holeSnapshots };
 }
 
 /**
- * Tally halfs from a houses array.
- * Positive house → Team A wins 1 half.
- * Negative house → Team B wins 1 half.
- * Zero → no one wins.
+ * Tally total 1s and 0.5s from final houses into total half points.
  */
 export function tallyHalfs(houses: number[]): { team1: number; team2: number } {
   let team1 = 0;
   let team2 = 0;
-  houses.forEach((h) => {
-    if (h > 0) team1++;
-    else if (h < 0) team2++;
-  });
+  for (const h of houses) {
+    if (h === 1) team1 += 2;
+    else if (h === 0.5) team1 += 1;
+    else if (h === -1) team2 += 2;
+    else if (h === -0.5) team2 += 1;
+  }
   return { team1, team2 };
 }
 
-export function formatNassauHouses(houses: number[] = []): string {
-  return houses.map((v) => Math.abs(v)).join("");
+/**
+ * Format nassau houses for compact display (e.g. "+1, +0.5" or "-1, -0.5").
+ */
+export function formatNassauHouses(houses?: number[]): string {
+  if (!houses || houses.length === 0) return '-';
+  const nonZero = houses.filter((h) => h !== 0);
+  if (nonZero.length === 0) return 'AS'; // All Square
+  return nonZero
+    .map((h) => (h > 0 ? `+${h}` : `${h}`))
+    .join(', ');
 }
 
-export function formatNassauHousesSpaced(houses: number[] = []): string {
-  return houses.map((v) => Math.abs(v)).join(" ");
+/**
+ * Format nassau houses with linebreaks/spaced out for scorecard table.
+ */
+export function formatNassauHousesSpaced(houses?: number[]): string[] {
+  if (!houses || houses.length === 0) return ['-'];
+  const nonZero = houses.filter((h) => h !== 0);
+  if (nonZero.length === 0) return ['AS'];
+  return nonZero.map((h) => (h > 0 ? `+${h}` : `${h}`));
 }
 
 /**
@@ -573,6 +599,8 @@ export function computeNassauState(
     teamBRawScores: (number | null)[];
     teamASandys: boolean[];
     teamBSandys: boolean[];
+    teamARs?: boolean[];
+    teamBRs?: boolean[];
   }[],
 ): NassauState & {
   patialaX: { teamA: number; teamB: number };
@@ -609,32 +637,24 @@ export function computeNassauState(
   const overallHouses = overallSim.finalHouses;
   const overallMatches = tallyHalfs(overallSim.finalHouses);
 
-  // console.log("Front9 Houses", front9Houses);
-  // console.log("Back9 Houses", back9Houses);
-  // console.log("Overall Houses", overallHouses);
-
-  // Build per-hole results with house snapshots from the overall simulation
+  // Per-hole results snapshot
   const holeResults: Record<number, HoleResult> = {};
   sorted.forEach((h, i) => {
-    let housesDisplay: number[] = [];
-    if (h.holeNumber <= 9) {
-      const idx = front9Indices.indexOf(i);
-      if (idx !== -1) housesDisplay = front9Sim.holeSnapshots[idx] || [];
-    } else {
-      const idx = back9Indices.indexOf(i);
-      if (idx !== -1) housesDisplay = back9Sim.holeSnapshots[idx] || [];
-    }
+    const isBack = h.holeNumber >= 10;
+    const housesDisplay = isBack
+      ? back9Sim.holeSnapshots[i - 9] || []
+      : front9Sim.holeSnapshots[i] || [];
 
-    const aValid = h.teamARawScores.filter((s) => s !== null) as number[];
-    const bValid = h.teamBRawScores.filter((s) => s !== null) as number[];
-    const teamAScore = mode === 'best' ? Math.min(...(aValid.length ? aValid : [Infinity])) : aValid.reduce((a, b) => a + b, 0);
-    const teamBScore = mode === 'best' ? Math.min(...(bValid.length ? bValid : [Infinity])) : bValid.reduce((a, b) => a + b, 0);
+    const teamAScore =
+      h.teamARawScores.length > 0 ? (h.teamARawScores[0] ?? null) : null;
+    const teamBScore =
+      h.teamBRawScores.length > 0 ? (h.teamBRawScores[0] ?? null) : null;
 
     holeResults[h.holeNumber] = {
       holeNumber: h.holeNumber,
       winner: allWinners[i],
-      teamAScore,
-      teamBScore,
+      teamAScore: teamAScore ?? 0,
+      teamBScore: teamBScore ?? 0,
       housesDisplay,
       overallHousesDisplay: overallSim.holeSnapshots[i] || [],
     };
@@ -668,6 +688,7 @@ export function computeNassauState(
         score: h.teamARawScores[pIdx] ?? null,
         par: h.par,
         sandy: h.teamASandys[pIdx] ?? false,
+        regulation: h.teamARs?.[pIdx] ?? false,
       })),
     ),
   ) || [];
@@ -677,6 +698,7 @@ export function computeNassauState(
         score: h.teamBRawScores[pIdx] ?? null,
         par: h.par,
         sandy: h.teamBSandys[pIdx] ?? false,
+        regulation: h.teamBRs?.[pIdx] ?? false,
       })),
     ),
   ) || [];

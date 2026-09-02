@@ -120,7 +120,7 @@ export const PlayerHeaderRow: React.FC<PlayerHeaderRowProps> = ({
                 { color: isDark ? "#ffffff" : "#0f172a" },
               ]}
             >
-              {player.isCurrentUser ? "You" : player.name}
+              {player.name}
             </Text>
 
             {hc !== undefined && hc !== null && (

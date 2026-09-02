@@ -25,6 +25,8 @@ export interface ScoreInputCellProps {
   showBadges?: boolean;
   isPrimary?: boolean;
   allowPartnerEdit?: boolean;
+  hideScoreIndicator?: boolean;
+  onDisabledPress?: () => void;
 }
 
 export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
@@ -44,7 +46,10 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
   showBadges = false,
   isPrimary = true,
   allowPartnerEdit = true,
+  hideScoreIndicator = false,
+  onDisabledPress,
 }) => {
+  const [isFocused, setIsFocused] = React.useState(false);
   const editable = !isReadOnly && allowPartnerEdit;
 
   const handleChange = (text: string) => {
@@ -63,8 +68,6 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.cellWrapper}>
-        <ScoreIndicator score={parsedScore} par={par} isDark={isDark} />
-
         {editable ? (
           <TextInput
             ref={inputRef}
@@ -72,34 +75,56 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
               styles.input,
               {
                 color: isDark ? "#ffffff" : "#111827",
-                backgroundColor: "transparent",
-                borderColor: isDark ? "#3f3f46" : "#cbd5e1",
+                backgroundColor: isDark ? "#202024" : "#ffffff",
+                borderColor: isFocused
+                  ? isDark
+                    ? "#4ade80"
+                    : "#16a34a"
+                  : isDark
+                    ? "#3f3f46"
+                    : "#cbd5e1",
               },
             ]}
             keyboardType="number-pad"
             maxLength={2}
             value={valueText ?? (score !== null && score !== undefined ? String(score) : "")}
             onChangeText={handleChange}
-            onFocus={onFocus}
+            onFocus={() => {
+              setIsFocused(true);
+              if (onFocus) onFocus();
+            }}
+            onBlur={() => setIsFocused(false)}
             textAlign="center"
             selectTextOnFocus
             placeholder="-"
             placeholderTextColor={isDark ? "#666666" : "#9ca3af"}
           />
         ) : (
-          <View style={styles.readOnlyCell}>
+          <Pressable
+            onPress={onDisabledPress}
+            style={[
+              styles.readOnlyCell,
+              {
+                backgroundColor: isDark ? "#18181b" : "#f1f5f9",
+                borderColor: isDark ? "#27272a" : "#e2e8f0",
+                opacity: 0.7,
+              },
+            ]}
+          >
             <Text
               style={[
                 styles.readOnlyText,
-                { color: isDark ? "#ffffff" : "#111827" },
+                { color: isDark ? "#71717a" : "#94a3b8" },
               ]}
             >
               {parsedScore !== null && parsedScore !== undefined && parsedScore >= 0
                 ? String(parsedScore)
                 : "-"}
             </Text>
-          </View>
+          </Pressable>
         )}
+
+        <ScoreIndicator score={parsedScore} par={par} isDark={isDark} />
       </View>
 
       {/* Sandy & Regulation Badges */}
@@ -108,6 +133,7 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
           {onToggleSandy && editable ? (
             <Pressable
               onPress={onToggleSandy}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               style={[
                 styles.miniBadge,
                 sandy
@@ -135,6 +161,7 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
           {onToggleR && editable ? (
             <Pressable
               onPress={onToggleR}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               style={[
                 styles.miniBadge,
                 r
@@ -174,30 +201,33 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
+    width: 44,
   },
   cellWrapper: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   input: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     fontSize: 15,
     fontWeight: "700",
     padding: 0,
     zIndex: 2,
-    borderWidth: 1,
-    borderRadius: 6,
+    borderWidth: 1.5,
+    borderRadius: 8,
   },
   readOnlyCell: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
+    borderWidth: 1.5,
+    borderRadius: 8,
   },
   readOnlyText: {
     fontSize: 15,
@@ -207,21 +237,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 2,
-    gap: 3,
+    marginTop: 3,
+    gap: 4,
   },
   miniBadge: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
+    width: 19,
+    height: 19,
+    borderRadius: 9.5,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
   },
   miniBadgeText: {
-    fontSize: 9,
-    fontWeight: "bold",
-    lineHeight: 11,
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 13,
   },
   sandyBadgeActive: {
     backgroundColor: "#d97706",
