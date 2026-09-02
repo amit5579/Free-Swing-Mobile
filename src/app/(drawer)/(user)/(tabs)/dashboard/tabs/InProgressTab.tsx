@@ -20,6 +20,9 @@ import {
   getInProgressGames,
   InProgressApiItem,
   deleteScorecardApi,
+  getPendingScorecardRequests,
+  approveScorecardRequest,
+  rejectScorecardRequest,
 } from "@/api/modules/dashboard.api";
 import { Skeleton } from "@/components/Skeleton";
 import { useFocusEffect } from "expo-router";
@@ -35,34 +38,72 @@ export type InProgressGame = {
   date: string;
   holesPlayed: number;
   isDQ: boolean;
+  scoringType?: string;
+  isDoublePeoria?: boolean;
+  tournamentId?: number | null;
   hasLocalDraft?: boolean;
   isLocalDraftOnly?: boolean;
+  courseHalf?: string;
+  isGroupDelegation?: boolean;
+  primaryUserName?: string;
+  playingGroupRoundKey?: string;
+  tournamentName?: string;
 };
 
 type InProgressTabProps = {
   playerId: number;
   onDelete?: (id: string) => void;
-  onResume?: (id: string, courseName: string, date?: string) => void;
+  onResume?: (
+    id: string,
+    courseName: string,
+    date?: string,
+    scoringType?: string,
+    tournamentId?: number | null,
+    isDoublePeoria?: boolean,
+    courseHalf?: string,
+    playingGroupRoundKey?: string,
+    tournamentName?: string,
+  ) => void;
   searchQuery?: string;
 };
 
 export function InProgressTab({
   playerId,
-  onDelete = () => { },
-  onResume = () => { },
+  onDelete = () => {},
+  onResume = () => {},
   searchQuery = "",
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [resumingId, setResumingId] = useState<string | null>(null);
-
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleResume = (id: string, courseName: string, date?: string) => {
+  const handleResume = (
+    id: string,
+    courseName: string,
+    date?: string,
+    scoringType?: string,
+    tournamentId?: number | null,
+    isDoublePeoria?: boolean,
+    courseHalf?: string,
+    playingGroupRoundKey?: string,
+    tournamentName?: string,
+  ) => {
     if (resumingId || deletingId) return;
     setResumingId(id);
-    onResume(id, courseName, date);
+    onResume(
+      id,
+      courseName,
+      date,
+      scoringType,
+      tournamentId,
+      isDoublePeoria,
+      courseHalf,
+      playingGroupRoundKey,
+      tournamentName,
+    );
     setTimeout(() => setResumingId(null), 1000);
   };
 
@@ -119,6 +160,15 @@ export function InProgressTab({
   const fetchGames = async (showSkeleton = true) => {
     try {
       if (showSkeleton) setLoading(true);
+
+      // Also fetch pending multiplayer requests
+      try {
+        const reqs = await getPendingScorecardRequests(playerId);
+        setPendingRequests(Array.isArray(reqs) ? reqs : []);
+      } catch (e) {
+        console.error("Failed to load pending scorecard requests:", e);
+      }
+
       const data: InProgressApiItem[] = await getInProgressGames(playerId);
       const drafts = await getUserDrafts(playerId);
       const merged = mergeInProgressRoundsWithDrafts(data, drafts);
@@ -128,12 +178,70 @@ export function InProgressTab({
         courseName: item.courseName,
         date: item.date,
         holesPlayed: item.holesPlayed,
-        isDQ: Boolean(item.isDQ ?? item.IsDQ ?? item.isDisqualified ?? item.IsDisqualified ?? false),
+        isDQ: Boolean(
+          item.isDQ ??
+          item.IsDQ ??
+          item.isDisqualified ??
+          item.IsDisqualified ??
+          false,
+        ),
+        scoringType:
+          item.scoringType ??
+          item.ScoringType ??
+          item.tournamentScoringType ??
+          item.TournamentScoringType ??
+          item.scoring_type ??
+          (item.isStableford ? "stableford" : undefined),
+        isStableford: Boolean(
+          item.isStableford ??
+          item.IsStableford ??
+          String(item.scoringType || "").toLowerCase().includes("stableford"),
+        ),
+        isDoublePeoria: Boolean(
+          item.isDoublePeoria ??
+          item.IsDoublePeoria ??
+          item.is_double_peoria ??
+          false,
+        ),
+        tournamentId: item.tournamentId ?? item.TournamentId ?? null,
+        tournamentName: item.tournamentName ?? item.TournamentName ?? item.tournament?.name ?? undefined,
         hasLocalDraft: !!item.hasLocalDraft,
         isLocalDraftOnly: !!item.isLocalDraftOnly,
+        courseHalf: item.courseHalf ?? item.CourseHalf ?? undefined,
+        isGroupDelegation: Boolean(item.isGroupDelegation ?? item.IsGroupDelegation),
+        primaryUserName: item.primaryUserName ?? item.PrimaryUserName ?? undefined,
+        playingGroupRoundKey: item.playingGroupRoundKey ?? item.PlayingGroupRoundKey ?? undefined,
       }));
 
-      setGames(mapped);
+      // Filter out ghost rounds (duplicate API rounds with holesPlayed = 0)
+      // Group by courseName + date
+      const grouped = new Map<string, typeof mapped>();
+      mapped.forEach((game: any) => {
+        const key = `${game.courseName}_${new Date(game.date).toDateString()}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, []);
+        }
+        grouped.get(key)!.push(game);
+      });
+
+      const finalGames: typeof mapped = [];
+      grouped.forEach((gamesInGroup) => {
+        if (gamesInGroup.length === 1) {
+          finalGames.push(gamesInGroup[0]);
+        } else {
+          // Keep rounds that have holesPlayed > 0 OR have a local draft
+          // If all are ghost rounds, just keep the latest one
+          const validGames = gamesInGroup.filter((g: any) => g.holesPlayed > 0 || g.hasLocalDraft);
+          if (validGames.length > 0) {
+            finalGames.push(...validGames);
+          } else {
+            // All are ghost rounds, keep the one with max ID
+            finalGames.push(gamesInGroup.reduce((prev: any, current: any) => (parseInt(prev.id) > parseInt(current.id)) ? prev : current));
+          }
+        }
+      });
+
+      setGames(finalGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     } catch (error) {
       console.error("Error fetching in-progress games:", error);
       setGames([]);
@@ -195,7 +303,9 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)",
+                  backgroundColor: isDark
+                    ? "rgba(26,26,26,0.6)"
+                    : "rgba(255,255,255,0.6)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
@@ -282,6 +392,104 @@ export function InProgressTab({
           />
         }
       >
+        {/* Pending Scorecard Requests Banner */}
+        {pendingRequests.length > 0 && (
+          <VStack space="sm" className="pt-2 pb-1">
+            {pendingRequests.map((req) => (
+              <Box
+                key={req.id}
+                style={{
+                  backgroundColor: isDark ? "rgba(245, 158, 11, 0.15)" : "#FEF3C7",
+                  borderColor: isDark ? "#F59E0B" : "#FDE68A",
+                  borderWidth: 1,
+                  borderRadius: 16,
+                  padding: 14,
+                  marginBottom: 10,
+                }}
+              >
+                <HStack className="items-center justify-between">
+                  <HStack space="sm" className="items-center flex-1 pr-2">
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: "#F59E0B",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Ionicons name="pencil" size={18} color="#ffffff" />
+                    </View>
+                    <VStack style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          color: isDark ? "#FBBF24" : "#92400E",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        }}
+                      >
+                        Scorecard Request
+                      </Text>
+                      <Text
+                        style={{
+                          color: isDark ? "#F3F4F6" : "#1F2937",
+                          fontSize: 12,
+                          marginTop: 2,
+                        }}
+                      >
+                        <Text style={{ fontWeight: "700" }}>{req.primaryUserName || "Round Scorer"}</Text> wants to fill in your scorecard for a multiplayer round.
+                      </Text>
+                    </VStack>
+                  </HStack>
+
+                  <HStack space="xs">
+                    <Button
+                      size="xs"
+                      onPress={async () => {
+                        try {
+                          await approveScorecardRequest(req.id);
+                          fetchGames(false);
+                        } catch (e) {
+                          Alert.alert("Error", "Failed to approve request.");
+                        }
+                      }}
+                      style={{
+                        backgroundColor: "#16A34A",
+                        borderRadius: 12,
+                        paddingHorizontal: 12,
+                        height: 32,
+                      }}
+                    >
+                      <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 12 }}>Approve</Text>
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onPress={async () => {
+                        try {
+                          await rejectScorecardRequest(req.id);
+                          fetchGames(false);
+                        } catch (e) {
+                          Alert.alert("Error", "Failed to reject request.");
+                        }
+                      }}
+                      style={{
+                        borderColor: isDark ? "#EF4444" : "#DC2626",
+                        borderRadius: 12,
+                        paddingHorizontal: 10,
+                        height: 32,
+                      }}
+                    >
+                      <Text style={{ color: isDark ? "#EF4444" : "#DC2626", fontWeight: "600", fontSize: 12 }}>Reject</Text>
+                    </Button>
+                  </HStack>
+                </HStack>
+              </Box>
+            ))}
+          </VStack>
+        )}
+
         {!filteredGames.length ? (
           <Box
             className="p-8 rounded-xl items-center mt-4"
@@ -303,7 +511,7 @@ export function InProgressTab({
             </Text>
           </Box>
         ) : (
-          <VStack space="md" className="pt-4">
+          <VStack space="md" className="pt-2">
             {filteredGames.map((game) => (
               <Box
                 key={game.id}
@@ -313,7 +521,13 @@ export function InProgressTab({
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDark ? 0.4 : 0.15,
                   shadowRadius: 14,
-                  backgroundColor: game.isDQ ? (isDark ? "rgba(50, 20, 20, 0.7)" : "#FFF1F2") : (isDark ? "rgba(26,26,26,0.6)" : "rgba(255,255,255,0.6)"),
+                  backgroundColor: game.isDQ
+                    ? isDark
+                      ? "rgba(50, 20, 20, 0.7)"
+                      : "#FFF1F2"
+                    : isDark
+                      ? "rgba(26,26,26,0.6)"
+                      : "rgba(255,255,255,0.6)",
                   borderLeftWidth: 6,
                   borderLeftColor: game.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,
@@ -328,19 +542,46 @@ export function InProgressTab({
                   borderRadius: 22,
                   overflow: "hidden",
                   paddingVertical: 9,
-                  paddingHorizontal: 5
+                  paddingHorizontal: 5,
                 }}
               >
                 <Box className="p-4">
-                  <Text
-                    style={{
-                      color: isDark ? "#FFFFFF" : "#111827",
-                      fontWeight: "bold",
-                      fontSize: 16,
-                    }}
-                  >
-                    {game.courseName}
-                  </Text>
+                  <HStack className="items-center flex-wrap gap-2">
+                    <Text
+                      style={{
+                        color: isDark ? "#FFFFFF" : "#111827",
+                        fontWeight: "bold",
+                        fontSize: 16,
+                      }}
+                    >
+                      {game.courseName}
+                    </Text>
+
+                    {game.isGroupDelegation && (
+                      <Badge
+                        style={{
+                          backgroundColor: isDark
+                            ? "rgba(6, 182, 212, 0.2)"
+                            : "#e0f2fe",
+                          borderWidth: 1,
+                          borderColor: isDark ? "#06b6d4" : "#0284c7",
+                          borderRadius: 6,
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: isDark ? "#38bdf8" : "#0369a1",
+                            fontSize: 11,
+                            fontWeight: "700",
+                          }}
+                        >
+                          👥 Multiplayer (Scorer: {game.primaryUserName || "Group Scorer"})
+                        </Text>
+                      </Badge>
+                    )}
+                  </HStack>
 
                   <HStack className="items-center mt-1 space-x-2">
                     <Ionicons
@@ -462,53 +703,71 @@ export function InProgressTab({
                   </HStack>
 
                   <HStack className="mt-4 justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={deletingId === game.id}
-                      onPress={() => handleDelete(game.id, !!game.isLocalDraftOnly)}
-                      className="rounded-full flex-row items-center justify-center"
-                      style={{
-                        borderColor: isDark ? "#EF4444" : "#FCA5A5",
-                        width: "48%",
-                        height: 42,
-                        opacity: deletingId === game.id ? 0.7 : 1,
-                      }}
-                    >
-                      {deletingId === game.id ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={isDark ? "#EF4444" : "#DC2626"}
-                        />
-                      ) : (
-                        <>
-                          <Ionicons
-                            name="trash-outline"
-                            size={14}
+                    {!game.isGroupDelegation && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={deletingId === game.id}
+                        onPress={() =>
+                          handleDelete(game.id, !!game.isLocalDraftOnly)
+                        }
+                        className="rounded-full flex-row items-center justify-center"
+                        style={{
+                          borderColor: isDark ? "#EF4444" : "#FCA5A5",
+                          width: "48%",
+                          height: 42,
+                          opacity: deletingId === game.id ? 0.7 : 1,
+                        }}
+                      >
+                        {deletingId === game.id ? (
+                          <ActivityIndicator
+                            size="small"
                             color={isDark ? "#EF4444" : "#DC2626"}
                           />
-                          <Text
-                            style={{
-                              color: isDark ? "#EF4444" : "#DC2626",
-                              fontWeight: "600",
-                              marginLeft: 6,
-                            }}
-                          >
-                            Delete
-                          </Text>
-                        </>
-                      )}
-                    </Button>
+                        ) : (
+                          <>
+                            <Ionicons
+                              name="trash-outline"
+                              size={14}
+                              color={isDark ? "#EF4444" : "#DC2626"}
+                            />
+                            <Text
+                              style={{
+                                color: isDark ? "#EF4444" : "#DC2626",
+                                fontWeight: "600",
+                                marginLeft: 6,
+                              }}
+                            >
+                              Delete
+                            </Text>
+                          </>
+                        )}
+                      </Button>
+                    )}
 
                     <Button
                       size="sm"
                       disabled={resumingId === game.id}
-                      onPress={() => handleResume(game.id, game.courseName, game.date)}
+                      onPress={() =>
+                        handleResume(
+                          game.id,
+                          game.courseName,
+                          game.date,
+                          game.scoringType,
+                          game.tournamentId,
+                          game.isDoublePeoria,
+                          game.courseHalf,
+                          game.playingGroupRoundKey,
+                          game.tournamentName,
+                        )
+                      }
                       className="rounded-full flex-row items-center justify-center"
                       style={{
                         backgroundColor:
-                          resumingId === game.id ? "#A5D6A7" : "#8BC34A",
-                        width: "48%",
+                          game.isGroupDelegation
+                            ? (isDark ? "#0284c7" : "#0284c7")
+                            : (resumingId === game.id ? "#A5D6A7" : "#8BC34A"),
+                        width: game.isGroupDelegation ? "100%" : "48%",
                         height: 42,
                         opacity: resumingId === game.id ? 0.7 : 1,
                       }}
@@ -516,12 +775,15 @@ export function InProgressTab({
                       <Text
                         style={{
                           color: "#FFFFFF",
-                          fontWeight: "600",
+                          fontWeight: "700",
                           marginRight: 6,
-                          
                         }}
                       >
-                        {resumingId === game.id ? "Opening..." : "Resume"}
+                        {resumingId === game.id
+                          ? "Opening..."
+                          : game.isGroupDelegation
+                            ? "View Live"
+                            : "Resume"}
                       </Text>
                       {resumingId !== game.id && (
                         <Ionicons

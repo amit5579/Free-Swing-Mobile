@@ -43,6 +43,7 @@ import { newRoundSchema, NewRoundFormValues } from "@/schema/userSchemas";
 import Toast from "react-native-toast-message";
 import { getAllPlayers } from "@/api/modules/admin/tournaments.api";
 import { getProfile } from "@/api/modules/profile.api";
+import { initGroupRound } from "@/api/modules/dashboard.api";
 
 export default function StartNewRoundPage() {
   const colorScheme = useColorScheme();
@@ -525,6 +526,30 @@ function CourseCard({
   const selectedTeeBoxId = watch("teeBoxId");
   const scoreType = watch("scoreType");
   const holesToPlay = watch("holesToPlay");
+  const startFromVal = watch("startFrom");
+
+  const isTeeBoxSelected = Boolean(
+    selectedTeeBoxId && Number(selectedTeeBoxId) > 0,
+  );
+
+  const arePlayersSelected =
+    numberOfPlayers === "solo"
+      ? true
+      : numberOfPlayers === "2"
+        ? Boolean(player2)
+        : numberOfPlayers === "3"
+          ? Boolean(player2 && player3)
+          : numberOfPlayers === "4"
+            ? Boolean(player2 && player3 && player4)
+            : false;
+
+  const isNassauStartSelected =
+    scoreType === "nassau_best" || scoreType === "nassau_combined"
+      ? Boolean(startFromVal)
+      : true;
+
+  const isStartDisabled =
+    !isTeeBoxSelected || !arePlayersSelected || !isNassauStartSelected;
 
   // Auto-set numberOfPlayers and handle dropdown logic based on scoring mode
   useEffect(() => {
@@ -535,11 +560,7 @@ function CourseCard({
     } else if (scoreType === "nassau_best" || scoreType === "nassau_combined") {
       setValue("holesToPlay", "18");
       if (numberOfPlayers !== "2" && numberOfPlayers !== "4") {
-        Alert.alert(
-          "Invalid Player Count",
-          "You can select 2 or 4 players for this scoring mode.",
-          [{ text: "OK", onPress: () => setNumberOfPlayers("2") }],
-        );
+        setNumberOfPlayers("2");
       }
     }
   }, [scoreType]);
@@ -636,19 +657,32 @@ function CourseCard({
       }
     }
 
+    const isNassau =
+      scoreType === "nassau_best" || scoreType === "nassau_combined";
+
     const context = {
       players: roundPlayers.slice(0, playerCount).map((player, index) => ({
         playerId: `p${index + 1}`,
         userId: player.userId,
         name: player.name,
         isPrimary: index === 0,
-        team: sideGameMode === "high-low" ? (index < 2 ? 1 : 2) : undefined,
+        team:
+          sideGameMode === "high-low" || isNassau
+            ? playerCount === 2
+              ? index === 0
+                ? 1
+                : 2
+              : index < 2
+                ? 1
+                : 2
+            : undefined,
       })),
-      matchScoringMode: sideGameMode,
+      matchScoringMode: sideGameMode !== "none" ? sideGameMode : isNassau ? scoreType : undefined,
+      nassauStartingNine: isNassau ? (startFromVal === "back" ? "back" : "front") : undefined,
       createdAt: new Date().toISOString(),
     };
 
-    const contextId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const contextId = `Group_${profile?.id || 0}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     try {
       await AsyncStorage.setItem(
         `pending_round_context_v1_${contextId}`,
@@ -1107,12 +1141,24 @@ function CourseCard({
                     backgroundColor: isDark ? "#333" : "#eee",
                   }}
                   activeColor={isDark ? "#333" : "#eee"}
-                  data={[
-                    { label: "Solo", value: "solo" },
-                    { label: "2 Players", value: "2" },
-                    { label: "3 Players", value: "3" },
-                    { label: "4 Players", value: "4" },
-                  ]}
+                  data={
+                    scoreType === "split_six"
+                      ? [{ label: "3 Players", value: "3" }]
+                      : scoreType === "high_low"
+                        ? [{ label: "4 Players", value: "4" }]
+                        : scoreType === "nassau_best" ||
+                            scoreType === "nassau_combined"
+                          ? [
+                              { label: "2 Players", value: "2" },
+                              { label: "4 Players", value: "4" },
+                            ]
+                          : [
+                              { label: "Solo", value: "solo" },
+                              { label: "2 Players", value: "2" },
+                              { label: "3 Players", value: "3" },
+                              { label: "4 Players", value: "4" },
+                            ]
+                  }
                   labelField="label"
                   valueField="value"
                   mode="modal"
@@ -1144,7 +1190,8 @@ function CourseCard({
                     } else if (
                       (scoreType === "nassau_best" ||
                         scoreType === "nassau_combined") &&
-                      (item.value === "solo" || item.value === "3")
+                      item.value !== "2" &&
+                      item.value !== "4"
                     ) {
                       Alert.alert(
                         "Invalid Player Count",
@@ -1809,6 +1856,24 @@ function CourseCard({
               )}
             </ScrollView>
 
+            {/* Bottom Error Notification */}
+            {!isTeeBoxSelected && (
+              <View style={{ marginTop: 8, marginBottom: 2, alignItems: "center" }}>
+                <Text
+                  style={[
+                    styles.errorText,
+                    {
+                      textAlign: "center",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    },
+                  ]}
+                >
+                  Please select a tee box
+                </Text>
+              </View>
+            )}
+
             {/* BUTTONS */}
             <HStack style={styles.buttonRow}>
               <Pressable
@@ -1829,6 +1894,7 @@ function CourseCard({
               </Pressable>
 
               <Pressable
+                disabled={isStartDisabled}
                 onPress={handleSubmit(async (data) => {
                   // Validate players selection
                   if (numberOfPlayers === "2" && !player2) {
@@ -1900,6 +1966,108 @@ function CourseCard({
 
                   const roundContextId = await savePendingRoundContext();
 
+                  // Dispatch delegations to partner users
+                  const targetUserIds = [player2, player3, player4]
+                    .map((id) => Number(id))
+                    .filter((id) => !isNaN(id) && id > 0);
+
+                  if (targetUserIds.length > 0 && roundContextId && profile?.id) {
+                    const isNassau =
+                      data.scoreType === "nassau_best" ||
+                      data.scoreType === "nassau_combined";
+                    const isGross = data.scoreType === "gross_score";
+                    const isSideGame =
+                      data.scoreType === "high_low" ||
+                      data.scoreType === "split_six" ||
+                      isNassau;
+                    const matchScoringType = isSideGame
+                      ? data.scoreType
+                      : isGross
+                        ? "gross"
+                        : null;
+
+                    const playersData = [
+                      {
+                        playerId: "p1",
+                        userId: profile.id,
+                        name: (profile.username || "You").trim(),
+                        isPrimary: true,
+                        team: isNassau || data.scoreType === "high_low" ? 1 : undefined,
+                      },
+                      ...(player2
+                        ? [
+                            {
+                              playerId: "p2",
+                              userId: Number(player2),
+                              name: (
+                                playerList.find((p: any) => p.id === player2)
+                                  ?.username || "Player 2"
+                              ).trim(),
+                              isPrimary: false,
+                              team:
+                                isNassau || data.scoreType === "high_low"
+                                  ? isNassau && numberOfPlayers === "4"
+                                    ? 1
+                                    : data.scoreType === "high_low"
+                                      ? 1
+                                      : 2
+                                  : undefined,
+                            },
+                          ]
+                        : []),
+                      ...(player3
+                        ? [
+                            {
+                              playerId: "p3",
+                              userId: Number(player3),
+                              name: (
+                                playerList.find((p: any) => p.id === player3)
+                                  ?.username || "Player 3"
+                              ).trim(),
+                              isPrimary: false,
+                              team:
+                                isNassau || data.scoreType === "high_low"
+                                  ? 2
+                                  : undefined,
+                            },
+                          ]
+                        : []),
+                      ...(player4
+                        ? [
+                            {
+                              playerId: "p4",
+                              userId: Number(player4),
+                              name: (
+                                playerList.find((p: any) => p.id === player4)
+                                  ?.username || "Player 4"
+                              ).trim(),
+                              isPrimary: false,
+                              team:
+                                isNassau || data.scoreType === "high_low"
+                                  ? 2
+                                  : undefined,
+                            },
+                          ]
+                        : []),
+                    ];
+
+                    try {
+                      await initGroupRound({
+                        primaryUserId: profile.id,
+                        targetUserIds,
+                        roundContextId,
+                        playingPartnersJson: JSON.stringify(playersData),
+                        matchScoringType,
+                        nassauStartingNine:
+                          isNassau && startFrom === "back" ? "back" : null,
+                        courseId: course.courseId,
+                        teeBoxId: data.teeBoxId,
+                      });
+                    } catch (initErr) {
+                      console.error("Failed to initialize group round delegations:", initErr);
+                    }
+                  }
+
                   setHandicapView(false);
                   setModalVisible(false);
 
@@ -1910,9 +2078,14 @@ function CourseCard({
 
                   routePage.push(url as any);
                 })}
-                style={styles.createBtn}
+                style={[
+                  styles.createBtn,
+                  isStartDisabled && {
+                    opacity: 0.45,
+                  },
+                ]}
               >
-                <Text style={{ color: "#fff" }}>Start Game</Text>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Start Game</Text>
               </Pressable>
             </HStack>
           </View>

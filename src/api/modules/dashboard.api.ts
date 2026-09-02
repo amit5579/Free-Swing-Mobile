@@ -363,13 +363,20 @@ export const rejectScorecardRequest = async (id: number) => {
   }
 };
 
-export const initGroupRound = async (primaryUserId: number, targetUserIds: number[], roundContextId: string) => {
+export interface InitGroupRoundPayload {
+  primaryUserId: number;
+  targetUserIds: number[];
+  roundContextId: string;
+  playingPartnersJson?: string;
+  matchScoringType?: string | null;
+  nassauStartingNine?: string | null;
+  courseId?: number;
+  teeBoxId?: number;
+}
+
+export const initGroupRound = async (payload: InitGroupRoundPayload) => {
   try {
-    const response = await client.post(`scorecard/group-round/init`, {
-      primaryUserId,
-      targetUserIds,
-      roundContextId
-    });
+    const response = await client.post(`scorecard/group-round/init`, payload);
     return response.data;
   } catch (error) {
     console.error("Init group round error:", error);

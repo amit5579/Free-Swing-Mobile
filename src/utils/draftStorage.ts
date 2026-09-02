@@ -16,9 +16,12 @@ export interface ScorecardHole {
   isDQ: boolean;
   tournamentId: number | null;
   isDoublePeoria: boolean;
+  isStableford?: boolean;
+  isSystem36?: boolean;
   courseHalf: string;
   isExcluded: boolean;
   scoringType?: string;
+  tournamentScoringType?: string | null;
   isTournament?: boolean;
   userId?: number;
   handicap?: number;
@@ -35,6 +38,8 @@ export interface ScorecardHole {
   nassauStartingNine?: string | null;
   NassauStartingNine?: string | null;
   groupName?: string | null;
+  appliedHandicap?: number;
+  handicapAllowancePercent?: number;
 }
 
 export interface ScorecardDraft {
@@ -50,6 +55,13 @@ export interface ScorecardDraft {
   updatedAt: string;
   holes: ScorecardHole[];
   textScores: Record<number, string>;
+  isStableford?: boolean;
+  isDoublePeoria?: boolean;
+  isExcluded?: boolean;
+  isGross?: boolean;
+  isSystem36?: boolean;
+  scoringType?: string;
+  tournamentId?: number | null;
 }
 
 const STORAGE_KEY = "@scorecard_local_drafts_v1";
@@ -154,6 +166,14 @@ export const applyDraftToRound = (apiRound: any, draft: ScorecardDraft) => {
     par: draft.par,
     holesPlayed: draft.holesPlayed,
     courseHalf: draft.courseHalf,
+    scoringType:
+      draft.scoringType ||
+      (draft.isStableford ? "stableford" : undefined) ||
+      apiRound.scoringType,
+    isStableford: draft.isStableford ?? apiRound.isStableford,
+    isDoublePeoria: draft.isDoublePeoria ?? apiRound.isDoublePeoria,
+    isExcluded: draft.isExcluded ?? apiRound.isExcluded,
+    isSystem36: draft.isSystem36 ?? apiRound.isSystem36,
     updatedAt: draft.updatedAt,
     hasLocalDraft: true,
   };
@@ -170,6 +190,13 @@ export const mapDraftToHistoryItem = (draft: ScorecardDraft) => {
     netScore: draft.netScore,
     par: draft.par,
     holesPlayed: draft.holesPlayed,
+    courseHalf: draft.courseHalf,
+    scoringType:
+      draft.scoringType || (draft.isStableford ? "stableford" : undefined),
+    isStableford: draft.isStableford,
+    isDoublePeoria: draft.isDoublePeoria,
+    isExcluded: draft.isExcluded,
+    isSystem36: draft.isSystem36,
     updatedAt: draft.updatedAt,
     date: draft.date || draft.updatedAt,
     hasLocalDraft: true,
@@ -191,8 +218,47 @@ export const mergeInProgressRoundsWithDrafts = (
   });
 
   const mergedApiRounds = apiRounds.map((apiRound) => {
-    const key = String(apiRound.scorecardId);
-    const draft = draftMap.get(key);
+    let key = String(apiRound.scorecardId);
+    let draft = draftMap.get(key);
+
+    // Fallback: match by tournamentId OR courseName and date
+    if (!draft) {
+      for (const [dKey, dVal] of draftMap.entries()) {
+        let isMatch = false;
+
+        // Condition 1: Match by tournamentId
+        if (
+          apiRound.tournamentId &&
+          dVal.tournamentId &&
+          String(apiRound.tournamentId) === String(dVal.tournamentId)
+        ) {
+          isMatch = true;
+        }
+        // Condition 2: Match by courseName and date
+        else if (
+          dVal.courseName &&
+          apiRound.courseName &&
+          dVal.courseName.trim().toLowerCase() === apiRound.courseName.trim().toLowerCase()
+        ) {
+          try {
+            const dDate = new Date(dVal.date).toDateString();
+            const aDate = new Date(apiRound.date).toDateString();
+            if (dDate === aDate) {
+              isMatch = true;
+            }
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+
+        if (isMatch) {
+          draft = dVal;
+          key = dKey;
+          break;
+        }
+      }
+    }
+
     if (draft) {
       draftMap.delete(key);
       return applyDraftToRound(apiRound, draft);

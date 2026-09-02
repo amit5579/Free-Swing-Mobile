@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const userTournamentSchema = z
   .object({
-    name: z.string().min(3, "Tournament Name must be at least 3 characters"),
+    name: z.string().min(1, "Tournament Name must be at least 1 character"),
     courseId: z.number().min(1, "Select a course"),
     teeBox: z.number().min(1, "Select a tee box"),
     scoringType: z.string().min(1, "Select a scoring type"),

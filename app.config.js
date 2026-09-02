@@ -21,7 +21,9 @@ export default ({ config }) => {
       package: "com.kolves18freeswing.freeswing",
       config: {
         googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_DEV_KEY || "",
+          apiKey:
+            process.env.EXPO_PUBLIC_GOOGLE_MAPS_DEV_KEY ||
+            process.env.GOOGLE_MAPS_ANDROID_KEY,
         },
       },
     },

@@ -15,8 +15,6 @@ import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 
 import { AuthProvider } from "@/context/AuthContext";
-import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import NoConnectionScreen from "@/components/NoConnectionScreen";
 import { store } from "@/redux/store";
 
 
@@ -108,8 +106,6 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
-  const { isConnected } = useNetworkStatus();
-
   if (!loaded && !error) {
     return null;
   }
@@ -121,15 +117,9 @@ export default function RootLayout() {
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            {isConnected === false ? (
-              <NoConnectionScreen />
-            ) : (
-              <>
-                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-                <Stack screenOptions={{ headerShown: false }} />
-                <Toast config={toastConfig} />
-              </>
-            )}
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <Stack screenOptions={{ headerShown: false }} />
+            <Toast config={toastConfig} />
           </ThemeProvider>
         </AuthProvider>
       </GestureHandlerRootView>

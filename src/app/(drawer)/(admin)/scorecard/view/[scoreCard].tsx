@@ -1918,7 +1918,15 @@ const ScoreCard: React.FC = () => {
                   teamBSandys: teamBInfos.map((i: any) => i.sandy),
                 };
               });
-              ns = computeNassauState(mode as "best" | "combined", allData);
+              const nassauStart =
+                displayHoles.find(
+                  (h: any) => h.nassauStartingNine || h.NassauStartingNine,
+                )?.nassauStartingNine || "front";
+              ns = computeNassauState(
+                mode as "best" | "combined",
+                allData,
+                nassauStart === "back" ? "back" : "front",
+              );
             }
             const colNassauWidth = 80;
             const colHighLowWidth = 65;
@@ -2258,10 +2266,35 @@ const ScoreCard: React.FC = () => {
 
                           {partners.map((p, pIndex) => {
                             const info = getPlayerHoleInfo(h, p);
+                            const hRes = ns?.holeResults?.[h.holeNumber];
+                            const isWinningTeamA =
+                              (hRes?.winner === "teamA" ||
+                                (hRes?.winner as any) === 1) &&
+                              (p.team === 1 || p.team === undefined);
+                            const isWinningTeamB =
+                              (hRes?.winner === "teamB" ||
+                                (hRes?.winner as any) === 2) &&
+                              p.team === 2;
+                            const isWinner = isWinningTeamA || isWinningTeamB;
+                            const nassauCellBg =
+                              isNassau && isWinner
+                                ? isWinningTeamA
+                                  ? isDark
+                                    ? "rgba(25, 135, 84, 0.28)"
+                                    : "rgba(25, 135, 84, 0.15)"
+                                  : isDark
+                                    ? "rgba(13, 110, 253, 0.28)"
+                                    : "rgba(13, 110, 253, 0.15)"
+                                : undefined;
+
                             return (
                               <View
                                 key={p.playerId}
-                                style={{ flexDirection: "row" }}
+                                style={{
+                                  flexDirection: "row",
+                                  backgroundColor: nassauCellBg,
+                                  borderRadius: 6,
+                                }}
                               >
                                 <View
                                   style={{

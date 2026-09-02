@@ -27,34 +27,68 @@ export default function ManageTournament() {
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
 
-  const { tournamentId, tournamentName } = useLocalSearchParams();
+  const { tournamentId, tournamentName, maxPlayers } = useLocalSearchParams();
+  const maxLimit = Number(maxPlayers) > 0 ? Number(maxPlayers) : 4;
 
-const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-const { loading, membersData ,addedPlayersData, error } = useAppSelector(
-  (state) => state.userTournament
-);
-
+  const { loading, membersData, addedPlayersData, error } = useAppSelector(
+    (state) => state.userTournament
+  );
 
   const [loadingLocal, setLoadingLocal] = useState(true);
   const [addedPlayers, setAddedPlayers] = useState<any>([]);
   const [search, setSearch] = useState("");
 
+  const isLimitReached = (addedPlayers?.length || 0) >= maxLimit;
+
   const handleAddPlayer = async (userId: number) => {
+    if ((addedPlayers?.length || 0) >= maxLimit) {
+      Toast.show({
+        type: "error",
+        text1: `Tournament is full (Max ${maxLimit} members)`,
+      });
+      return;
+    }
+
     try {
       setLoadingLocal(true);
       await addPlayerToTournament(Number(tournamentId), userId);
-      setAddedPlayers((prev: any[]) => [...prev, { userId, id: userId }]); // Optimistic update or at least tracking
+      setAddedPlayers((prev: any[]) => [...prev, { userId, id: userId }]); // Optimistic update
       Toast.show({
         type: "success",
         text1: "Player added successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Adding user to tournament Error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Failed to add player",
-      });
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data ||
+        error?.message ||
+        "Failed to add player";
+
+      if (
+        typeof msg === "string" &&
+        (msg === "Tournament is full." || msg.toLowerCase().includes("full"))
+      ) {
+        Toast.show({
+          type: "error",
+          text1: `Tournament is full (Max ${maxLimit} members)`,
+        });
+      } else if (
+        typeof msg === "string" &&
+        msg.toLowerCase().includes("already joined")
+      ) {
+        Toast.show({
+          type: "info",
+          text1: "Already joined",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: typeof msg === "string" ? msg : "Failed to add player",
+        });
+      }
     } finally {
       setLoadingLocal(false);
     }
@@ -136,7 +170,13 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
           >
             {/* 🔙 BACK */}
             <Pressable
-              onPress={() => routePage.back()}
+              onPress={() => {
+                if (routePage.canGoBack()) {
+                  routePage.back();
+                } else {
+                  routePage.replace("/(drawer)/(user)/(tabs)/tournaments");
+                }
+              }}
               style={{
                 width: 40,
                 height: 40,
@@ -260,67 +300,81 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
         <Watermark />
 
         <ScrollView contentContainerStyle={{ padding: 12 }}>
-          <ScrollView contentContainerStyle={{ padding: 12 }}>
-            {/* 🔍 Search Input */}
-            {isPageLoading ? (
-              <SearchSkeleton isDark={isDark} />
-            ) : (
-              <>
-                <HStack className="bg-[#e0f2fe] border border-[#7dd3fc] rounded-lg p-3 items-start gap-2 mb-2">
-                  {/* Icon */}
+          {/*  Search Input & Quota Banner */}
+          {isPageLoading ? (
+            <SearchSkeleton isDark={isDark} />
+          ) : (
+            <>
+              {isLimitReached ? (
+                <HStack className="bg-[#fef2f2] border border-[#fca5a5] rounded-lg p-3 items-start gap-2 mb-3">
+                  <Ionicons
+                    name="warning-outline"
+                    size={18}
+                    color="#ef4444"
+                  />
+                  <Text className="flex-1 text-[13px] text-[#b91c1c] leading-5">
+                    <Text className="font-semibold">Tournament is full:</Text> You have reached the maximum capacity ({addedPlayers.length}/{maxLimit} members). Remove a member to add someone else.
+                  </Text>
+                </HStack>
+              ) : (
+                <HStack className="bg-[#e0f2fe] border border-[#7dd3fc] rounded-lg p-3 items-start gap-2 mb-3">
                   <Ionicons
                     name="information-circle-outline"
                     size={18}
                     color="#0284c7"
                   />
-
-                  {/* Text */}
                   <Text className="flex-1 text-[13px] text-[#0369a1] leading-5">
                     You are the creator of this tournament. You can add up to{" "}
-                    <Text className="font-semibold">4 members</Text>.
+                    <Text className="font-semibold">{maxLimit} members</Text> ({addedPlayers.length}/{maxLimit} added).
                   </Text>
                 </HStack>
-                <View
+              )}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  backgroundColor: isDark
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <TextInput
+                  placeholder="Search users by name or email..."
+                  placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
+                  value={search}
+                  onChangeText={setSearch}
                   style={{
-                    borderWidth: 1,
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                    backgroundColor: isDark
-                      ? "rgba(15, 23, 42, 0.7)"
-                      : "rgba(255, 255, 255, 0.7)",
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    marginBottom: 12,
+                    color: isDark ? "#fff" : "#000",
                   }}
-                >
-                  <TextInput
-                    placeholder="Search users by name or email..."
-                    placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
-                    value={search}
-                    onChangeText={setSearch}
-                    style={{
-                      color: isDark ? "#fff" : "#000",
-                    }}
-                  />
-                </View>
-              </>
-            )}
+                />
+              </View>
+            </>
+          )}
 
-            {isPageLoading ? (
-              <>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <UserCardSkeleton key={i} isDark={isDark} />
-                ))}
-              </>
-            ) : (
-              <>
-                {/* ❌ No Users Found */}
-                {isSearching || dataToShow.length === 0 ? (
-                  <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
-                    No users found
-                  </ThemedText>
-                ) : (
-                  dataToShow.map((user: any) => (
+          {isPageLoading ? (
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <UserCardSkeleton key={i} isDark={isDark} />
+              ))}
+            </>
+          ) : (
+            <>
+              {/* ❌ No Users Found */}
+              {isSearching || dataToShow.length === 0 ? (
+                <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                  No users found
+                </ThemedText>
+              ) : (
+                dataToShow.map((user: any) => {
+                  const isAdded = addedPlayers.some(
+                    (p: any) => p.userId === user.id || p.id === user.id,
+                  );
+
+                  return (
                     <View
                       key={user.id}
                       style={{
@@ -332,7 +386,6 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
                         borderRadius: 12,
                         padding: 12,
                         marginBottom: 10,
-                        //   backgroundColor: isDark ? "#111827" : "#ffffff",
                       }}
                     >
                       <HStack
@@ -342,7 +395,7 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
                         }}
                       >
                         {/* LEFT SIDE */}
-                        <View>
+                        <View style={{ flex: 1, paddingRight: 8 }}>
                           <ThemedText
                             style={{ fontSize: 16, fontWeight: "600" }}
                           >
@@ -355,9 +408,7 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
                         </View>
 
                         {/* RIGHT SIDE BUTTON */}
-                        {addedPlayers.some(
-                          (p: any) => p.userId === user.id || p.id === user.id,
-                        ) ? (
+                        {isAdded ? (
                           <Pressable
                             className="flex-row items-center gap-1 border border-red-500 px-3 py-1 rounded-md"
                             style={{ borderColor: "#ef4444" }}
@@ -380,18 +431,21 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
                           </Pressable>
                         ) : (
                           <Pressable
-                            className="flex-row items-center gap-1 border border-blue-500 px-3 py-1 rounded-md"
-                            style={{ borderColor: "#3b82f6" }}
+                            className="flex-row items-center gap-1 border px-3 py-1 rounded-md"
+                            style={{
+                              borderColor: isLimitReached ? "#94a3b8" : "#3b82f6",
+                              opacity: isLimitReached ? 0.5 : 1,
+                            }}
                             onPress={() => handleAddPlayer(user.id)}
                           >
                             <Ionicons
                               name="person-add"
                               size={15}
-                              color="#3b82f6"
+                              color={isLimitReached ? "#94a3b8" : "#3b82f6"}
                             />
                             <ThemedText
                               style={{
-                                color: "#3b82f6",
+                                color: isLimitReached ? "#94a3b8" : "#3b82f6",
                                 fontSize: 13,
                                 fontWeight: "700",
                               }}
@@ -402,29 +456,11 @@ const { loading, membersData ,addedPlayersData, error } = useAppSelector(
                         )}
                       </HStack>
                     </View>
-                  ))
-                )}
-                {/* ✅ Done Button */}
-                {/* {isSearching && dataToShow.length === 0 ? (
-                  ""
-                ) : (
-                  <Pressable
-                    style={{
-                      marginVertical: 20,
-                      alignSelf: "center",
-                      borderWidth: 1,
-                      borderColor: "#9ca3af",
-                      paddingHorizontal: 20,
-                      paddingVertical: 8,
-                      borderRadius: 8,
-                    }}
-                  >
-                    <ThemedText>Done</ThemedText>
-                  </Pressable>
-                )} */}
-              </>
-            )}
-          </ScrollView>
+                  );
+                })
+              )}
+            </>
+          )}
         </ScrollView>
       </ThemedView>
     </>
