@@ -101,7 +101,8 @@ export const CONDITION_OPTIONS = [
   },
   {
     code: "ModeratelyHarder",
-    label: "Course played moderately harder than normal (e.g., heavy rain/wind).",
+    label:
+      "Course played moderately harder than normal (e.g., heavy rain/wind).",
   },
   {
     code: "ExtremelyHard",
@@ -161,8 +162,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   const insets = useSafeAreaInsets();
   const isInsideTabs =
     isTabScreen || mode === "new-round" || mode === "tournament-play";
-  const effectiveTopInset =
-    disableTopInset || isInsideTabs ? 0 : insets.top;
+  const effectiveTopInset = disableTopInset || isInsideTabs ? 0 : insets.top;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -1047,14 +1047,20 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         first.Handicap;
 
       let fetchedPrimaryHc =
-        rawFirstHc !== undefined && rawFirstHc !== null && String(rawFirstHc) !== ""
+        rawFirstHc !== undefined &&
+        rawFirstHc !== null &&
+        String(rawFirstHc) !== ""
           ? Math.round(Number(rawFirstHc) || 0)
-          : propHandicap !== undefined && propHandicap !== null && String(propHandicap) !== ""
+          : propHandicap !== undefined &&
+              propHandicap !== null &&
+              String(propHandicap) !== ""
             ? Math.round(Number(propHandicap) || 0)
             : 0;
 
       if (
-        (rawFirstHc === undefined || rawFirstHc === null || String(rawFirstHc) === "") &&
+        (rawFirstHc === undefined ||
+          rawFirstHc === null ||
+          String(rawFirstHc) === "") &&
         targetUserId &&
         effectiveTeeBoxId
       ) {
@@ -1757,7 +1763,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     }
     if (holesRef.current && holesRef.current.length > 0 && !isReadOnly) {
       try {
-        await syncServerAndDraft(holesRef.current, textScoresRef.current, false);
+        await syncServerAndDraft(
+          holesRef.current,
+          textScoresRef.current,
+          false,
+        );
       } catch (e) {
         console.error("Error saving on back:", e);
       }
@@ -2421,7 +2431,14 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
     });
     return { gross, net, pts, hasScore };
-  }, [holes, partners, primaryHandicap, companionHandicaps, gameConfig, isReadOnly]);
+  }, [
+    holes,
+    partners,
+    primaryHandicap,
+    companionHandicaps,
+    gameConfig,
+    isReadOnly,
+  ]);
 
   const getSubtotal = (holesList: any[]) => {
     return {
@@ -2435,9 +2452,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // ─────────────────────────────────────────────
   if (loading) {
     return (
-      <ThemedView
-        style={[styles.container, { paddingTop: effectiveTopInset }]}
-      >
+      <ThemedView style={[styles.container, { paddingTop: effectiveTopInset }]}>
         <Watermark />
         <View className="px-4 py-4">
           <View className="flex-row items-center mb-6">
@@ -2883,22 +2898,22 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           </View>
         )}
 
-        {/* Main Scroll Content */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="none"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#0284c7", "#16a34a"]}
-              tintColor={isDark ? "#38bdf8" : "#0284c7"}
-            />
-          }
-        >
-          {activeTab === "scoring" && gameConfig.hasMatchTab ? (
+        {/* Main Content */}
+        {activeTab === "scoring" && gameConfig.hasMatchTab ? (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="none"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#0284c7", "#16a34a"]}
+                tintColor={isDark ? "#38bdf8" : "#0284c7"}
+              />
+            }
+          >
             <ScoringTabContent
               mode={
                 gameConfig.isSplit6
@@ -2915,139 +2930,150 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               nassauState={sideScoringSummaries.nassauState}
               isDark={isDark}
             />
-          ) : (
-            <>
-              {/* Player Header Cards (only for multiplayer rounds) */}
-              {partners.length > 1 && (
-                <PlayerHeaderRow
-                  players={partners}
-                  delegationStatuses={delegationStatuses}
-                  isDark={isDark}
-                  showTeams={gameConfig.isHighLow || gameConfig.isNassau}
-                />
-              )}
+          </ScrollView>
+        ) : (
+          <View style={styles.scorecardContainer}>
+            {/* Player Header Cards (only for multiplayer rounds) - FIXED */}
+            {partners.length > 1 && (
+              <PlayerHeaderRow
+                players={partners}
+                delegationStatuses={delegationStatuses}
+                isDark={isDark}
+                showTeams={gameConfig.isHighLow || gameConfig.isNassau}
+              />
+            )}
 
-              {/* Halves Selector (Front 9 / Back 9 / All 18) - only for 18-hole rounds */}
-              {!isNineHoleOnly && (
-                <View style={styles.halfFilterRow}>
-                  <Pressable
-                    onPress={() => setActiveCourseHalf("all")}
-                    style={[
-                      styles.halfFilterButton,
-                      activeCourseHalf === "all"
-                        ? styles.halfFilterActive
-                        : {
-                            backgroundColor: isDark
-                              ? "rgba(39, 39, 42, 0.35)"
-                              : "rgba(226, 232, 240, 0.35)",
-                          },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.halfFilterText,
-                        {
-                          color:
-                            activeCourseHalf === "all"
-                              ? "#ffffff"
-                              : isDark
-                                ? "#a1a1aa"
-                                : "#475569",
-                        },
-                      ]}
-                    >
-                      All 18
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setActiveCourseHalf("front")}
-                    style={[
-                      styles.halfFilterButton,
-                      activeCourseHalf === "front"
-                        ? styles.halfFilterActive
-                        : {
-                            backgroundColor: isDark
-                              ? "rgba(39, 39, 42, 0.35)"
-                              : "rgba(226, 232, 240, 0.35)",
-                          },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.halfFilterText,
-                        {
-                          color:
-                            activeCourseHalf === "front"
-                              ? "#ffffff"
-                              : isDark
-                                ? "#a1a1aa"
-                                : "#475569",
-                        },
-                      ]}
-                    >
-                      Front 9
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setActiveCourseHalf("back")}
-                    style={[
-                      styles.halfFilterButton,
-                      activeCourseHalf === "back"
-                        ? styles.halfFilterActive
-                        : {
-                            backgroundColor: isDark
-                              ? "rgba(39, 39, 42, 0.35)"
-                              : "rgba(226, 232, 240, 0.35)",
-                          },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.halfFilterText,
-                        {
-                          color:
-                            activeCourseHalf === "back"
-                              ? "#ffffff"
-                              : isDark
-                                ? "#a1a1aa"
-                                : "#475569",
-                        },
-                      ]}
-                    >
-                      Back 9
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-
-              {/* Scorecard Table */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ minWidth: "100%" }}
-              >
-                <View
+            {/* Halves Selector (Front 9 / Back 9 / All 18) - FIXED Tab filter switches */}
+            {!isNineHoleOnly && (
+              <View style={styles.halfFilterRow}>
+                <Pressable
+                  onPress={() => setActiveCourseHalf("all")}
                   style={[
-                    styles.tableContainer,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(24, 24, 27, 0.30)"
-                        : "rgba(255, 255, 255, 0.30)",
-                      borderColor: isDark ? "#27272a" : "#e4e4e7",
-                      minWidth: "100%",
-                    },
+                    styles.halfFilterButton,
+                    activeCourseHalf === "all"
+                      ? styles.halfFilterActive
+                      : {
+                          backgroundColor: isDark
+                            ? "rgba(39, 39, 42, 0.35)"
+                            : "rgba(226, 232, 240, 0.35)",
+                        },
                   ]}
                 >
-                  {/* Table Column Headers */}
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "all"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    All 18
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setActiveCourseHalf("front")}
+                  style={[
+                    styles.halfFilterButton,
+                    activeCourseHalf === "front"
+                      ? styles.halfFilterActive
+                      : {
+                          backgroundColor: isDark
+                            ? "rgba(39, 39, 42, 0.35)"
+                            : "rgba(226, 232, 240, 0.35)",
+                        },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "front"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    Front 9
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setActiveCourseHalf("back")}
+                  style={[
+                    styles.halfFilterButton,
+                    activeCourseHalf === "back"
+                      ? styles.halfFilterActive
+                      : {
+                          backgroundColor: isDark
+                            ? "rgba(39, 39, 42, 0.35)"
+                            : "rgba(226, 232, 240, 0.35)",
+                        },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.halfFilterText,
+                      {
+                        color:
+                          activeCourseHalf === "back"
+                            ? "#ffffff"
+                            : isDark
+                              ? "#a1a1aa"
+                              : "#475569",
+                      },
+                    ]}
+                  >
+                    Back 9
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Scorecard Table Area with Fixed Header & Scrollable Rows */}
+            <View
+              style={[
+                styles.tableContainer,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(24, 24, 27, 0.30)"
+                    : "rgba(255, 255, 255, 0.30)",
+                  borderColor: isDark ? "#27272a" : "#e4e4e7",
+                },
+              ]}
+            >
+              <ScrollView
+                horizontal
+                scrollEnabled={
+                  partners.length > 1 ||
+                  gameConfig.isSplit6 ||
+                  gameConfig.isHighLow ||
+                  gameConfig.isNassau
+                }
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                contentContainerStyle={{ flexGrow: 1 }}
+                style={{ flex: 1 }}
+              >
+                <View style={{ flex: 1 }}>
+                  {/* FIXED Scorecard Table Column Header */}
                   <View
                     style={[
                       styles.tableRowHeader,
                       {
                         backgroundColor: isDark
-                          ? "rgba(39, 39, 42, 0.45)"
-                          : "rgba(241, 245, 249, 0.45)",
+                          ? "rgba(39, 39, 42, 0.65)"
+                          : "rgba(241, 245, 249, 0.85)",
+                        borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
+                        borderBottomWidth: 1,
                       },
                     ]}
                   >
@@ -3091,7 +3117,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                     {partners.map((partner) => (
                       <View
                         key={partner.playerId}
-                        style={styles.colPlayerScores}
+                        style={[
+                          styles.colPlayerScores,
+                          partners.length === 1 && {
+                            flex: 1,
+                            justifyContent: "space-around",
+                          },
+                        ]}
                       >
                         <View style={styles.colScoreInputWrapper}>
                           <Text
@@ -3185,708 +3217,750 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                     )}
                   </View>
 
-                  {/* Hole Rows & Subtotals */}
-                  {(() => {
-                    const renderHoleRow = (hole: any, index: number) => {
-                      const isEven = index % 2 === 0;
-                      const holeResult =
-                        sideScoringSummaries.nassauState?.holeResults?.[
-                          hole.holeNumber
-                        ];
+                  {/* SCROLLABLE ROWS BELOW SCORECARD HEADER */}
+                  <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: 60 }}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled={true}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="none"
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={["#0284c7", "#16a34a"]}
+                        tintColor={isDark ? "#38bdf8" : "#0284c7"}
+                      />
+                    }
+                  >
+                    {(() => {
+                      const renderHoleRow = (hole: any, index: number) => {
+                        const isEven = index % 2 === 0;
+                        const holeResult =
+                          sideScoringSummaries.nassauState?.holeResults?.[
+                            hole.holeNumber
+                          ];
 
-                      return (
-                        <View
-                          key={hole.holeId || hole.holeNumber}
-                          style={[
-                            styles.tableRow,
-                            {
-                              backgroundColor: isEven
-                                ? isDark
-                                  ? "rgba(24, 24, 27, 0.20)"
-                                  : "rgba(255, 255, 255, 0.20)"
-                                : isDark
-                                  ? "rgba(32, 32, 36, 0.20)"
-                                  : "rgba(248, 250, 252, 0.20)",
-                              borderBottomColor: isDark ? "#27272a" : "#f1f5f9",
-                            },
-                          ]}
-                        >
-                          <View style={styles.colHoleContainer}>
+                        return (
+                          <View
+                            key={hole.holeId || hole.holeNumber}
+                            style={[
+                              styles.tableRow,
+                              {
+                                backgroundColor: isEven
+                                  ? isDark
+                                    ? "rgba(24, 24, 27, 0.20)"
+                                    : "rgba(255, 255, 255, 0.20)"
+                                  : isDark
+                                    ? "rgba(32, 32, 36, 0.20)"
+                                    : "rgba(248, 250, 252, 0.20)",
+                                borderBottomColor: isDark
+                                  ? "#27272a"
+                                  : "#f1f5f9",
+                              },
+                            ]}
+                          >
+                            <View style={styles.colHoleContainer}>
+                              <Text
+                                style={[
+                                  styles.colHoleVal,
+                                  { color: isDark ? "#ffffff" : "#0f172a" },
+                                ]}
+                              >
+                                {hole.holeNumber}
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  handleOpenRangefinder(hole.holeNumber)
+                                }
+                                style={styles.perHoleGpsButton}
+                                hitSlop={{
+                                  top: 6,
+                                  bottom: 6,
+                                  left: 6,
+                                  right: 6,
+                                }}
+                              >
+                                <Ionicons
+                                  name="locate-outline"
+                                  size={13}
+                                  color={isDark ? "#4ade80" : "#16a34a"}
+                                />
+                              </TouchableOpacity>
+                            </View>
+
+                            {isDetailsVisible && (
+                              <>
+                                <Text
+                                  style={[
+                                    styles.colSIVal,
+                                    { color: isDark ? "#9ca3af" : "#64748b" },
+                                  ]}
+                                >
+                                  {hole.strokeIndex || "-"}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.colYardVal,
+                                    { color: isDark ? "#9ca3af" : "#64748b" },
+                                  ]}
+                                >
+                                  {hole.yardage || "-"}
+                                </Text>
+                              </>
+                            )}
+
                             <Text
                               style={[
-                                styles.colHoleVal,
+                                styles.colParVal,
                                 { color: isDark ? "#ffffff" : "#0f172a" },
                               ]}
                             >
-                              {hole.holeNumber}
+                              {hole.par}
                             </Text>
-                            <TouchableOpacity
-                              onPress={() =>
-                                handleOpenRangefinder(hole.holeNumber)
-                              }
-                              style={styles.perHoleGpsButton}
-                              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                            >
-                              <Ionicons
-                                name="locate-outline"
-                                size={13}
-                                color={isDark ? "#4ade80" : "#16a34a"}
-                              />
-                            </TouchableOpacity>
-                          </View>
 
-                          {isDetailsVisible && (
-                            <>
-                              <Text
-                                style={[
-                                  styles.colSIVal,
-                                  { color: isDark ? "#9ca3af" : "#64748b" },
-                                ]}
-                              >
-                                {hole.strokeIndex || "-"}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.colYardVal,
-                                  { color: isDark ? "#9ca3af" : "#64748b" },
-                                ]}
-                              >
-                                {hole.yardage || "-"}
-                              </Text>
-                            </>
-                          )}
+                            {/* Players Score Cells */}
+                            {partners.map((partner) => {
+                              const holeInfo = getPlayerHoleInfo(
+                                hole,
+                                partner,
+                                primaryHandicap,
+                                companionHandicaps,
+                                { ...gameConfig, isReadOnly },
+                              );
+                              const key = `${hole.holeId}_${partner.playerId}`;
+                              const valueText =
+                                textScores[key] ??
+                                (holeInfo.score !== null
+                                  ? String(holeInfo.score)
+                                  : "");
+                              const multiplier = getHoleXPoints(
+                                holeInfo.score,
+                                hole.par,
+                                holeInfo.sandy,
+                                holeInfo.r,
+                              );
 
-                          <Text
-                            style={[
-                              styles.colParVal,
-                              { color: isDark ? "#ffffff" : "#0f172a" },
-                            ]}
-                          >
-                            {hole.par}
-                          </Text>
+                              const isWinningTeamA =
+                                (holeResult?.winner === "teamA" ||
+                                  (holeResult?.winner as any) === 1) &&
+                                (partner.team === 1 ||
+                                  partner.team === undefined);
+                              const isWinningTeamB =
+                                (holeResult?.winner === "teamB" ||
+                                  (holeResult?.winner as any) === 2) &&
+                                partner.team === 2;
+                              const isWinner = isWinningTeamA || isWinningTeamB;
 
-                          {/* Players Score Cells */}
-                          {partners.map((partner) => {
-                            const holeInfo = getPlayerHoleInfo(
-                              hole,
-                              partner,
-                              primaryHandicap,
-                              companionHandicaps,
-                              { ...gameConfig, isReadOnly },
-                            );
-                            const key = `${hole.holeId}_${partner.playerId}`;
-                            const valueText =
-                              textScores[key] ??
-                              (holeInfo.score !== null
-                                ? String(holeInfo.score)
-                                : "");
-                            const multiplier = getHoleXPoints(
-                              holeInfo.score,
-                              hole.par,
-                              holeInfo.sandy,
-                              holeInfo.r,
-                            );
+                              const nassauCellBg =
+                                gameConfig.isNassau && isWinner
+                                  ? isWinningTeamA
+                                    ? isDark
+                                      ? "rgba(25, 135, 84, 0.28)"
+                                      : "rgba(25, 135, 84, 0.15)"
+                                    : isDark
+                                      ? "rgba(13, 110, 253, 0.28)"
+                                      : "rgba(13, 110, 253, 0.15)"
+                                  : undefined;
 
-                            const isWinningTeamA =
-                              (holeResult?.winner === "teamA" ||
-                                (holeResult?.winner as any) === 1) &&
-                              (partner.team === 1 ||
-                                partner.team === undefined);
-                            const isWinningTeamB =
-                              (holeResult?.winner === "teamB" ||
-                                (holeResult?.winner as any) === 2) &&
-                              partner.team === 2;
-                            const isWinner = isWinningTeamA || isWinningTeamB;
-
-                            const nassauCellBg =
-                              gameConfig.isNassau && isWinner
-                                ? isWinningTeamA
-                                  ? isDark
-                                    ? "rgba(25, 135, 84, 0.28)"
-                                    : "rgba(25, 135, 84, 0.15)"
-                                  : isDark
-                                    ? "rgba(13, 110, 253, 0.28)"
-                                    : "rgba(13, 110, 253, 0.15)"
-                                : undefined;
-
-                            return (
-                              <View
-                                key={partner.playerId}
-                                style={[
-                                  styles.colPlayerScores,
-                                  !!nassauCellBg && {
-                                    backgroundColor: nassauCellBg,
-                                    borderRadius: 6,
-                                    paddingVertical: 2,
-                                  },
-                                ]}
-                              >
-                                <View style={styles.colScoreInputWrapper}>
-                                  <ScoreInputCell
-                                    score={holeInfo.score}
-                                    par={hole.par}
-                                    isReadOnly={isReadOnly}
-                                    isDark={isDark}
-                                    valueText={valueText}
-                                    cellBackgroundColor={nassauCellBg}
-                                    onChangeText={(t) =>
-                                      handleScoreChange(
-                                        hole.holeId,
-                                        partner.playerId,
-                                        t,
-                                      )
-                                    }
-                                    sandy={holeInfo.sandy}
-                                    onToggleSandy={() =>
-                                      handleToggleSandy(
-                                        hole.holeId,
-                                        partner.playerId,
-                                      )
-                                    }
-                                    r={holeInfo.r}
-                                    onToggleR={() =>
-                                      handleToggleR(
-                                        hole.holeId,
-                                        partner.playerId,
-                                      )
-                                    }
-                                    onDisabledPress={() => {
-                                      if (isReadOnly) return;
-                                      if (partner.userId) {
-                                        const uid = Number(partner.userId);
-                                        const raw = (
-                                          (uid != null
-                                            ? delegationStatuses[uid]
-                                            : "") ||
-                                          (partner.userId != null
-                                            ? (delegationStatuses as any)[
-                                                partner.userId
-                                              ]
-                                            : "") ||
-                                          (partner.playerId
-                                            ? (delegationStatuses as any)[
-                                                partner.playerId
-                                              ]
-                                            : "") ||
-                                          ""
+                              return (
+                                <View
+                                  key={partner.playerId}
+                                  style={[
+                                    styles.colPlayerScores,
+                                    partners.length === 1 && {
+                                      flex: 1,
+                                      justifyContent: "space-around",
+                                    },
+                                    !!nassauCellBg && {
+                                      backgroundColor: nassauCellBg,
+                                      borderRadius: 6,
+                                      paddingVertical: 2,
+                                    },
+                                  ]}
+                                >
+                                  <View style={styles.colScoreInputWrapper}>
+                                    <ScoreInputCell
+                                      score={holeInfo.score}
+                                      par={hole.par}
+                                      isReadOnly={isReadOnly}
+                                      isDark={isDark}
+                                      valueText={valueText}
+                                      cellBackgroundColor={nassauCellBg}
+                                      onChangeText={(t) =>
+                                        handleScoreChange(
+                                          hole.holeId,
+                                          partner.playerId,
+                                          t,
                                         )
-                                          .toString()
-                                          .toLowerCase()
-                                          .trim();
-
-                                        if (
-                                          raw === "rejected" ||
-                                          raw === "declined" ||
-                                          raw.includes("reject") ||
-                                          raw.includes("declin") ||
-                                          raw === "0" ||
-                                          raw === "false"
-                                        ) {
-                                          Toast.show({
-                                            type: "error",
-                                            text1: "Request Declined",
-                                            text2: `${partner.name} declined participation in this round.`,
-                                          });
-                                        } else {
-                                          Toast.show({
-                                            type: "info",
-                                            text1: "Pending Approval",
-                                            text2: `${partner.name} has not approved this round yet.`,
-                                          });
-                                        }
                                       }
-                                    }}
-                                    multiplier={multiplier}
-                                    showBadges={
-                                      gameConfig.isHighLow ||
-                                      gameConfig.isSplit6 ||
-                                      gameConfig.isNassau
-                                    }
-                                    isPrimary={partner.isPrimary}
-                                    allowPartnerEdit={
-                                      !isReadOnly &&
-                                      isPlayerApprovedToScore(partner)
-                                    }
-                                    inputRef={(el) => {
-                                      inputRefs.current[key] = el;
-                                    }}
-                                  />
+                                      sandy={holeInfo.sandy}
+                                      onToggleSandy={() =>
+                                        handleToggleSandy(
+                                          hole.holeId,
+                                          partner.playerId,
+                                        )
+                                      }
+                                      r={holeInfo.r}
+                                      onToggleR={() =>
+                                        handleToggleR(
+                                          hole.holeId,
+                                          partner.playerId,
+                                        )
+                                      }
+                                      onDisabledPress={() => {
+                                        if (isReadOnly) return;
+                                        if (partner.userId) {
+                                          const uid = Number(partner.userId);
+                                          const raw = (
+                                            (uid != null
+                                              ? delegationStatuses[uid]
+                                              : "") ||
+                                            (partner.userId != null
+                                              ? (delegationStatuses as any)[
+                                                  partner.userId
+                                                ]
+                                              : "") ||
+                                            (partner.playerId
+                                              ? (delegationStatuses as any)[
+                                                  partner.playerId
+                                                ]
+                                              : "") ||
+                                            ""
+                                          )
+                                            .toString()
+                                            .toLowerCase()
+                                            .trim();
+
+                                          if (
+                                            raw === "rejected" ||
+                                            raw === "declined" ||
+                                            raw.includes("reject") ||
+                                            raw.includes("declin") ||
+                                            raw === "0" ||
+                                            raw === "false"
+                                          ) {
+                                            Toast.show({
+                                              type: "error",
+                                              text1: "Request Declined",
+                                              text2: `${partner.name} declined participation in this round.`,
+                                            });
+                                          } else {
+                                            Toast.show({
+                                              type: "info",
+                                              text1: "Pending Approval",
+                                              text2: `${partner.name} has not approved this round yet.`,
+                                            });
+                                          }
+                                        }
+                                      }}
+                                      multiplier={multiplier}
+                                      showBadges={
+                                        gameConfig.isHighLow ||
+                                        gameConfig.isSplit6 ||
+                                        gameConfig.isNassau
+                                      }
+                                      isPrimary={partner.isPrimary}
+                                      allowPartnerEdit={
+                                        !isReadOnly &&
+                                        isPlayerApprovedToScore(partner)
+                                      }
+                                      inputRef={(el) => {
+                                        inputRefs.current[key] = el;
+                                      }}
+                                    />
+                                  </View>
+
+                                  {gameConfig.showNetColumns && (
+                                    <Text
+                                      style={[
+                                        styles.subColVal,
+                                        {
+                                          color: isDark ? "#38bdf8" : "#0284c7",
+                                        },
+                                      ]}
+                                    >
+                                      {holeInfo.netScore !== null
+                                        ? holeInfo.netScore
+                                        : "-"}
+                                    </Text>
+                                  )}
+
+                                  {gameConfig.showPtsColumns && (
+                                    <Text
+                                      style={[
+                                        styles.subColVal,
+                                        {
+                                          color: isDark ? "#fbbf24" : "#d97706",
+                                        },
+                                      ]}
+                                    >
+                                      {holeInfo.stablefordPoints !== null
+                                        ? holeInfo.stablefordPoints
+                                        : "-"}
+                                    </Text>
+                                  )}
                                 </View>
+                              );
+                            })}
 
-                                {gameConfig.showNetColumns && (
-                                  <Text
-                                    style={[
-                                      styles.subColVal,
-                                      { color: isDark ? "#38bdf8" : "#0284c7" },
-                                    ]}
-                                  >
-                                    {holeInfo.netScore !== null
-                                      ? holeInfo.netScore
-                                      : "-"}
-                                  </Text>
-                                )}
-
-                                {gameConfig.showPtsColumns && (
-                                  <Text
-                                    style={[
-                                      styles.subColVal,
-                                      { color: isDark ? "#fbbf24" : "#d97706" },
-                                    ]}
-                                  >
-                                    {holeInfo.stablefordPoints !== null
-                                      ? holeInfo.stablefordPoints
-                                      : "-"}
-                                  </Text>
-                                )}
-                              </View>
-                            );
-                          })}
-
-                          {/* Split-Six Points Cell */}
-                          {gameConfig.isSplit6 && (
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                            >
-                              {partners.slice(0, 3).map((partner, pIdx) => {
-                                const pts =
-                                  sideScoringSummaries.splitSixSummary
-                                    ?.holeResults?.[hole.holeNumber]?.[pIdx];
-                                const displayPts =
-                                  pts !== undefined ? String(pts) : "-";
-                                return (
-                                  <Text
-                                    key={`split6_pts_${hole.holeId || hole.holeNumber}_${partner.playerId}`}
-                                    style={[
-                                      styles.colSplitSixPts,
-                                      {
-                                        color: isDark ? "#ffffff" : "#0f172a",
-                                        fontWeight: "700",
-                                      },
-                                    ]}
-                                  >
-                                    {displayPts}
-                                  </Text>
-                                );
-                              })}
-                            </View>
-                          )}
-
-                          {/* Nassau Houses Cell */}
-                          {gameConfig.isNassau && (
-                            <View style={styles.colNassau}>
-                              <NassauHouses
-                                overallHouses={holeResult?.overallHousesDisplay}
-                                halfHouses={holeResult?.housesDisplay}
-                                isSecondNine={
-                                  nassauStartNine === "back"
-                                    ? hole.holeNumber <= 9
-                                    : hole.holeNumber >= 10
-                                }
-                                isDark={isDark}
-                                fontSize={12}
-                              />
-                            </View>
-                          )}
-
-                          {/* High-Low Team Points Cell */}
-                          {gameConfig.isHighLow && (
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Text
-                                style={[
-                                  styles.colTeamPts,
-                                  {
-                                    color: isDark ? "#ffffff" : "#0f172a",
-                                    fontWeight: "700",
-                                  },
-                                ]}
-                              >
-                                {sideScoringSummaries.highLowSummary
-                                  ?.holeResults?.[hole.holeNumber]?.teamA ??
-                                  "-"}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.colTeamPts,
-                                  {
-                                    color: isDark ? "#ffffff" : "#0f172a",
-                                    fontWeight: "700",
-                                  },
-                                ]}
-                              >
-                                {sideScoringSummaries.highLowSummary
-                                  ?.holeResults?.[hole.holeNumber]?.teamB ??
-                                  "-"}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      );
-                    };
-
-                    const renderTotalRow = (
-                      label: string,
-                      holesSubset: any[],
-                      nassauHouses?: number[],
-                      isGrandTotal: boolean = false,
-                    ) => {
-                      const subtotal = getSubtotal(holesSubset);
-
-                      return (
-                        <View
-                          key={`subtotal_${label}`}
-                          style={[
-                            isGrandTotal
-                              ? styles.tableTotalRow
-                              : styles.tableSubtotalRow,
-                            {
-                              backgroundColor: isGrandTotal
-                                ? isDark
-                                  ? "rgba(39, 39, 42, 0.45)"
-                                  : "rgba(226, 232, 240, 0.45)"
-                                : isDark
-                                  ? "rgba(32, 32, 37, 0.35)"
-                                  : "rgba(241, 245, 249, 0.35)",
-                              borderTopColor: isGrandTotal
-                                ? isDark
-                                  ? "#3f3f46"
-                                  : "#cbd5e1"
-                                : isDark
-                                  ? "#27272a"
-                                  : "#e2e8f0",
-                              borderBottomColor: isGrandTotal
-                                ? undefined
-                                : isDark
-                                  ? "#27272a"
-                                  : "#e2e8f0",
-                              borderBottomWidth: isGrandTotal ? 0 : 1,
-                            },
-                          ]}
-                        >
-                          <Text
-                            numberOfLines={1}
-                            style={[
-                              styles.colHole,
-                              {
-                                fontWeight: "800",
-                                fontSize: isGrandTotal ? 13 : 12,
-                                color: isGrandTotal
-                                  ? isDark
-                                    ? "#ffffff"
-                                    : "#0f172a"
-                                  : isDark
-                                    ? "#4ade80"
-                                    : "#16a34a",
-                              },
-                            ]}
-                          >
-                            {label}
-                          </Text>
-
-                          {isDetailsVisible && (
-                            <>
-                              <Text style={styles.colSI}>-</Text>
-                              <Text
-                                style={[
-                                  styles.colYard,
-                                  {
-                                    fontWeight: "700",
-                                    color: isDark ? "#d1d5db" : "#334155",
-                                  },
-                                ]}
-                              >
-                                {subtotal.yards}
-                              </Text>
-                            </>
-                          )}
-
-                          <Text
-                            style={[
-                              styles.colPar,
-                              {
-                                fontWeight: "800",
-                                color: isDark ? "#ffffff" : "#0f172a",
-                              },
-                            ]}
-                          >
-                            {subtotal.par}
-                          </Text>
-
-                          {partners.map((partner) => {
-                            const totals = calculateTotalsForPlayer(
-                              partner,
-                              holesSubset,
-                            );
-                            return (
+                            {/* Split-Six Points Cell */}
+                            {gameConfig.isSplit6 && (
                               <View
-                                key={partner.playerId}
-                                style={styles.colPlayerScores}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
                               >
-                                <View style={styles.colScoreInputWrapper}>
-                                  <Text
-                                    style={[
-                                      isGrandTotal
-                                        ? styles.playerTotalScore
-                                        : styles.playerSubtotalScore,
-                                      { color: isDark ? "#ffffff" : "#0f172a" },
-                                    ]}
-                                  >
-                                    {totals.gross}
-                                  </Text>
-                                </View>
-                                {gameConfig.showNetColumns && (
-                                  <Text
-                                    style={[
-                                      styles.subColVal,
-                                      {
-                                        fontWeight: "700",
-                                        color: isDark ? "#38bdf8" : "#0284c7",
-                                      },
-                                    ]}
-                                  >
-                                    {totals.net}
-                                  </Text>
-                                )}
-                                {gameConfig.showPtsColumns && (
-                                  <Text
-                                    style={[
-                                      styles.subColVal,
-                                      {
-                                        fontWeight: "700",
-                                        color: isDark ? "#fbbf24" : "#d97706",
-                                      },
-                                    ]}
-                                  >
-                                    {totals.pts}
-                                  </Text>
-                                )}
-                              </View>
-                            );
-                          })}
-
-                          {/* Split-Six Points Total Cell */}
-                          {gameConfig.isSplit6 && (
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
-                            >
-                              {partners.slice(0, 3).map((partner, pIdx) => {
-                                let totalPts = 0;
-                                holesSubset.forEach((h) => {
+                                {partners.slice(0, 3).map((partner, pIdx) => {
                                   const pts =
                                     sideScoringSummaries.splitSixSummary
-                                      ?.holeResults?.[h.holeNumber]?.[pIdx];
-                                  if (pts !== undefined) totalPts += pts;
-                                });
-                                return (
-                                  <Text
-                                    key={`split6_tot_${label}_${partner.playerId}`}
-                                    style={[
-                                      styles.colSplitSixPts,
-                                      {
-                                        color: isDark ? "#ffffff" : "#0f172a",
-                                        fontWeight: isGrandTotal
-                                          ? "800"
-                                          : "700",
-                                      },
-                                    ]}
-                                  >
-                                    {totalPts}
-                                  </Text>
-                                );
-                              })}
-                            </View>
-                          )}
+                                      ?.holeResults?.[hole.holeNumber]?.[pIdx];
+                                  const displayPts =
+                                    pts !== undefined ? String(pts) : "-";
+                                  return (
+                                    <Text
+                                      key={`split6_pts_${hole.holeId || hole.holeNumber}_${partner.playerId}`}
+                                      style={[
+                                        styles.colSplitSixPts,
+                                        {
+                                          color: isDark ? "#ffffff" : "#0f172a",
+                                          fontWeight: "700",
+                                        },
+                                      ]}
+                                    >
+                                      {displayPts}
+                                    </Text>
+                                  );
+                                })}
+                              </View>
+                            )}
 
-                          {gameConfig.isNassau && (
-                            <View style={styles.colNassau}>
-                              <NassauHouses
-                                houses={nassauHouses}
-                                isTotalRow={true}
-                                isDark={isDark}
-                                fontSize={12}
-                              />
-                            </View>
-                          )}
+                            {/* Nassau Houses Cell */}
+                            {gameConfig.isNassau && (
+                              <View style={styles.colNassau}>
+                                <NassauHouses
+                                  overallHouses={
+                                    holeResult?.overallHousesDisplay
+                                  }
+                                  halfHouses={holeResult?.housesDisplay}
+                                  isSecondNine={
+                                    nassauStartNine === "back"
+                                      ? hole.holeNumber <= 9
+                                      : hole.holeNumber >= 10
+                                  }
+                                  isDark={isDark}
+                                  fontSize={12}
+                                />
+                              </View>
+                            )}
 
-                          {gameConfig.isHighLow && (
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                              }}
+                            {/* High-Low Team Points Cell */}
+                            {gameConfig.isHighLow && (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Text
+                                  style={[
+                                    styles.colTeamPts,
+                                    {
+                                      color: isDark ? "#ffffff" : "#0f172a",
+                                      fontWeight: "700",
+                                    },
+                                  ]}
+                                >
+                                  {sideScoringSummaries.highLowSummary
+                                    ?.holeResults?.[hole.holeNumber]?.teamA ??
+                                    "-"}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.colTeamPts,
+                                    {
+                                      color: isDark ? "#ffffff" : "#0f172a",
+                                      fontWeight: "700",
+                                    },
+                                  ]}
+                                >
+                                  {sideScoringSummaries.highLowSummary
+                                    ?.holeResults?.[hole.holeNumber]?.teamB ??
+                                    "-"}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        );
+                      };
+
+                      const renderTotalRow = (
+                        label: string,
+                        holesSubset: any[],
+                        nassauHouses?: number[],
+                        isGrandTotal: boolean = false,
+                      ) => {
+                        const subtotal = getSubtotal(holesSubset);
+
+                        return (
+                          <View
+                            key={`subtotal_${label}`}
+                            style={[
+                              isGrandTotal
+                                ? styles.tableTotalRow
+                                : styles.tableSubtotalRow,
+                              {
+                                backgroundColor: isGrandTotal
+                                  ? isDark
+                                    ? "rgba(39, 39, 42, 0.45)"
+                                    : "rgba(226, 232, 240, 0.45)"
+                                  : isDark
+                                    ? "rgba(32, 32, 37, 0.35)"
+                                    : "rgba(241, 245, 249, 0.35)",
+                                borderTopColor: isGrandTotal
+                                  ? isDark
+                                    ? "#3f3f46"
+                                    : "#cbd5e1"
+                                  : isDark
+                                    ? "#27272a"
+                                    : "#e2e8f0",
+                                borderBottomColor: isGrandTotal
+                                  ? undefined
+                                  : isDark
+                                    ? "#27272a"
+                                    : "#e2e8f0",
+                                borderBottomWidth: isGrandTotal ? 0 : 1,
+                              },
+                            ]}
+                          >
+                            <Text
+                              numberOfLines={1}
+                              style={[
+                                styles.colHole,
+                                {
+                                  fontWeight: "800",
+                                  fontSize: isGrandTotal ? 13 : 12,
+                                  color: isGrandTotal
+                                    ? isDark
+                                      ? "#ffffff"
+                                      : "#0f172a"
+                                    : isDark
+                                      ? "#4ade80"
+                                      : "#16a34a",
+                                },
+                              ]}
                             >
-                              <Text
-                                style={[
-                                  styles.colTeamPts,
-                                  {
-                                    color: isDark ? "#ffffff" : "#0f172a",
-                                    fontWeight: "800",
-                                  },
-                                ]}
-                              >
-                                {isGrandTotal
-                                  ? sideScoringSummaries.highLowSummary
-                                      ?.overallMatchPts?.teamA || 0
-                                  : (holesSubset === halvesData.front9
-                                      ? sideScoringSummaries.highLowSummary
-                                          ?.front9MatchPts?.teamA
-                                      : sideScoringSummaries.highLowSummary
-                                          ?.back9MatchPts?.teamA) || 0}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.colTeamPts,
-                                  {
-                                    color: isDark ? "#ffffff" : "#0f172a",
-                                    fontWeight: "800",
-                                  },
-                                ]}
-                              >
-                                {isGrandTotal
-                                  ? sideScoringSummaries.highLowSummary
-                                      ?.overallMatchPts?.teamB || 0
-                                  : (holesSubset === halvesData.front9
-                                      ? sideScoringSummaries.highLowSummary
-                                          ?.front9MatchPts?.teamB
-                                      : sideScoringSummaries.highLowSummary
-                                          ?.back9MatchPts?.teamB) || 0}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      );
-                    };
+                              {label}
+                            </Text>
 
-                    if (
-                      activeCourseHalf === "all" &&
-                      halvesData.front9.length > 0 &&
-                      halvesData.back9.length > 0
-                    ) {
-                      const firstHalf = halvesData.isBackStart
-                        ? halvesData.back9
-                        : halvesData.front9;
-                      const firstLabel = halvesData.isBackStart
-                        ? "Back 9"
-                        : "Front 9";
-                      const firstNassauHouses = halvesData.isBackStart
-                        ? sideScoringSummaries.nassauState?.back9Houses
-                        : sideScoringSummaries.nassauState?.front9Houses;
+                            {isDetailsVisible && (
+                              <>
+                                <Text style={styles.colSI}>-</Text>
+                                <Text
+                                  style={[
+                                    styles.colYard,
+                                    {
+                                      fontWeight: "700",
+                                      color: isDark ? "#d1d5db" : "#334155",
+                                    },
+                                  ]}
+                                >
+                                  {subtotal.yards}
+                                </Text>
+                              </>
+                            )}
 
-                      const secondHalf = halvesData.isBackStart
-                        ? halvesData.front9
-                        : halvesData.back9;
-                      const secondLabel = halvesData.isBackStart
-                        ? "Front 9"
-                        : "Back 9";
-                      const secondNassauHouses = halvesData.isBackStart
-                        ? sideScoringSummaries.nassauState?.front9Houses
-                        : sideScoringSummaries.nassauState?.back9Houses;
+                            <Text
+                              style={[
+                                styles.colPar,
+                                {
+                                  fontWeight: "800",
+                                  color: isDark ? "#ffffff" : "#0f172a",
+                                },
+                              ]}
+                            >
+                              {subtotal.par}
+                            </Text>
+
+                            {partners.map((partner) => {
+                              const totals = calculateTotalsForPlayer(
+                                partner,
+                                holesSubset,
+                              );
+                              return (
+                                <View
+                                  key={partner.playerId}
+                                  style={[
+                                    styles.colPlayerScores,
+                                    partners.length === 1 && {
+                                      flex: 1,
+                                      justifyContent: "space-around",
+                                    },
+                                  ]}
+                                >
+                                  <View style={styles.colScoreInputWrapper}>
+                                    <Text
+                                      style={[
+                                        isGrandTotal
+                                          ? styles.playerTotalScore
+                                          : styles.playerSubtotalScore,
+                                        {
+                                          color: isDark ? "#ffffff" : "#0f172a",
+                                        },
+                                      ]}
+                                    >
+                                      {totals.gross}
+                                    </Text>
+                                  </View>
+                                  {gameConfig.showNetColumns && (
+                                    <Text
+                                      style={[
+                                        styles.subColVal,
+                                        {
+                                          fontWeight: "700",
+                                          color: isDark ? "#38bdf8" : "#0284c7",
+                                        },
+                                      ]}
+                                    >
+                                      {totals.net}
+                                    </Text>
+                                  )}
+                                  {gameConfig.showPtsColumns && (
+                                    <Text
+                                      style={[
+                                        styles.subColVal,
+                                        {
+                                          fontWeight: "700",
+                                          color: isDark ? "#fbbf24" : "#d97706",
+                                        },
+                                      ]}
+                                    >
+                                      {totals.pts}
+                                    </Text>
+                                  )}
+                                </View>
+                              );
+                            })}
+
+                            {/* Split-Six Points Total Cell */}
+                            {gameConfig.isSplit6 && (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {partners.slice(0, 3).map((partner, pIdx) => {
+                                  let totalPts = 0;
+                                  holesSubset.forEach((h) => {
+                                    const pts =
+                                      sideScoringSummaries.splitSixSummary
+                                        ?.holeResults?.[h.holeNumber]?.[pIdx];
+                                    if (pts !== undefined) totalPts += pts;
+                                  });
+                                  return (
+                                    <Text
+                                      key={`split6_tot_${label}_${partner.playerId}`}
+                                      style={[
+                                        styles.colSplitSixPts,
+                                        {
+                                          color: isDark ? "#ffffff" : "#0f172a",
+                                          fontWeight: isGrandTotal
+                                            ? "800"
+                                            : "700",
+                                        },
+                                      ]}
+                                    >
+                                      {totalPts}
+                                    </Text>
+                                  );
+                                })}
+                              </View>
+                            )}
+
+                            {gameConfig.isNassau && (
+                              <View style={styles.colNassau}>
+                                <NassauHouses
+                                  houses={nassauHouses}
+                                  isTotalRow={true}
+                                  isDark={isDark}
+                                  fontSize={12}
+                                />
+                              </View>
+                            )}
+
+                            {gameConfig.isHighLow && (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Text
+                                  style={[
+                                    styles.colTeamPts,
+                                    {
+                                      color: isDark ? "#ffffff" : "#0f172a",
+                                      fontWeight: "800",
+                                    },
+                                  ]}
+                                >
+                                  {isGrandTotal
+                                    ? sideScoringSummaries.highLowSummary
+                                        ?.overallMatchPts?.teamA || 0
+                                    : (holesSubset === halvesData.front9
+                                        ? sideScoringSummaries.highLowSummary
+                                            ?.front9MatchPts?.teamA
+                                        : sideScoringSummaries.highLowSummary
+                                            ?.back9MatchPts?.teamA) || 0}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.colTeamPts,
+                                    {
+                                      color: isDark ? "#ffffff" : "#0f172a",
+                                      fontWeight: "800",
+                                    },
+                                  ]}
+                                >
+                                  {isGrandTotal
+                                    ? sideScoringSummaries.highLowSummary
+                                        ?.overallMatchPts?.teamB || 0
+                                    : (holesSubset === halvesData.front9
+                                        ? sideScoringSummaries.highLowSummary
+                                            ?.front9MatchPts?.teamB
+                                        : sideScoringSummaries.highLowSummary
+                                            ?.back9MatchPts?.teamB) || 0}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        );
+                      };
+
+                      if (
+                        activeCourseHalf === "all" &&
+                        halvesData.front9.length > 0 &&
+                        halvesData.back9.length > 0
+                      ) {
+                        const firstHalf = halvesData.isBackStart
+                          ? halvesData.back9
+                          : halvesData.front9;
+                        const firstLabel = halvesData.isBackStart
+                          ? "Back 9"
+                          : "Front 9";
+                        const firstNassauHouses = halvesData.isBackStart
+                          ? sideScoringSummaries.nassauState?.back9Houses
+                          : sideScoringSummaries.nassauState?.front9Houses;
+
+                        const secondHalf = halvesData.isBackStart
+                          ? halvesData.front9
+                          : halvesData.back9;
+                        const secondLabel = halvesData.isBackStart
+                          ? "Front 9"
+                          : "Back 9";
+                        const secondNassauHouses = halvesData.isBackStart
+                          ? sideScoringSummaries.nassauState?.front9Houses
+                          : sideScoringSummaries.nassauState?.back9Houses;
+
+                        return (
+                          <>
+                            {/* First 9 Holes (Back 9 if isBackStart, else Front 9) */}
+                            {firstHalf.map((hole, index) =>
+                              renderHoleRow(hole, index),
+                            )}
+
+                            {/* First 9 Subtotal */}
+                            {renderTotalRow(
+                              firstLabel,
+                              firstHalf,
+                              firstNassauHouses,
+                              false,
+                            )}
+
+                            {/* Second 9 Holes */}
+                            {secondHalf.map((hole, index) =>
+                              renderHoleRow(hole, index + firstHalf.length),
+                            )}
+
+                            {/* Second 9 Subtotal */}
+                            {renderTotalRow(
+                              secondLabel,
+                              secondHalf,
+                              secondNassauHouses,
+                              false,
+                            )}
+
+                            {/* Grand Total */}
+                            {renderTotalRow(
+                              "Total",
+                              halvesData.allSorted,
+                              sideScoringSummaries.nassauState?.overallHouses,
+                              true,
+                            )}
+                          </>
+                        );
+                      }
+
+                      if (activeCourseHalf === "front") {
+                        return (
+                          <>
+                            {halvesData.front9.map((hole, index) =>
+                              renderHoleRow(hole, index),
+                            )}
+                            {renderTotalRow(
+                              "Front 9",
+                              halvesData.front9,
+                              sideScoringSummaries.nassauState?.front9Houses,
+                              true,
+                            )}
+                          </>
+                        );
+                      }
+
+                      if (activeCourseHalf === "back") {
+                        return (
+                          <>
+                            {halvesData.back9.map((hole, index) =>
+                              renderHoleRow(hole, index),
+                            )}
+                            {renderTotalRow(
+                              "Back 9",
+                              halvesData.back9,
+                              sideScoringSummaries.nassauState?.back9Houses,
+                              true,
+                            )}
+                          </>
+                        );
+                      }
 
                       return (
                         <>
-                          {/* First 9 Holes (Back 9 if isBackStart, else Front 9) */}
-                          {firstHalf.map((hole, index) =>
+                          {displayedHoles.map((hole, index) =>
                             renderHoleRow(hole, index),
                           )}
-
-                          {/* First 9 Subtotal */}
-                          {renderTotalRow(
-                            firstLabel,
-                            firstHalf,
-                            firstNassauHouses,
-                            false,
-                          )}
-
-                          {/* Second 9 Holes */}
-                          {secondHalf.map((hole, index) =>
-                            renderHoleRow(hole, index + firstHalf.length),
-                          )}
-
-                          {/* Second 9 Subtotal */}
-                          {renderTotalRow(
-                            secondLabel,
-                            secondHalf,
-                            secondNassauHouses,
-                            false,
-                          )}
-
-                          {/* Grand Total */}
                           {renderTotalRow(
                             "Total",
-                            halvesData.allSorted,
+                            displayedHoles,
                             sideScoringSummaries.nassauState?.overallHouses,
                             true,
                           )}
                         </>
                       );
-                    }
-
-                    if (activeCourseHalf === "front") {
-                      return (
-                        <>
-                          {halvesData.front9.map((hole, index) =>
-                            renderHoleRow(hole, index),
-                          )}
-                          {renderTotalRow(
-                            "Front 9",
-                            halvesData.front9,
-                            sideScoringSummaries.nassauState?.front9Houses,
-                            true,
-                          )}
-                        </>
-                      );
-                    }
-
-                    if (activeCourseHalf === "back") {
-                      return (
-                        <>
-                          {halvesData.back9.map((hole, index) =>
-                            renderHoleRow(hole, index),
-                          )}
-                          {renderTotalRow(
-                            "Back 9",
-                            halvesData.back9,
-                            sideScoringSummaries.nassauState?.back9Houses,
-                            true,
-                          )}
-                        </>
-                      );
-                    }
-
-                    return (
-                      <>
-                        {displayedHoles.map((hole, index) =>
-                          renderHoleRow(hole, index),
-                        )}
-                        {renderTotalRow(
-                          "Total",
-                          displayedHoles,
-                          sideScoringSummaries.nassauState?.overallHouses,
-                          true,
-                        )}
-                      </>
-                    );
-                  })()}
+                    })()}
+                  </ScrollView>
                 </View>
               </ScrollView>
+            </View>
 
-              {/* Scorecard Legend (only for single player rounds) */}
-              {partners.length <= 1 && (
-                <ScoringLegend counts={legendCounts} isDark={isDark} />
-              )}
-            </>
-          )}
-        </ScrollView>
+            {/* Scorecard Legend (only for single player rounds - OUTSIDE horizontal scroll) */}
+            {partners.length <= 1 && (
+              <ScoringLegend counts={legendCounts} isDark={isDark} />
+            )}
+          </View>
+        )}
       </KeyboardAvoidingView>
 
       {/* GPS Rangefinder Overlay */}
@@ -4254,6 +4328,11 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 280,
   },
+  scorecardContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
   halfFilterRow: {
     flexDirection: "row",
     gap: 8,
@@ -4275,7 +4354,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    marginBottom: 14,
+    marginBottom: 8,
+    flex: 1,
   },
   tableRowHeader: {
     flexDirection: "row",
