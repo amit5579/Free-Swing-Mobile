@@ -2,10 +2,11 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import ENV from "../config/env";
+import Toast from "react-native-toast-message";
 
 const client = axios.create({
   baseURL: ENV.API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -13,10 +14,19 @@ const client = axios.create({
 
 client.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("token");
+    try {
+      const token = await AsyncStorage.getItem("token");
 
-    if (token) {
-      config.headers.set("Authorization", `Bearer ${token}`);
+      if (token) {
+        if (config.headers && typeof config.headers.set === "function") {
+          config.headers.set("Authorization", `Bearer ${token}`);
+        } else {
+          config.headers = config.headers || {};
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+      }
+    } catch (err) {
+      console.warn("Error attaching auth token to request:", err);
     }
 
     return config;
@@ -26,58 +36,23 @@ client.interceptors.request.use(
   }
 );
 
-// RESPONSE INTERCEPTOR (optional)
-// client.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-
-//     if (error.response?.status === 401) {
-//       // token expired logic
-//       await AsyncStorage.removeItem("token");
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
-
-
 let isRedirecting = false;
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const isUnauthorized = error.response?.status === 401;
-    const isTimeout =
-      error.code === "ECONNABORTED" ||
-      error.message?.toLowerCase().includes("timeout");
 
-    // // ⏰ Timeout → go to login
-    // if (isTimeout) {
-    //   console.log("⏰ Timeout - redirecting to login");
-
-    //   await AsyncStorage.removeItem("token");
-    //   await AsyncStorage.removeItem("userId");
-
-    //   router.replace("/(auth)/login");
-    //   return Promise.reject(error);
-    // }
-
-    // // 🔒 401 → go to login
-    // if (isUnauthorized) {
-    //   console.log("🚨 Unauthorized - redirecting to login");
-
-    //   await AsyncStorage.removeItem("token");
-    //   await AsyncStorage.removeItem("userId");
-
-    //   router.replace("/(auth)/login");
-    // }
-
-    if ((isTimeout || isUnauthorized) && !isRedirecting) {
+    // Only redirect to login and clear credentials on 401 Unauthorized (session expired)
+    if (isUnauthorized && !isRedirecting) {
       isRedirecting = true;
 
-      console.log("🚨 Session expired or timeout - redirecting");
-
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("userId");
+      console.log("🚨 Session expired (401) - redirecting to login");
+      Toast.show({
+        type: "error",
+        text1: "Session expired",
+        text2: "Please login again to continue",
+      });
+      await AsyncStorage.multiRemove(["token", "userId", "role", "username"]);
 
       router.replace("/(auth)/login");
       setTimeout(() => {
