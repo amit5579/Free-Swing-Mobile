@@ -51,6 +51,7 @@ interface UserProfile {
   paradisePostCount?: number;
   paradisePhotoPostCount?: number;
   lastParadisePostAt?: string | null;
+  membershipNo?:any
 }
 
 export default function MemberProfilePage({
@@ -128,10 +129,10 @@ export default function MemberProfilePage({
   if (loading) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}
+        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F8F9FA" }}
         edges={["top", "left", "right"]}
       >
-        <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}>
+        <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F8F9FA" }}>
           <Watermark />
           {!hideHeader && (
             <HStack className="items-center px-4 py-3 justify-between">
@@ -278,10 +279,10 @@ export default function MemberProfilePage({
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}
+      style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F8F9FA" }}
       edges={["top", "left", "right"]}
     >
-      <View style={{ flex: 1, backgroundColor: isDark ? "#000" : "#F8F9FA" }}>
+      <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#F8F9FA" }}>
         {/* Header */}
         {!hideHeader && (
           <HStack className="items-center px-4 py-3 justify-between">
@@ -332,20 +333,19 @@ export default function MemberProfilePage({
           <Box
             style={{
               backgroundColor: isDark
-                ? "rgba(30,41,59,0.5)"
-                : "rgba(241,245,249,0.8)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
               borderRadius: 28,
               marginBottom: 10,
               borderWidth: 1,
               borderColor: isDark
-                ? "rgba(139,195,74,0.3)"
-                : "rgba(139,195,74,0.1)",
+                ? "rgba(139, 195, 74, 0.35)"
+                : "rgba(139, 195, 74, 0.45)",
               shadowColor: "#8BC34A",
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: isDark ? 0.3 : 0.1,
               shadowRadius: 16,
-              padding:20,
-              // elevation: 10,
+              padding: 20,
               zIndex: 10,
             }}
           >
@@ -478,13 +478,15 @@ export default function MemberProfilePage({
           <Box
             style={{
               backgroundColor: isDark
-                ? "rgba(30,41,59,0.5)"
-                : "rgba(241,245,249,0.8)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
               borderRadius: 32,
               padding: 24,
               marginBottom: 20,
               borderWidth: 1,
-              borderColor: isDark ? "rgba(139,195,74,0.2)" : "rgba(0,0,0,0.05)",
+              borderColor: isDark
+                ? "rgba(139, 195, 74, 0.35)"
+                : "rgba(139, 195, 74, 0.45)",
             }}
           >
             <HStack
@@ -535,14 +537,14 @@ export default function MemberProfilePage({
             <Box
               style={{
                 backgroundColor: isDark
-                  ? "rgba(30,41,59,0.5)"
-                  : "rgba(241,245,249,0.8)",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
                 borderRadius: 24,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <TouchableOpacity
@@ -594,13 +596,15 @@ export default function MemberProfilePage({
                   />
                   {renderInfoRow("Email", user.email, "mail-outline")}
                   {renderInfoRow("Mobile", user.mobileNumber, "call-outline")}
-                  {renderInfoRow(
+                  {renderInfoRow("Membership No.", `# ${user.id}`, "list-outline")}
+
+                  {/* {renderInfoRow(
                     "Date of Birth",
                     user.dateOfBirth
                       ? new Date(user.dateOfBirth).toLocaleDateString()
                       : "N/A",
                     "calendar-outline",
-                  )}
+                  )} */}
                   {renderInfoRow(
                     "Member Since",
                     user.createdAt || user.memberSince
@@ -621,14 +625,14 @@ export default function MemberProfilePage({
             <Box
               style={{
                 backgroundColor: isDark
-                  ? "rgba(30,41,59,0.5)"
-                  : "rgba(241,245,249,0.8)",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
                 borderRadius: 24,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <TouchableOpacity
@@ -680,7 +684,7 @@ export default function MemberProfilePage({
                   />
                   {renderInfoRow(
                     "Home Course",
-                    user.homeCourse || "N/A",
+                    user.homeCourse || "Not added yet",
                     "location-outline",
                   )}
                   {renderInfoRow(
@@ -695,7 +699,7 @@ export default function MemberProfilePage({
                   )}
                   {renderInfoRow(
                     "Invited By",
-                    user.invitedBySubAdminName || "Direct",
+                    user.invitedBySubAdminName || "Direct registration",
                     "people-outline",
                   )}
                 </View>
@@ -704,14 +708,15 @@ export default function MemberProfilePage({
 
             <Box
               style={{
-backgroundColor: isDark
-                ? "rgba(30,41,59,0.5)"
-                : "rgba(241,245,249,0.8)",                borderRadius: 24,
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderRadius: 24,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <TouchableOpacity

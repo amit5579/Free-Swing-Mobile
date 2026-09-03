@@ -160,7 +160,19 @@ export default function UserProfile() {
 
   const ProfileCardSkeleton = ({ isDark }: { isDark: boolean }) => {
     return (
-      <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+      <Box
+        style={{
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
+          borderWidth: 1,
+          borderRadius: 24,
+        }}
+        className="p-6 mb-6"
+      >
         <VStack className="items-center">
           <Skeleton
             isDark={isDark}
@@ -311,7 +323,19 @@ export default function UserProfile() {
                   </ThemedText>
                 </HStack>
 
-                <Box className="rounded-3xl p-6 mb-6 bg-white/5">
+                <Box
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark
+                      ? "rgba(139, 195, 74, 0.35)"
+                      : "rgba(139, 195, 74, 0.45)",
+                    borderWidth: 1,
+                    borderRadius: 24,
+                  }}
+                  className="p-6 mb-6"
+                >
                   <VStack className="items-center">
                     <Pressable onPress={pickImage}>
                       <View

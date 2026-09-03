@@ -230,16 +230,6 @@ export default function TabLayout() {
                   >
                     {profile.username.toUpperCase()}
                   </Text>
-                  <Text
-                    style={{
-                      color: "#8BC34A",
-                      fontSize: 24,
-                      fontWeight: "900",
-                      marginLeft: 2,
-                    }}
-                  >
-                    !
-                  </Text>
                 </HStack>
               </View>
             );

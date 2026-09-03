@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Pressable,
   TouchableOpacity,
@@ -204,9 +210,9 @@ export default function LeaderboardUser() {
     return (
       <Box
         style={{
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         <VStack
@@ -234,14 +240,10 @@ export default function LeaderboardUser() {
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#f1f5f9",
               }}
             >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={isDark ? "#fff" : "#020617"}
-              />
+              <Ionicons name="arrow-back" size={20} color="#8BC34A" />
             </TouchableOpacity>
 
             {/* 🧠 TITLE BLOCK */}
@@ -301,11 +303,13 @@ export default function LeaderboardUser() {
   const RenderStatsSection = () => {
     const isDark = colorScheme === "dark";
 
-    const bg = isDark ? "#0f172a" : "#ffffff";
+    const bg = isDark ? "#161618" : "#ffffff";
     const cardBg = isDark
       ? "rgba(15, 23, 42, 0.7)"
       : "rgba(255, 255, 255, 0.7)";
-    const border = isDark ? "#334155" : "#e2e8f0";
+    const border = isDark
+      ? "rgba(139, 195, 74, 0.35)"
+      : "rgba(139, 195, 74, 0.45)";
 
     const primaryText = isDark ? "#f1f5f9" : "#020617";
     const secondaryText = isDark ? "#94a3b8" : "#64748b";
@@ -577,9 +581,13 @@ export default function LeaderboardUser() {
       style={{
         height: 45,
         width: LEFT_FIXED_WIDTH,
-        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(139, 195, 74, 0.15)",
         borderRightWidth: 1,
-        borderColor: isDark ? "#334155" : "#e2e8f0",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.1)"
+          : "rgba(0, 0, 0, 0.08)",
       }}
     >
       <ThemedText style={[styles.headerText, { width: RANK_WIDTH }]}>
@@ -593,7 +601,13 @@ export default function LeaderboardUser() {
       >
         PLAYER
       </ThemedText>
-      <HStack style={{ width: HCP_WIDTH, alignItems: "center", justifyContent: "center" }}>
+      <HStack
+        style={{
+          width: HCP_WIDTH,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <ThemedText style={[styles.headerText, { width: "auto" }]}>
           HCP
         </ThemedText>
@@ -623,7 +637,9 @@ export default function LeaderboardUser() {
       style={{
         height: 45,
         width: rightContentWidth,
-        backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(139, 195, 74, 0.15)",
       }}
     >
       {Array.from({ length: 9 }).map((_, i) => (
@@ -687,9 +703,13 @@ export default function LeaderboardUser() {
         height: 40,
         width: LEFT_FIXED_WIDTH,
         borderBottomWidth: 1,
-        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(0, 0, 0, 0.06)",
         borderRightWidth: 1,
-        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.03)"
+          : "rgba(0, 0, 0, 0.02)",
       }}
     >
       <View style={{ width: RANK_WIDTH }} />
@@ -712,8 +732,12 @@ export default function LeaderboardUser() {
         height: 40,
         width: rightContentWidth,
         borderBottomWidth: 1,
-        borderColor: isDark ? "#1e293b" : "#e2e8f0",
-        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+        borderColor: isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(0, 0, 0, 0.06)",
+        backgroundColor: isDark
+          ? "rgba(255, 255, 255, 0.03)"
+          : "rgba(0, 0, 0, 0.02)",
       }}
     >
       {data.slice(0, 9).map((h, i) => (
@@ -751,19 +775,34 @@ export default function LeaderboardUser() {
       >
         {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
       </ThemedText>
-      <View style={{ width: STAT_WIDTH * (showNetColumn ? 5 : 4) + ACTIONS_WIDTH }} />
+      {showNetColumn && (
+        <ThemedText
+          style={[
+            styles.infoCellText,
+            { width: STAT_WIDTH, fontWeight: "700" },
+          ]}
+        >
+          -
+        </ThemedText>
+      )}
+      <ThemedText
+        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+      >
+        -
+      </ThemedText>
+      <View
+        style={{ width: STAT_WIDTH * (showNetColumn ? 5 : 4) + ACTIONS_WIDTH }}
+      />
     </HStack>
   );
 
   const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
-      ? isDark
-        ? "#0f172a"
-        : "#fff"
+      ? "transparent"
       : isDark
-        ? "#1e293b"
-        : "#f8fafc";
+        ? "rgba(255, 255, 255, 0.03)"
+        : "rgba(0, 0, 0, 0.02)";
 
     return (
       <HStack
@@ -772,7 +811,9 @@ export default function LeaderboardUser() {
           width: LEFT_FIXED_WIDTH,
           backgroundColor: rowBg,
           borderBottomWidth: 0.5,
-          borderColor: isDark ? "#333" : "#eee",
+          borderColor: isDark
+            ? "rgba(255, 255, 255, 0.08)"
+            : "rgba(0, 0, 0, 0.06)",
           borderRightWidth: 1,
         }}
       >
@@ -799,7 +840,9 @@ export default function LeaderboardUser() {
           {player.handicap}
         </ThemedText>
         {isSystem36 && (
-          <ThemedText style={[styles.cellText, { width: SHCP_WIDTH, color: "#f59e0b" }]}>
+          <ThemedText
+            style={[styles.cellText, { width: SHCP_WIDTH, color: "#f59e0b" }]}
+          >
             {player.dpHandicap != null ? player.dpHandicap : "-"}
           </ThemedText>
         )}
@@ -816,12 +859,10 @@ export default function LeaderboardUser() {
   }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
-      ? isDark
-        ? "#0f172a"
-        : "#fff"
+      ? "transparent"
       : isDark
-        ? "#1e293b"
-        : "#f8fafc";
+        ? "rgba(255, 255, 255, 0.03)"
+        : "rgba(0, 0, 0, 0.02)";
 
     return (
       <HStack
@@ -830,7 +871,9 @@ export default function LeaderboardUser() {
           width: rightContentWidth,
           backgroundColor: rowBg,
           borderBottomWidth: 0.5,
-          borderColor: isDark ? "#333" : "#eee",
+          borderColor: isDark
+            ? "rgba(255, 255, 255, 0.08)"
+            : "rgba(0, 0, 0, 0.06)",
         }}
       >
         {Array.from({ length: 9 }).map((_, i) => {
@@ -912,49 +955,51 @@ export default function LeaderboardUser() {
             paddingHorizontal: 8,
           }}
         >
-          {/* History Button (with Eye icon) */}
-          <Pressable
-            disabled={!player.scorecardId}
-            onPress={() => {
-              routePage.push({
-                pathname:
-                  "/(drawer)/(user)/(tabs)/tournaments/tournamentHistory",
-                params: {
-                  tournamentId,
-                  tournamentName,
-                  teeBoxId: teeboxId,
-                  scoringType,
-                  scorecardId: player.scorecardId,
-                  handicap: player.handicap,
-                },
-              });
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isDark ? "rgba(6, 182, 212, 0.15)" : "#ecfeff",
-              borderWidth: 1,
-              borderColor: "#06b6d4",
-              borderRadius: 6,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              height: 32,
-              opacity: player.scorecardId ? 1 : 0.4,
-            }}
-          >
-            <Ionicons
-              name="eye-outline"
-              size={14}
-              color="#06b6d4"
-              style={{ marginRight: 4 }}
-            />
-            <ThemedText
-              style={{ color: "#06b6d4", fontSize: 11, fontWeight: "600" }}
+          {/* History Button (with Eye icon) - Conditionally rendered based on scorecardId matching web (*ngIf="l.scorecardId") */}
+          {player.scorecardId ? (
+            <Pressable
+              onPress={() => {
+                routePage.push({
+                  pathname:
+                    "/(drawer)/(user)/(tabs)/tournaments/tournamentHistory",
+                  params: {
+                    tournamentId,
+                    tournamentName,
+                    teeBoxId: teeboxId,
+                    scoringType,
+                    scorecardId: player.scorecardId,
+                    handicap: player.handicap,
+                  },
+                });
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#399bb4ff",
+                borderRadius: 6,
+                paddingVertical: 4,
+                paddingHorizontal: 8,
+                height: 32,
+              }}
             >
-              History
-            </ThemedText>
-          </Pressable>
+              <Ionicons
+                name="eye-outline"
+                size={14}
+                color="#ffffff"
+                style={{ marginRight: 4 }}
+              />
+              <ThemedText
+                style={{
+                  color: "#ffffff",
+                  fontSize: 11,
+                  fontWeight: "600",
+                }}
+              >
+                History
+              </ThemedText>
+            </Pressable>
+          ) : null}
 
           {/* Authenticate Button / Badge (with Lock icon) */}
           {player.isAuthenticated ? (
@@ -963,11 +1008,7 @@ export default function LeaderboardUser() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: isDark
-                  ? "rgba(139, 195, 74, 0.15)"
-                  : "#f1f8e9",
-                borderWidth: 1,
-                borderColor: "#8bc34a",
+                backgroundColor: "#16a34a",
                 borderRadius: 6,
                 paddingVertical: 4,
                 paddingHorizontal: 8,
@@ -977,18 +1018,21 @@ export default function LeaderboardUser() {
               <Ionicons
                 name="checkmark-circle"
                 size={14}
-                color="#8bc34a"
+                color="#ffffff"
                 style={{ marginRight: 4 }}
               />
               <ThemedText
-                style={{ color: "#8bc34a", fontSize: 11, fontWeight: "600" }}
+                style={{
+                  color: "#ffffff",
+                  fontSize: 11,
+                  fontWeight: "600",
+                }}
               >
                 Verified
               </ThemedText>
             </View>
-          ) : player.userId !== currentUserId ? (
+          ) : player.userId !== currentUserId && player.scorecardId ? (
             <Pressable
-              disabled={!player.scorecardId}
               onPress={() => handleAuthenticate(player)}
               style={{
                 flexDirection: "row",
@@ -999,23 +1043,32 @@ export default function LeaderboardUser() {
                 paddingVertical: 4,
                 paddingHorizontal: 8,
                 height: 32,
-                opacity: player.scorecardId ? 1 : 0.4,
               }}
             >
               <Ionicons
                 name="lock-closed-outline"
                 size={14}
-                color="white"
+                color="#ffffff"
                 style={{ marginRight: 4 }}
               />
               <ThemedText
-                style={{ color: "white", fontSize: 11, fontWeight: "600" }}
+                style={{ color: "#ffffff", fontSize: 11, fontWeight: "600" }}
               >
                 Auth
               </ThemedText>
             </Pressable>
-          ) : (
-            <View style={{ width: 60, height: 32 }} />
+          ) : null}
+
+          {!player.scorecardId && !player.isAuthenticated && (
+            <ThemedText
+              style={{
+                color: isDark ? "#64748b" : "#94a3b8",
+                fontSize: 14,
+                fontWeight: "600",
+              }}
+            >
+              -
+            </ThemedText>
           )}
         </HStack>
       </HStack>
@@ -1034,14 +1087,13 @@ export default function LeaderboardUser() {
   }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
-      ? isDark
-        ? "#0f172a"
-        : "#fff"
+      ? "transparent"
       : isDark
-        ? "#1e293b"
-        : "#f8fafc";
+        ? "rgba(255, 255, 255, 0.03)"
+        : "rgba(0, 0, 0, 0.02)";
 
-    const dataMap = type === "net" ? player.holeNetScores : player.holeStablefordPoints;
+    const dataMap =
+      type === "net" ? player.holeNetScores : player.holeStablefordPoints;
     const front9Total = type === "net" ? player.front9Net : player.front9Points;
     const back9Total = type === "net" ? player.back9Net : player.back9Points;
     const labelColor = type === "net" ? "#3b82f6" : "#16a34a";
@@ -1053,16 +1105,26 @@ export default function LeaderboardUser() {
           width: rightContentWidth,
           backgroundColor: rowBg,
           borderBottomWidth: type === "points" ? 1.5 : 0.5,
-          borderColor: type === "points"
-            ? isDark ? "#475569" : "#cbd5e1"
-            : isDark ? "#333" : "#eee",
+          borderColor:
+            type === "points"
+              ? isDark
+                ? "rgba(139, 195, 74, 0.2)"
+                : "rgba(139, 195, 74, 0.3)"
+              : isDark
+                ? "rgba(255, 255, 255, 0.08)"
+                : "rgba(0, 0, 0, 0.06)",
         }}
       >
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 1];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
-              <ThemedText style={{ fontSize: 12, fontWeight: "500", color: labelColor }}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
+              <ThemedText
+                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
+              >
                 {val != null ? val : "-"}
               </ThemedText>
             </View>
@@ -1079,8 +1141,13 @@ export default function LeaderboardUser() {
         {Array.from({ length: 9 }).map((_, i) => {
           const val = dataMap?.[i + 10];
           return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}>
-              <ThemedText style={{ fontSize: 12, fontWeight: "500", color: labelColor }}>
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
+              <ThemedText
+                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
+              >
                 {val != null ? val : "-"}
               </ThemedText>
             </View>
@@ -1101,18 +1168,26 @@ export default function LeaderboardUser() {
         {showNetColumn && (
           <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
             {type === "net" ? (
-              <ThemedText style={{ color: "#3b82f6", fontWeight: "800", fontSize: 12 }}>
+              <ThemedText
+                style={{ color: "#3b82f6", fontWeight: "800", fontSize: 12 }}
+              >
                 {player.net}
               </ThemedText>
-            ) : "-"}
+            ) : (
+              "-"
+            )}
           </ThemedText>
         )}
         <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
           {type === "points" ? (
-            <ThemedText style={{ color: "#16a34a", fontWeight: "800", fontSize: 12 }}>
+            <ThemedText
+              style={{ color: "#16a34a", fontWeight: "800", fontSize: 12 }}
+            >
               {player.points != null ? player.points : 0}
             </ThemedText>
-          ) : "-"}
+          ) : (
+            "-"
+          )}
         </ThemedText>
         {/* Empty stats + actions cells */}
         <View style={{ width: STAT_WIDTH * 3 + ACTIONS_WIDTH }} />
@@ -1129,12 +1204,10 @@ export default function LeaderboardUser() {
   }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
-      ? isDark
-        ? "#0f172a"
-        : "#fff"
+      ? "transparent"
       : isDark
-        ? "#1e293b"
-        : "#f8fafc";
+        ? "rgba(255, 255, 255, 0.03)"
+        : "rgba(0, 0, 0, 0.02)";
 
     return (
       <HStack
@@ -1143,9 +1216,14 @@ export default function LeaderboardUser() {
           width: LEFT_FIXED_WIDTH,
           backgroundColor: rowBg,
           borderBottomWidth: label === "Pts" ? 1.5 : 0.5,
-          borderColor: label === "Pts"
-            ? isDark ? "#475569" : "#cbd5e1"
-            : isDark ? "#333" : "#eee",
+          borderColor:
+            label === "Pts"
+              ? isDark
+                ? "rgba(139, 195, 74, 0.2)"
+                : "rgba(139, 195, 74, 0.3)"
+              : isDark
+                ? "rgba(255, 255, 255, 0.08)"
+                : "rgba(0, 0, 0, 0.06)",
           borderRightWidth: 1,
         }}
       >
@@ -1176,111 +1254,132 @@ export default function LeaderboardUser() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 20 }}
       >
-        <HStack
+        <View
           style={{
-            borderTopWidth: 1,
-            borderColor: isDark ? "#1e293b" : "#e2e8f0",
+            marginHorizontal: 12,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: isDark
+              ? "rgba(139, 195, 74, 0.35)"
+              : "rgba(139, 195, 74, 0.45)",
+            backgroundColor: isDark
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
+            overflow: "hidden",
           }}
         >
-          {/* Left fixed skeleton */}
-          <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-            <View
-              style={{
-                height: 45,
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
-                borderRightWidth: 1,
-                borderColor: isDark ? "#334155" : "#e2e8f0",
-                justifyContent: "center",
-                paddingHorizontal: 10,
-              }}
-            >
-              <Skeleton isDark={isDark} height={12} width={120} />
-            </View>
-            {Array.from({ length: rows }).map((_, i) => (
-              <HStack
-                key={i}
-                style={{
-                  height: 50,
-                  borderBottomWidth: 0.5,
-                  borderColor: isDark ? "#333" : "#eee",
-                  borderRightWidth: 1,
-                  paddingHorizontal: 8,
-                  alignItems: "center",
-                  gap: 8,
-                  backgroundColor:
-                    i % 2 === 0
-                      ? isDark
-                        ? "#0f172a"
-                        : "#fff"
-                      : isDark
-                        ? "#1e293b"
-                        : "#f8fafc",
-                }}
-              >
-                <Skeleton isDark={isDark} height={12} width={20} />
-                <Skeleton isDark={isDark} height={12} width={60} />
-                <Skeleton isDark={isDark} height={12} width={25} />
-              </HStack>
-            ))}
-          </VStack>
-
-          {/* Right scrollable skeleton */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <VStack style={{ width: rightContentWidth }}>
+          <HStack>
+            {/* Left fixed skeleton */}
+            <VStack style={{ width: LEFT_FIXED_WIDTH }}>
               <View
                 style={{
                   height: 45,
-                  backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                  backgroundColor: isDark
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : "rgba(139, 195, 74, 0.15)",
+                  borderRightWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(255, 255, 255, 0.1)"
+                    : "rgba(0, 0, 0, 0.08)",
                   justifyContent: "center",
                   paddingHorizontal: 10,
                 }}
               >
-                <Skeleton isDark={isDark} height={12} width={220} />
+                <Skeleton isDark={isDark} height={12} width={120} />
               </View>
-
-              {Array.from({ length: rows }).map((_, r) => (
+              {Array.from({ length: rows }).map((_, i) => (
                 <HStack
-                  key={r}
+                  key={i}
                   style={{
                     height: 50,
                     borderBottomWidth: 0.5,
-                    borderColor: isDark ? "#333" : "#eee",
-                    backgroundColor:
-                      r % 2 === 0
-                        ? isDark
-                          ? "#0f172a"
-                          : "#fff"
-                        : isDark
-                          ? "#1e293b"
-                          : "#f8fafc",
-                    paddingHorizontal: 6,
+                    borderColor: isDark
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "rgba(0, 0, 0, 0.06)",
+                    borderRightWidth: 1,
+                    paddingHorizontal: 8,
                     alignItems: "center",
+                    gap: 8,
+                    backgroundColor:
+                      i % 2 === 0
+                        ? "transparent"
+                        : isDark
+                          ? "rgba(255, 255, 255, 0.03)"
+                          : "rgba(0, 0, 0, 0.02)",
                   }}
                 >
-                  {Array.from({ length: 10 }).map((__, c) => (
-                    <View
-                      key={c}
-                      style={{
-                        width: c === 9 ? TOTAL_WIDTH : HOLE_WIDTH,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Skeleton isDark={isDark} height={12} width={18} />
-                    </View>
-                  ))}
-                  <View style={{ width: 12 }} />
-                  <Skeleton isDark={isDark} height={12} width={260} />
+                  <Skeleton isDark={isDark} height={12} width={20} />
+                  <Skeleton isDark={isDark} height={12} width={60} />
+                  <Skeleton isDark={isDark} height={12} width={25} />
                 </HStack>
               ))}
             </VStack>
-          </ScrollView>
-        </HStack>
+
+            {/* Right scrollable skeleton */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <VStack style={{ width: rightContentWidth }}>
+                <View
+                  style={{
+                    height: 45,
+                    backgroundColor: isDark
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "rgba(139, 195, 74, 0.15)",
+                    justifyContent: "center",
+                    paddingHorizontal: 10,
+                  }}
+                >
+                  <Skeleton isDark={isDark} height={12} width={220} />
+                </View>
+
+                {Array.from({ length: rows }).map((_, r) => (
+                  <HStack
+                    key={r}
+                    style={{
+                      height: 50,
+                      borderBottomWidth: 0.5,
+                      borderColor: isDark
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : "rgba(0, 0, 0, 0.06)",
+                      backgroundColor:
+                        r % 2 === 0
+                          ? "transparent"
+                          : isDark
+                            ? "rgba(255, 255, 255, 0.03)"
+                            : "rgba(0, 0, 0, 0.02)",
+                      paddingHorizontal: 6,
+                      alignItems: "center",
+                    }}
+                  >
+                    {Array.from({ length: 10 }).map((__, c) => (
+                      <View
+                        key={c}
+                        style={{
+                          width: c === 9 ? TOTAL_WIDTH : HOLE_WIDTH,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Skeleton isDark={isDark} height={12} width={18} />
+                      </View>
+                    ))}
+                    <View style={{ width: 12 }} />
+                    <Skeleton isDark={isDark} height={12} width={260} />
+                  </HStack>
+                ))}
+              </VStack>
+            </ScrollView>
+          </HStack>
+        </View>
       </ScrollView>
     );
   };
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? "#161618" : "#ffffff",
+      }}
+    >
       <RenderHeader />
       <Watermark />
 
@@ -1294,80 +1393,97 @@ export default function LeaderboardUser() {
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 20 }}
             refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#8bc34a"]}
-            tintColor="#8bc34a"
-          />
-        }
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#8bc34a"]}
+                tintColor="#8bc34a"
+              />
+            }
           >
-            <HStack
+            <View
               style={{
-                borderTopWidth: 1,
-                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                marginHorizontal: 12,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                overflow: "hidden",
               }}
             >
-              {/* Fixed left block */}
-              <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-                <TableHeaderLeft />
-                {holes.length > 0 && (
-                  <>
-                    <InfoRowLeft label="COURSE PAR" />
-                    <InfoRowLeft label="STROKE INDEX" />
-                  </>
-                )}
-                {leaderboard.map((player, idx) => {
-                  const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                  const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
-                  return (
-                    <React.Fragment key={player.userId}>
-                      <PlayerRowLeft
-                        player={player}
-                        index={idx}
-                      />
-                      {hasNetScores && (
-                        <PlayerSubRowLeft index={idx} label="Net" />
-                      )}
-                      {hasStablefordPoints && (
-                        <PlayerSubRowLeft index={idx} label="Pts" />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </VStack>
-
-              {/* Horizontally scrollable right block */}
-              <ScrollView horizontal showsHorizontalScrollIndicator>
-                <VStack style={{ width: rightContentWidth }}>
-                  <TableHeaderRight />
+              <HStack>
+                {/* Fixed left block */}
+                <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+                  <TableHeaderLeft />
                   {holes.length > 0 && (
                     <>
-                      <InfoRowRight data={holes} type="par" />
-                      <InfoRowRight data={holes} type="si" />
+                      <InfoRowLeft label="COURSE PAR" />
+                      <InfoRowLeft label="STROKE INDEX" />
                     </>
                   )}
                   {leaderboard.map((player, idx) => {
-                    const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                    const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
+                    const hasNetScores =
+                      Object.keys(player.holeNetScores || {}).length > 0;
+                    const hasStablefordPoints =
+                      Object.keys(player.holeStablefordPoints || {}).length > 0;
                     return (
                       <React.Fragment key={player.userId}>
-                        <PlayerRowRight
-                          player={player}
-                          index={idx}
-                        />
+                        <PlayerRowLeft player={player} index={idx} />
                         {hasNetScores && (
-                          <PlayerSubRowRight player={player} index={idx} type="net" />
+                          <PlayerSubRowLeft index={idx} label="Net" />
                         )}
                         {hasStablefordPoints && (
-                          <PlayerSubRowRight player={player} index={idx} type="points" />
+                          <PlayerSubRowLeft index={idx} label="Pts" />
                         )}
                       </React.Fragment>
                     );
                   })}
                 </VStack>
-              </ScrollView>
-            </HStack>
+
+                {/* Horizontally scrollable right block */}
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <VStack style={{ width: rightContentWidth }}>
+                    <TableHeaderRight />
+                    {holes.length > 0 && (
+                      <>
+                        <InfoRowRight data={holes} type="par" />
+                        <InfoRowRight data={holes} type="si" />
+                      </>
+                    )}
+                    {leaderboard.map((player, idx) => {
+                      const hasNetScores =
+                        Object.keys(player.holeNetScores || {}).length > 0;
+                      const hasStablefordPoints =
+                        Object.keys(player.holeStablefordPoints || {}).length >
+                        0;
+                      return (
+                        <React.Fragment key={player.userId}>
+                          <PlayerRowRight player={player} index={idx} />
+                          {hasNetScores && (
+                            <PlayerSubRowRight
+                              player={player}
+                              index={idx}
+                              type="net"
+                            />
+                          )}
+                          {hasStablefordPoints && (
+                            <PlayerSubRowRight
+                              player={player}
+                              index={idx}
+                              type="points"
+                            />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </VStack>
+                </ScrollView>
+              </HStack>
+            </View>
             {leaderboard.length == 0 && (
               <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
                 No Players or scores available yet.

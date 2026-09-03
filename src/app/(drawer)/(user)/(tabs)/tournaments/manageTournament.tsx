@@ -152,9 +152,9 @@ export default function ManageTournament() {
     return (
       <Box
         style={{
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         <VStack
@@ -186,14 +186,14 @@ export default function ManageTournament() {
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#f1f5f9",
               }}
               android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
               <Ionicons
                 name="arrow-back"
                 size={20}
-                color={isDark ? "#fff" : "#020617"}
+                color="#8BC34A"
               />
             </Pressable>
 
@@ -298,7 +298,12 @@ export default function ManageTournament() {
 
   return (
     <>
-      <ThemedView style={{ flex: 1 }}>
+      <ThemedView
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#161618" : "#ffffff",
+        }}
+      >
         <RenderHeader />
         <Watermark />
 
@@ -335,11 +340,13 @@ export default function ManageTournament() {
               <View
                 style={{
                   borderWidth: 1,
-                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  borderColor: isDark
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
                   backgroundColor: isDark
                     ? "rgba(15, 23, 42, 0.7)"
                     : "rgba(255, 255, 255, 0.7)",
-                  borderRadius: 10,
+                  borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   marginBottom: 12,
@@ -382,11 +389,13 @@ export default function ManageTournament() {
                       key={user.id}
                       style={{
                         borderWidth: 1,
-                        borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                        borderColor: isDark
+                          ? "rgba(139, 195, 74, 0.35)"
+                          : "rgba(139, 195, 74, 0.45)",
                         backgroundColor: isDark
                           ? "rgba(15, 23, 42, 0.7)"
                           : "rgba(255, 255, 255, 0.7)",
-                        borderRadius: 12,
+                        borderRadius: 16,
                         padding: 12,
                         marginBottom: 10,
                       }}

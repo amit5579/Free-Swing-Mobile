@@ -356,9 +356,12 @@ export default function GolferParadise({
         className="p-4 rounded-2xl border"
         style={{
           backgroundColor: isDark
-            ? "rgba(26,26,26,0.55)"
-            : "rgba(255,255,255,0.55)",
-          borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(224, 224, 224, 0.7)",
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
+          borderRadius: 20,
           shadowColor: "#8BC34A",
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: isDark ? 0.3 : 0.1,
@@ -492,9 +495,12 @@ export default function GolferParadise({
                   className="rounded-2xl border"
                   style={{
                     backgroundColor: isDark
-                      ? "rgba(26,26,26,0.55)"
-                      : "rgba(255,255,255,0.55)",
-                    borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(224, 224, 224, 0.7)",
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark
+                      ? "rgba(139, 195, 74, 0.35)"
+                      : "rgba(139, 195, 74, 0.45)",
+                    borderRadius: 20,
                     marginBottom: 16,
                     overflow: "hidden",
                     shadowColor: "#8BC34A",

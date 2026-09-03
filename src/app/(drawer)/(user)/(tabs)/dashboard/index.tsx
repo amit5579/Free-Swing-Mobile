@@ -323,10 +323,12 @@ export default function DashboardScreen() {
                 className="rounded-full p-1 justify-between"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(22, 22, 24, 0.4)"
-                    : "rgba(255, 255, 255, 0.35)",
-                  borderWidth: isDark ? 1 : 0,
-                  borderColor: isDark ? "#FFFFFF" : "transparent",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
                 }}
               >
                 <Skeleton
@@ -353,11 +355,11 @@ export default function DashboardScreen() {
                 className="flex-row items-center px-4 rounded-xl border h-11"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(255,255,255,0.9)",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
                   borderColor: isDark
-                    ? "rgba(139,195,74,0.3)"
-                    : "rgba(229,231,235,1)",
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
                 }}
               >
                 <Skeleton
@@ -381,12 +383,12 @@ export default function DashboardScreen() {
                 className="p-1 rounded-full"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(22, 22, 24, 0.4)"
-                    : "rgba(243, 244, 246, 0.8)",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
                   borderWidth: 1,
                   borderColor: isDark
-                    ? "rgba(139,195,74,0.1)"
-                    : "rgba(229,231,235,1)",
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
                 }}
               >
                 {tabs.map((tab) => {
@@ -442,11 +444,11 @@ export default function DashboardScreen() {
                   className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
                   style={{
                     backgroundColor: isDark
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(255,255,255,0.9)",
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
                     borderColor: isDark
-                      ? "rgba(139,195,74,0.3)"
-                      : "rgba(229,231,235,1)",
+                      ? "rgba(139, 195, 74, 0.35)"
+                      : "rgba(139, 195, 74, 0.45)",
                   }}
                 >
                   <Ionicons name="search-outline" size={18} color="#8BC34A" />
@@ -524,10 +526,13 @@ export default function DashboardScreen() {
                               minWidth: STAT_CARD_WIDTH,
                               minHeight: 100,
                               backgroundColor: isDark
-                                ? "rgba(31, 31, 31, 0.5)"
-                                : "rgba(243, 244, 246, 0.8)",
-                              borderColor: "rgba(139, 195, 74, 0.2)",
-                              borderWidth: 1.5,
+                                ? "rgba(15, 23, 42, 0.7)"
+                                : "rgba(255, 255, 255, 0.7)",
+                              borderColor: isDark
+                                ? "rgba(139, 195, 74, 0.35)"
+                                : "rgba(139, 195, 74, 0.45)",
+                              borderWidth: 1,
+                              borderRadius: 16,
                             }}
                           >
                             <Skeleton
@@ -577,12 +582,14 @@ export default function DashboardScreen() {
                     className="w-full rounded-2xl mb-4"
                     style={{
                       backgroundColor: isDark
-                        ? "rgba(26,26,26,0.6)"
-                        : "rgba(255,255,255,0.7)",
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
                       borderLeftWidth: 6,
                       borderLeftColor: "#8BC34A",
                       borderWidth: 1,
-                      borderColor: "rgba(139, 195, 74, 0.3)",
+                      borderColor: isDark
+                        ? "rgba(139, 195, 74, 0.35)"
+                        : "rgba(139, 195, 74, 0.45)",
                       borderRadius: 20,
                       overflow: "hidden",
                       padding: 16,
@@ -687,12 +694,14 @@ export default function DashboardScreen() {
                       className="w-full rounded-2xl mb-4"
                       style={{
                         backgroundColor: isDark
-                          ? "rgba(26,26,26,0.6)"
-                          : "rgba(255,255,255,0.7)",
+                          ? "rgba(15, 23, 42, 0.7)"
+                          : "rgba(255, 255, 255, 0.7)",
                         borderLeftWidth: 6,
                         borderLeftColor: "#8BC34A",
                         borderWidth: 1,
-                        borderColor: "rgba(139, 195, 74, 0.3)",
+                        borderColor: isDark
+                          ? "rgba(139, 195, 74, 0.35)"
+                          : "rgba(139, 195, 74, 0.45)",
                         borderRadius: 20,
                         overflow: "hidden",
                         padding: 16,
@@ -866,10 +875,13 @@ export default function DashboardScreen() {
                                   flexShrink: 0,
                                   minHeight: 100,
                                   backgroundColor: isDark
-                                    ? "rgba(31, 31, 31, 0.55)"
-                                    : "rgba(255, 255, 255, 0.55)",
-                                  borderWidth: 1.5,
-                                  borderColor: "#8BC34A",
+                                    ? "rgba(15, 23, 42, 0.7)"
+                                    : "rgba(255, 255, 255, 0.7)",
+                                  borderWidth: 1,
+                                  borderColor: isDark
+                                    ? "rgba(139, 195, 74, 0.35)"
+                                    : "rgba(139, 195, 74, 0.45)",
+                                  borderRadius: 16,
                                 }}
                               >
                                 <Box
@@ -920,15 +932,15 @@ export default function DashboardScreen() {
                         className="items-center justify-between mt-2"
                         style={{
                           width: "100%",
-                          padding: 12,
-                          borderRadius: 14,
+                          padding: 14,
+                          borderRadius: 16,
                           backgroundColor: isDark
-                            ? "rgba(31, 31, 31, 0.55)"
-                            : "rgba(255, 255, 255, 0.55)",
+                            ? "rgba(15, 23, 42, 0.7)"
+                            : "rgba(255, 255, 255, 0.7)",
                           borderWidth: 1,
                           borderColor: isDark
-                            ? "rgba(255,255,255,0.08)"
-                            : "#E5E7EB",
+                            ? "rgba(139, 195, 74, 0.35)"
+                            : "rgba(139, 195, 74, 0.45)",
                         }}
                       >
                         {/* LEFT CONTENT */}

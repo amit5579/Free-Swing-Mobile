@@ -11,7 +11,7 @@ import {
 import { useColorScheme, useThemeControls } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { removeToken } from "@/utils/storage";
 import { getUserProfile, UserProfile } from "@/api/modules/dashboard.api";
@@ -31,7 +31,7 @@ function CustomDrawerContent({ navigation }: any) {
   const logout = async () => {
     await removeToken();
   };
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
 
@@ -47,9 +47,9 @@ function CustomDrawerContent({ navigation }: any) {
     } catch (error) {
       console.log("Profile error:", error);
     }
-  };
+  }, []);
 
-  const loadRole = async () => {
+  const loadRole = useCallback(async () => {
     const storedRole = await AsyncStorage.getItem("role");
     const normalizedRole =
       storedRole?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
@@ -60,18 +60,18 @@ function CustomDrawerContent({ navigation }: any) {
       setIsSubAdmin(true);
     }
     setRole(storedRole);
-  };
+  }, []);
 
   useEffect(() => {
     loadRole();
     fetchProfile();
-  }, [fetchProfile, loadRole]);
+  }, [loadRole, fetchProfile]);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadRole();
       fetchProfile();
-    }, []),
+    }, [loadRole, fetchProfile]),
   );
 
   return (
@@ -557,7 +557,7 @@ function CustomDrawerContent({ navigation }: any) {
                 <View style={styles.iconContainer}>
                   <Ionicons name="book-outline" size={22} color="#8bc34a" />
                 </View>
-                <Text style={styles.drawerText}>R & A Rules</Text>
+                <Text style={styles.drawerText}>Golf Rules</Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}

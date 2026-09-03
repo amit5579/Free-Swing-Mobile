@@ -85,9 +85,9 @@ export default function UserBillingPage() {
   const RenderHeader = () => (
     <Box
       style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
+        backgroundColor: isDark ? "#161618" : "#ffffff",
         borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
       }}
     >
       <HStack
@@ -107,11 +107,11 @@ export default function UserBillingPage() {
             borderRadius: 10,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+            backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#f1f5f9",
           }}
           android_ripple={{ color: "rgba(0,0,0,0.1)" }}
         >
-          <Ionicons name="arrow-back" size={20} color={isDark ? "#fff" : "#020617"} />
+          <Ionicons name="arrow-back" size={20} color="#8BC34A" />
         </Pressable>
 
         <VStack style={{ flex: 1, alignItems: "center" }}>
@@ -134,6 +134,7 @@ export default function UserBillingPage() {
 
   const renderBillItem = ({ item }: any) => {
     const isPaid = item.paymentStatus === "Paid";
+    const isPendingApproval = item.paymentStatus === "PendingApproval";
     const hasScreenshot = item.paymentScreenshotUrl && item.paymentScreenshotUrl.trim() !== "";
     const isUploading = uploadingId === item.id;
     
@@ -162,7 +163,14 @@ export default function UserBillingPage() {
       <Box
         className="p-4 rounded-2xl mb-4"
         style={{
-          backgroundColor: isDark ? "rgba(30, 41, 59, 0.5)" : "rgba(241, 245, 249, 0.6)",
+          backgroundColor: isDark
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
+          borderWidth: 1,
+          borderRadius: 20,
         }}
       >
         <HStack className="items-center justify-between mb-3">
@@ -267,7 +275,14 @@ export default function UserBillingPage() {
     <Box
       className="p-4 rounded-2xl mb-4"
       style={{
-        backgroundColor: isDark ? "rgba(30, 41, 59, 0.5)" : "rgba(241, 245, 249, 0.6)",
+        backgroundColor: isDark
+          ? "rgba(15, 23, 42, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+        borderColor: isDark
+          ? "rgba(139, 195, 74, 0.35)"
+          : "rgba(139, 195, 74, 0.45)",
+        borderWidth: 1,
+        borderRadius: 20,
       }}
     >
       <HStack className="justify-between mb-4">
@@ -285,7 +300,7 @@ export default function UserBillingPage() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#020617" : "#ffffff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#ffffff" }}>
       <RenderHeader />
       <Watermark />
 
