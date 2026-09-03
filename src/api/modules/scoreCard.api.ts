@@ -112,4 +112,18 @@ export const pinMapLocation = async (holeId: number, pinLat: number, pinLng: num
     console.error("Updating pin location Error:", error);
     throw error;
   }
-}
+};
+
+export const submitConditionFeedback = async (dto: {
+  roundId: string;
+  conditionCode: string;
+  userId?: number;
+}) => {
+  try {
+    const response = await client.post("scorecard/condition-feedback", dto);
+    return response.data;
+  } catch (error) {
+    console.error("Submitting condition feedback error:", error);
+    throw error;
+  }
+};

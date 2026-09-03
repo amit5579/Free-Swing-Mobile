@@ -64,6 +64,7 @@ import {
   getScorecardHandicap,
   getSubScorecardHandicap,
   getScoreCardOpen,
+  submitConditionFeedback,
 } from "@/api/modules/scoreCard.api";
 import { getScoreCardDetails as getNewRoundDetails } from "@/api/modules/newRound.api";
 
@@ -84,6 +85,29 @@ import {
   computeNassauState,
 } from "@/utils/scorecardUtils";
 import { getDraft, saveDraft, deleteDraft } from "@/utils/draftStorage";
+
+export const CONDITION_OPTIONS = [
+  {
+    code: "Easier",
+    label: "Course played easier than normal (e.g., no wind, soft greens).",
+  },
+  {
+    code: "Expected",
+    label: "Course played as expected (this is the result on most days).",
+  },
+  {
+    code: "SlightlyHarder",
+    label: "Course played slightly harder than normal.",
+  },
+  {
+    code: "ModeratelyHarder",
+    label: "Course played moderately harder than normal (e.g., heavy rain/wind).",
+  },
+  {
+    code: "ExtremelyHard",
+    label: "Course played extremely hard (maximum ceiling limit).",
+  },
+];
 
 export type ScorecardMode = "view" | "resume" | "new-round" | "tournament-play";
 
@@ -217,6 +241,17 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
   // Finish confirmation modal
   const [showFinishModal, setShowFinishModal] = useState(false);
+
+  // Playing condition feedback modal
+  const [showConditionFeedbackModal, setShowConditionFeedbackModal] =
+    useState(false);
+  const [pendingConditionRoundId, setPendingConditionRoundId] = useState<
+    string | null
+  >(null);
+  const [selectedConditionCode, setSelectedConditionCode] =
+    useState<string>("Expected");
+  const [isSubmittingConditionFeedback, setIsSubmittingConditionFeedback] =
+    useState(false);
 
   // Refs
   const holesRef = useRef<any[]>([]);
@@ -1572,10 +1607,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
         const res = await saveScoreCard(payload);
         let newId = null;
+        let newRoundId = null;
         if (Array.isArray(res) && res.length > 0) {
           newId = res[0].scorecardId || res[0].id || res[0].ScorecardId;
+          newRoundId = res[0].roundId || res[0].RoundId;
         } else if (res && typeof res === "object") {
           newId = res.scorecardId || res.id || res.ScorecardId;
+          newRoundId = res.roundId || res.RoundId;
         }
 
         if (newId) {
@@ -1583,11 +1621,13 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             prev.map((h) => ({
               ...h,
               scorecardId: h.scorecardId || newId,
+              roundId: h.roundId || newRoundId,
             })),
           );
           holesRef.current = holesRef.current.map((h) => ({
             ...h,
             scorecardId: h.scorecardId || newId,
+            roundId: h.roundId || newRoundId,
           }));
         }
 
@@ -1607,8 +1647,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             await deleteDraft(`draft_${delCourseId}_${delTeeBoxId}`);
           }
         }
+
+        return { res, newId, newRoundId };
       } catch (err) {
         console.error("Server sync error:", err);
+        return null;
       }
     },
     [
@@ -2000,23 +2043,81 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     setShowFinishModal(false);
     setSaving(true);
     try {
-      await syncServerAndDraft(holes, textScores, true);
-      Toast.show({
-        type: "success",
-        text1: "Scorecard Completed",
-        text2: "Your round has been saved successfully.",
-      });
+      const syncResult = await syncServerAndDraft(holes, textScores, true);
+      const effectiveRoundId =
+        syncResult?.newRoundId ||
+        holes[0]?.roundId ||
+        holes[0]?.RoundId ||
+        (roundKey &&
+        !roundKey.startsWith("round_") &&
+        !roundKey.startsWith("group_")
+          ? roundKey
+          : null);
 
-      if (onFinishRound) {
-        onFinishRound();
+      if (effectiveRoundId) {
+        setPendingConditionRoundId(String(effectiveRoundId));
+        setShowConditionFeedbackModal(true);
       } else {
-        router.back();
+        Toast.show({
+          type: "success",
+          text1: "Scorecard Completed",
+          text2: "Your round has been saved successfully.",
+        });
+
+        if (onFinishRound) {
+          onFinishRound();
+        } else {
+          router.back();
+        }
       }
     } catch (e) {
       console.error("Finishing round error:", e);
       Alert.alert("Error", "Could not complete scorecard. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSubmitConditionFeedback = async () => {
+    if (!selectedConditionCode || !pendingConditionRoundId) {
+      handleSkipConditionFeedback();
+      return;
+    }
+
+    setIsSubmittingConditionFeedback(true);
+    try {
+      const currentUserId =
+        userId || Number(await AsyncStorage.getItem("userId")) || undefined;
+      await submitConditionFeedback({
+        roundId: pendingConditionRoundId,
+        conditionCode: selectedConditionCode,
+        userId: currentUserId,
+      });
+      Toast.show({
+        type: "success",
+        text1: "Thank you for your feedback!",
+      });
+    } catch (err) {
+      console.error("Error submitting condition feedback:", err);
+    } finally {
+      setIsSubmittingConditionFeedback(false);
+      setShowConditionFeedbackModal(false);
+      setPendingConditionRoundId(null);
+      if (onFinishRound) {
+        onFinishRound();
+      } else {
+        router.back();
+      }
+    }
+  };
+
+  const handleSkipConditionFeedback = () => {
+    setShowConditionFeedbackModal(false);
+    setPendingConditionRoundId(null);
+    if (onFinishRound) {
+      onFinishRound();
+    } else {
+      router.back();
     }
   };
 
@@ -3877,6 +3978,156 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           </View>
         </View>
       </Modal>
+
+      {/* Course Playing Conditions Feedback Modal */}
+      <Modal
+        visible={showConditionFeedbackModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleSkipConditionFeedback}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.conditionModalContainer,
+              { backgroundColor: isDark ? "#18181b" : "#ffffff" },
+            ]}
+          >
+            {/* Modal Header */}
+            <View style={styles.conditionModalHeader}>
+              <View
+                style={[
+                  styles.conditionIconBadge,
+                  {
+                    backgroundColor: isDark
+                      ? "rgba(22, 163, 74, 0.2)"
+                      : "rgba(22, 163, 74, 0.1)",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="partly-sunny-outline"
+                  size={24}
+                  color="#16a34a"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[
+                    styles.conditionModalTitle,
+                    { color: isDark ? "#ffffff" : "#0f172a" },
+                  ]}
+                >
+                  Course Playing Conditions
+                </Text>
+                <Text
+                  style={[
+                    styles.conditionModalSubtitle,
+                    { color: isDark ? "#9ca3af" : "#64748b" },
+                  ]}
+                >
+                  How did the course play during today's round?
+                </Text>
+              </View>
+            </View>
+
+            {/* Options List */}
+            <View style={styles.conditionOptionsList}>
+              {CONDITION_OPTIONS.map((opt) => {
+                const isSelected = selectedConditionCode === opt.code;
+                return (
+                  <Pressable
+                    key={opt.code}
+                    onPress={() => setSelectedConditionCode(opt.code)}
+                    style={[
+                      styles.conditionOptionCard,
+                      {
+                        backgroundColor: isSelected
+                          ? isDark
+                            ? "rgba(22, 163, 74, 0.15)"
+                            : "#f0fdf4"
+                          : isDark
+                            ? "rgba(39, 39, 42, 0.5)"
+                            : "#f8fafc",
+                        borderColor: isSelected
+                          ? "#16a34a"
+                          : isDark
+                            ? "#27272a"
+                            : "#e2e8f0",
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.radioOuter,
+                        {
+                          borderColor: isSelected
+                            ? "#16a34a"
+                            : isDark
+                              ? "#71717a"
+                              : "#94a3b8",
+                        },
+                      ]}
+                    >
+                      {isSelected && <View style={styles.radioInner} />}
+                    </View>
+                    <Text
+                      style={[
+                        styles.conditionOptionLabel,
+                        {
+                          color: isDark ? "#e4e4e7" : "#1e293b",
+                          fontWeight: isSelected ? "600" : "400",
+                        },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* Action Footer */}
+            <View style={styles.conditionActionRow}>
+              <TouchableOpacity
+                onPress={handleSkipConditionFeedback}
+                disabled={isSubmittingConditionFeedback}
+                style={styles.conditionSkipButton}
+              >
+                <Text
+                  style={[
+                    styles.conditionSkipText,
+                    { color: isDark ? "#9ca3af" : "#64748b" },
+                  ]}
+                >
+                  Skip
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSubmitConditionFeedback}
+                disabled={
+                  isSubmittingConditionFeedback || !selectedConditionCode
+                }
+                style={[
+                  styles.conditionSubmitButton,
+                  (!selectedConditionCode || isSubmittingConditionFeedback) && {
+                    opacity: 0.7,
+                  },
+                ]}
+              >
+                {isSubmittingConditionFeedback ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.conditionSubmitText}>
+                    Submit Feedback
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 };
@@ -4250,6 +4501,99 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalConfirmText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  // Playing condition feedback modal styles
+  conditionModalContainer: {
+    width: "100%",
+    maxWidth: 440,
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  conditionModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  conditionIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  conditionModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  conditionModalSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  conditionOptionsList: {
+    gap: 8,
+    marginBottom: 20,
+  },
+  conditionOptionCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    gap: 12,
+  },
+  radioOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  radioInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: "#16a34a",
+  },
+  conditionOptionLabel: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  conditionActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 4,
+  },
+  conditionSkipButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  conditionSkipText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  conditionSubmitButton: {
+    backgroundColor: "#16a34a",
+    paddingVertical: 11,
+    paddingHorizontal: 22,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 140,
+  },
+  conditionSubmitText: {
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
