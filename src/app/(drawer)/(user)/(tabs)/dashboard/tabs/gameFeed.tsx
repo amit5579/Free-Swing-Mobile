@@ -89,23 +89,25 @@ const FeedCard = ({
   };
 
   return (
-    <Box
+    <><Box
       className="mb-4"
       style={{
         shadowColor: "#8BC34A",
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: isDark ? 0.35 : 0.1,
+        shadowOpacity: isDark ? 0.3 : 0.1,
         shadowRadius: 16,
         elevation: 4,
-        backgroundColor: card.isDQ ? (isDark ? "rgba(50, 20, 20, 0.9)" : "#FFF1F2") : (isDark ? "rgba(30, 30, 32, 0.85)" : "rgba(255, 255, 255, 0.95)"),
+        backgroundColor: card.isDQ
+          ? (isDark ? "rgba(50, 20, 20, 0.6)" : "rgba(254, 242, 242, 0.6)")
+          : (isDark ? "rgba(26, 26, 26, 0.55)" : "rgba(255, 255, 255, 0.55)"),
         borderLeftWidth: 6,
         borderLeftColor: card.isDQ ? "#EF4444" : "#8BC34A",
         borderWidth: 1,
         borderColor: card.isDQ
           ? "rgba(239, 68, 68, 0.4)"
           : isDark
-            ? "rgba(139, 195, 74, 0.25)"
-            : "rgba(224, 224, 224, 0.6)",
+            ? "rgba(139, 195, 74, 0.3)"
+            : "rgba(224, 224, 224, 0.7)",
         borderRadius: 20,
         overflow: "hidden",
       }}
@@ -341,11 +343,11 @@ const FeedCard = ({
                 style={{
                   width: "23%",
                   backgroundColor: isDark
-                    ? "rgba(22, 22, 24, 0.8)"
-                    : "rgba(255, 255, 255, 0.95)",
+                    ? "rgba(22, 22, 24, 0.4)"
+                    : "rgba(255, 255, 255, 0.4)",
                   borderColor: isDark
-                    ? "rgba(139,195,74,0.2)"
-                    : "rgba(139,195,74,0.15)",
+                    ? "rgba(139,195,74,0.25)"
+                    : "rgba(139,195,74,0.2)",
                 }}
               >
                 <Text
@@ -416,8 +418,8 @@ const FeedCard = ({
             className="px-4 py-3 justify-between items-center"
             style={{
               backgroundColor: isDark
-                ? "rgba(22, 22, 24, 0.4)"
-                : "rgba(249, 250, 251, 0.4)",
+                ? "rgba(22, 22, 24, 0.25)"
+                : "rgba(249, 250, 251, 0.25)",
             }}
           >
             <HStack space="lg" className="items-center">
@@ -531,7 +533,8 @@ const FeedCard = ({
           </HStack>
         </VStack>
       )}
-    </Box>
+    </Box></>
+    
   );
 };
 
@@ -714,11 +717,11 @@ export function OverviewTab({
                 className="rounded-2xl border py-14 items-center"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(30,30,30,0.7)"
-                    : "rgba(255,255,255,0.7)",
+                    ? "rgba(26, 26, 26, 0.55)"
+                    : "rgba(255, 255, 255, 0.55)",
                   borderColor: isDark
                     ? "rgba(139,195,74,0.3)"
-                    : "rgba(229,231,235,0.5)",
+                    : "rgba(229,231,235,0.8)",
                 }}
               >
                 <Text className="text-5xl">⛳</Text>

@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, useColorScheme, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, TextInput, useColorScheme, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
@@ -37,12 +37,14 @@ export default function ManageTournament() {
   );
 
   const [loadingLocal, setLoadingLocal] = useState(true);
+  const [processingUserId, setProcessingUserId] = useState<number | null>(null);
   const [addedPlayers, setAddedPlayers] = useState<any>([]);
   const [search, setSearch] = useState("");
 
   const isLimitReached = (addedPlayers?.length || 0) >= maxLimit;
 
   const handleAddPlayer = async (userId: number) => {
+    if (processingUserId !== null) return;
     if ((addedPlayers?.length || 0) >= maxLimit) {
       Toast.show({
         type: "error",
@@ -52,7 +54,7 @@ export default function ManageTournament() {
     }
 
     try {
-      setLoadingLocal(true);
+      setProcessingUserId(userId);
       await addPlayerToTournament(Number(tournamentId), userId);
       setAddedPlayers((prev: any[]) => [...prev, { userId, id: userId }]); // Optimistic update
       Toast.show({
@@ -90,13 +92,14 @@ export default function ManageTournament() {
         });
       }
     } finally {
-      setLoadingLocal(false);
+      setProcessingUserId(null);
     }
   };
 
   const handleRemovePlayer = async (userId: number) => {
+    if (processingUserId !== null) return;
     try {
-      setLoadingLocal(true);
+      setProcessingUserId(userId);
       await removePlayerFromTournament(Number(tournamentId), userId);
       setAddedPlayers((prev: any[]) =>
         prev.filter((p: any) => p.userId !== userId && p.id !== userId),
@@ -112,7 +115,7 @@ export default function ManageTournament() {
         text1: "Failed to remove player",
       });
     } finally {
-      setLoadingLocal(false);
+      setProcessingUserId(null);
     }
   };
 
@@ -364,7 +367,7 @@ export default function ManageTournament() {
           ) : (
             <>
               {/* ❌ No Users Found */}
-              {isSearching || dataToShow.length === 0 ? (
+              {dataToShow.length === 0 ? (
                 <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
                   No users found
                 </ThemedText>
@@ -411,47 +414,71 @@ export default function ManageTournament() {
                         {isAdded ? (
                           <Pressable
                             className="flex-row items-center gap-1 border border-red-500 px-3 py-1 rounded-md"
-                            style={{ borderColor: "#ef4444" }}
+                            style={{
+                              borderColor: "#ef4444",
+                              opacity: processingUserId === user.id ? 0.6 : 1,
+                            }}
+                            disabled={processingUserId === user.id}
                             onPress={() => handleRemovePlayer(user.id)}
                           >
-                            <Ionicons
-                              name="person-remove"
-                              size={15}
-                              color="#ef4444"
-                            />
-                            <ThemedText
-                              style={{
-                                color: "#ef4444",
-                                fontSize: 13,
-                                fontWeight: "700",
-                              }}
-                            >
-                              Remove
-                            </ThemedText>
+                            {processingUserId === user.id ? (
+                              <ActivityIndicator size="small" color="#ef4444" />
+                            ) : (
+                              <>
+                                <Ionicons
+                                  name="person-remove"
+                                  size={15}
+                                  color="#ef4444"
+                                />
+                                <ThemedText
+                                  style={{
+                                    color: "#ef4444",
+                                    fontSize: 13,
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  Remove
+                                </ThemedText>
+                              </>
+                            )}
                           </Pressable>
                         ) : (
                           <Pressable
                             className="flex-row items-center gap-1 border px-3 py-1 rounded-md"
                             style={{
                               borderColor: isLimitReached ? "#94a3b8" : "#3b82f6",
-                              opacity: isLimitReached ? 0.5 : 1,
+                              opacity:
+                                isLimitReached || processingUserId === user.id
+                                  ? 0.5
+                                  : 1,
                             }}
+                            disabled={
+                              processingUserId === user.id || isLimitReached
+                            }
                             onPress={() => handleAddPlayer(user.id)}
                           >
-                            <Ionicons
-                              name="person-add"
-                              size={15}
-                              color={isLimitReached ? "#94a3b8" : "#3b82f6"}
-                            />
-                            <ThemedText
-                              style={{
-                                color: isLimitReached ? "#94a3b8" : "#3b82f6",
-                                fontSize: 13,
-                                fontWeight: "700",
-                              }}
-                            >
-                              Add
-                            </ThemedText>
+                            {processingUserId === user.id ? (
+                              <ActivityIndicator size="small" color="#3b82f6" />
+                            ) : (
+                              <>
+                                <Ionicons
+                                  name="person-add"
+                                  size={15}
+                                  color={isLimitReached ? "#94a3b8" : "#3b82f6"}
+                                />
+                                <ThemedText
+                                  style={{
+                                    color: isLimitReached
+                                      ? "#94a3b8"
+                                      : "#3b82f6",
+                                    fontSize: 13,
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  Add
+                                </ThemedText>
+                              </>
+                            )}
                           </Pressable>
                         )}
                       </HStack>

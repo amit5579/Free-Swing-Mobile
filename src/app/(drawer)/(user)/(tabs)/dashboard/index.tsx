@@ -866,8 +866,8 @@ export default function DashboardScreen() {
                                   flexShrink: 0,
                                   minHeight: 100,
                                   backgroundColor: isDark
-                                    ? "rgba(31, 31, 31, 0.6)"
-                                    : "rgba(243, 244, 246, 0.7)",
+                                    ? "rgba(31, 31, 31, 0.55)"
+                                    : "rgba(255, 255, 255, 0.55)",
                                   borderWidth: 1.5,
                                   borderColor: "#8BC34A",
                                 }}
@@ -923,8 +923,8 @@ export default function DashboardScreen() {
                           padding: 12,
                           borderRadius: 14,
                           backgroundColor: isDark
-                            ? "rgba(31,31,31,0.6)"
-                            : "rgba(243,244,246,0.9)",
+                            ? "rgba(31, 31, 31, 0.55)"
+                            : "rgba(255, 255, 255, 0.55)",
                           borderWidth: 1,
                           borderColor: isDark
                             ? "rgba(255,255,255,0.08)"

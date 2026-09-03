@@ -176,7 +176,14 @@ export function getPlayerHoleInfo(
   partner: RoundPlayer,
   primaryHandicap: number = 0,
   companionHandicaps: Record<string | number, number> = {},
-  options?: { isExcluded?: boolean; isStableford?: boolean; isSystem36?: boolean; isGross?: boolean }
+  options?: {
+    isExcluded?: boolean;
+    isStableford?: boolean;
+    isSystem36?: boolean;
+    isGross?: boolean;
+    isDoublePeoria?: boolean;
+    isReadOnly?: boolean;
+  }
 ): PlayerHoleResult {
   const isPrimary = partner.isPrimary;
   const playerId = partner.playerId;
@@ -264,17 +271,37 @@ export function getPlayerHoleInfo(
 
   const isEx = options?.isExcluded && hole.par === 3;
   const strokesReceived = isEx ? 0 : calculateStrokes(playerHandicap, strokeIndex);
-  const netScore = calculateNetScore(rawScore, strokesReceived, { isGross: options?.isGross });
+
+  // Resolve Net Score
+  let netScore: number | null = null;
+  if (isPrimary && hole.netScore !== null && hole.netScore !== undefined && hole.netScore !== "") {
+    netScore = Number(hole.netScore);
+  } else if (options?.isGross) {
+    netScore = rawScore;
+  } else if (options?.isDoublePeoria || options?.isSystem36) {
+    netScore =
+      isPrimary && hole.netScore !== null && hole.netScore !== undefined && hole.netScore !== ""
+        ? Number(hole.netScore)
+        : rawScore;
+  } else {
+    netScore = calculateNetScore(rawScore, strokesReceived, {
+      isGross: options?.isGross,
+      isDoublePeoria: options?.isDoublePeoria,
+    });
+  }
+
   const isStablefordMode = Boolean(options?.isStableford || options?.isSystem36);
-  const stablefordPoints =
-    isStablefordMode && rawScore !== null
-      ? calculateStablefordPoints(
-        netScore,
-        hole.par,
-        options?.isSystem36,
-        rawScore
-      )
-      : null;
+  let stablefordPoints: number | null = null;
+  if (isPrimary && hole.stablefordPoints !== null && hole.stablefordPoints !== undefined && hole.stablefordPoints !== "") {
+    stablefordPoints = Number(hole.stablefordPoints);
+  } else if (isStablefordMode && rawScore !== null) {
+    stablefordPoints = calculateStablefordPoints(
+      netScore,
+      hole.par,
+      options?.isSystem36,
+      rawScore
+    );
+  }
 
   return {
     score: rawScore,
@@ -315,6 +342,7 @@ export function normalizeHoleFromApi(rawHole: any): any {
 
   return {
     ...rawHole,
+    scorecardId: rawHole.scorecardId ?? rawHole.ScorecardId ?? null,
     holeId: rawHole.holeId ?? rawHole.HoleId,
     holeNumber: rawHole.holeNumber ?? rawHole.HoleNumber,
     par: rawHole.par ?? rawHole.Par ?? 0,
@@ -359,6 +387,12 @@ export function normalizeHoleFromApi(rawHole: any): any {
     companionRsJson: rawHole.companionRsJson ?? rawHole.CompanionRsJson ?? null,
     userName: rawHole.userName ?? rawHole.UserName ?? rawHole.username ?? rawHole.playerName ?? rawHole.PlayerName ?? rawHole.name,
     userId: rawHole.userId ?? rawHole.UserId,
+    appliedHandicap:
+      rawHole.appliedHandicap ??
+      rawHole.AppliedHandicap ??
+      rawHole.userHandicap ??
+      rawHole.UserHandicap ??
+      null,
     score,
     netScore,
     stablefordPoints,
