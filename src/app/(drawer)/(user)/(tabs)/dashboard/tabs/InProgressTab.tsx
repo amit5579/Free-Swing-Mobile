@@ -304,15 +304,17 @@ export function InProgressTab({
                   shadowOpacity: isDark ? 0.3 : 0.1,
                   shadowRadius: 14,
                   backgroundColor: isDark
-                    ? "rgba(26,26,26,0.55)"
-                    : "rgba(255,255,255,0.55)",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
                   borderRightWidth: 1,
                   borderBottomWidth: 1,
-                  borderColor: isDark ? "rgba(139, 195, 74, 0.4)" : "rgba(224, 224, 224, 0.7)",
-                  borderRadius: 22,
+                  borderColor: isDark
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
+                  borderRadius: 20,
                   overflow: "hidden",
                 }}
               >
@@ -495,9 +497,12 @@ export function InProgressTab({
             className="p-8 rounded-2xl items-center mt-4 border"
             style={{
               backgroundColor: isDark
-                ? "rgba(26,26,26,0.55)"
-                : "rgba(255,255,255,0.55)",
-              borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.8)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
+              borderColor: isDark
+                ? "rgba(139, 195, 74, 0.35)"
+                : "rgba(139, 195, 74, 0.45)",
+              borderRadius: 20,
             }}
           >
             <Ionicons name="documents-outline" size={32} color="#9ca3af" />
@@ -524,11 +529,11 @@ export function InProgressTab({
                   shadowRadius: 14,
                   backgroundColor: game.isDQ
                     ? isDark
-                      ? "rgba(50, 20, 20, 0.6)"
-                      : "rgba(254, 242, 242, 0.6)"
+                      ? "rgba(50, 20, 20, 0.7)"
+                      : "rgba(254, 242, 242, 0.7)"
                     : isDark
-                      ? "rgba(26,26,26,0.55)"
-                      : "rgba(255,255,255,0.55)",
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
                   borderLeftWidth: 6,
                   borderLeftColor: game.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,
@@ -538,9 +543,9 @@ export function InProgressTab({
                     game.isDQ && isDark
                       ? "#ef4444"
                       : isDark
-                        ? "rgba(139,195,74,0.3)"
-                        : "rgba(224,224,224,0.7)",
-                  borderRadius: 22,
+                        ? "rgba(139, 195, 74, 0.35)"
+                        : "rgba(139, 195, 74, 0.45)",
+                  borderRadius: 20,
                   overflow: "hidden",
                   paddingVertical: 9,
                   paddingHorizontal: 5,

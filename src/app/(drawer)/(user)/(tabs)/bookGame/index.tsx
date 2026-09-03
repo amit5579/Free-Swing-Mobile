@@ -82,15 +82,15 @@ export default function BookGameScreen() {
   const renderHeader = () => (
     <Box
       style={{
-        backgroundColor: isDark ? "#020617" : "#ffffff",
+        backgroundColor: isDark ? "#161618" : "#ffffff",
         borderBottomWidth: 1,
-        borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+        borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
       }}
     >
       <VStack
         style={{
           paddingHorizontal: 20,
-          paddingTop: 20,
+          paddingTop: 16,
           paddingBottom: 16,
           alignItems: "center",
         }}
@@ -127,6 +127,7 @@ export default function BookGameScreen() {
     <ThemedView
       style={{
         flex: 1,
+        backgroundColor: isDark ? "#161618" : "#FFFFFF",
       }}
     >
       {/* Header */}
@@ -145,9 +146,16 @@ export default function BookGameScreen() {
                     backgroundColor: isDark
                       ? "rgba(15, 23, 42, 0.7)"
                       : "rgba(255, 255, 255, 0.7)",
-                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                    borderColor: isDark
+                      ? "rgba(139, 195, 74, 0.35)"
+                      : "rgba(139, 195, 74, 0.45)",
                     borderWidth: 1,
-                    borderRadius: 9,
+                    borderRadius: 16,
+                    shadowColor: "#000",
+                    // shadowOffset: { width: 0, height: 2 },
+                    // shadowOpacity: isDark ? 0.2 : 0.05,
+                    // shadowRadius: 6,
+                    // elevation: 2,
                   }}
                 >
                   <HStack className="items-center justify-between">
@@ -185,7 +193,7 @@ export default function BookGameScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={20}
-                      color={isDark ? "#aaa" : "#777"}
+                      color="#8BC34A"
                     />
                   </HStack>
                 </Box>

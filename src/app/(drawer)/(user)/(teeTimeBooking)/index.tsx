@@ -428,14 +428,13 @@ export default function TeeTimeBookingPage() {
       fetchTeeTiming();
     }
   }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
-
   const RenderHeader = () => {
     return (
       <Box
         style={{
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         <VStack
@@ -461,14 +460,14 @@ export default function TeeTimeBookingPage() {
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#f1f5f9",
               }}
               android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
               <Ionicons
                 name="arrow-back"
                 size={20}
-                color={isDark ? "#fff" : "#020617"}
+                color="#8BC34A"
               />
             </Pressable>
 
@@ -490,18 +489,6 @@ export default function TeeTimeBookingPage() {
             {/* ⚖️ RIGHT SPACER */}
             <View style={{ width: 40 }} />
           </HStack>
-
-          {/* 📌 SUBTITLE */}
-          <ThemedText
-            style={{
-              fontSize: 12,
-              color: isDark ? "#94a3b8" : "#64748b",
-              // marginTop: 6,
-              textAlign: "center",
-            }}
-          >
-            Schedule and manage tee time slots
-          </ThemedText>
         </VStack>
       </Box>
     );
@@ -510,16 +497,11 @@ export default function TeeTimeBookingPage() {
   const TeeRow = ({ slot }: any) => {
     const isSlotExpired = () => {
       if (!availableDates[selectedDateIndex]) return false;
-      const parts = slot.time.trim().split(" ");
-      const timePart = parts[0];
-      const modifier = parts[1];
-
-      let [hours, minutes] = timePart.split(":").map(Number);
-
-      if (modifier) {
-        if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
-        if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
-      }
+      const [slotHours, slotMinutes] = slot.time.split(":").map(Number);
+      let hours = slotHours;
+      if (slot.time.toLowerCase().includes("pm") && hours < 12) hours += 12;
+      if (slot.time.toLowerCase().includes("am") && hours === 12) hours = 0;
+      const minutes = isNaN(slotMinutes) ? 0 : slotMinutes;
 
       const slotDate = new Date(availableDates[selectedDateIndex]);
       slotDate.setHours(hours, minutes, 0, 0);
@@ -532,17 +514,17 @@ export default function TeeTimeBookingPage() {
       <Box
         style={{
           marginBottom: 16,
-          borderRadius: 14,
+          borderRadius: 16,
           padding: 14,
           borderWidth: 1,
           backgroundColor: isDark
             ? "rgba(15, 23, 42, 0.7)"
             : "rgba(255, 255, 255, 0.7)",
-          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
           shadowColor: "#000",
           shadowOpacity: isDark ? 0.2 : 0.05,
-          // borderRadius: 6,
-          // elevation: 2,
         }}
       >
         {/* Time Header */}
@@ -838,7 +820,7 @@ export default function TeeTimeBookingPage() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
         }}
       >
         {/* HEADER */}
@@ -861,18 +843,16 @@ export default function TeeTimeBookingPage() {
             <ThemedView
               style={{
                 backgroundColor: isDark
-                  ? "rgba(30, 41, 59, 0.5)"
-                  : "rgba(255, 255, 255, 0.8)",
-                borderColor: isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
+                borderColor: isDark
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
                 borderWidth: 1,
                 borderRadius: 20,
                 paddingVertical: 16,
                 paddingHorizontal: 12,
                 shadowColor: "#000",
-                // shadowOffset: { width: 0, height: 4 },
-                // shadowOpacity: isDark ? 0.3 : 0.05,
-                // shadowRadius: 12,
-                // elevation: 2,
               }}
               className="mb-6"
             >
@@ -1097,16 +1077,73 @@ export default function TeeTimeBookingPage() {
                     <TeeRow key={slot.time} slot={slot} />
                   ))}
 
-                  {teeData?.slots?.length === 0 && (
-                    <Text
+                  {(!teeData?.slots || teeData?.slots?.length === 0) && (
+                    <Box
+                      className="py-12 px-6 rounded-2xl items-center mt-2 border"
                       style={{
-                        textAlign: "center",
-                        marginTop: 40,
-                        color: isDark ? "#94a3b8" : "#6b7280",
+                        backgroundColor: isDark
+                          ? "rgba(15, 23, 42, 0.7)"
+                          : "rgba(255, 255, 255, 0.7)",
+                        borderColor: isDark
+                          ? "rgba(139, 195, 74, 0.35)"
+                          : "rgba(139, 195, 74, 0.45)",
+                        borderRadius: 20,
+                        shadowColor: "#8BC34A",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: isDark ? 0.2 : 0.08,
+                        shadowRadius: 10,
                       }}
                     >
-                      No slots available
-                    </Text>
+                      <View
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 32,
+                          backgroundColor: isDark
+                            ? "rgba(139, 195, 74, 0.12)"
+                            : "rgba(139, 195, 74, 0.15)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 14,
+                        }}
+                      >
+                        <Ionicons name="golf-outline" size={34} color="#8BC34A" />
+                      </View>
+                      <Text
+                        style={{
+                          color: isDark ? "#ffffff" : "#111827",
+                          fontSize: 17,
+                          fontWeight: "700",
+                          textAlign: "center",
+                        }}
+                      >
+                        No Tee Time Slots Available
+                      </Text>
+                      <Text
+                        style={{
+                          color: isDark ? "#94a3b8" : "#64748b",
+                          fontSize: 13,
+                          textAlign: "center",
+                          marginTop: 6,
+                          lineHeight: 18,
+                          maxWidth: 280,
+                        }}
+                      >
+                        There are no tee times scheduled for this date or course. Try picking another date or refresh.
+                      </Text>
+                      <Pressable
+                        onPress={() => fetchTeeTiming()}
+                        className="mt-5 px-5 py-2.5 rounded-full flex-row items-center"
+                        style={{
+                          backgroundColor: "#8BC34A",
+                        }}
+                      >
+                        <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                        <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 13 }}>
+                          Refresh Slots
+                        </Text>
+                      </Pressable>
+                    </Box>
                   )}
                 </>
               )}

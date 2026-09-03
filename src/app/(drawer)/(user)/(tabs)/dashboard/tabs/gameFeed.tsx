@@ -24,7 +24,7 @@ import { Image } from "expo-image";
 import { getLikedUsersApi, LikedUser } from "@/api/modules/dashboard.api";
 import { verifyScoreApi } from "@/api/modules/admin/dashboard.api";
 import GolferParadise from "./GolferParadise";
-import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers";
+import MembersTab from "./MembersTab";
 import { useFocusEffect } from "expo-router";
 
 export type Scorecard = {
@@ -98,16 +98,16 @@ const FeedCard = ({
         shadowRadius: 16,
         elevation: 4,
         backgroundColor: card.isDQ
-          ? (isDark ? "rgba(50, 20, 20, 0.6)" : "rgba(254, 242, 242, 0.6)")
-          : (isDark ? "rgba(26, 26, 26, 0.55)" : "rgba(255, 255, 255, 0.55)"),
+          ? (isDark ? "rgba(50, 20, 20, 0.7)" : "rgba(254, 242, 242, 0.7)")
+          : (isDark ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.7)"),
         borderLeftWidth: 6,
         borderLeftColor: card.isDQ ? "#EF4444" : "#8BC34A",
         borderWidth: 1,
         borderColor: card.isDQ
           ? "rgba(239, 68, 68, 0.4)"
           : isDark
-            ? "rgba(139, 195, 74, 0.3)"
-            : "rgba(224, 224, 224, 0.7)",
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
         borderRadius: 20,
         overflow: "hidden",
       }}
@@ -599,12 +599,12 @@ export function OverviewTab({
             className="mb-4 p-1.5 rounded-full"
             style={{
               backgroundColor: isDark
-                ? "rgba(22, 22, 24, 0.6)"
-                : "rgba(243, 244, 246, 0.95)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
               borderWidth: 1,
               borderColor: isDark
-                ? "rgba(139,195,74,0.15)"
-                : "rgba(229,231,235,1)",
+                ? "rgba(139, 195, 74, 0.35)"
+                : "rgba(139, 195, 74, 0.45)",
             }}
           >
             <Pressable
@@ -717,11 +717,12 @@ export function OverviewTab({
                 className="rounded-2xl border py-14 items-center"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(26, 26, 26, 0.55)"
-                    : "rgba(255, 255, 255, 0.55)",
+                    ? "rgba(15, 23, 42, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
                   borderColor: isDark
-                    ? "rgba(139,195,74,0.3)"
-                    : "rgba(229,231,235,0.8)",
+                    ? "rgba(139, 195, 74, 0.35)"
+                    : "rgba(139, 195, 74, 0.45)",
+                  borderRadius: 20,
                 }}
               >
                 <Text className="text-5xl">⛳</Text>
@@ -756,7 +757,7 @@ export function OverviewTab({
           </View>
         ) : (
           <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
-            <AllMembersScreen hideAdminControls={true} searchQuery={searchQuery} />
+            <MembersTab searchQuery={searchQuery} />
           </View>
         )}
       </VStack>

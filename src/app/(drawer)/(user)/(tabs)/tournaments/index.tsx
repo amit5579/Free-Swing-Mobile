@@ -390,9 +390,9 @@ export default function TournamentsScreen() {
       <Box
         style={{
           paddingVertical: 10,
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         {/* 🔝 TOP ROW */}
@@ -453,7 +453,7 @@ export default function TournamentsScreen() {
       <View
         style={[
           styles.container,
-          { backgroundColor: isDark ? "#020617" : "#ffffff" },
+          { backgroundColor: isDark ? "#161618" : "#ffffff" },
         ]}
       >
         <View style={styles.safeArea}>
@@ -541,10 +541,13 @@ export default function TournamentsScreen() {
                           style={[
                             styles.card,
                             {
-                              borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                              borderColor: isDark
+                                ? "rgba(139, 195, 74, 0.35)"
+                                : "rgba(139, 195, 74, 0.45)",
                               backgroundColor: isDark
                                 ? "rgba(15, 23, 42, 0.7)"
                                 : "rgba(255, 255, 255, 0.7)",
+                              borderRadius: 16,
                             },
                           ]}
                         >

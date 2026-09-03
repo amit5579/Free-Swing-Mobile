@@ -142,9 +142,9 @@ export default function StartNewRoundPage() {
     return (
       <Box
         style={{
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         <VStack
@@ -189,7 +189,7 @@ export default function StartNewRoundPage() {
         className="rounded-2xl p-5 relative"
         style={{
           borderWidth: 1,
-          borderColor: isDark ? "#262626" : "#e5e5e5",
+          borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "#e5e5e5",
           marginBottom: 12,
         }}
       >
@@ -245,8 +245,8 @@ export default function StartNewRoundPage() {
       <View
         style={{
           borderWidth: 1,
-          borderColor: isDark ? "#1e293b" : "#e2e8f0",
-          backgroundColor: isDark ? "rgba(15, 23, 42, 0.5)" : "#fff",
+          borderColor: isDark ? "rgba(139, 195, 74, 0.35)" : "rgba(139, 195, 74, 0.45)",
+          backgroundColor: isDark ? "rgba(15, 23, 42, 0.7)" : "#fff",
           borderRadius: 16,
           padding: 16,
           marginBottom: 12,
@@ -303,7 +303,7 @@ export default function StartNewRoundPage() {
       <View
         style={{
           flex: 1,
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
         }}
       >
         {/* Header */}
@@ -321,7 +321,9 @@ export default function StartNewRoundPage() {
                 flexDirection: "row",
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                borderColor: isDark
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
                 backgroundColor: isDark
                   ? "rgba(15, 23, 42, 0.7)"
                   : "rgba(255, 255, 255, 0.7)",
@@ -725,7 +727,10 @@ function CourseCard({
           backgroundColor: isDark
             ? "rgba(15, 23, 42, 0.7)"
             : "rgba(255, 255, 255, 0.7)",
-          borderColor: isDark ? "#1e293b" : "#e2e8f0",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
+          borderRadius: 16,
         }}
       >
         {/* Free Badge */}
@@ -987,7 +992,7 @@ function CourseCard({
                       <Ionicons name="alert-circle" size={25} color="#8bc34a" />
 
                       <Text className="flex-1 text-md leading-5 text-[#8bc34a] font-semibold">
-                        Net scores are calculated using the WHS 95% playing
+                        Net scores are calculated using the 95% playing
                         handicap allowance.
                       </Text>
                     </HStack>

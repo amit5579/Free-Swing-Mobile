@@ -73,9 +73,9 @@ export default function SubscriptionsPage() {
     return (
       <Box
         style={{
-          backgroundColor: isDark ? "#020617" : "#ffffff",
+          backgroundColor: isDark ? "#161618" : "#ffffff",
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? "#1e293b" : "#e5e7eb",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "#e5e7eb",
         }}
       >
         <VStack
@@ -101,14 +101,14 @@ export default function SubscriptionsPage() {
                 borderRadius: 10,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                backgroundColor: isDark ? "rgba(139,195,74,0.15)" : "#f1f5f9",
               }}
               android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
               <Ionicons
                 name="arrow-back"
                 size={20}
-                color={isDark ? "#fff" : "#020617"}
+                color="#8BC34A"
               />
             </Pressable>
 
@@ -130,6 +130,15 @@ export default function SubscriptionsPage() {
             {/* ⚖️ RIGHT SPACER */}
             <View style={{ width: 40 }} />
           </HStack>
+          <ThemedText
+            style={{
+              fontSize: 12,
+              color: isDark ? "#94a3b8" : "#64748b",
+              textAlign: "center",
+            }}
+          >
+            Manage your plan, renewals, and view active status
+          </ThemedText>
         </VStack>
       </Box>
     );
@@ -137,46 +146,43 @@ export default function SubscriptionsPage() {
 
   const SubscriptionPageSkeleton = ({ isDark }: { isDark: boolean }) => (
     <VStack className="px-4 pt-5 pb-24" space="lg">
-      {/* Plan Card Skeleton */}
+      {/* Active Plan Skeleton */}
       <Box
         style={{
           padding: 16,
-          borderRadius: 24,
+          borderRadius: 20,
           backgroundColor: isDark
-            ? "rgba(30, 41, 59, 0.4)"
-            : "rgba(255, 255, 255, 0.8)",
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
           borderWidth: 1,
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
         }}
       >
-        <HStack className="justify-between items-center">
+        <HStack className="justify-between items-center" style={{ gap: 16 }}>
           <VStack style={{ flex: 1 }}>
             <Skeleton
               isDark={isDark}
               height={20}
-              width={80}
+              width={70}
               borderRadius={8}
               style={{ marginBottom: 8 }}
             />
             <Skeleton
               isDark={isDark}
-              height={28}
-              width="70%"
+              height={24}
+              width={140}
               borderRadius={8}
               style={{ marginBottom: 6 }}
             />
-            <Skeleton
-              isDark={isDark}
-              height={16}
-              width="90%"
-              borderRadius={8}
-            />
+            <Skeleton isDark={isDark} height={14} width="80%" borderRadius={6} />
           </VStack>
           <Skeleton isDark={isDark} height={72} width={72} borderRadius={36} />
         </HStack>
       </Box>
 
-      {/* Stats Grid Skeleton */}
+      {/* Stats Cards Skeleton */}
       <HStack space="md">
         {[1, 2, 3].map((i) => (
           <Box
@@ -186,12 +192,12 @@ export default function SubscriptionsPage() {
               padding: 16,
               borderRadius: 20,
               backgroundColor: isDark
-                ? "rgba(30, 41, 59, 0.4)"
-                : "rgba(255, 255, 255, 0.8)",
+                ? "rgba(15, 23, 42, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
               borderWidth: 1,
               borderColor: isDark
-                ? "rgba(255,255,255,0.08)"
-                : "rgba(0,0,0,0.05)",
+                ? "rgba(139, 195, 74, 0.35)"
+                : "rgba(139, 195, 74, 0.45)",
             }}
           >
             <Skeleton
@@ -204,16 +210,11 @@ export default function SubscriptionsPage() {
             <Skeleton
               isDark={isDark}
               height={12}
-              width="40%"
+              width={60}
               borderRadius={6}
-              style={{ marginBottom: 4 }}
+              style={{ marginBottom: 6 }}
             />
-            <Skeleton
-              isDark={isDark}
-              height={18}
-              width="60%"
-              borderRadius={6}
-            />
+            <Skeleton isDark={isDark} height={16} width={80} borderRadius={6} />
           </Box>
         ))}
       </HStack>
@@ -222,21 +223,24 @@ export default function SubscriptionsPage() {
       <Box
         style={{
           padding: 18,
-          borderRadius: 24,
+          borderRadius: 20,
           backgroundColor: isDark
-            ? "rgba(30, 41, 59, 0.4)"
-            : "rgba(255, 255, 255, 0.8)",
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
           borderWidth: 1,
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
         }}
       >
         <HStack className="items-center mb-4" style={{ gap: 8 }}>
-          <Skeleton isDark={isDark} height={24} width={24} borderRadius={12} />
-          <VStack>
+          <Skeleton isDark={isDark} height={20} width={20} borderRadius={10} />
+          <VStack style={{ gap: 4 }}>
+            <Skeleton isDark={isDark} height={16} width={100} borderRadius={6} />
             <Skeleton
               isDark={isDark}
-              height={20}
-              width={120}
+              height={12}
+              width={160}
               borderRadius={8}
             />
           </VStack>
@@ -258,12 +262,14 @@ export default function SubscriptionsPage() {
       <Box
         style={{
           padding: 18,
-          borderRadius: 24,
+          borderRadius: 20,
           backgroundColor: isDark
-            ? "rgba(30, 41, 59, 0.4)"
-            : "rgba(255, 255, 255, 0.8)",
+            ? "rgba(15, 23, 42, 0.7)"
+            : "rgba(255, 255, 255, 0.7)",
           borderWidth: 1,
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+          borderColor: isDark
+            ? "rgba(139, 195, 74, 0.35)"
+            : "rgba(139, 195, 74, 0.45)",
         }}
       >
         <Skeleton
@@ -279,7 +285,12 @@ export default function SubscriptionsPage() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? "#161618" : "#ffffff",
+      }}
+    >
       <RenderHeader />
       <Watermark />
 
@@ -302,14 +313,14 @@ export default function SubscriptionsPage() {
             <Box
               style={{
                 padding: 16,
-                borderRadius: 24,
+                borderRadius: 20,
                 backgroundColor: isDark
-                  ? "rgba(30, 41, 59, 0.4)"
-                  : "rgba(255, 255, 255, 0.8)",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <HStack
@@ -444,12 +455,12 @@ export default function SubscriptionsPage() {
                       padding: 16,
                       borderRadius: 20,
                       backgroundColor: isDark
-                        ? "rgba(30, 41, 59, 0.4)"
-                        : "rgba(255, 255, 255, 0.8)",
+                        ? "rgba(15, 23, 42, 0.7)"
+                        : "rgba(255, 255, 255, 0.7)",
                       borderWidth: 1,
                       borderColor: isDark
-                        ? "rgba(255,255,255,0.08)"
-                        : "rgba(0,0,0,0.05)",
+                        ? "rgba(139, 195, 74, 0.35)"
+                        : "rgba(139, 195, 74, 0.45)",
                     }}
                   >
                     <Box
@@ -496,14 +507,14 @@ export default function SubscriptionsPage() {
             <Box
               style={{
                 padding: 18,
-                borderRadius: 24,
+                borderRadius: 20,
                 backgroundColor: isDark
-                  ? "rgba(30, 41, 59, 0.4)"
-                  : "rgba(255, 255, 255, 0.8)",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <HStack className="items-center mb-4" style={{ gap: 8 }}>
@@ -552,12 +563,12 @@ export default function SubscriptionsPage() {
                       padding: 12,
                       borderRadius: 16,
                       backgroundColor: isDark
-                        ? "rgba(255,255,255,0.03)"
+                        ? "rgba(255,255,255,0.05)"
                         : "rgba(0,0,0,0.02)",
                       borderWidth: 1,
                       borderColor: isDark
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(0,0,0,0.03)",
+                        ? "rgba(139, 195, 74, 0.2)"
+                        : "rgba(139, 195, 74, 0.2)",
                     }}
                   >
                     <HStack className="items-center mb-1" style={{ gap: 4 }}>
@@ -589,14 +600,14 @@ export default function SubscriptionsPage() {
             <Box
               style={{
                 padding: 18,
-                borderRadius: 24,
+                borderRadius: 20,
                 backgroundColor: isDark
-                  ? "rgba(30, 41, 59, 0.4)"
-                  : "rgba(255, 255, 255, 0.8)",
+                  ? "rgba(15, 23, 42, 0.7)"
+                  : "rgba(255, 255, 255, 0.7)",
                 borderWidth: 1,
                 borderColor: isDark
-                  ? "rgba(255,255,255,0.08)"
-                  : "rgba(0,0,0,0.05)",
+                  ? "rgba(139, 195, 74, 0.35)"
+                  : "rgba(139, 195, 74, 0.45)",
               }}
             >
               <HStack className="items-center mb-3" style={{ gap: 8 }}>

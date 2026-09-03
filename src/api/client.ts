@@ -14,6 +14,7 @@ const client = axios.create({
 
 client.interceptors.request.use(
   async (config) => {
+    console.log(`🌐 [API Request] ${config.method?.toUpperCase()} ${config.baseURL || ""}${config.url || ""}`);
     try {
       const token = await AsyncStorage.getItem("token");
 
@@ -58,6 +59,8 @@ client.interceptors.response.use(
       setTimeout(() => {
         isRedirecting = false;
       }, 5000);
+    } else {
+      console.log(`❌ [API Error] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL || ""}${error.config?.url || ""} -> ${error.message}`);
     }
 
     return Promise.reject(error);

@@ -628,18 +628,20 @@ export default function AllMembersScreen({
           style={{
             shadowColor: "#8BC34A",
             shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: isDark ? 0.4 : 0.15,
+            shadowOpacity: isDark ? 0.3 : 0.1,
             shadowRadius: 14,
             backgroundColor: isDark
-              ? "rgba(26, 26, 26, 0.55)"
-              : "rgba(255, 255, 255, 0.55)",
+              ? "rgba(15, 23, 42, 0.7)"
+              : "rgba(255, 255, 255, 0.7)",
             borderLeftWidth: 6,
             borderLeftColor: "#8BC34A",
             borderTopWidth: 1,
             borderRightWidth: 1,
             borderBottomWidth: 1,
-            borderColor: isDark ? "rgba(139,195,74,0.4)" : "rgba(224, 224, 224, 0.7)",
-            borderRadius: 22,
+            borderColor: isDark
+              ? "rgba(139, 195, 74, 0.35)"
+              : "rgba(139, 195, 74, 0.45)",
+            borderRadius: 20,
             marginBottom: 16,
             overflow: "hidden",
           }}
@@ -818,7 +820,7 @@ export default function AllMembersScreen({
               >
                 Members
               </ThemedText>
-              <ThemedText style={{ fontSize: 13, opacity: 0.6, marginTop: -2 }}>
+              <ThemedText style={{ color:"#ffffff", fontSize: 13, opacity: 0.6, marginTop: -2 }}>
                 Total Members: {members.length}
               </ThemedText>
             </VStack>
@@ -912,7 +914,7 @@ export default function AllMembersScreen({
                 }}
               >
                 <ThemedText
-                  style={{ fontSize: 12, fontWeight: "900" }}
+                  style={{ color: "#ffffff", fontSize: 12, fontWeight: "900" }}
                 >
                   Total: {members.length}
                 </ThemedText>
@@ -1060,20 +1062,20 @@ export default function AllMembersScreen({
                         style={{
                           shadowColor: "#8BC34A",
                           shadowOffset: { width: 0, height: 6 },
-                          shadowOpacity: isDark ? 0.4 : 0.15,
+                          shadowOpacity: isDark ? 0.35 : 0.1,
                           shadowRadius: 14,
                           backgroundColor: isDark
-                            ? "rgba(26, 26, 26, 0.55)"
-                            : "rgba(255, 255, 255, 0.55)",
+                            ? "rgba(15, 23, 42, 0.7)"
+                            : "rgba(255, 255, 255, 0.7)",
                           borderLeftWidth: 6,
                           borderLeftColor: "#8BC34A",
                           borderTopWidth: 1,
                           borderRightWidth: 1,
                           borderBottomWidth: 1,
                           borderColor: isDark
-                            ? "rgba(139, 195, 74, 0.4)"
-                            : "rgba(224, 224, 224, 0.7)",
-                          borderRadius: 22,
+                            ? "rgba(139, 195, 74, 0.35)"
+                            : "rgba(139, 195, 74, 0.45)",
+                          borderRadius: 20,
                           marginBottom: 16,
                           overflow: "hidden",
                         }}
