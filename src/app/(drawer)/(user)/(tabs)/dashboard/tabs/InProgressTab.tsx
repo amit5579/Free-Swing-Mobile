@@ -257,7 +257,7 @@ export function InProgressTab({
   if (loading) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
       >
         <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
           <VStack>
@@ -301,17 +301,17 @@ export function InProgressTab({
                 style={{
                   shadowColor: "#8BC34A",
                   shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowOpacity: isDark ? 0.3 : 0.1,
                   shadowRadius: 14,
                   backgroundColor: isDark
-                    ? "rgba(26,26,26,0.6)"
-                    : "rgba(255,255,255,0.6)",
+                    ? "rgba(26,26,26,0.55)"
+                    : "rgba(255,255,255,0.55)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
                   borderRightWidth: 1,
                   borderBottomWidth: 1,
-                  borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                  borderColor: isDark ? "rgba(139, 195, 74, 0.4)" : "rgba(224, 224, 224, 0.7)",
                   borderRadius: 22,
                   overflow: "hidden",
                 }}
@@ -356,7 +356,7 @@ export function InProgressTab({
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
         <VStack>
           <Text
@@ -399,7 +399,7 @@ export function InProgressTab({
               <Box
                 key={req.id}
                 style={{
-                  backgroundColor: isDark ? "rgba(245, 158, 11, 0.15)" : "#FEF3C7",
+                  backgroundColor: isDark ? "rgba(245, 158, 11, 0.15)" : "rgba(254, 243, 199, 0.6)",
                   borderColor: isDark ? "#F59E0B" : "#FDE68A",
                   borderWidth: 1,
                   borderRadius: 16,
@@ -492,11 +492,12 @@ export function InProgressTab({
 
         {!filteredGames.length ? (
           <Box
-            className="p-8 rounded-xl items-center mt-4"
+            className="p-8 rounded-2xl items-center mt-4 border"
             style={{
-              backgroundColor: isDark ? "#161618" : "#FFFFFF",
-              borderWidth: 1,
-              borderColor: isDark ? "#8BC34A" : "#E5E7EB",
+              backgroundColor: isDark
+                ? "rgba(26,26,26,0.55)"
+                : "rgba(255,255,255,0.55)",
+              borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.8)",
             }}
           >
             <Ionicons name="documents-outline" size={32} color="#9ca3af" />
@@ -519,15 +520,15 @@ export function InProgressTab({
                 style={{
                   shadowColor: "#8BC34A",
                   shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowOpacity: isDark ? 0.35 : 0.1,
                   shadowRadius: 14,
                   backgroundColor: game.isDQ
                     ? isDark
-                      ? "rgba(50, 20, 20, 0.7)"
-                      : "#FFF1F2"
+                      ? "rgba(50, 20, 20, 0.6)"
+                      : "rgba(254, 242, 242, 0.6)"
                     : isDark
-                      ? "rgba(26,26,26,0.6)"
-                      : "rgba(255,255,255,0.6)",
+                      ? "rgba(26,26,26,0.55)"
+                      : "rgba(255,255,255,0.55)",
                   borderLeftWidth: 6,
                   borderLeftColor: game.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,
@@ -537,8 +538,8 @@ export function InProgressTab({
                     game.isDQ && isDark
                       ? "#ef4444"
                       : isDark
-                        ? "rgba(139,195,74,0.6)"
-                        : "#E0E0E0",
+                        ? "rgba(139,195,74,0.3)"
+                        : "rgba(224,224,224,0.7)",
                   borderRadius: 22,
                   overflow: "hidden",
                   paddingVertical: 9,

@@ -356,12 +356,12 @@ export default function GolferParadise({
         className="p-4 rounded-2xl border"
         style={{
           backgroundColor: isDark
-            ? "rgba(26,26,26,0.6)"
-            : "rgba(255,255,255,0.7)",
-          borderColor: "rgba(139, 195, 74, 0.3)",
-          shadowColor: "#000",
-          // shadowOffset: { width: 0, height: 4 },
-          // shadowOpacity: 0.1,
+            ? "rgba(26,26,26,0.55)"
+            : "rgba(255,255,255,0.55)",
+          borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(224, 224, 224, 0.7)",
+          shadowColor: "#8BC34A",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 10,
         }}
       >
@@ -492,11 +492,15 @@ export default function GolferParadise({
                   className="rounded-2xl border"
                   style={{
                     backgroundColor: isDark
-                      ? "rgba(26,26,26,0.6)"
-                      : "rgba(255,255,255,0.7)",
-                    borderColor: "rgba(139, 195, 74, 0.3)",
+                      ? "rgba(26,26,26,0.55)"
+                      : "rgba(255,255,255,0.55)",
+                    borderColor: isDark ? "rgba(139, 195, 74, 0.3)" : "rgba(224, 224, 224, 0.7)",
                     marginBottom: 16,
                     overflow: "hidden",
+                    shadowColor: "#8BC34A",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: isDark ? 0.3 : 0.1,
+                    shadowRadius: 10,
                   }}
                 >
                   <HStack className="p-4 items-center justify-between">

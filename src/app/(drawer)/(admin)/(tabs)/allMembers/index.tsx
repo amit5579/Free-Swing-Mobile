@@ -631,14 +631,14 @@ export default function AllMembersScreen({
             shadowOpacity: isDark ? 0.4 : 0.15,
             shadowRadius: 14,
             backgroundColor: isDark
-              ? "rgba(26, 26, 26, 0.6)"
-              : "rgba(255, 255, 255, 0.6)",
+              ? "rgba(26, 26, 26, 0.55)"
+              : "rgba(255, 255, 255, 0.55)",
             borderLeftWidth: 6,
             borderLeftColor: "#8BC34A",
             borderTopWidth: 1,
             borderRightWidth: 1,
             borderBottomWidth: 1,
-            borderColor: isDark ? "rgba(139,195,74,0.6)" : "#E0E0E0",
+            borderColor: isDark ? "rgba(139,195,74,0.4)" : "rgba(224, 224, 224, 0.7)",
             borderRadius: 22,
             marginBottom: 16,
             overflow: "hidden",
@@ -1063,16 +1063,16 @@ export default function AllMembersScreen({
                           shadowOpacity: isDark ? 0.4 : 0.15,
                           shadowRadius: 14,
                           backgroundColor: isDark
-                            ? "rgba(26, 26, 26, 0.6)"
-                            : "rgba(255, 255, 255, 0.6)",
+                            ? "rgba(26, 26, 26, 0.55)"
+                            : "rgba(255, 255, 255, 0.55)",
                           borderLeftWidth: 6,
                           borderLeftColor: "#8BC34A",
                           borderTopWidth: 1,
                           borderRightWidth: 1,
                           borderBottomWidth: 1,
                           borderColor: isDark
-                            ? "rgba(139, 195, 74, 0.6)"
-                            : "#E0E0E0",
+                            ? "rgba(139, 195, 74, 0.4)"
+                            : "rgba(224, 224, 224, 0.7)",
                           borderRadius: 22,
                           marginBottom: 16,
                           overflow: "hidden",

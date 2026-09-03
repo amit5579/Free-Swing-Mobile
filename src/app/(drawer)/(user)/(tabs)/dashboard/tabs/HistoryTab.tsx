@@ -102,7 +102,7 @@ export function HistoryTab({
   if (loading) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
+        style={{ flex: 1, backgroundColor: "transparent" }}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -142,17 +142,17 @@ export function HistoryTab({
                 style={{
                   shadowColor: "#8BC34A",
                   shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowOpacity: isDark ? 0.3 : 0.1,
                   shadowRadius: 14,
                   backgroundColor: isDark
-                    ? "rgba(26,26,26,0.6)"
-                    : "rgba(255,255,255,0.6)",
+                    ? "rgba(26,26,26,0.55)"
+                    : "rgba(255,255,255,0.55)",
                   borderLeftWidth: 6,
                   borderLeftColor: "#8BC34A",
                   borderTopWidth: 1,
                   borderRightWidth: 1,
                   borderBottomWidth: 1,
-                  borderColor: isDark ? "rgba(139, 195, 74, 0.6)" : "#E0E0E0",
+                  borderColor: isDark ? "rgba(139, 195, 74, 0.4)" : "rgba(224, 224, 224, 0.7)",
                   borderRadius: 22,
                   padding: 16,
                 }}
@@ -192,8 +192,8 @@ export function HistoryTab({
                       className="flex-1 items-center py-3 rounded-xl"
                       style={{
                         backgroundColor: isDark
-                          ? "rgba(22, 22, 24, 0.6)"
-                          : "rgba(255, 255, 255, 0.6)",
+                          ? "rgba(22, 22, 24, 0.4)"
+                          : "rgba(255, 255, 255, 0.4)",
                         borderColor: "rgba(139,195,74,0.3)",
                         borderWidth: 1,
                       }}
@@ -246,7 +246,7 @@ export function HistoryTab({
       style={{
         flex: 1,
         paddingTop: 0,
-        backgroundColor: isDark ? "#161618" : "#FFFFFF",
+        backgroundColor: "transparent",
       }}
     >
       <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
@@ -287,8 +287,13 @@ export function HistoryTab({
       >
         {filteredHistory.length === 0 ? (
           <Box
-            className="bg-background-0 rounded-2xl border border-outline-200 py-12 items-center mt-4"
-            style={{ borderColor: isDark ? "#8BC34A" : "#E5E7EB" }}
+            className="rounded-2xl border py-12 items-center mt-4"
+            style={{
+              backgroundColor: isDark
+                ? "rgba(26,26,26,0.55)"
+                : "rgba(255,255,255,0.55)",
+              borderColor: isDark ? "rgba(139,195,74,0.3)" : "rgba(229,231,235,0.8)",
+            }}
           >
             <Ionicons name="time-outline" size={40} color="#9ca3af" />
             <ThemedText className="text-typography-400 font-semibold text-sm mt-3">
@@ -308,15 +313,15 @@ export function HistoryTab({
                 style={{
                   shadowColor: "#8BC34A",
                   shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDark ? 0.4 : 0.15,
+                  shadowOpacity: isDark ? 0.35 : 0.1,
                   shadowRadius: 14,
                   backgroundColor: item.isDQ
                     ? isDark
-                      ? "rgba(50, 20, 20, 0.7)"
-                      : "#FFF1F2"
+                      ? "rgba(50, 20, 20, 0.6)"
+                      : "rgba(254, 242, 242, 0.6)"
                     : isDark
-                      ? "rgba(26,26,26,0.6)"
-                      : "rgba(255,255,255,0.6)",
+                      ? "rgba(26,26,26,0.55)"
+                      : "rgba(255,255,255,0.55)",
                   borderLeftWidth: 6,
                   borderLeftColor: item.isDQ ? "#ef4444" : "#8BC34A",
                   borderTopWidth: 1,
@@ -326,8 +331,8 @@ export function HistoryTab({
                     item.isDQ && isDark
                       ? "#ef4444"
                       : isDark
-                        ? "rgba(139,195,74,0.6)"
-                        : "#E0E0E0",
+                        ? "rgba(139,195,74,0.3)"
+                        : "rgba(224,224,224,0.7)",
                   borderRadius: 22,
                   overflow: "hidden",
                 }}
@@ -404,8 +409,8 @@ export function HistoryTab({
                         className="flex-1 rounded-xl items-center py-3 border"
                         style={{
                           backgroundColor: isDark
-                            ? "rgba(22, 22, 24, 0.6)"
-                            : "rgba(255, 255, 255, 0.6)",
+                            ? "rgba(22, 22, 24, 0.4)"
+                            : "rgba(255, 255, 255, 0.4)",
                           borderColor: "rgba(139,195,74,0.3)",
                           borderWidth: 1,
                         }}

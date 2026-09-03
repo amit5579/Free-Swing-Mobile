@@ -62,6 +62,7 @@ import {
 import {
   saveScoreCard,
   getScorecardHandicap,
+  getSubScorecardHandicap,
   getScoreCardOpen,
 } from "@/api/modules/scoreCard.api";
 import { getScoreCardDetails as getNewRoundDetails } from "@/api/modules/newRound.api";
@@ -605,6 +606,15 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         if (mode === "resume" && effectiveId) {
           try {
             let draft = await getDraft(effectiveId);
+            const detectedTourId =
+              propTournamentId ||
+              rawHoles?.[0]?.tournamentId ||
+              rawHoles?.[0]?.TournamentId;
+            if (!draft && detectedTourId) {
+              draft =
+                (await getDraft(`tournament_${detectedTourId}`)) ||
+                (await getDraft(detectedTourId));
+            }
             if (!draft && rawHoles && rawHoles.length > 0) {
               const firstHole = rawHoles[0];
               if (firstHole.courseId && firstHole.teeBoxId) {
@@ -766,7 +776,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         if (propTournamentId) {
           rawHoles = await getScoreCardOpen(Number(propTournamentId));
           try {
-            const draft = await getDraft(propTournamentId);
+            const draft =
+              (await getDraft(`tournament_${propTournamentId}`)) ||
+              (await getDraft(propTournamentId));
             if (draft && draft.holes && draft.holes.length > 0) {
               rawHoles = draft.holes;
             }
@@ -987,23 +999,47 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         setNassauStartNine("back");
       }
 
-      // Fetch primary handicap if teeBoxId is available
-      let fetchedPrimaryHc = Number(propHandicap || 0);
-      if (effectiveTeeBoxId) {
+      // Fetch primary handicap
+      const targetUserId =
+        scorecardOwnerUserId ||
+        (first.userId ? Number(first.userId) : null) ||
+        currentUserId;
+
+      const rawFirstHc =
+        first.appliedHandicap ??
+        first.AppliedHandicap ??
+        first.handicap ??
+        first.Handicap;
+
+      let fetchedPrimaryHc =
+        rawFirstHc !== undefined && rawFirstHc !== null && String(rawFirstHc) !== ""
+          ? Math.round(Number(rawFirstHc) || 0)
+          : propHandicap !== undefined && propHandicap !== null && String(propHandicap) !== ""
+            ? Math.round(Number(propHandicap) || 0)
+            : 0;
+
+      if (
+        (rawFirstHc === undefined || rawFirstHc === null || String(rawFirstHc) === "") &&
+        targetUserId &&
+        effectiveTeeBoxId
+      ) {
         try {
-          const hcDetails = await getScorecardHandicap(effectiveTeeBoxId);
+          const hcDetails = await getSubScorecardHandicap(
+            Number(targetUserId),
+            effectiveTeeBoxId,
+          );
           if (hcDetails) {
             fetchedPrimaryHc = Number(
               hcDetails.courseHandicap ??
                 hcDetails.handicap ??
                 fetchedPrimaryHc,
             );
-            setPrimaryHandicap(fetchedPrimaryHc);
           }
         } catch (hcErr) {
           console.warn("Handicap lookup warning:", hcErr);
         }
       }
+      setPrimaryHandicap(fetchedPrimaryHc);
 
       // Map Companion Handicaps
       const hcMap: Record<string | number, number> = {};
@@ -1373,10 +1409,14 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     ) => {
       if (isReadOnly && !isCompleted) return;
 
-      const effectiveId =
+      const existingScorecardId =
         propScorecardId ||
-        propTournamentId ||
         holes[0]?.scorecardId ||
+        holesRef.current[0]?.scorecardId;
+
+      const draftKey =
+        existingScorecardId ||
+        (propTournamentId ? `tournament_${propTournamentId}` : null) ||
         (propRoundContextId ? `round_${propRoundContextId}` : null) ||
         (propCourseId && propTeeBoxId
           ? `draft_${propCourseId}_${propTeeBoxId}`
@@ -1386,7 +1426,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         userId || Number(await AsyncStorage.getItem("userId")) || 0;
 
       // 1. Save Local Draft
-      if (effectiveId && !isCompleted) {
+      if (draftKey && !isCompleted) {
         try {
           const holesPlayed = updatedHoles.filter(
             (h) => h.score !== null && h.score > 0,
@@ -1399,7 +1439,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           const par = updatedHoles.reduce((s, h) => s + (h.par || 0), 0);
 
           await saveDraft({
-            scorecardId: effectiveId,
+            scorecardId: draftKey,
             userId: currentUserId,
             courseName: propCourseName || holes[0]?.courseName || "Scorecard",
             date: propDate || new Date().toISOString(),
@@ -1435,11 +1475,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           });
         } catch (draftErr) {
           console.error("Failed to save draft:", draftErr);
-          Toast.show({
-            type: "error",
-            text1: "Failed to save draft",
-            text2: "Please try again",
-          });
         }
       }
 
@@ -1450,7 +1485,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           partners.length > 0 ? JSON.stringify(partners) : undefined;
 
         const payload = updatedHoles.map((h) => ({
-          scorecardId: h.scorecardId || propScorecardId || undefined,
+          scorecardId: h.scorecardId || undefined,
+          editScorecardId: existingScorecardId
+            ? Number(existingScorecardId)
+            : h.scorecardId
+              ? Number(h.scorecardId)
+              : undefined,
           courseId: propCourseId ? Number(propCourseId) : h.courseId || null,
           courseHalf:
             detectedCourseHalf === "Front9" ||
@@ -1529,43 +1569,35 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             ? { playingPartnersJson, PlayingPartnersJson: playingPartnersJson }
             : {}),
         }));
-        // console.log("ppp", payload);
 
-        const targetId =
-          effectiveId ||
-          holes[0]?.scorecardId ||
-          holesRef.current[0]?.scorecardId;
+        const res = await saveScoreCard(payload);
+        let newId = null;
+        if (Array.isArray(res) && res.length > 0) {
+          newId = res[0].scorecardId || res[0].id || res[0].ScorecardId;
+        } else if (res && typeof res === "object") {
+          newId = res.scorecardId || res.id || res.ScorecardId;
+        }
 
-        if (mode === "new-round" && !targetId) {
-          const res = await saveScoreCard(payload);
-
-          let newId = null;
-          if (Array.isArray(res) && res.length > 0) {
-            newId = res[0].scorecardId || res[0].id;
-          } else if (res && typeof res === "object") {
-            newId = res.scorecardId || res.id;
-          }
-
-          if (newId) {
-            setHoles((prev) => prev.map((h) => ({ ...h, scorecardId: newId })));
-            holesRef.current = holesRef.current.map((h) => ({
+        if (newId) {
+          setHoles((prev) =>
+            prev.map((h) => ({
               ...h,
-              scorecardId: newId,
-            }));
-          }
-        } else if (targetId) {
-          const updatedPayload = payload.map((h) => ({
+              scorecardId: h.scorecardId || newId,
+            })),
+          );
+          holesRef.current = holesRef.current.map((h) => ({
             ...h,
-            scorecardId: targetId,
+            scorecardId: h.scorecardId || newId,
           }));
-          await updateHoleScoresApi(targetId, updatedPayload);
-        } else {
-          await saveScoreCard(payload);
         }
 
         // If round is completed, clear local draft
         if (isCompleted) {
-          if (effectiveId) await deleteDraft(effectiveId);
+          if (draftKey) await deleteDraft(draftKey);
+          if (existingScorecardId) await deleteDraft(existingScorecardId);
+          if (propTournamentId)
+            await deleteDraft(`tournament_${propTournamentId}`);
+          if (propTournamentId) await deleteDraft(propTournamentId);
           if (propRoundContextId)
             await deleteDraft(`round_${propRoundContextId}`);
 
@@ -1676,13 +1708,19 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   }, [syncServerAndDraft]);
 
   // Back handler with confirmation if unsaved changes exist
-  const handleBack = useCallback(() => {
+  const handleBack = useCallback(async () => {
     if (debounceSaveTimerRef.current) {
       clearTimeout(debounceSaveTimerRef.current);
-      syncServerAndDraft(holesRef.current, textScoresRef.current, false);
+    }
+    if (holesRef.current && holesRef.current.length > 0 && !isReadOnly) {
+      try {
+        await syncServerAndDraft(holesRef.current, textScoresRef.current, false);
+      } catch (e) {
+        console.error("Error saving on back:", e);
+      }
     }
     router.back();
-  }, [router, syncServerAndDraft]);
+  }, [router, syncServerAndDraft, isReadOnly]);
 
   useFocusEffect(
     useCallback(() => {
@@ -2228,7 +2266,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         player,
         primaryHandicap,
         companionHandicaps,
-        gameConfig,
+        { ...gameConfig, isReadOnly },
       );
       if (info.score !== null) {
         gross += info.score;
@@ -2267,7 +2305,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         primary,
         primaryHandicap,
         companionHandicaps,
-        gameConfig,
+        { ...gameConfig, isReadOnly },
       );
       if (info.score !== null && info.score !== undefined && info.score >= 0) {
         gross += info.score;
@@ -2282,7 +2320,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
     });
     return { gross, net, pts, hasScore };
-  }, [holes, partners, primaryHandicap, companionHandicaps, gameConfig]);
+  }, [holes, partners, primaryHandicap, companionHandicaps, gameConfig, isReadOnly]);
 
   const getSubtotal = (holesList: any[]) => {
     return {
@@ -3133,7 +3171,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                               partner,
                               primaryHandicap,
                               companionHandicaps,
-                              gameConfig,
+                              { ...gameConfig, isReadOnly },
                             );
                             const key = `${hole.holeId}_${partner.playerId}`;
                             const valueText =
