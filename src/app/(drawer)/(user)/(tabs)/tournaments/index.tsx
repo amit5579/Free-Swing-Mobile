@@ -44,6 +44,7 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function TournamentsScreen() {
   const colorScheme = useColorScheme();
@@ -65,7 +66,8 @@ export default function TournamentsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [deleteConfirmTournament, setDeleteConfirmTournament] = useState<any>(null);
+  const [deleteConfirmTournament, setDeleteConfirmTournament] =
+    useState<any>(null);
   const [deletingTournament, setDeletingTournament] = useState(false);
 
   const {
@@ -192,7 +194,7 @@ export default function TournamentsScreen() {
         tournamentData.scoringType,
         tournamentData.startDate,
         tournamentData.teeBoxId,
-        tournamentData.handicapAllowancePercent
+        tournamentData.handicapAllowancePercent,
       );
 
       Toast.show({
@@ -273,15 +275,19 @@ export default function TournamentsScreen() {
   const [playLoadingId, setPlayLoadingId] = useState<number | null>(null);
 
   const handlePlayNow = async (tournament: any) => {
-    const tName = encodeURIComponent(tournament.name || tournament.tournamentName || "");
-    const cName = encodeURIComponent(tournament.courseName || tournament.course?.name || "");
+    const tName = encodeURIComponent(
+      tournament.name || tournament.tournamentName || "",
+    );
+    const cName = encodeURIComponent(
+      tournament.courseName || tournament.course?.name || "",
+    );
     if (tournament.creatorId == null) {
       try {
         setPlayLoadingId(tournament.tournamentId);
         const currentUserId = userId || (await AsyncStorage.getItem("userId"));
         const response = await getWaiverStatus(
           tournament.tournamentId,
-          Number(currentUserId)
+          Number(currentUserId),
         );
 
         const isAccepted =
@@ -418,32 +424,48 @@ export default function TournamentsScreen() {
         </HStack>
 
         {/* 🔥 PRIMARY CTA */}
-        <Pressable
-          onPress={handleCreate}
+        <LinearGradient
+          colors={["#8bc34a", "#558b2f"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
             marginHorizontal: 16,
-            marginBottom: 12,
-            paddingVertical: 12,
-            borderRadius: 12,
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 6,
-            backgroundColor: "#84cc16",
+              marginBottom: 12,
+              paddingVertical: 12,
+              borderRadius: 12,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 6,
+              backgroundColor: "#84cc16",
+            shadowColor: "#8bc34a",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 8,
+            elevation: 4,
           }}
-          android_ripple={{ color: "rgba(255,255,255,0.2)" }}
         >
-          <Ionicons name="add" size={18} color="#fff" />
-          <ThemedText
+          <Pressable
+            onPress={handleCreate}
             style={{
-              color: "#fff",
-              fontWeight: "600",
-              fontSize: 14,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
             }}
+            android_ripple={{ color: "rgba(255,255,255,0.2)" }}
           >
-            Create Mini Tournament
-          </ThemedText>
-        </Pressable>
+            <Ionicons name="add" size={18} color="#fff" />
+            <ThemedText
+              style={{
+                color: "#fff",
+                fontWeight: "600",
+                fontSize: 14,
+              }}
+            >
+              Create Mini Tournament
+            </ThemedText>
+          </Pressable>
+        </LinearGradient>
       </Box>
     );
   };
@@ -744,7 +766,9 @@ export default function TournamentsScreen() {
                                 </Pressable>
 
                                 <Pressable
-                                  onPress={() => setDeleteConfirmTournament(tournament)}
+                                  onPress={() =>
+                                    setDeleteConfirmTournament(tournament)
+                                  }
                                   className="flex-1 flex-row justify-center items-center gap-2 border border-[#ef4444] py-2.5 rounded-xl"
                                 >
                                   <Ionicons
@@ -766,7 +790,8 @@ export default function TournamentsScreen() {
                             )}
 
                             {/* Play Button Row */}
-                            {!tournament.isPlayed && !tournament.isGroupedAsNonScorer &&
+                            {!tournament.isPlayed &&
+                              !tournament.isGroupedAsNonScorer &&
                               (isEnded ? (
                                 <View className="flex-1 flex-row justify-center items-center gap-2 bg-gray-400 py-2.5 rounded-xl">
                                   <Ionicons
@@ -787,12 +812,17 @@ export default function TournamentsScreen() {
                                 </View>
                               ) : (
                                 <Pressable
-                                  disabled={playLoadingId === tournament.tournamentId}
+                                  disabled={
+                                    playLoadingId === tournament.tournamentId
+                                  }
                                   onPress={() => handlePlayNow(tournament)}
                                   className="flex-1 flex-row justify-center items-center gap-2 bg-[#8bc34a] py-2.5 rounded-xl"
                                 >
                                   {playLoadingId === tournament.tournamentId ? (
-                                    <ActivityIndicator size="small" color="white" />
+                                    <ActivityIndicator
+                                      size="small"
+                                      color="white"
+                                    />
                                   ) : (
                                     <>
                                       <Ionicons
@@ -839,9 +869,7 @@ export default function TournamentsScreen() {
           style={[
             styles.overlay,
             {
-              backgroundColor: isDark
-                ? "rgba(0,0,0,0.7)"
-                : "rgba(0,0,0,0.5)",
+              backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)",
             },
           ]}
         >
@@ -849,9 +877,7 @@ export default function TournamentsScreen() {
             style={[
               styles.modalContainer,
               {
-                backgroundColor: isDark
-                  ? "#121212"
-                  : "white",
+                backgroundColor: isDark ? "#121212" : "white",
               },
             ]}
           >
@@ -883,40 +909,25 @@ export default function TournamentsScreen() {
             </VStack>
             {/* BASIC INFO */}
             <VStack style={styles.infoBox}>
-              <Text
-                style={{ color: isDark ? "#eee" : "#000" }}
-              >
+              <Text style={{ color: isDark ? "#eee" : "#000" }}>
                 <Text
-                  style={[
-                    styles.bold,
-                    { color: isDark ? "white" : "black" },
-                  ]}
+                  style={[styles.bold, { color: isDark ? "white" : "black" }]}
                 >
                   Tournament Name:{" "}
                 </Text>
                 {selectedTournament?.name}
               </Text>
-              <Text
-                style={{ color: isDark ? "#eee" : "#000" }}
-              >
+              <Text style={{ color: isDark ? "#eee" : "#000" }}>
                 <Text
-                  style={[
-                    styles.bold,
-                    { color: isDark ? "white" : "black" },
-                  ]}
+                  style={[styles.bold, { color: isDark ? "white" : "black" }]}
                 >
                   Organized By:{" "}
                 </Text>
                 KOLVE18FREESWING LLP
               </Text>
-              <Text
-                style={{ color: isDark ? "#eee" : "#000" }}
-              >
+              <Text style={{ color: isDark ? "#eee" : "#000" }}>
                 <Text
-                  style={[
-                    styles.bold,
-                    { color: isDark ? "white" : "black" },
-                  ]}
+                  style={[styles.bold, { color: isDark ? "white" : "black" }]}
                 >
                   Effective Date:{" "}
                 </Text>
@@ -929,9 +940,7 @@ export default function TournamentsScreen() {
               style={[
                 styles.warningBox,
                 {
-                  backgroundColor: isDark
-                    ? "#3e2723"
-                    : "#fff3cd",
+                  backgroundColor: isDark ? "#3e2723" : "#fff3cd",
                 },
               ]}
             >
@@ -941,16 +950,13 @@ export default function TournamentsScreen() {
                   { color: isDark ? "#ffe0b2" : "#854d0e" },
                 ]}
               >
-                Before completing your tournament
-                registration, you must read and agree to
-                this Liability Waiver.
+                Before completing your tournament registration, you must read
+                and agree to this Liability Waiver.
               </Text>
             </View>
 
             {/* WAIVER CONTENT */}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView showsVerticalScrollIndicator={false}>
               <VStack style={styles.section}>
                 <Text
                   style={[
@@ -966,10 +972,9 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I understand that participation in golf
-                  tournaments involves inherent risks
-                  including injury, collisions, equipment
-                  hazards and weather related risks.
+                  I understand that participation in golf tournaments involves
+                  inherent risks including injury, collisions, equipment hazards
+                  and weather related risks.
                 </Text>
               </VStack>
 
@@ -988,8 +993,8 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I declare that I am medically fit to
-                  participate in this tournament.
+                  I declare that I am medically fit to participate in this
+                  tournament.
                 </Text>
               </VStack>
 
@@ -1008,9 +1013,9 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I release the organizers and sponsors from
-                  any liability related to injuries, damages
-                  or losses arising from my participation.
+                  I release the organizers and sponsors from any liability
+                  related to injuries, damages or losses arising from my
+                  participation.
                 </Text>
               </VStack>
 
@@ -1029,9 +1034,8 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I agree to indemnify the organizers
-                  against claims arising from my
-                  participation.
+                  I agree to indemnify the organizers against claims arising
+                  from my participation.
                 </Text>
               </VStack>
 
@@ -1050,8 +1054,7 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I will comply with tournament rules and
-                  play fairly.
+                  I will comply with tournament rules and play fairly.
                 </Text>
               </VStack>
 
@@ -1070,8 +1073,7 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  The organizer is not responsible for lost
-                  or stolen property.
+                  The organizer is not responsible for lost or stolen property.
                 </Text>
               </VStack>
 
@@ -1090,8 +1092,8 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  The organizer may reschedule or cancel
-                  events due to weather or safety concerns.
+                  The organizer may reschedule or cancel events due to weather
+                  or safety concerns.
                 </Text>
               </VStack>
 
@@ -1110,8 +1112,8 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I grant permission to use images or videos
-                  from the tournament for promotional use.
+                  I grant permission to use images or videos from the tournament
+                  for promotional use.
                 </Text>
               </VStack>
 
@@ -1130,8 +1132,8 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  I agree that scores and tournament data
-                  may be stored digitally.
+                  I agree that scores and tournament data may be stored
+                  digitally.
                 </Text>
               </VStack>
 
@@ -1150,8 +1152,7 @@ export default function TournamentsScreen() {
                     { color: isDark ? "#aaa" : "#555" },
                   ]}
                 >
-                  This agreement is governed by the laws of
-                  India.
+                  This agreement is governed by the laws of India.
                 </Text>
               </VStack>
             </ScrollView>
@@ -1171,9 +1172,7 @@ export default function TournamentsScreen() {
               <Controller
                 control={waiverControl}
                 name="readAndUnderstood"
-                render={({
-                  field: { onChange, value },
-                }) => (
+                render={({ field: { onChange, value } }) => (
                   <Pressable
                     style={styles.checkboxRow}
                     onPress={() => onChange(!value)}
@@ -1182,9 +1181,7 @@ export default function TournamentsScreen() {
                       style={[
                         styles.checkbox,
                         {
-                          borderColor: isDark
-                            ? "#444"
-                            : "#999",
+                          borderColor: isDark ? "#444" : "#999",
                           justifyContent: "center",
                           alignItems: "center",
                         },
@@ -1192,11 +1189,7 @@ export default function TournamentsScreen() {
                       ]}
                     >
                       {value && (
-                        <Ionicons
-                          name="checkmark"
-                          size={14}
-                          color="white"
-                        />
+                        <Ionicons name="checkmark" size={14} color="white" />
                       )}
                     </View>
                     <Text
@@ -1211,9 +1204,7 @@ export default function TournamentsScreen() {
                 )}
               />
               {waiverErrors.readAndUnderstood && (
-                <Text
-                  style={{ color: "red", fontSize: 12, marginBottom: 10 }}
-                >
+                <Text style={{ color: "red", fontSize: 12, marginBottom: 10 }}>
                   {waiverErrors.readAndUnderstood.message}
                 </Text>
               )}
@@ -1221,9 +1212,7 @@ export default function TournamentsScreen() {
               <Controller
                 control={waiverControl}
                 name="agreedToTerms"
-                render={({
-                  field: { onChange, value },
-                }) => (
+                render={({ field: { onChange, value } }) => (
                   <Pressable
                     style={styles.checkboxRow}
                     onPress={() => onChange(!value)}
@@ -1232,9 +1221,7 @@ export default function TournamentsScreen() {
                       style={[
                         styles.checkbox,
                         {
-                          borderColor: isDark
-                            ? "#444"
-                            : "#999",
+                          borderColor: isDark ? "#444" : "#999",
                           justifyContent: "center",
                           alignItems: "center",
                         },
@@ -1242,11 +1229,7 @@ export default function TournamentsScreen() {
                       ]}
                     >
                       {value && (
-                        <Ionicons
-                          name="checkmark"
-                          size={14}
-                          color="white"
-                        />
+                        <Ionicons name="checkmark" size={14} color="white" />
                       )}
                     </View>
                     <Text
@@ -1261,9 +1244,7 @@ export default function TournamentsScreen() {
                 )}
               />
               {waiverErrors.agreedToTerms && (
-                <Text
-                  style={{ color: "red", fontSize: 12 }}
-                >
+                <Text style={{ color: "red", fontSize: 12 }}>
                   {waiverErrors.agreedToTerms.message}
                 </Text>
               )}
@@ -1277,8 +1258,7 @@ export default function TournamentsScreen() {
                   resetWaiver();
                   Toast.show({
                     type: "error",
-                    text1:
-                      "You must accept the waiver to play the game",
+                    text1: "You must accept the waiver to play the game",
                   });
                 }}
                 style={styles.declineBtn}
@@ -1294,9 +1274,7 @@ export default function TournamentsScreen() {
               </Pressable>
 
               <Pressable
-                onPress={handleWaiverSubmit(
-                  handleAcceptanceWeiver,
-                )}
+                onPress={handleWaiverSubmit(handleAcceptanceWeiver)}
                 style={styles.acceptBtn}
               >
                 <Text
@@ -1358,7 +1336,9 @@ export default function TournamentsScreen() {
                   width: 52,
                   height: 52,
                   borderRadius: 26,
-                  backgroundColor: isDark ? "rgba(239, 68, 68, 0.15)" : "#FEE2E2",
+                  backgroundColor: isDark
+                    ? "rgba(239, 68, 68, 0.15)"
+                    : "#FEE2E2",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 12,
@@ -1386,7 +1366,12 @@ export default function TournamentsScreen() {
                 }}
               >
                 Are you sure you want to delete{" "}
-                <Text style={{ fontWeight: "700", color: isDark ? "#ffffff" : "#0f172a" }}>
+                <Text
+                  style={{
+                    fontWeight: "700",
+                    color: isDark ? "#ffffff" : "#0f172a",
+                  }}
+                >
                   {deleteConfirmTournament?.name}
                 </Text>{" "}
                 tournament?

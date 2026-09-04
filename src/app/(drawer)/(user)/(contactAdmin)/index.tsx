@@ -23,6 +23,7 @@ import { useRouter } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contactAdminSchema, ContactAdminType } from "@/schema/userSchemas";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { Dropdown } from "react-native-element-dropdown";
 import {
@@ -290,14 +291,27 @@ export default function ContactAdminPage() {
           {/* BUTTON */}
           <Pressable
             onPress={() => setModalVisible(true)}
-            className="mb-4 p-4 rounded-xl items-center"
-            style={{
-              backgroundColor: "#8BC34A",
-            }}
+            style={{ borderRadius: 12, marginBottom: 16 }}
           >
-            <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-              + Send Feedback
-            </ThemedText>
+            <LinearGradient
+              colors={["#8bc34a", "#558b2f"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                alignItems: "center",
+                shadowColor: "#8bc34a",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 5,
+              }}
+            >
+              <ThemedText style={{ color: "#fff", fontWeight: "800" }}>
+                + Send Feedback
+              </ThemedText>
+            </LinearGradient>
           </Pressable>
 
           <VStack>
@@ -579,17 +593,27 @@ export default function ContactAdminPage() {
             {/* SUBMIT */}
             <Pressable
               onPress={handleSubmit(onSubmit)}
-              style={{
-                backgroundColor: "#84cc16",
-                padding: 14,
-                borderRadius: 12,
-                marginTop: 16,
-                alignItems: "center",
-              }}
+              style={{ borderRadius: 12, marginTop: 16 }}
             >
-              <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                Submit
-              </ThemedText>
+              <LinearGradient
+                colors={["#8bc34a", "#558b2f"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  padding: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  shadowColor: "#8bc34a",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 8,
+                  elevation: 5,
+                }}
+              >
+                <ThemedText style={{ color: "#fff", fontWeight: "800" }}>
+                  Submit
+                </ThemedText>
+              </LinearGradient>
             </Pressable>
           </View>
         </View>

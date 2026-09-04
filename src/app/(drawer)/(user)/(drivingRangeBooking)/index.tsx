@@ -19,6 +19,7 @@ import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
 import { getDrivingRangeSlots, bookDrivingRangeSlot, uploadScreenshot } from "@/api/modules/drivingRange.api";
 import { getProfile } from "@/api/modules/profile.api";
 import ImageCropPicker from "react-native-image-crop-picker";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function DrivingRangeBookingPage() {
   const colorScheme = useColorScheme();
@@ -727,24 +728,35 @@ export default function DrivingRangeBookingPage() {
               <Pressable
                 onPress={handleBookSlot}
                 disabled={bookingLoading}
-                style={{
-                  backgroundColor: bookingLoading ? "#a3e635" : "#8BC34A",
-                  paddingVertical: 14,
-                  borderRadius: 12,
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 8,
-                }}
+                style={{ borderRadius: 12 }}
               >
-                {bookingLoading ? (
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Processing...</Text>
-                ) : (
-                  <>
-                    <Ionicons name="flash" size={18} color="#fff" />
-                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Pay via UPI & Book</Text>
-                  </>
-                )}
+                <LinearGradient
+                  colors={bookingLoading ? ["#a3e635", "#8bc34a"] : ["#8bc34a", "#558b2f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 8,
+                    shadowColor: "#8bc34a",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.35,
+                    shadowRadius: 10,
+                    elevation: 6,
+                  }}
+                >
+                  {bookingLoading ? (
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>Processing...</Text>
+                  ) : (
+                    <>
+                      <Ionicons name="flash" size={18} color="#fff" />
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>Pay via UPI & Book</Text>
+                    </>
+                  )}
+                </LinearGradient>
               </Pressable>
             ) : (
               <VStack style={{ alignItems: "center", marginTop: 10 }}>
@@ -783,16 +795,26 @@ export default function DrivingRangeBookingPage() {
                     <Pressable
                       onPress={handlePickAndUploadScreenshot}
                       disabled={isUploading}
-                      style={{
-                        backgroundColor: isUploading ? "#a3e635" : "#8BC34A",
-                        paddingVertical: 12,
-                        borderRadius: 8,
-                        alignItems: "center",
-                      }}
+                      style={{ borderRadius: 8 }}
                     >
-                      <Text style={{ color: "#fff", fontWeight: "600" }}>
-                        {isUploading ? "Uploading..." : "Upload Screenshot"}
-                      </Text>
+                      <LinearGradient
+                        colors={isUploading ? ["#a3e635", "#8bc34a"] : ["#8bc34a", "#558b2f"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          paddingVertical: 12,
+                          borderRadius: 8,
+                          alignItems: "center",
+                          shadowColor: "#8bc34a",
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.3,
+                          elevation: 4,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "700" }}>
+                          {isUploading ? "Uploading..." : "Upload Screenshot"}
+                        </Text>
+                      </LinearGradient>
                     </Pressable>
                   </VStack>
                 ) : (

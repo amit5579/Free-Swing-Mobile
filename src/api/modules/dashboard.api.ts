@@ -74,6 +74,16 @@ export interface InProgressApiItem {
   holesPlayed: number;
   isDQ: boolean;
   tournamentId: number | null;
+  roundNumber?: number;
+  courseHalf?: string | null;
+  isGroupDelegation?: boolean;
+  primaryUserName?: string | null;
+  playingGroupRoundKey?: string | null;
+  tournamentName?: string;
+  scoringType?: string;
+  isDoublePeoria?: boolean;
+  isStableford?: boolean;
+  updatedAt?: string;
 }
 
 export const getInProgressGames = async (playerId: number) => {
@@ -178,6 +188,10 @@ export interface ScoreHistoryItem {
   isDQ: boolean;
   isDisqualified: boolean;
   tournamentId: number | null;
+  playingCondition?: string | null;
+  playingConditionCode?: string | null;
+  PlayingCondition?: string | null;
+  PlayingConditionCode?: string | null;
 }
 
 export const getScoreHistory = async (playerId: number) => {

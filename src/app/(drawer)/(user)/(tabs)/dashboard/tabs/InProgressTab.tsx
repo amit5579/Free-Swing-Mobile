@@ -16,6 +16,7 @@ import {
   RefreshControl,
   InteractionManager,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   getInProgressGames,
   InProgressApiItem,
@@ -48,6 +49,7 @@ export type InProgressGame = {
   primaryUserName?: string;
   playingGroupRoundKey?: string;
   tournamentName?: string;
+  roundNumber?: number;
 };
 
 type InProgressTabProps = {
@@ -65,6 +67,7 @@ type InProgressTabProps = {
     tournamentName?: string,
   ) => void;
   searchQuery?: string;
+  onCountChange?: (count: number) => void;
 };
 
 export function InProgressTab({
@@ -72,6 +75,7 @@ export function InProgressTab({
   onDelete = () => {},
   onResume = () => {},
   searchQuery = "",
+  onCountChange,
 }: InProgressTabProps) {
   const [games, setGames] = useState<InProgressGame[]>([]);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
@@ -173,10 +177,11 @@ export function InProgressTab({
       const drafts = await getUserDrafts(playerId);
       const merged = mergeInProgressRoundsWithDrafts(data, drafts);
 
-      const mapped = merged.map((item: any) => ({
+      const mapped: InProgressGame[] = merged.map((item: any) => ({
         id: item.scorecardId.toString(),
         courseName: item.courseName,
         date: item.date,
+        roundNumber: item.roundNumber ?? item.RoundNumber ?? undefined,
         holesPlayed: item.holesPlayed,
         isDQ: Boolean(
           item.isDQ ??
@@ -213,38 +218,13 @@ export function InProgressTab({
         playingGroupRoundKey: item.playingGroupRoundKey ?? item.PlayingGroupRoundKey ?? undefined,
       }));
 
-      // Filter out ghost rounds (duplicate API rounds with holesPlayed = 0)
-      // Group by courseName + date
-      const grouped = new Map<string, typeof mapped>();
-      mapped.forEach((game: any) => {
-        const key = `${game.courseName}_${new Date(game.date).toDateString()}`;
-        if (!grouped.has(key)) {
-          grouped.set(key, []);
-        }
-        grouped.get(key)!.push(game);
-      });
-
-      const finalGames: typeof mapped = [];
-      grouped.forEach((gamesInGroup) => {
-        if (gamesInGroup.length === 1) {
-          finalGames.push(gamesInGroup[0]);
-        } else {
-          // Keep rounds that have holesPlayed > 0 OR have a local draft
-          // If all are ghost rounds, just keep the latest one
-          const validGames = gamesInGroup.filter((g: any) => g.holesPlayed > 0 || g.hasLocalDraft);
-          if (validGames.length > 0) {
-            finalGames.push(...validGames);
-          } else {
-            // All are ghost rounds, keep the one with max ID
-            finalGames.push(gamesInGroup.reduce((prev: any, current: any) => (parseInt(prev.id) > parseInt(current.id)) ? prev : current));
-          }
-        }
-      });
-
-      setGames(finalGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      const sorted = mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setGames(sorted);
+      onCountChange?.(sorted.length);
     } catch (error) {
       console.error("Error fetching in-progress games:", error);
       setGames([]);
+      onCountChange?.(0);
     } finally {
       if (showSkeleton) setLoading(false);
     }
@@ -273,13 +253,12 @@ export function InProgressTab({
               Games you are currently playing
             </Text>
           </VStack>
-          {/* <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
-            <Ionicons
-              name="sync-outline"
-              size={20}
-              color={isDark ? "#fff" : "#6B7280"}
-            />
-          </Pressable> */}
+          <Skeleton
+            isDark={isDark}
+            width={64}
+            height={26}
+            borderRadius={12}
+          />
         </HStack>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -370,16 +349,37 @@ export function InProgressTab({
           <Text
             className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}
           >
-            Games you are currently playing
+            {searchQuery
+              ? `Showing ${filteredGames.length} of ${games.length} ${games.length === 1 ? "game" : "games"}`
+              : "Games you are currently playing"}
           </Text>
         </VStack>
-        {/* <Pressable onPress={() => fetchGames()} className="p-2 rounded-full">
-          <Ionicons
-            name="sync-outline"
-            size={20}
-            color={isDark ? "#fff" : "#6B7280"}
-          />
-        </Pressable> */}
+
+        <LinearGradient
+          colors={["#8bc34a", "#558b2f"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 5,
+            borderRadius: 12,
+            shadowColor: "#8bc34a",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.35,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: 12,
+              fontWeight: "800",
+            }}
+          >
+            Total: {searchQuery && filteredGames.length !== games.length ? `${filteredGames.length} / ${games.length}` : games.length}
+          </Text>
+        </LinearGradient>
       </HStack>
 
       <ScrollView
@@ -589,7 +589,7 @@ export function InProgressTab({
                     )}
                   </HStack>
 
-                  <HStack className="items-center mt-1 space-x-2">
+                  <HStack className="items-center mt-1 space-x-2 flex-wrap">
                     <Ionicons
                       name="calendar-outline"
                       size={14}
@@ -601,7 +601,16 @@ export function InProgressTab({
                         fontSize: 12,
                       }}
                     >
-                      {new Date(game.date).toDateString()}
+                      {new Date(game.date).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                      {" • "}
+                      {new Date(game.date).toLocaleTimeString(undefined, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </Text>
 
                     <Text
@@ -750,9 +759,7 @@ export function InProgressTab({
                         )}
                       </Button>
                     )}
-
-                    <Button
-                      size="sm"
+                    <Pressable
                       disabled={resumingId === game.id}
                       onPress={() =>
                         handleResume(
@@ -767,38 +774,57 @@ export function InProgressTab({
                           game.tournamentName,
                         )
                       }
-                      className="rounded-full flex-row items-center justify-center"
                       style={{
-                        backgroundColor:
-                          game.isGroupDelegation
-                            ? (isDark ? "#0284c7" : "#0284c7")
-                            : (resumingId === game.id ? "#A5D6A7" : "#8BC34A"),
                         width: game.isGroupDelegation ? "100%" : "48%",
-                        height: 42,
-                        opacity: resumingId === game.id ? 0.7 : 1,
+                        borderRadius: 9999,
                       }}
                     >
-                      <Text
+                      <LinearGradient
+                        colors={
+                          game.isGroupDelegation
+                            ? ["#0284c7", "#0369a1"]
+                            : resumingId === game.id
+                              ? ["#A5D6A7", "#81C784"]
+                              : ["#8bc34a", "#558b2f"]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={{
-                          color: "#FFFFFF",
-                          fontWeight: "700",
-                          marginRight: 6,
+                          height: 42,
+                          borderRadius: 9999,
+                          shadowColor: game.isGroupDelegation
+                            ? "#0284c7"
+                            : "#8bc34a",
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                          elevation: 4,
+                          opacity: resumingId === game.id ? 0.7 : 1,
                         }}
+                        className="flex-row items-center justify-center"
                       >
-                        {resumingId === game.id
-                          ? "Opening..."
-                          : game.isGroupDelegation
-                            ? "View Live"
-                            : "Resume"}
-                      </Text>
-                      {resumingId !== game.id && (
-                        <Ionicons
-                          name="arrow-forward"
-                          size={14}
-                          color="#FFFFFF"
-                        />
-                      )}
-                    </Button>
+                        <Text
+                          style={{
+                            color: "#FFFFFF",
+                            fontWeight: "800",
+                            marginRight: 6,
+                          }}
+                        >
+                          {resumingId === game.id
+                            ? "Opening..."
+                            : game.isGroupDelegation
+                              ? "View Live"
+                              : "Resume"}
+                        </Text>
+                        {resumingId !== game.id && (
+                          <Ionicons
+                            name="arrow-forward"
+                            size={14}
+                            color="#FFFFFF"
+                          />
+                        )}
+                      </LinearGradient>
+                    </Pressable>
                   </HStack>
                 </Box>
               </Box>

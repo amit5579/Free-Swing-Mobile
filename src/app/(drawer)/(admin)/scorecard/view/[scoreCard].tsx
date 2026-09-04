@@ -180,7 +180,7 @@ const ScoreCard: React.FC = () => {
       return "Split 6";
     if (!isExcluded && !isStableford && !isSplit6 && isHighLow)
       return "High-Low";
-    if (isNassauBest) return "Nassau • Best Score";
+    if (isNassauBest) return "Nassau • Best Ball";
     if (isNassauCombined) return "Nassau • Combined Score";
     return "";
   };

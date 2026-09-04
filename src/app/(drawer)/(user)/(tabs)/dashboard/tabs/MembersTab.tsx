@@ -10,6 +10,7 @@ import {
 import { router, useFocusEffect } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { Box } from "@/components/box";
 import { VStack } from "@/components/vstack";
@@ -162,15 +163,17 @@ export default function MembersTab({ searchQuery = "" }: MembersTabProps) {
           Members
         </ThemedText>
         <Box style={{ position: "relative" }}>
-          <Box
+          <LinearGradient
+            colors={["#8bc34a", "#558b2f"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              backgroundColor: "#8BC34A",
               paddingHorizontal: 14,
               paddingVertical: 6,
               borderRadius: 12,
-              shadowColor: "#8BC34A",
+              shadowColor: "#8bc34a",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
+              shadowOpacity: 0.35,
               shadowRadius: 6,
               elevation: 4,
             }}
@@ -184,7 +187,7 @@ export default function MembersTab({ searchQuery = "" }: MembersTabProps) {
             >
               Total: {members.length}
             </ThemedText>
-          </Box>
+          </LinearGradient>
         </Box>
       </HStack>
 
@@ -401,33 +404,40 @@ export default function MembersTab({ searchQuery = "" }: MembersTabProps) {
                         </ThemedText>
                       </VStack>
                       <TouchableOpacity
+                        activeOpacity={0.8}
                         onPress={() => {
                           router.push(
                             `/(drawer)/(user)/(tabs)/dashboard/tabs/${member.id}`
                           );
                         }}
-                        style={{
-                          backgroundColor: "#8BC34A",
-                          paddingHorizontal: 10,
-                          paddingVertical: 7,
-                          borderRadius: 12,
-                          alignItems: "center",
-                          shadowColor: "#8BC34A",
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.3,
-                          shadowRadius: 8,
-                          elevation: 4,
-                        }}
+                        style={{ borderRadius: 12 }}
                       >
-                        <ThemedText
+                        <LinearGradient
+                          colors={["#8bc34a", "#558b2f"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
                           style={{
-                            color: "white",
-                            fontWeight: "700",
-                            fontSize: 12,
+                            paddingHorizontal: 12,
+                            paddingVertical: 7,
+                            borderRadius: 12,
+                            alignItems: "center",
+                            shadowColor: "#8bc34a",
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 8,
+                            elevation: 4,
                           }}
                         >
-                          View Profile
-                        </ThemedText>
+                          <ThemedText
+                            style={{
+                              color: "white",
+                              fontWeight: "800",
+                              fontSize: 12,
+                            }}
+                          >
+                            View Profile
+                          </ThemedText>
+                        </LinearGradient>
                       </TouchableOpacity>
                     </HStack>
                   </View>

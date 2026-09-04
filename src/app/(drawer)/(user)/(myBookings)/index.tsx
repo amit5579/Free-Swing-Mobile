@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { LinearGradient } from "expo-linear-gradient";
 import ImageCropPicker from "react-native-image-crop-picker";
 import Toast from "react-native-toast-message";
 import {
@@ -579,29 +580,66 @@ export default function MyBookingsScreen() {
           // contentContainerStyle={styles.filterContainer}
           style={styles.filterContainer}
         >
-          {["All","Tee Time","Driving Range", "Pending", "Approved"].map(
-            (f) => (
-              <TouchableOpacity
-                key={f}
-                style={[
-                  styles.filterTab,
-                  filter === f && styles.filterTabActive,
-                  { borderColor: isDark ? "#333" : "#E0E0E0" },
-                ]}
-                onPress={() => setFilter(f as any)}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    filter === f
-                      ? styles.filterTextActive
-                      : { color: isDark ? "#AAA" : "#666" },
-                  ]}
+          {["All", "Tee Time", "Driving Range", "Pending", "Approved"].map(
+            (f) => {
+              const active = filter === f;
+              return (
+                <TouchableOpacity
+                  key={f}
+                  style={{ borderRadius: 20 }}
+                  onPress={() => setFilter(f as any)}
                 >
-                  {f}
-                </Text>
-              </TouchableOpacity>
-            ),
+                  {active ? (
+                    <LinearGradient
+                      colors={["#8bc34a", "#558b2f"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.filterTab,
+                        {
+                          borderWidth: 0,
+                          shadowColor: "#8bc34a",
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 6,
+                          elevation: 4,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterText,
+                          { color: "#FFF", fontWeight: "800" },
+                        ]}
+                      >
+                        {f}
+                      </Text>
+                    </LinearGradient>
+                  ) : (
+                    <View
+                      style={[
+                        styles.filterTab,
+                        {
+                          borderColor: isDark ? "#333" : "#E0E0E0",
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.05)"
+                            : "#fff",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterText,
+                          { color: isDark ? "#AAA" : "#666" },
+                        ]}
+                      >
+                        {f}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            },
           )}
         </View>
       </View>
@@ -791,18 +829,33 @@ export default function MyBookingsScreen() {
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.modalBtnSubmit,
-                  (!selectedImage || uploading) && { opacity: 0.5 },
-                ]}
                 onPress={handleUploadProof}
                 disabled={!selectedImage || uploading}
+                style={{
+                  borderRadius: 8,
+                  opacity: !selectedImage || uploading ? 0.5 : 1,
+                }}
               >
-                {uploading ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Text style={styles.modalBtnConfirmText}>Submit Proof</Text>
-                )}
+                <LinearGradient
+                  colors={["#8bc34a", "#558b2f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.modalBtnSubmit,
+                    {
+                      shadowColor: "#8bc34a",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.35,
+                      elevation: 4,
+                    },
+                  ]}
+                >
+                  {uploading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.modalBtnConfirmText}>Submit Proof</Text>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>

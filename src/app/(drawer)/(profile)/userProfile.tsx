@@ -23,6 +23,7 @@ import { Box } from "@/components/box";
 import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
 import Watermark from "@/components/watermark";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   getCertificateByUserId,
@@ -91,14 +92,27 @@ export default function UserProfile() {
     }
   };
 
-  const handleCertificateClick = () => {
-    if (userCertificate?.isEligible) {
-      router.push("/(drawer)/(profile)/certificate");
-    } else {
+  const handleCertificateClick = async () => {
+    try {
+      let cert = userCertificate;
+      if (!cert) {
+        cert = await getCertificateByUserId();
+        setUserCertificate(cert);
+      }
+      if (cert?.isEligible) {
+        router.push("/(drawer)/(profile)/certificate");
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "You are not eligible for handicap certificate",
+          text2: `You are not eligible. You have only completed ${cert?.completedHolesCount || 0} holes (requires 180).`,
+        });
+      }
+    } catch (error) {
       Toast.show({
         type: "error",
-        text1: "You are not eligible for handicap certificate",
-        text2: `You have only completed ${userCertificate?.completedHolesCount || 0} holes (requires 180).`,
+        text1: "Error",
+        text2: "Failed to load certificate eligibility",
       });
     }
   };
@@ -565,16 +579,27 @@ export default function UserProfile() {
                   {userProfile?.role === "Player" && (
                     <Pressable
                       onPress={() => handleCertificateClick()}
-                      style={{
-                        backgroundColor: "#8BC34A",
-                        padding: 14,
-                        borderRadius: 12,
-                        alignItems: "center",
-                      }}
+                      style={{ borderRadius: 12 }}
                     >
-                      <ThemedText style={{ fontWeight: "600", color: "#fff" }}>
-                        Handicap Certificate
-                      </ThemedText>
+                      <LinearGradient
+                        colors={["#8bc34a", "#558b2f"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          padding: 14,
+                          borderRadius: 12,
+                          alignItems: "center",
+                          shadowColor: "#8bc34a",
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                          elevation: 5,
+                        }}
+                      >
+                        <ThemedText style={{ fontWeight: "800", color: "#fff" }}>
+                          Handicap Certificate
+                        </ThemedText>
+                      </LinearGradient>
                     </Pressable>
                   )}
                 </VStack>
@@ -802,16 +827,24 @@ export default function UserProfile() {
               </Pressable>
               <Pressable
                 onPress={handleSubmit(onSubmit)}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 10,
-                  backgroundColor: "#8BC34A",
-                  alignItems: "center",
-                  marginLeft: 8,
-                }}
+                style={{ flex: 1, marginLeft: 8, borderRadius: 10 }}
               >
-                <Text style={{ color: "#fff", fontWeight: "600" }}>Update</Text>
+                <LinearGradient
+                  colors={["#8bc34a", "#558b2f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    shadowColor: "#8bc34a",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.35,
+                    elevation: 4,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "800" }}>Update</Text>
+                </LinearGradient>
               </Pressable>
             </HStack>
           </View>

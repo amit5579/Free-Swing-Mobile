@@ -19,6 +19,7 @@ import { Box } from "@/components/box";
 import { Skeleton } from "@/components/Skeleton";
 
 import { Colors } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function TabLayout() {
   const scheme = useColorScheme();
@@ -267,20 +268,25 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ focused }) => (
             <View style={styles.fabOuter}>
-              <View
-                style={[
-                  styles.fabInner,
-                  {
-                    backgroundColor: focused ? "#8bc34a" : "#fff",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="add"
-                  size={32}
-                  color={focused ? "#FFF" : "#8bc34a"}
-                />
-              </View>
+              {focused ? (
+                <LinearGradient
+                  colors={["#8bc34a", "#558b2f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.fabInner}
+                >
+                  <Ionicons name="add" size={32} color="#FFF" />
+                </LinearGradient>
+              ) : (
+                <View
+                  style={[
+                    styles.fabInner,
+                    { backgroundColor: isDark ? "#1f2937" : "#fff" },
+                  ]}
+                >
+                  <Ionicons name="add" size={32} color="#8bc34a" />
+                </View>
+              )}
             </View>
           ),
         }}
@@ -338,17 +344,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowColor: "#8bc34a",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   fabInner: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
