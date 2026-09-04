@@ -26,6 +26,7 @@ import https from "@/api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postParadise } from "@/api/modules/dashboard.api";
 import { ThemedText } from "@/components/themed-text";
+import { LinearGradient } from "expo-linear-gradient";
 
 export interface ParadisePost {
   id: number;
@@ -462,19 +463,38 @@ export default function GolferParadise({
               Upload Image
             </Text>
           </TouchableOpacity>
-          <Button
-            size="sm"
+          <Pressable
             onPress={handlePost}
             disabled={posting || (!caption && !selectedImage)}
-            className="rounded-full px-6 h-10"
-            style={{ backgroundColor: "#8BC34A", opacity: posting ? 0.6 : 1 }}
+            style={{ borderRadius: 9999 }}
           >
-            {posting ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <ThemedText className="font-bold">Post</ThemedText>
-            )}
-          </Button>
+            <LinearGradient
+              colors={["#8bc34a", "#558b2f"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                paddingHorizontal: 24,
+                height: 40,
+                borderRadius: 9999,
+                justifyContent: "center",
+                alignItems: "center",
+                shadowColor: "#8bc34a",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 4,
+                opacity: posting || (!caption && !selectedImage) ? 0.6 : 1,
+              }}
+            >
+              {posting ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>
+                  Post
+                </Text>
+              )}
+            </LinearGradient>
+          </Pressable>
         </HStack>
       </Box>
 
@@ -978,14 +998,31 @@ export default function GolferParadise({
                   }
                 />
                 <TouchableOpacity
-                  className="ml-3 w-10 h-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: "#8BC34A" }}
+                  activeOpacity={0.8}
+                  style={{ marginLeft: 12, borderRadius: 20 }}
                   onPress={() => {
                     handleAddComment(commentModalPostId);
-                    // Optional: Wait for refresh or ignore
                   }}
                 >
-                  <Ionicons name="send" size={16} color="white" />
+                  <LinearGradient
+                    colors={["#8bc34a", "#558b2f"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      shadowColor: "#8bc34a",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.35,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
+                  >
+                    <Ionicons name="send" size={16} color="white" />
+                  </LinearGradient>
                 </TouchableOpacity>
               </HStack>
             </Box>

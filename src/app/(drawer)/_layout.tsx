@@ -102,13 +102,18 @@ function CustomDrawerContent({ navigation }: any) {
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <View style={styles.avatarPlaceholder}>
+                <LinearGradient
+                  colors={["#8bc34a", "#558b2f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.avatarPlaceholder}
+                >
                   <Text style={styles.avatarInitial}>
                     {profile?.username?.trim()
                       ? profile.username.trim()[0].toUpperCase()
                       : "U"}
                   </Text>
-                </View>
+                </LinearGradient>
               )}
               {/* <LinearGradient
                 colors={["#FDD835", "#FBC02D"]}
@@ -784,14 +789,22 @@ function CustomDrawerContent({ navigation }: any) {
 
         <View style={styles.logoutContainer}>
           <TouchableOpacity
+            activeOpacity={0.8}
             onPress={async () => {
               await logout();
               router.replace("/(auth)/login");
             }}
-            style={styles.logoutButton}
+            style={{ borderRadius: 16 }}
           >
-            <Ionicons name="log-out-outline" size={22} color="#fff" />
-            <Text style={styles.logoutText}>Logout</Text>
+            <LinearGradient
+              colors={["#8bc34a", "#558b2f"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoutButton}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#fff" />
+              <Text style={styles.logoutText}>Logout</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -842,35 +855,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowColor: "#8bc34a",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
   },
   avatarWrapper: {
     position: "relative",
   },
   avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 3,
-    borderColor: "rgba(255,255,255,0.4)",
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2.5,
+    borderColor: "rgba(255,255,255,0.7)",
   },
   avatarPlaceholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.4)",
+    borderColor: "rgba(255,255,255,0.6)",
+    elevation: 6,
+    shadowColor: "#8bc34a",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
   },
   avatarInitial: {
     color: "#fff",
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "800",
   },
   badge: {
     position: "absolute",
@@ -946,15 +963,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#8bc34a",
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 16,
-    elevation: 4,
-    shadowColor: "#000",
+    elevation: 6,
+    shadowColor: "#8bc34a",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
   },
   logoutText: {
     marginLeft: 8,

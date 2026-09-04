@@ -18,6 +18,7 @@ import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
 import { Dropdown } from "react-native-element-dropdown";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   bookSeat,
   cancelSeatBooking,
@@ -996,17 +997,27 @@ export default function TeeTimeBookingPage() {
                   }}
                 />
                 <Pressable
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    backgroundColor: "#8BC34A",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
+                  style={{ borderRadius: 10 }}
                   onPress={() => fetchTeeTiming()}
                 >
-                  <Ionicons name="refresh" size={16} color="#fff" />
+                  <LinearGradient
+                    colors={["#8bc34a", "#558b2f"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 14,
+                      borderRadius: 10,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      shadowColor: "#8bc34a",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      elevation: 3,
+                    }}
+                  >
+                    <Ionicons name="refresh" size={16} color="#fff" />
+                  </LinearGradient>
                 </Pressable>
               </HStack>
             </ThemedView>
@@ -1038,23 +1049,52 @@ export default function TeeTimeBookingPage() {
                     onPress={() => {
                       setActiveTeeTab(tab.key);
                     }}
-                    className="flex-1 px-4 py-4 flex-row items-center justify-center"
-                    style={[
-                      { borderRadius: 30 },
-                      active ? { backgroundColor: "#8BC34A" } : {},
-                    ]}
+                    className="flex-1"
+                    style={{ borderRadius: 30 }}
                   >
-                    <Ionicons
-                      name="golf-outline"
-                      size={16}
-                      color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
-                      className="mr-1"
-                    />
-                    <Text
-                      className={`text-md font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}
-                    >
-                      {tab.label}
-                    </Text>
+                    {active ? (
+                      <LinearGradient
+                        colors={["#8bc34a", "#558b2f"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          borderRadius: 30,
+                          shadowColor: "#8bc34a",
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                          elevation: 5,
+                        }}
+                        className="px-4 py-4 flex-row items-center justify-center"
+                      >
+                        <Ionicons
+                          name="golf-outline"
+                          size={16}
+                          color="#fff"
+                          className="mr-1"
+                        />
+                        <Text
+                          className="text-md text-white"
+                          style={{ fontWeight: "800" }}
+                        >
+                          {tab.label}
+                        </Text>
+                      </LinearGradient>
+                    ) : (
+                      <View className="px-4 py-4 flex-row items-center justify-center">
+                        <Ionicons
+                          name="golf-outline"
+                          size={16}
+                          color={isDark ? "#aaa" : "#6b7280"}
+                          className="mr-1"
+                        />
+                        <Text
+                          className={`text-md font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                        >
+                          {tab.label}
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -1133,15 +1173,30 @@ export default function TeeTimeBookingPage() {
                       </Text>
                       <Pressable
                         onPress={() => fetchTeeTiming()}
-                        className="mt-5 px-5 py-2.5 rounded-full flex-row items-center"
-                        style={{
-                          backgroundColor: "#8BC34A",
-                        }}
+                        style={{ borderRadius: 9999, marginTop: 20 }}
                       >
-                        <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                        <Text style={{ color: "#ffffff", fontWeight: "700", fontSize: 13 }}>
-                          Refresh Slots
-                        </Text>
+                        <LinearGradient
+                          colors={["#8bc34a", "#558b2f"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            paddingHorizontal: 20,
+                            paddingVertical: 10,
+                            borderRadius: 9999,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            shadowColor: "#8bc34a",
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 8,
+                            elevation: 4,
+                          }}
+                        >
+                          <Ionicons name="refresh" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                          <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 13 }}>
+                            Refresh Slots
+                          </Text>
+                        </LinearGradient>
                       </Pressable>
                     </Box>
                   )}

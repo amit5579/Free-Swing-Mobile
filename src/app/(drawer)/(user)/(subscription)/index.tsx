@@ -23,6 +23,7 @@ import { useRouter } from "expo-router";
 
 import { Skeleton } from "@/components/Skeleton";
 import { getUser } from "@/api/modules/subAdmin/dashboard.api";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function SubscriptionsPage() {
   const colorScheme = useColorScheme();
@@ -672,16 +673,27 @@ export default function SubscriptionsPage() {
               onPress={() => {
                 routePage.push("/(drawer)/(user)/(contactAdmin)");
               }}
-              style={{
-                backgroundColor: "#84cc16",
-                padding: 14,
-                borderRadius: 12,
-                alignItems: "center",
-              }}
+              style={{ borderRadius: 12 }}
             >
-              <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                Contact Admin
-              </ThemedText>
+              <LinearGradient
+                colors={["#8bc34a", "#558b2f"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  padding: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  shadowColor: "#8bc34a",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 8,
+                  elevation: 5,
+                }}
+              >
+                <ThemedText style={{ color: "#fff", fontWeight: "800" }}>
+                  Contact Admin
+                </ThemedText>
+              </LinearGradient>
             </Pressable>
           </VStack>
         )}

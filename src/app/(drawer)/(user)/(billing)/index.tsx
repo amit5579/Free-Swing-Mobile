@@ -23,6 +23,7 @@ import ImageCropPicker from "react-native-image-crop-picker";
 import QRCode from "react-native-qrcode-svg";
 
 import { getMyBills, uploadBillScreenshot } from "@/api/modules/billing.api";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function UserBillingPage() {
   const colorScheme = useColorScheme();
@@ -247,22 +248,52 @@ export default function UserBillingPage() {
               <Pressable
                 onPress={() => handleUploadScreenshot(item.id)}
                 disabled={isUploading || hasScreenshot}
-                style={{
-                  backgroundColor: isUploading ? "#a3e635" : (hasScreenshot ? "transparent" : "#84cc16"),
-                  borderWidth: hasScreenshot ? 1 : 0,
-                  borderColor: "#84cc16",
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  alignItems: "center",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
+                style={{ borderRadius: 8 }}
               >
-                {!isUploading && !hasScreenshot && <Ionicons name="cloud-upload-outline" size={18} color="#fff" />}
-                <Text style={{ color: hasScreenshot ? "#84cc16" : "#fff", fontWeight: "600" }}>
-                  {isUploading ? "Uploading..." : (hasScreenshot ? "Payment Screenshot Uploaded" : "Upload Screenshot")}
-                </Text>
+                {hasScreenshot ? (
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: "#8bc34a",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={18} color="#8bc34a" />
+                    <Text style={{ color: "#8bc34a", fontWeight: "700" }}>
+                      Payment Screenshot Uploaded
+                    </Text>
+                  </View>
+                ) : (
+                  <LinearGradient
+                    colors={isUploading ? ["#a3e635", "#8bc34a"] : ["#8bc34a", "#558b2f"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      gap: 8,
+                      shadowColor: "#8bc34a",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.35,
+                      elevation: 4,
+                    }}
+                  >
+                    {!isUploading && (
+                      <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+                    )}
+                    <Text style={{ color: "#fff", fontWeight: "700" }}>
+                      {isUploading ? "Uploading..." : "Upload Screenshot"}
+                    </Text>
+                  </LinearGradient>
+                )}
               </Pressable>
             </VStack>
           </VStack>

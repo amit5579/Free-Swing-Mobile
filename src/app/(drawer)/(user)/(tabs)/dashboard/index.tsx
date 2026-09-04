@@ -21,6 +21,7 @@ import {
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedView } from "@/components/themed-view";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { HistoryTab } from "./tabs/HistoryTab";
 import { InProgressTab } from "./tabs/InProgressTab";
@@ -66,6 +67,7 @@ export default function DashboardScreen() {
   const [pendingScorecardRequests, setPendingScorecardRequests] = useState<
     any[]
   >([]);
+  const [inProgressCount, setInProgressCount] = useState<number | null>(null);
 
   // useEffect(() => {
   //   console.log("cccc",cards);
@@ -406,31 +408,59 @@ export default function DashboardScreen() {
                         // Reset search query when changing main tabs
                         setSearchQuery("");
                       }}
-                      className="flex-1 flex-row py-3 px-1 items-center justify-center rounded-full"
-                      style={{
-                        backgroundColor: active ? "#8BC34A" : "transparent",
-                      }}
+                      className="flex-1"
+                      style={{ borderRadius: 9999 }}
                     >
-                      <Ionicons
-                        name={tab.icon as any}
-                        size={16}
-                        color={active ? "#fff" : isDark ? "#D1D5DB" : "#6B7280"}
-                      />
-
-                      <Text
-                        className="text-md font-bold ml-1"
-                        style={{
-                          color: active
-                            ? "#fff"
-                            : isDark
-                              ? "#D1D5DB"
-                              : "#6B7280",
-                        }}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                      >
-                        {tab.label}
-                      </Text>
+                      {active ? (
+                        <LinearGradient
+                          colors={["#8bc34a", "#558b2f"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            borderRadius: 9999,
+                            shadowColor: "#8bc34a",
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 10,
+                            elevation: 6,
+                          }}
+                          className="flex-row py-3 px-1 items-center justify-center rounded-full"
+                        >
+                          <Ionicons
+                            name={tab.icon as any}
+                            size={16}
+                            color="#fff"
+                          />
+                          <Text
+                            className="text-md ml-1 text-white"
+                            style={{
+                              fontWeight: "800",
+                            }}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                          >
+                            {tab.label}
+                          </Text>
+                        </LinearGradient>
+                      ) : (
+                        <View className="flex-row py-3 px-1 items-center justify-center rounded-full">
+                          <Ionicons
+                            name={tab.icon as any}
+                            size={16}
+                            color={isDark ? "#D1D5DB" : "#6B7280"}
+                          />
+                          <Text
+                            className="text-md font-bold ml-1"
+                            style={{
+                              color: isDark ? "#D1D5DB" : "#6B7280",
+                            }}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                          >
+                            {tab.label}
+                          </Text>
+                        </View>
+                      )}
                     </Pressable>
                   );
                 })}
@@ -1010,6 +1040,7 @@ export default function DashboardScreen() {
             <InProgressTab
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
+              onCountChange={setInProgressCount}
               onDelete={() => {}}
               onResume={(
                 id,

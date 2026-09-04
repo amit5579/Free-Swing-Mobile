@@ -28,6 +28,7 @@ import {
   PlayerApi,
 } from "@/api/modules/admin/dashboard.api";
 import { Skeleton } from "@/components/Skeleton";
+import { LinearGradient } from "expo-linear-gradient";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -187,20 +188,52 @@ export default function AdminDashboard() {
                 onPress={() => {
                   setActiveTab(tab.key);
                 }}
-                className="flex-1 px-4 py-2.5 rounded-full flex-row items-center justify-center"
-                style={active ? { backgroundColor: "#8BC34A" } : {}}
+                className="flex-1"
+                style={{ borderRadius: 9999 }}
               >
-                <Ionicons
-                  name={tab.icon as any}
-                  size={16}
-                  color={active ? "#fff" : isDark ? "#aaa" : "#6b7280"}
-                  className="mr-1"
-                />
-                <Text
-                  className={`text-sm font-medium ${active ? "text-white" : isDark ? "text-gray-400" : "text-gray-600"}`}
-                >
-                  {tab.label}
-                </Text>
+                {active ? (
+                  <LinearGradient
+                    colors={["#8bc34a", "#558b2f"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 9999,
+                      shadowColor: "#8bc34a",
+                      shadowOffset: { width: 0, height: 6 },
+                      shadowOpacity: 0.35,
+                      shadowRadius: 10,
+                      elevation: 6,
+                    }}
+                    className="px-4 py-2.5 rounded-full flex-row items-center justify-center"
+                  >
+                    <Ionicons
+                      name={tab.icon as any}
+                      size={16}
+                      color="#fff"
+                      className="mr-1"
+                    />
+                    <Text
+                      className="text-sm font-bold text-white"
+                      style={{ fontWeight: "800" }}
+                    >
+                      {tab.label}
+                    </Text>
+                  </LinearGradient>
+                ) : (
+                  <View className="px-4 py-2.5 rounded-full flex-row items-center justify-center">
+                    <Ionicons
+                      name={tab.icon as any}
+                      size={16}
+                      color={isDark ? "#aaa" : "#6b7280"}
+                      className="mr-1"
+                    />
+                    <Text
+                      className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                    >
+                      {tab.label}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}

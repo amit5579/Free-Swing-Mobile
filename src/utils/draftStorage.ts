@@ -218,49 +218,21 @@ export const mergeInProgressRoundsWithDrafts = (
   });
 
   const mergedApiRounds = apiRounds.map((apiRound) => {
-    let key = String(apiRound.scorecardId);
+    const key = String(apiRound.scorecardId);
     let draft = draftMap.get(key);
 
-    // Fallback: match by tournamentId OR courseName and date
-    if (!draft) {
-      for (const [dKey, dVal] of draftMap.entries()) {
-        let isMatch = false;
-
-        // Condition 1: Match by tournamentId
-        if (
-          apiRound.tournamentId &&
-          dVal.tournamentId &&
-          String(apiRound.tournamentId) === String(dVal.tournamentId)
-        ) {
-          isMatch = true;
-        }
-        // Condition 2: Match by courseName and date
-        else if (
-          dVal.courseName &&
-          apiRound.courseName &&
-          dVal.courseName.trim().toLowerCase() === apiRound.courseName.trim().toLowerCase()
-        ) {
-          try {
-            const dDate = new Date(dVal.date).toDateString();
-            const aDate = new Date(apiRound.date).toDateString();
-            if (dDate === aDate) {
-              isMatch = true;
-            }
-          } catch (e) {
-            // Ignore date parsing errors
-          }
-        }
-
-        if (isMatch) {
-          draft = dVal;
-          key = dKey;
-          break;
-        }
+    // Fallback: match tournament key if saved with `tournament_${id}`
+    if (!draft && apiRound.tournamentId) {
+      const tournamentKey = `tournament_${apiRound.tournamentId}`;
+      if (draftMap.has(tournamentKey)) {
+        draft = draftMap.get(tournamentKey);
+        draftMap.delete(tournamentKey);
       }
+    } else if (draft) {
+      draftMap.delete(key);
     }
 
     if (draft) {
-      draftMap.delete(key);
       return applyDraftToRound(apiRound, draft);
     }
     return apiRound;

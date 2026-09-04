@@ -25,6 +25,7 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRouter, useFocusEffect } from "expo-router";
@@ -252,6 +253,36 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     useState<string>("Expected");
   const [isSubmittingConditionFeedback, setIsSubmittingConditionFeedback] =
     useState(false);
+
+  // Keyboard and Scroll Tracking for scorecard rows
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const verticalScrollRef = useRef<ScrollView | null>(null);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const verticalScrollPaddingBottom = useMemo(() => {
+    if (partners.length > 1) {
+      return Math.max(320, keyboardHeight + 80);
+    }
+    return keyboardHeight > 0 ? keyboardHeight + 80 : 60;
+  }, [keyboardHeight, partners.length]);
 
   // Refs
   const holesRef = useRef<any[]>([]);
@@ -3219,8 +3250,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
                   {/* SCROLLABLE ROWS BELOW SCORECARD HEADER */}
                   <ScrollView
+                    ref={verticalScrollRef}
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingBottom: 60 }}
+                    contentContainerStyle={{
+                      paddingBottom: verticalScrollPaddingBottom,
+                    }}
                     showsVerticalScrollIndicator={false}
                     nestedScrollEnabled={true}
                     keyboardShouldPersistTaps="handled"
@@ -3469,6 +3503,15 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                                       inputRef={(el) => {
                                         inputRefs.current[key] = el;
                                       }}
+                                      // onFocus={() => {
+                                      //   const targetY = index * 48;
+                                      //   setTimeout(() => {
+                                      //     verticalScrollRef.current?.scrollTo({
+                                      //       y: Math.max(0, targetY - 50),
+                                      //       animated: true,
+                                      //     });
+                                      //   }, 120);
+                                      // }}
                                     />
                                   </View>
 

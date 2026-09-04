@@ -20,6 +20,34 @@ import { getScoreHistory, ScoreHistoryItem } from "@/api/modules/dashboard.api";
 import { router, useFocusEffect } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
 import { ThemedText } from "@/components/themed-text";
+import { LinearGradient } from "expo-linear-gradient";
+
+export const CONDITION_DESCRIPTIONS: Record<string, string> = {
+  Easier: "Course played easier than normal (e.g., no wind, soft greens).",
+  Expected: "Course played as expected (this is the result on most days).",
+  SlightlyHarder: "Course played slightly harder than normal.",
+  ModeratelyHarder:
+    "Course played moderately harder than normal (e.g., heavy rain/wind).",
+  ExtremelyHard: "Course played extremely hard (maximum ceiling limit).",
+};
+
+export const formatConditionCode = (code?: string | null): string => {
+  if (!code) return "";
+  switch (code.trim()) {
+    case "Easier":
+      return "Easier";
+    case "Expected":
+      return "Normal / Expected";
+    case "SlightlyHarder":
+      return "Slightly Harder";
+    case "ModeratelyHarder":
+      return "Moderately Harder";
+    case "ExtremelyHard":
+      return "Extremely Hard";
+    default:
+      return code.replace(/([A-Z])/g, " $1").trim();
+  }
+};
 
 export type GameHistory = {
   id: string;
@@ -33,6 +61,8 @@ export type GameHistory = {
   tournamentId?: number | null;
   scoringType?: string;
   isDQ: boolean;
+  playingCondition?: string | null;
+  playingConditionCode?: string | null;
 };
 
 type HistoryTabProps = {
@@ -85,6 +115,9 @@ export function HistoryTab({
           item.ScoringType ??
           (item.isStableford ? "stableford" : undefined),
         isDQ: Boolean(item.isDQ ?? item.isDisqualified ?? false),
+        playingCondition: item.playingCondition ?? item.PlayingCondition ?? null,
+        playingConditionCode:
+          item.playingConditionCode ?? item.PlayingConditionCode ?? null,
       }));
 
       setHistory(mapped);
@@ -403,6 +436,53 @@ export function HistoryTab({
                     </VStack>
                   </HStack>
 
+                  {/* Playing Condition according to the web */}
+                  {(item.playingCondition || item.playingConditionCode) && (
+                    <View
+                      style={{
+                        marginTop: 10,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 10,
+                        backgroundColor: isDark
+                          ? "rgba(139, 195, 74, 0.1)"
+                          : "rgba(139, 195, 74, 0.08)",
+                        borderWidth: 1,
+                        borderColor: isDark
+                          ? "rgba(139, 195, 74, 0.25)"
+                          : "rgba(139, 195, 74, 0.18)",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        justifyContent:"space-between"
+                      }}
+                    >
+                      
+                      <Ionicons
+                        name="partly-sunny-outline"
+                        size={15}
+                        color={isDark ? "#8BC34A" : "#2E7D32"}
+                        style={{ marginRight: 6 }}
+                      />
+                     
+
+                     
+                      <Text
+                        className="text-xs font-medium"
+                        style={{
+                          color: isDark ? "#8BC34A" : "#2E7D32",
+                          fontSize: 12,
+                          lineHeight: 16,
+                          flex: 1,
+                        }}
+                      >
+                        {item.playingCondition ||
+                          CONDITION_DESCRIPTIONS[item.playingConditionCode!] ||
+                          item.playingConditionCode}
+                      </Text>
+                    </View>
+                  )}
+
                   <HStack space="sm" className="mt-4">
                     {[
                       { label: "SCORE", value: item.score, type: "normal" },
@@ -465,10 +545,9 @@ export function HistoryTab({
                   </HStack>
 
                     <HStack className="mt-4 w-full">
-                      <Button
-                        size="sm"
-                        className="w-full rounded-2xl h-10 flex-row items-center justify-center"
-                        style={{ backgroundColor: "#8BC34A" }}
+                      <Pressable
+                        className="w-full"
+                        style={{ borderRadius: 16 }}
                         onPress={() =>
                           handleViewScorecard(
                             item.id,
@@ -478,11 +557,29 @@ export function HistoryTab({
                           )
                         }
                       >
-                        <Ionicons name="eye-outline" size={14} color="white" />
-                        <ButtonText className="text-white text-md font-bold ml-1.5">
-                          View
-                        </ButtonText>
-                      </Button>
+                        <LinearGradient
+                          colors={["#8bc34a", "#558b2f"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            borderRadius: 16,
+                            shadowColor: "#8bc34a",
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 8,
+                            elevation: 4,
+                          }}
+                          className="w-full h-10 flex-row items-center justify-center"
+                        >
+                          <Ionicons name="eye-outline" size={16} color="white" />
+                          <Text
+                            className="text-white text-md ml-1.5"
+                            style={{ fontWeight: "800" }}
+                          >
+                            View
+                          </Text>
+                        </LinearGradient>
+                      </Pressable>
                     </HStack>
                 </Box>
               </Box>
