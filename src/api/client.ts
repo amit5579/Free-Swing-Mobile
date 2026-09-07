@@ -26,6 +26,21 @@ client.interceptors.request.use(
           config.headers["Authorization"] = `Bearer ${token}`;
         }
       }
+      const isFormData =
+        config.data instanceof FormData ||
+        (config.data &&
+          typeof config.data === "object" &&
+          (Array.isArray((config.data as any)._parts) || "_parts" in (config.data as any)));
+
+      if (isFormData) {
+        if (config.headers && typeof config.headers.delete === "function") {
+          config.headers.delete("Content-Type");
+          config.headers.delete("content-type");
+        } else if (config.headers) {
+          delete config.headers["Content-Type"];
+          delete config.headers["content-type"];
+        }
+      }
     } catch (err) {
       console.warn("Error attaching auth token to request:", err);
     }

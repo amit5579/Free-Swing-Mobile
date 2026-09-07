@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { Image } from "expo-image";
 import GolferParadise from "@/app/(drawer)/(user)/(tabs)/dashboard/tabs/GolferParadise";
 import AllMembersScreen from "@/app/(drawer)/(admin)/(tabs)/allMembers/index";
+import { LinearGradient } from "expo-linear-gradient";
 
 export type Scorecard = {
   id: string;
@@ -404,23 +405,25 @@ const FeedCard = ({
             }}
           />
 
-          <HStack
-            className="px-4 py-3 justify-between items-center"
+          <VStack
+            className="px-4 py-3"
             style={{
               backgroundColor: isDark
-                ? "rgba(22, 22, 24, 0.4)"
-                : "rgba(249, 250, 251, 0.4)",
+                ? "rgba(22, 22, 24, 0.25)"
+                : "rgba(249, 250, 251, 0.25)",
+              gap: 10,
             }}
           >
-            <HStack space="lg" className="items-center">
+            {/* Row 1: Like (Left) & Auth / Verified (Right) */}
+            <HStack className="w-full items-center justify-between">
               <Pressable
                 onPress={() => handleLike(card.id)}
                 hitSlop={10}
-                className="py-2 px-3 rounded-full flex-row items-center"
+                className="h-9 px-3.5 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.03)",
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
                 }}
               >
                 <Ionicons
@@ -435,10 +438,23 @@ const FeedCard = ({
                   {card.likes}
                 </Text>
               </Pressable>
+
               {card.isAuthenticated ? (
-                <HStack space="xs" className="items-center ml-1">
-                  <Ionicons name="shield-checkmark" size={16} color="#8BC34A" />
-                  <Text className="text-xs font-bold text-green-600">
+                <HStack
+                  space="xs"
+                  className="items-center px-3 h-9 rounded-full"
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(16,185,129,0.12)"
+                      : "rgba(16,185,129,0.08)",
+                    borderWidth: 1,
+                    borderColor: isDark
+                      ? "rgba(16,185,129,0.25)"
+                      : "rgba(16,185,129,0.18)",
+                  }}
+                >
+                  <Ionicons name="shield-checkmark" size={15} color="#8BC34A" />
+                  <Text className="text-xs font-bold text-green-600 ml-1">
                     Verified
                   </Text>
                 </HStack>
@@ -446,17 +462,21 @@ const FeedCard = ({
                 <Button
                   size="xs"
                   disabled={!card.canAuthenticate}
-                  className={`rounded-full px-3 ml-1 h-8 shadow-none ${card.canAuthenticate ? "opacity-100" : "opacity-40"}`}
+                  className={`rounded-full px-3.5 h-9 shadow-none ${card.canAuthenticate ? "opacity-100" : "opacity-40"}`}
                   style={{
                     backgroundColor: isDark
                       ? "rgba(139,195,74,0.12)"
                       : "rgba(139,195,74,0.08)",
+                    borderWidth: 1,
+                    borderColor: isDark
+                      ? "rgba(139,195,74,0.25)"
+                      : "rgba(139,195,74,0.18)",
                   }}
                   onPress={() => handleVerifyCard(card.id, card.playerName)}
                 >
                   <Ionicons
                     name="shield"
-                    size={12}
+                    size={13}
                     color={
                       card.canAuthenticate
                         ? "#8BC34A"
@@ -481,16 +501,17 @@ const FeedCard = ({
               )}
             </HStack>
 
-            <HStack space="sm" className="items-center">
+            {/* Row 2: Activity (Left) & View Scorecard (Right) */}
+            <HStack className="w-full items-center justify-between">
               <Pressable
                 onPress={() => {
                   onActivity(card.id);
                 }}
-                className="px-3 h-10 rounded-full flex-row items-center"
+                className="px-3.5 h-9 rounded-full flex-row items-center"
                 style={{
                   backgroundColor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.03)",
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
                 }}
               >
                 <Ionicons
@@ -499,27 +520,42 @@ const FeedCard = ({
                   color={isDark ? "#fff" : "#6B7280"}
                 />
                 <Text
-                  className="mx-1 text-xs font-semibold"
+                  className="mx-1.5 text-xs font-semibold"
                   style={{ color: isDark ? "#fff" : "#6B7280" }}
                 >
                   Activity
                 </Text>
               </Pressable>
-              <Button
-                size="md"
-                className="rounded-full px-4 h-10 shadow-sm items-center"
-                style={{ backgroundColor: "#8BC34A" }}
-                onPress={() =>
-                  handleViewScorecard(card.id, card.playerName, card.courseName)
-                }
+
+              <LinearGradient
+                colors={["#8bc34a", "#558b2f"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  borderRadius: 9999,
+                  shadowColor: "#8bc34a",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+                className="rounded-full overflow-hidden"
               >
-                <Ionicons name="eye" size={16} color="#fff" />
-                <ButtonText className="text-white text-xs font-bold mx-1">
-                  View
-                </ButtonText>
-              </Button>
+                <Button
+                  size="sm"
+                  className="h-9 px-4 items-center bg-transparent"
+                  onPress={() =>
+                    handleViewScorecard(card.id, card.playerName, card.courseName)
+                  }
+                >
+                  <Ionicons name="eye" size={15} color="#fff" />
+                  <ButtonText className="text-white text-xs font-bold ml-1.5">
+                    View
+                  </ButtonText>
+                </Button>
+              </LinearGradient>
             </HStack>
-          </HStack>
+          </VStack>
         </VStack>
       )}
     </Box>

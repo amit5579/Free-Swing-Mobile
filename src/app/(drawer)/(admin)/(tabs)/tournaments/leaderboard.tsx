@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Pressable,
+  TouchableOpacity,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -9,6 +10,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
@@ -30,11 +32,31 @@ import { Skeleton } from "@/components/Skeleton";
 import { Text } from "@/components/text";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Dimensions } from "react-native";
 
 export default function LeaderboardPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+  const [isCardRotated, setIsCardRotated] = useState(false);
+  const windowDims = Dimensions.get("window");
+  const [containerDimensions, setContainerDimensions] = useState({
+    width: windowDims.width,
+    height: windowDims.height - 130,
+  });
+
+  // Toggle card rotation
+  const toggleOrientation = useCallback(() => {
+    setIsCardRotated((prev) => !prev);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (isCardRotated) {
+      setIsCardRotated(false);
+      return;
+    }
+    routePage.back();
+  }, [isCardRotated, routePage]);
 
   const {
     tournamentId,
@@ -104,10 +126,23 @@ export default function LeaderboardPage() {
         fetchData(false);
       }, 3000);
 
+      const onBackPress = () => {
+        if (isCardRotated) {
+          setIsCardRotated(false);
+          return true;
+        }
+        return false;
+      };
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
       return () => {
         clearInterval(intervalId);
+        subscription.remove();
       };
-    }, [tournamentId, teeboxId])
+    }, [tournamentId, teeboxId, isCardRotated])
   );
 
   useEffect(() => {
@@ -217,7 +252,7 @@ export default function LeaderboardPage() {
       >
         {/* 🔙 BACK BUTTON */}
         <Pressable
-          onPress={() => routePage.back()}
+          onPress={handleBack}
           style={{
             width: 40,
             height: 40,
@@ -279,8 +314,40 @@ export default function LeaderboardPage() {
           )}
         </VStack>
 
-        {/* ⚖️ RIGHT PLACEHOLDER */}
-        <View style={{ width: 40 }} />
+        {/* 🔄 ROTATE DISPLAY BUTTON */}
+        <TouchableOpacity
+          onPress={toggleOrientation}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: isCardRotated
+              ? "#8BC34A"
+              : isDark
+                ? "rgba(139,195,74,0.15)"
+                : "#f1f5f9",
+            borderWidth: 1,
+            borderColor: isCardRotated
+              ? "#7cb342"
+              : isDark
+                ? "rgba(139,195,74,0.3)"
+                : "rgba(139,195,74,0.2)",
+          }}
+        >
+          <Ionicons
+            name={
+              isCardRotated
+                ? "phone-portrait-outline"
+                : "phone-landscape-outline"
+            }
+            size={20}
+            color={isCardRotated ? "#ffffff" : "#8BC34A"}
+          />
+        </TouchableOpacity>
       </HStack>
     );
   };
@@ -779,6 +846,7 @@ export default function LeaderboardPage() {
       style={{
         height: 40,
         width: LEFT_FIXED_WIDTH,
+        alignItems: "center",
         borderBottomWidth: 1,
         borderColor: isDark ? "#1e293b" : "#e2e8f0",
         borderRightWidth: 1,
@@ -786,10 +854,13 @@ export default function LeaderboardPage() {
       }}
     >
       <View style={{ width: RANK_WIDTH }} />
-      <ThemedText style={[styles.infoLabel, { width: PLAYER_WIDTH }]}>
+      <ThemedText
+        numberOfLines={2}
+        style={[styles.infoLabel, { width: PLAYER_WIDTH }]}
+      >
         {label}
       </ThemedText>
-      <View style={{ width: HCP_WIDTH }} />
+      <View style={{ width: HCP_WIDTH + SHCP_WIDTH }} />
     </HStack>
   );
 
@@ -1389,89 +1460,125 @@ export default function LeaderboardPage() {
         <RenderHeader />
         <Watermark />
 
-        <View style={{ flex: 1, paddingHorizontal: 12 }}>
-          {loading ? (
-            <TableLoadingSkeleton />
-          ) : (
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-              {isDoublePreoria && <RenderSecretHoles />}
+        {/* 🔄 Leaderboard Card Area (Only this card rotates when toggled) */}
+        <View
+          style={{ flex: 1, overflow: "hidden" }}
+          onLayout={(e) => {
+            const { width, height } = e.nativeEvent.layout;
+            if (width > 0 && height > 0) {
+              setContainerDimensions({ width, height });
+            }
+          }}
+        >
+          <View
+            style={
+              isCardRotated &&
+              containerDimensions.width > 0 &&
+              containerDimensions.height > 0
+                ? {
+                    width: containerDimensions.height,
+                    height: containerDimensions.width,
+                    position: "absolute",
+                    top:
+                      (containerDimensions.height - containerDimensions.width) /
+                      2,
+                    left:
+                      (containerDimensions.width - containerDimensions.height) /
+                      2,
+                    transform: [{ rotate: "90deg" }],
+                    paddingHorizontal: 12,
+                  }
+                : { flex: 1, paddingHorizontal: 12 }
+            }
+          >
+            {loading ? (
+              <TableLoadingSkeleton />
+            ) : (
+              <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                {isDoublePreoria && <RenderSecretHoles />}
 
-              <HStack
-                style={{
-                  borderTopWidth: 1,
-                  borderColor: isDark ? "#1e293b" : "#e2e8f0",
-                  marginTop: isDoublePreoria ? 8 : 0,
-                }}
-              >
-                {/* Fixed left block */}
-                <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-                  <TableHeaderLeft />
-                  {holes.length > 0 && (
-                    <>
-                      <InfoRowLeft label="COURSE PAR" />
-                      <InfoRowLeft label="STROKE INDEX" />
-                    </>
-                  )}
-                  {leaderboard.map((player, idx) => {
-                    const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                    const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
-                    return (
-                      <React.Fragment key={player.userId}>
-                        <PlayerRowLeft player={player} index={idx} />
-                        {hasNetScores && (
-                          <PlayerSubRowLeft index={idx} label="Net" />
-                        )}
-                        {hasStablefordPoints && (
-                          <PlayerSubRowLeft index={idx} label="Pts" />
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </VStack>
-
-                {/* Horizontally scrollable right block */}
-                <ScrollView horizontal showsHorizontalScrollIndicator>
-                  <VStack style={{ width: rightContentWidth }}>
-                    <TableHeaderRight />
-                    {holes && (
+                <HStack
+                  style={{
+                    borderTopWidth: 1,
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                    marginTop: isDoublePreoria ? 8 : 0,
+                  }}
+                >
+                  {/* Fixed left block */}
+                  <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+                    <TableHeaderLeft />
+                    {holes.length > 0 && (
                       <>
-                        <InfoRowRight data={holes} type="par" />
-                        <InfoRowRight data={holes} type="si" />
+                        <InfoRowLeft label={"COURSE\nPAR"} />
+                        <InfoRowLeft label={"STROKE\nINDEX"} />
                       </>
                     )}
                     {leaderboard.map((player, idx) => {
-                      const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                      const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
+                      const hasNetScores =
+                        Object.keys(player.holeNetScores || {}).length > 0;
+                      const hasStablefordPoints =
+                        Object.keys(player.holeStablefordPoints || {}).length > 0;
                       return (
                         <React.Fragment key={player.userId}>
-                          <PlayerRowRight player={player} index={idx} />
+                          <PlayerRowLeft player={player} index={idx} />
                           {hasNetScores && (
-                            <PlayerSubRowRight
-                              player={player}
-                              index={idx}
-                              type="net"
-                            />
+                            <PlayerSubRowLeft index={idx} label="Net" />
                           )}
                           {hasStablefordPoints && (
-                            <PlayerSubRowRight
-                              player={player}
-                              index={idx}
-                              type="points"
-                            />
+                            <PlayerSubRowLeft index={idx} label="Pts" />
                           )}
                         </React.Fragment>
                       );
                     })}
                   </VStack>
-                </ScrollView>
-              </HStack>
-              {leaderboard.length == 0 && (
-                <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
-                  No Players or scores available yet.
-                </ThemedText>
-              )}
-            </ScrollView>
-          )}
+
+                  {/* Horizontally scrollable right block */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator>
+                    <VStack style={{ width: rightContentWidth }}>
+                      <TableHeaderRight />
+                      {holes && (
+                        <>
+                          <InfoRowRight data={holes} type="par" />
+                          <InfoRowRight data={holes} type="si" />
+                        </>
+                      )}
+                      {leaderboard.map((player, idx) => {
+                        const hasNetScores =
+                          Object.keys(player.holeNetScores || {}).length > 0;
+                        const hasStablefordPoints =
+                          Object.keys(player.holeStablefordPoints || {}).length >
+                          0;
+                        return (
+                          <React.Fragment key={player.userId}>
+                            <PlayerRowRight player={player} index={idx} />
+                            {hasNetScores && (
+                              <PlayerSubRowRight
+                                player={player}
+                                index={idx}
+                                type="net"
+                              />
+                            )}
+                            {hasStablefordPoints && (
+                              <PlayerSubRowRight
+                                player={player}
+                                index={idx}
+                                type="points"
+                              />
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </VStack>
+                  </ScrollView>
+                </HStack>
+                {leaderboard.length == 0 && (
+                  <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
+                    No Players or scores available yet.
+                  </ThemedText>
+                )}
+              </ScrollView>
+            )}
+          </View>
         </View>
 
         {/* ── Edit Score Modal ── */}
@@ -1644,11 +1751,11 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   infoLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
     textAlign: "left",
     paddingLeft: 10,
-    lineHeight: 40,
+    lineHeight: 14,
     color: "#84cc16",
   },
   cell: {

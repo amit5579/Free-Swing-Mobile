@@ -6,7 +6,7 @@ export default ({ config }) => {
     name: "Freeswing",
     slug: "freeswing",
     version: "1.0.0",
-    orientation: "portrait",
+    orientation: "default",
     icon: "./assets/FreeSwing.png",
     scheme: "freeswing",
     userInterfaceStyle: "automatic",
@@ -50,6 +50,7 @@ export default ({ config }) => {
       "expo-sharing",
       "expo-asset",
       "expo-image",
+      "expo-screen-orientation",
     ],
     experiments: {
       typedRoutes: true,

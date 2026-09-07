@@ -80,3 +80,13 @@ export const newRoundSchema = z
     }
   );
 export type NewRoundFormValues = z.infer<typeof newRoundSchema>;
+
+export const paymentScreenshotCompulsorySchema = z.object({
+  screenshotUploaded: z.boolean().refine((val) => val === true, {
+    message: "Upload of the screenshot is compulsory.",
+  }),
+});
+
+export type PaymentScreenshotCompulsoryType = z.infer<
+  typeof paymentScreenshotCompulsorySchema
+>;

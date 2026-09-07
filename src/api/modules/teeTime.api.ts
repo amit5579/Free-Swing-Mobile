@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import client from "../client";
 
 // get teetimeslots TeeTime/slots/2?date=2026-03-25&tee=1 qparams : date 2026-03-25 tee 1
@@ -98,18 +99,19 @@ export const bookSeat = async (courseId: number, date: string, memberCategory: s
 // tee booking ss
 export const uploadTeeBookingScreenshot = async (bookingId: number, uri: string, type: string, name: string) => {
     try {
+        const normalizedUri =
+            Platform.OS === "android" && !uri.startsWith("file://") && !uri.startsWith("content://")
+                ? `file://${uri}`
+                : uri;
+
         const formData = new FormData();
         formData.append("image", {
-            uri,
+            uri: normalizedUri,
             name,
             type,
         } as any);
 
-        const response = await client.post(`TeeTime/${bookingId}/upload-screenshot`, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
+        const response = await client.post(`TeeTime/${bookingId}/upload-screenshot`, formData);
         return response.data;
     } catch (error) {
         console.error("Upload Tee Booking Screenshot Error:", error);
