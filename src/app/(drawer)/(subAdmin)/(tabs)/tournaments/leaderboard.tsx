@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  TouchableOpacity,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -9,6 +10,9 @@ import {
   Modal,
   TextInput,
   View,
+  Dimensions,
+  BackHandler,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
@@ -17,7 +21,6 @@ import { ThemedText } from "@/components/themed-text";
 import { VStack } from "@/components/vstack";
 import { HStack } from "@/components/hstack";
 import Watermark from "@/components/watermark";
-import { Alert } from "react-native";
 
 import {
   getLeaderboard,
@@ -36,6 +39,44 @@ export default function SubAdminLeaderboardPage() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const routePage = useRouter();
+  const [isCardRotated, setIsCardRotated] = useState(false);
+  const windowDims = Dimensions.get("window");
+  const [containerDimensions, setContainerDimensions] = useState({
+    width: windowDims.width,
+    height: windowDims.height - 130,
+  });
+
+  // Toggle card rotation
+  const toggleOrientation = useCallback(() => {
+    setIsCardRotated((prev) => !prev);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (isCardRotated) {
+      setIsCardRotated(false);
+      return;
+    }
+    routePage.back();
+  }, [isCardRotated, routePage]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (isCardRotated) {
+          setIsCardRotated(false);
+          return true;
+        }
+        return false;
+      };
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+      return () => {
+        subscription.remove();
+      };
+    }, [isCardRotated])
+  );
 
   const {
     tournamentId,
@@ -334,7 +375,7 @@ export default function SubAdminLeaderboardPage() {
         >
           {/* 🔙 BACK BUTTON */}
           <Pressable
-            onPress={() => routePage.back()}
+            onPress={handleBack}
             style={{
               width: 40,
               height: 40,
@@ -387,8 +428,40 @@ export default function SubAdminLeaderboardPage() {
             </ThemedText>
           </VStack>
 
-          {/* ⚖️ RIGHT PLACEHOLDER */}
-          <View style={{ width: 40 }} />
+          {/* 🔄 ROTATE DISPLAY BUTTON */}
+          <TouchableOpacity
+            onPress={toggleOrientation}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: isCardRotated
+                ? "#8BC34A"
+                : isDark
+                  ? "rgba(139,195,74,0.15)"
+                  : "#f1f5f9",
+              borderWidth: 1,
+              borderColor: isCardRotated
+                ? "#7cb342"
+                : isDark
+                  ? "rgba(139,195,74,0.3)"
+                  : "rgba(139,195,74,0.2)",
+            }}
+          >
+            <Ionicons
+              name={
+                isCardRotated
+                  ? "phone-portrait-outline"
+                  : "phone-landscape-outline"
+              }
+              size={20}
+              color={isCardRotated ? "#ffffff" : "#8BC34A"}
+            />
+          </TouchableOpacity>
         </HStack>
       </VStack>
     );
@@ -1461,85 +1534,122 @@ export default function SubAdminLeaderboardPage() {
       {renderHeader()}
       <Watermark />
 
-      {loading ? (
-        <TableLoadingSkeleton />
-      ) : (
-        <ScrollView style={{ flex: 1, marginBottom: 30 }}>
-          <RenderStatsSection />
-
-          {isDoublePreoria && <RenderSecretHoles />}
-
-          {leaderboard.length === 0 ? (
-            <EmptyState />
+      {/* 🔄 Leaderboard Card Area (Only this card rotates when toggled) */}
+      <View
+        style={{ flex: 1, overflow: "hidden" }}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          if (width > 0 && height > 0) {
+            setContainerDimensions({ width, height });
+          }
+        }}
+      >
+        <View
+          style={
+            isCardRotated &&
+            containerDimensions.width > 0 &&
+            containerDimensions.height > 0
+              ? {
+                  width: containerDimensions.height,
+                  height: containerDimensions.width,
+                  position: "absolute",
+                  top:
+                    (containerDimensions.height - containerDimensions.width) /
+                    2,
+                  left:
+                    (containerDimensions.width - containerDimensions.height) /
+                    2,
+                  transform: [{ rotate: "90deg" }],
+                }
+              : { flex: 1 }
+          }
+        >
+          {loading ? (
+            <TableLoadingSkeleton />
           ) : (
-            <HStack
-              style={{
-                borderTopWidth: 1,
-                borderColor: isDark ? "#1e293b" : "#e2e8f0",
-              }}
-            >
-              {/* LEFT FIXED */}
-              <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-                <TableHeaderLeft />
-                <InfoRowLeft label="PAR" />
-                <InfoRowLeft label="SI" />
-                {leaderboard.map((player, idx) => {
-                  const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                  const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
-                  return (
-                    <React.Fragment key={player.userId}>
-                      <PlayerRowLeft player={player} index={idx} />
-                      {hasNetScores && (
-                        <PlayerSubRowLeft index={idx} label="Net" />
-                      )}
-                      {hasStablefordPoints && (
-                        <PlayerSubRowLeft index={idx} label="Pts" />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </VStack>
+            <ScrollView style={{ flex: 1, marginBottom: 30 }}>
+              <RenderStatsSection />
 
-              {/* RIGHT SCROLLABLE */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <VStack style={{ width: rightContentWidth }}>
-                  <TableHeaderRight />
-                  <InfoRowRight data={holes} type="par" />
-                  <InfoRowRight data={holes} type="si" />
-                  {leaderboard.map((player, idx) => {
-                    const hasNetScores = Object.keys(player.holeNetScores || {}).length > 0;
-                    const hasStablefordPoints = Object.keys(player.holeStablefordPoints || {}).length > 0;
-                    return (
-                      <React.Fragment key={player.userId}>
-                        <PlayerRowRight player={player} index={idx} />
-                        {hasNetScores && (
-                          <PlayerSubRowRight
-                            player={player}
-                            index={idx}
-                            type="net"
-                          />
-                        )}
-                        {hasStablefordPoints && (
-                          <PlayerSubRowRight
-                            player={player}
-                            index={idx}
-                            type="points"
-                          />
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </VStack>
-              </ScrollView>
-            </HStack>
+              {isDoublePreoria && <RenderSecretHoles />}
+
+              {leaderboard.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <HStack
+                  style={{
+                    borderTopWidth: 1,
+                    borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                  }}
+                >
+                  {/* LEFT FIXED */}
+                  <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+                    <TableHeaderLeft />
+                    <InfoRowLeft label="PAR" />
+                    <InfoRowLeft label="SI" />
+                    {leaderboard.map((player, idx) => {
+                      const hasNetScores =
+                        Object.keys(player.holeNetScores || {}).length > 0;
+                      const hasStablefordPoints =
+                        Object.keys(player.holeStablefordPoints || {}).length > 0;
+                      return (
+                        <React.Fragment key={player.userId}>
+                          <PlayerRowLeft player={player} index={idx} />
+                          {hasNetScores && (
+                            <PlayerSubRowLeft index={idx} label="Net" />
+                          )}
+                          {hasStablefordPoints && (
+                            <PlayerSubRowLeft index={idx} label="Pts" />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </VStack>
+
+                  {/* RIGHT SCROLLABLE */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <VStack style={{ width: rightContentWidth }}>
+                      <TableHeaderRight />
+                      <InfoRowRight data={holes} type="par" />
+                      <InfoRowRight data={holes} type="si" />
+                      {leaderboard.map((player, idx) => {
+                        const hasNetScores =
+                          Object.keys(player.holeNetScores || {}).length > 0;
+                        const hasStablefordPoints =
+                          Object.keys(player.holeStablefordPoints || {}).length >
+                          0;
+                        return (
+                          <React.Fragment key={player.userId}>
+                            <PlayerRowRight player={player} index={idx} />
+                            {hasNetScores && (
+                              <PlayerSubRowRight
+                                player={player}
+                                index={idx}
+                                type="net"
+                              />
+                            )}
+                            {hasStablefordPoints && (
+                              <PlayerSubRowRight
+                                player={player}
+                                index={idx}
+                                type="points"
+                              />
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </VStack>
+                  </ScrollView>
+                </HStack>
+              )}
+              {leaderboard.length == 0 && (
+                <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
+                  No Players or scores available yet.
+                </ThemedText>
+              )}
+            </ScrollView>
           )}
-          {leaderboard.length == 0 && (
-            <ThemedText style={{ textAlign: "center", marginTop: 3 }}>
-              No Players or scores available yet.
-            </ThemedText>
-          )}
-        </ScrollView>
-      )}
+        </View>
+      </View>
 
       {/* ── Edit Score Modal ── */}
       <Modal

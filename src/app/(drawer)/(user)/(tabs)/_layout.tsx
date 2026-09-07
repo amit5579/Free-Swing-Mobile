@@ -261,30 +261,41 @@ export default function TabLayout() {
         }}
       />
 
-      {/* NEW ROUND - FAB style */}
+      {/* NEW ROUND - Modern In-Bar Action Button */}
       <Tabs.Screen
         name="newRound"
         options={{
-          title: "",
+          title: "New Round",
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: "600",
+          },
           tabBarIcon: ({ focused }) => (
-            <View style={styles.fabOuter}>
+            <View style={styles.newRoundBtnOuter}>
               {focused ? (
                 <LinearGradient
                   colors={["#8bc34a", "#558b2f"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={styles.fabInner}
+                  style={styles.newRoundBtnActive}
                 >
-                  <Ionicons name="add" size={32} color="#FFF" />
+                  <Ionicons name="add" size={20} color="#FFF" />
                 </LinearGradient>
               ) : (
                 <View
                   style={[
-                    styles.fabInner,
-                    { backgroundColor: isDark ? "#1f2937" : "#fff" },
+                    styles.newRoundBtnInactive,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(139,195,74,0.14)"
+                        : "rgba(139,195,74,0.10)",
+                      borderColor: isDark
+                        ? "rgba(139,195,74,0.3)"
+                        : "rgba(139,195,74,0.22)",
+                    },
                   ]}
                 >
-                  <Ionicons name="add" size={32} color="#8bc34a" />
+                  <Ionicons name="add" size={20} color="#8bc34a" />
                 </View>
               )}
             </View>
@@ -334,27 +345,28 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  fabOuter: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "transparent",
-    borderWidth: 3,
-    borderColor: "#8bc34a",
-    justifyContent: "center",
+  newRoundBtnOuter: {
     alignItems: "center",
-    marginBottom: 25,
-    shadowColor: "#8bc34a",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
+    justifyContent: "center",
   },
-  fabInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  newRoundBtnActive: {
+    width: 46,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#8bc34a",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  newRoundBtnInactive: {
+    width: 46,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
   },
 });

@@ -17,7 +17,6 @@ import { Provider } from "react-redux";
 import { AuthProvider } from "@/context/AuthContext";
 import { store } from "@/redux/store";
 
-
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

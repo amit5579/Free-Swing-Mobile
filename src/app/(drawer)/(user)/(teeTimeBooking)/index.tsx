@@ -11,7 +11,16 @@ import Watermark from "@/components/watermark";
 
 import { HStack } from "@/components/hstack";
 import { useRouter } from "expo-router";
-import { Pressable, useColorScheme, View, Modal, Linking, TouchableOpacity } from "react-native";
+import {
+  Pressable,
+  useColorScheme,
+  View,
+  Modal,
+  Linking,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import ImageCropPicker from "react-native-image-crop-picker";
 import QRCode from "react-native-qrcode-svg";
 
@@ -31,6 +40,8 @@ import { getSubAdminList } from "@/api/modules/admin/subAdmins.api";
 import { Skeleton } from "@/components/Skeleton";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { paymentScreenshotCompulsorySchema } from "@/schema/userSchemas";
+import ENV from "@/config/env";
 
 export default function TeeTimeBookingPage() {
   const colorScheme = useColorScheme();
@@ -57,14 +68,19 @@ export default function TeeTimeBookingPage() {
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [bookingResponse, setBookingResponse] = useState<any>(null);
   const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
+  const [selectedFileForUpload, setSelectedFileForUpload] = useState<any>(null);
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
   const [screenshotUploaded, setScreenshotUploaded] = useState(false);
+  const [screenshotViewerUrl, setScreenshotViewerUrl] = useState<string | null>(null);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [seatToCancel, setSeatToCancel] = useState<any>(null);
+  const [seatActionModalVisible, setSeatActionModalVisible] = useState(false);
+  const [activeSeatAction, setActiveSeatAction] = useState<any>(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchTeeTiming();
+    await fetchTeeTiming(false);
     setRefreshing(false);
   }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
   const getSeatKey = (
@@ -79,13 +95,9 @@ export default function TeeTimeBookingPage() {
     { key: 10, label: "Tee10", icon: "people-outline" },
   ];
 
-  const fetchTeeTiming = async (showSkeleton = true) => {
+  const fetchCourses = async () => {
     try {
-      if (showSkeleton) setLoading(true);
-
       const courseResponse = await getSubAdminCourses();
-      // console.log("courseResponse", courseResponse);
-
       const formattedCourses = courseResponse.map((c: any) => ({
         label: c.name || `Course ${c.courseId}`,
         value: c.courseId,
@@ -93,21 +105,32 @@ export default function TeeTimeBookingPage() {
       }));
 
       setCourses(formattedCourses);
-
-      let currentCourseId = selectedCourse;
       if (formattedCourses.length > 0 && !selectedCourse) {
-        currentCourseId = formattedCourses[0].value;
-        setSelectedCourse(currentCourseId);
+        setSelectedCourse(formattedCourses[0].value);
       }
+      return formattedCourses;
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      return [];
+    }
+  };
 
-      if (currentCourseId) {
-        const teeDetails = await getTeeTimeSeats(
-          currentCourseId,
-          availableDates[selectedDateIndex],
-          activeTeeTab,
-        );
-        setTeeData(teeDetails); // ✅ IMPORTANT
-      }
+  const fetchTeeTiming = async (
+    showSkeleton = false,
+    courseIdToUse?: any,
+    dateToUse?: string,
+    teeToUse?: number,
+  ) => {
+    const courseId = courseIdToUse ?? selectedCourse;
+    const date = dateToUse ?? availableDates[selectedDateIndex];
+    const tee = teeToUse ?? activeTeeTab;
+
+    if (!courseId || !date) return;
+
+    try {
+      if (showSkeleton) setLoading(true);
+      const teeDetails = await getTeeTimeSeats(courseId, date, tee);
+      setTeeData(teeDetails);
     } catch (error) {
       console.error("Error fetching tee timings:", error);
     } finally {
@@ -117,6 +140,7 @@ export default function TeeTimeBookingPage() {
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [clubMemberCourseIds, setClubMemberCourseIds] = useState<number[]>([]);
+  const [allSubAdmins, setAllSubAdmins] = useState<any[]>([]);
 
   useEffect(() => {
     const loadUserAndClubData = async () => {
@@ -128,11 +152,15 @@ export default function TeeTimeBookingPage() {
         const user = await getProfile();
         setCurrentUser(user);
 
+        const subAdmins = await getSubAdminList();
+        if (Array.isArray(subAdmins)) {
+          setAllSubAdmins(subAdmins);
+        }
+
         const userSubAdminId =
           user?.invitedBySubAdminId ?? user?.subAdminId;
-        if (userSubAdminId) {
-          const subAdmins = await getSubAdminList();
-          const club = subAdmins?.find(
+        if (userSubAdminId && Array.isArray(subAdmins)) {
+          const club = subAdmins.find(
             (sa: any) => Number(sa.id) === Number(userSubAdminId),
           );
           const cIds: number[] = [];
@@ -156,6 +184,20 @@ export default function TeeTimeBookingPage() {
     };
     loadUserAndClubData();
   }, []);
+
+  const getSubAdminForCourse = (courseId: any) => {
+    if (!courseId || !allSubAdmins || allSubAdmins.length === 0) return null;
+    const numId = Number(courseId);
+    return allSubAdmins.find(
+      (sa: any) =>
+        (Array.isArray(sa.courses) &&
+          sa.courses.some(
+            (c: any) => Number(c.courseId ?? c.id) === numId,
+          )) ||
+        (Array.isArray(sa.courseIds) &&
+          sa.courseIds.some((cid: any) => Number(cid) === numId)),
+    );
+  };
 
   const currentCourseObj = courses.find(
     (c: any) => c.value === selectedCourse || c.courseId === selectedCourse,
@@ -282,23 +324,53 @@ export default function TeeTimeBookingPage() {
         timeSlot,
       );
 
-      await fetchTeeTiming(false);
-      setBookingResponse(resp);
       setScreenshotUri(null);
+      setSelectedFileForUpload(null);
       setScreenshotUploaded(false);
 
-      if (resp?.amountToPay > 0 && resp?.paymentStatus === "Pending") {
-        setPaymentModalVisible(true);
-      }
+      const matchedSubAdmin = getSubAdminForCourse(selectedCourse);
+      const subAdminUpi = (
+        resp?.subAdminUpiId ||
+        matchedSubAdmin?.upiId ||
+        currentCourseObj?.subAdminUpiId ||
+        currentCourseObj?.upiId ||
+        ""
+      ).trim();
 
-      Toast.show({
-        type: "success",
-        text1: "Seat Booked",
-        text2:
-          memberCategory === "Club Member" || resp?.amountToPay === 0
-            ? "Complimentary club member seat confirmed."
-            : "Seat booked successfully. Please complete payment.",
-      });
+      const subAdminPayee = (
+        resp?.subAdminUpiPayeeName ||
+        resp?.subAdminName ||
+        matchedSubAdmin?.upiPayeeName ||
+        matchedSubAdmin?.username ||
+        currentCourseObj?.subAdminUpiPayeeName ||
+        "Club Admin"
+      ).trim();
+
+      const amt = Number(resp?.amountToPay ?? 0);
+
+      if (amt > 0) {
+        setScreenshotError(null);
+        setBookingResponse({
+          ...resp,
+          amountToPay: amt,
+          subAdminUpiId: subAdminUpi,
+          subAdminUpiPayeeName: subAdminPayee,
+          subAdminName: subAdminPayee,
+        });
+        setPaymentModalVisible(true);
+        // Silently update slots in background without blocking payment modal
+        fetchTeeTiming(false);
+      } else {
+        Toast.show({
+          type: "success",
+          text1: "Seat Booked",
+          text2:
+            memberCategory === "Club Member" || amt === 0
+              ? "Complimentary club member seat confirmed."
+              : "Seat booked successfully.",
+        });
+        await fetchTeeTiming(false);
+      }
     } catch (error: any) {
       console.error(error);
 
@@ -319,6 +391,51 @@ export default function TeeTimeBookingPage() {
     }
   };
 
+  const openPaymentForExistingBooking = (seat: any) => {
+    const matchedSubAdmin = getSubAdminForCourse(selectedCourse);
+    const upiId = (
+      matchedSubAdmin?.upiId ||
+      currentCourseObj?.subAdminUpiId ||
+      currentCourseObj?.upiId ||
+      ""
+    ).trim();
+    const payee = (
+      matchedSubAdmin?.upiPayeeName ||
+      matchedSubAdmin?.username ||
+      currentCourseObj?.subAdminUpiPayeeName ||
+      "Club Admin"
+    ).trim();
+    const amount = Number(
+      seat.amountToPay ?? getSelectedDateRate("Non-Affiliated"),
+    );
+
+    setScreenshotError(null);
+    setBookingResponse({
+      bookingId: seat.bookingId,
+      amountToPay: amount,
+      paymentStatus: seat.paymentStatus || "Pending",
+      subAdminUpiId: upiId,
+      subAdminUpiPayeeName: payee,
+      subAdminName: payee,
+    });
+    const apiOrigin = (ENV.API_BASE_URL || "http://192.168.29.150:5281/api/").replace(/\/api\/?$/i, "");
+    setScreenshotUri(
+      seat.paymentScreenshotUrl
+        ? seat.paymentScreenshotUrl.startsWith("http")
+          ? seat.paymentScreenshotUrl
+          : `${apiOrigin}${seat.paymentScreenshotUrl.startsWith("/") ? "" : "/"}${seat.paymentScreenshotUrl}`
+        : null,
+    );
+    setSelectedFileForUpload(null);
+    setScreenshotUploaded(Boolean(seat.paymentScreenshotUrl));
+    setPaymentModalVisible(true);
+  };
+
+  const handleOpenSeatActions = (seat: any, slot: any) => {
+    setActiveSeatAction({ seat, slot });
+    setSeatActionModalVisible(true);
+  };
+
   const cancelBookingHandler = async (
     bookingId: number,
     timeSlot: string,
@@ -334,7 +451,7 @@ export default function TeeTimeBookingPage() {
     try {
       await cancelSeatBooking(bookingId);
 
-      await fetchTeeTiming();
+      await fetchTeeTiming(false);
       Toast.show({
         type: "success",
         text1: "Booking Cancelled",
@@ -356,52 +473,135 @@ export default function TeeTimeBookingPage() {
     }
   };
 
-  const handleUploadScreenshot = async () => {
+  const handlePickScreenshot = async () => {
     try {
       const result = await ImageCropPicker.openPicker({
         mediaType: "photo",
         cropping: false,
         cropperChooseText: "Done/Submit",
-        cropperToolbarTitle: "Edit Image",
+        cropperToolbarTitle: "Select Payment Screenshot",
       });
 
+      const fileName =
+        result.filename || result.path.split("/").pop() || "screenshot.jpg";
+      const mimeType = result.mime || "image/jpeg";
+
+      setSelectedFileForUpload({
+        path: result.path,
+        mime: mimeType,
+        filename: fileName,
+      });
       setScreenshotUri(result.path);
-      try {
-        setUploadingScreenshot(true);
-        const fileName =
-          result.filename || result.path.split("/").pop() || "screenshot.jpg";
-        await uploadTeeBookingScreenshot(
-          bookingResponse.bookingId,
-          result.path,
-          result.mime || "image/jpeg",
-          fileName,
-        );
-        setScreenshotUploaded(true);
-        Toast.show({
-          type: "success",
-          text1: "Screenshot Uploaded",
-          text2: "Awaiting admin approval.",
-        });
-      } catch (error) {
-        Toast.show({
-          type: "error",
-          text1: "Upload Failed",
-          text2: "Failed to upload screenshot.",
-        });
-        setScreenshotUri(null);
-      } finally {
-        setUploadingScreenshot(false);
-      }
+      setScreenshotUploaded(false);
+      setScreenshotError(null);
     } catch (err: any) {
       if (err.code !== "E_PICKER_CANCELLED") {
-        console.error(err);
+        console.error("Screenshot picker error:", err);
       }
+    }
+  };
+
+  const handleUploadScreenshot = async () => {
+    if (!selectedFileForUpload || !bookingResponse?.bookingId) {
+      setScreenshotError("Please choose a payment screenshot image first.");
+      return;
+    }
+
+    try {
+      setScreenshotError(null);
+      setUploadingScreenshot(true);
+      await uploadTeeBookingScreenshot(
+        bookingResponse.bookingId,
+        selectedFileForUpload.path,
+        selectedFileForUpload.mime,
+        selectedFileForUpload.filename,
+      );
+      setScreenshotUploaded(true);
+      Toast.show({
+        type: "success",
+        text1: "Screenshot Uploaded",
+        text2: "Awaiting admin verification.",
+      });
+      fetchTeeTiming(false);
+      setTimeout(() => {
+        setPaymentModalVisible(false);
+        setSelectedFileForUpload(null);
+        setScreenshotUri(null);
+        setScreenshotUploaded(false);
+        setScreenshotError(null);
+      }, 1500);
+    } catch (error) {
+      setScreenshotError("Failed to upload screenshot. Please try again.");
+    } finally {
+      setUploadingScreenshot(false);
+    }
+  };
+
+  const handleClosePaymentModal = () => {
+    const result = paymentScreenshotCompulsorySchema.safeParse({
+      screenshotUploaded,
+    });
+    if (!result.success) {
+      const errorMsg =
+        result.error.issues[0]?.message ||
+        "Upload of the screenshot is compulsory.";
+      setScreenshotError(errorMsg);
+      return;
+    }
+    setScreenshotError(null);
+    setPaymentModalVisible(false);
+    setSelectedFileForUpload(null);
+    setScreenshotUri(null);
+    setScreenshotUploaded(false);
+    fetchTeeTiming(false);
+  };
+
+  const handleCancelFromPaymentModal = async () => {
+    setScreenshotError(null);
+    if (!bookingResponse?.bookingId) {
+      setPaymentModalVisible(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      await cancelSeatBooking(bookingResponse.bookingId);
+      Toast.show({
+        type: "info",
+        text1: "Booking Cancelled",
+        text2: "Your reservation was released.",
+      });
+      setPaymentModalVisible(false);
+      setSelectedFileForUpload(null);
+      setScreenshotUri(null);
+      setScreenshotUploaded(false);
+      await fetchTeeTiming(false);
+    } catch (err) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to cancel booking.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const openUPIApp = () => {
     if (!bookingResponse) return;
-    const url = `upi://pay?pa=${bookingResponse.subAdminUpiId}&pn=${encodeURIComponent(bookingResponse.subAdminUpiPayeeName)}&am=${bookingResponse.amountToPay}&cu=INR`;
+    const upiId = bookingResponse.subAdminUpiId?.trim();
+    if (!upiId) {
+      Toast.show({
+        type: "error",
+        text1: "UPI Not Configured",
+        text2: "The club admin has not configured a UPI ID.",
+      });
+      return;
+    }
+    const payeeName =
+      bookingResponse.subAdminUpiPayeeName ||
+      bookingResponse.subAdminName ||
+      "Club Admin";
+    const url = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${bookingResponse.amountToPay}&cu=INR`;
     Linking.openURL(url).catch(() => {
       Toast.show({ type: "error", text1: "Error", text2: "No UPI app found." });
     });
@@ -415,7 +615,7 @@ export default function TeeTimeBookingPage() {
     const today = new Date();
     const arr = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 7; i++) {
       const newDate = new Date(today);
       newDate.setDate(today.getDate() + i);
       arr.push(formatDate(newDate));
@@ -424,11 +624,40 @@ export default function TeeTimeBookingPage() {
     setAvailableDates(arr);
   }, []);
 
+  // Initial load: fetch courses once, then fetch initial slots once
   useEffect(() => {
+    const init = async () => {
+      try {
+        setLoading(true);
+        const cList = await fetchCourses();
+        const initialCourse = cList.length > 0 ? cList[0].value : null;
+        if (initialCourse && availableDates.length > 0) {
+          const initialDate = availableDates[0] || formatDate(new Date());
+          const teeDetails = await getTeeTimeSeats(
+            initialCourse,
+            initialDate,
+            activeTeeTab,
+          );
+          setTeeData(teeDetails);
+        }
+      } catch (err) {
+        console.error("Initial load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (availableDates.length > 0) {
-      fetchTeeTiming();
+      init();
     }
-  }, [availableDates, selectedDateIndex, activeTeeTab, selectedCourse]);
+  }, [availableDates.length]);
+
+  // Update slots silently on date, tee, or course changes without full screen flicker
+  useEffect(() => {
+    if (availableDates.length > 0 && selectedCourse) {
+      fetchTeeTiming(false);
+    }
+  }, [selectedDateIndex, activeTeeTab, selectedCourse]);
   const RenderHeader = () => {
     return (
       <Box
@@ -591,10 +820,18 @@ export default function TeeTimeBookingPage() {
                 key={seat.id ?? `${slot.time}-${index}`}
                 style={{
                   width: "23%",
-                  borderRadius: 10,
+                  height: 74,
+                  borderRadius: 12,
                   marginBottom: 10,
                   backgroundColor: bgColor,
                   overflow: "hidden",
+                  position: "relative",
+                  borderWidth: isMine ? 1.5 : 0,
+                  borderColor: isMine
+                    ? isRequested
+                      ? "#ca8a04"
+                      : "#dc2626"
+                    : "transparent",
                 }}
               >
                 <Pressable
@@ -602,23 +839,25 @@ export default function TeeTimeBookingPage() {
                     if (isLoading || seatExpired) return;
 
                     if (isBooked) {
-                      if (isMine && seat.bookingId && !isRequested) {
-                        setSeatToCancel({
-                          bookingId: seat.bookingId,
-                          timeSlot: slot.time,
-                          seatNumber: seat.seatNumber,
+                      if (isMine && seat.bookingId) {
+                        handleOpenSeatActions(seat, slot);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Seat Booked",
+                          text2: `This seat is booked by ${seat.userName || "another player"}.`,
                         });
-                        setCancelModalVisible(true);
                       }
                     } else {
                       initiateBooking(slot.time, seat.seatNumber);
                     }
                   }}
-                  disabled={isLoading || seatExpired || (isMine && isRequested)}
+                  disabled={isLoading || seatExpired}
                   style={{
-                    paddingVertical: 10,
+                    flex: 1,
+                    justifyContent: "center",
                     alignItems: "center",
-                    width: "100%",
+                    paddingHorizontal: 4,
                   }}
                 >
                   <Ionicons
@@ -630,40 +869,41 @@ export default function TeeTimeBookingPage() {
                           : isBooked
                             ? isMine
                               ? isRequested
-                                ? "time"
-                                : "close-circle"
+                                ? "time-outline"
+                                : "checkmark-circle"
                               : "person"
                             : "add-circle-sharp"
                     }
                     size={20}
                     color="#fff"
-                    style={{ marginBottom: 4 }}
+                    style={{ marginBottom: 2 }}
                   />
 
                   <Text
+                    numberOfLines={1}
                     style={{
-                      fontSize: 11,
-                      fontWeight: "500",
+                      fontSize: 10,
+                      fontWeight: "600",
                       color: "#fff",
                       textAlign: "center",
                     }}
                   >
                     {isLoading
-                      ? "Please wait"
+                      ? "Wait..."
                       : seatExpired
                         ? "Expired"
                         : isBooked
                           ? isMine
                             ? isRequested
                               ? "Requested"
-                              : "Cancel"
+                              : "My Seat"
                             : seat.userName || "Booked"
                           : "Book"}
                   </Text>
                   <Text
                     style={{
-                      fontSize: 13,
-                      fontWeight: "700",
+                      fontSize: 12,
+                      fontWeight: "800",
                       color: "#fff",
                     }}
                   >
@@ -671,36 +911,39 @@ export default function TeeTimeBookingPage() {
                   </Text>
                 </Pressable>
 
-                {isBooked && isMine && isRequested && (
-                  <Pressable
-                    onPress={() => {
-                      if (seat.bookingId) {
-                        setSeatToCancel({
-                          bookingId: seat.bookingId,
-                          timeSlot: slot.time,
-                          seatNumber: seat.seatNumber,
-                        });
-                        setCancelModalVisible(true);
-                      }
-                    }}
+                {/* Status indicator badge on top-right */}
+                {isBooked && isMine && (
+                  <View
                     style={{
-                      backgroundColor: "#ef4444",
-                      paddingVertical: 6,
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 14,
+                      height: 14,
+                      borderRadius: 7,
+                      backgroundColor: isRequested
+                        ? seat.paymentScreenshotUrl
+                          ? "#3b82f6"
+                          : "#f59e0b"
+                        : "#22c55e",
+                      justifyContent: "center",
                       alignItems: "center",
-                      borderTopWidth: 1,
-                      borderTopColor: "rgba(255,255,255,0.2)",
+                      borderWidth: 1.5,
+                      borderColor: "#fff",
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        color: "#fff",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      CANCEL
-                    </Text>
-                  </Pressable>
+                    <Ionicons
+                      name={
+                        isRequested
+                          ? seat.paymentScreenshotUrl
+                            ? "document-text"
+                            : "alert"
+                          : "checkmark"
+                      }
+                      size={8}
+                      color="#fff"
+                    />
+                  </View>
                 )}
               </View>
             );
@@ -998,7 +1241,7 @@ export default function TeeTimeBookingPage() {
                 />
                 <Pressable
                   style={{ borderRadius: 10 }}
-                  onPress={() => fetchTeeTiming()}
+                  onPress={() => fetchTeeTiming(false)}
                 >
                   <LinearGradient
                     colors={["#8bc34a", "#558b2f"]}
@@ -1103,9 +1346,6 @@ export default function TeeTimeBookingPage() {
             <Box>
               {loading ? (
                 <>
-                  <DateSectionSkeleton isDark={isDark} />
-                  <TeeTabsSkeleton isDark={isDark} />
-
                   {/* Multiple fake cards */}
                   {Array.from({ length: 4 }).map((_, i) => (
                     <TeeRowSkeleton key={i} isDark={isDark} />
@@ -1495,7 +1735,7 @@ export default function TeeTimeBookingPage() {
                 {/* 3. NON-AFFILIATED OPTION */}
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => bookSeatHandler("NonAffiliated")}
+                  onPress={() => bookSeatHandler("Non-Affiliated")}
                   style={{
                     padding: 14,
                     borderRadius: 14,
@@ -1582,10 +1822,332 @@ export default function TeeTimeBookingPage() {
           </View>
         </Modal>
 
+        {/* SEAT ACTION BOTTOM SHEET MODAL */}
+        <Modal
+          visible={seatActionModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setSeatActionModalVisible(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.6)",
+              justifyContent: "flex-end",
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                paddingHorizontal: 20,
+                paddingTop: 12,
+                paddingBottom: 32,
+                borderWidth: 1,
+                borderColor: isDark ? "#1e293b" : "#e2e8f0",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: -6 },
+                shadowOpacity: 0.25,
+                shadowRadius: 16,
+                elevation: 12,
+              }}
+            >
+              {/* Drag Handle */}
+              <View style={{ alignItems: "center", marginBottom: 16 }}>
+                <View
+                  style={{
+                    width: 44,
+                    height: 5,
+                    backgroundColor: isDark ? "#475569" : "#cbd5e1",
+                    borderRadius: 3,
+                  }}
+                />
+              </View>
+
+              {/* Header */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 16,
+                }}
+              >
+                <View style={{ flex: 1, marginRight: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "800",
+                      color: isDark ? "#fff" : "#0f172a",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Seat {activeSeatAction?.seat?.seatNumber} • {activeSeatAction?.slot?.time}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: isDark ? "#94a3b8" : "#64748b",
+                    }}
+                  >
+                    {currentCourseObj?.name || "Golf Course"} • Tee {activeTeeTab} • {availableDates[selectedDateIndex]}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={() => setSeatActionModalVisible(false)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: isDark ? "#1e293b" : "#f1f5f9",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="close"
+                    size={18}
+                    color={isDark ? "#94a3b8" : "#64748b"}
+                  />
+                </Pressable>
+              </View>
+
+              {/* Status Banner */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 20,
+                  backgroundColor:
+                    activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "rgba(59, 130, 246, 0.12)"
+                        : "rgba(234, 179, 8, 0.12)"
+                      : "rgba(34, 197, 94, 0.12)",
+                  borderWidth: 1,
+                  borderColor:
+                    activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "rgba(59, 130, 246, 0.3)"
+                        : "rgba(234, 179, 8, 0.3)"
+                      : "rgba(34, 197, 94, 0.3)",
+                }}
+              >
+                <Ionicons
+                  name={
+                    activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "shield-checkmark-outline"
+                        : "time-outline"
+                      : "checkmark-circle-outline"
+                  }
+                  size={22}
+                  color={
+                    activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "#3b82f6"
+                        : "#eab308"
+                      : "#22c55e"
+                  }
+                  style={{ marginRight: 10 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color:
+                        activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                        activeSeatAction?.seat?.status === "Requested"
+                          ? activeSeatAction?.seat?.paymentScreenshotUrl
+                            ? "#3b82f6"
+                            : "#eab308"
+                          : "#22c55e",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "Proof Uploaded"
+                        : "Payment Pending"
+                      : "Booking Confirmed"}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: isDark ? "#94a3b8" : "#64748b",
+                    }}
+                  >
+                    {activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                    activeSeatAction?.seat?.status === "Requested"
+                      ? activeSeatAction?.seat?.paymentScreenshotUrl
+                        ? "Your payment screenshot is awaiting admin approval."
+                        : "Please complete payment and upload screenshot to confirm."
+                      : "Your seat has been successfully booked and confirmed."}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={{ gap: 10 }}>
+                {/* Pay / Upload Screenshot Button */}
+                {(activeSeatAction?.seat?.paymentStatus === "Pending" ||
+                  activeSeatAction?.seat?.status === "Requested") &&
+                  !activeSeatAction?.seat?.paymentScreenshotUrl && (
+                  <Pressable
+                    onPress={() => {
+                      const seat = activeSeatAction?.seat;
+                      setSeatActionModalVisible(false);
+                      setTimeout(() => {
+                        if (seat) openPaymentForExistingBooking(seat);
+                      }, 250);
+                    }}
+                    style={{ borderRadius: 12, overflow: "hidden" }}
+                  >
+                    <LinearGradient
+                      colors={["#8bc34a", "#558b2f"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        paddingVertical: 14,
+                        paddingHorizontal: 16,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Ionicons
+                        name="qr-code-outline"
+                        size={18}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontWeight: "700",
+                          fontSize: 15,
+                        }}
+                      >
+                        Pay & Upload Screenshot
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                )}
+
+                {/* View Uploaded Screenshot Button */}
+                {/* {activeSeatAction?.seat?.paymentScreenshotUrl ? (
+                  <Pressable
+                    onPress={() => {
+                      const seat = activeSeatAction?.seat;
+                      setSeatActionModalVisible(false);
+                      setTimeout(() => {
+                        if (seat?.paymentScreenshotUrl) {
+                          const apiOrigin = (ENV.API_BASE_URL || "http://192.168.29.150:5281/api/").replace(/\/api\/?$/i, "");
+                          const path = seat.paymentScreenshotUrl.startsWith("/")
+                            ? seat.paymentScreenshotUrl
+                            : `/${seat.paymentScreenshotUrl}`;
+                          const url = seat.paymentScreenshotUrl.startsWith("http")
+                            ? seat.paymentScreenshotUrl
+                            : `${apiOrigin}${path}`;
+                          setScreenshotViewerUrl(url);
+                        }
+                      }, 250);
+                    }}
+                    style={{
+                      paddingVertical: 13,
+                      paddingHorizontal: 16,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: "#3b82f6",
+                      backgroundColor: "rgba(59, 130, 246, 0.08)",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="image-outline"
+                      size={18}
+                      color="#3b82f6"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      style={{
+                        color: "#3b82f6",
+                        fontWeight: "700",
+                        fontSize: 14,
+                      }}
+                    >
+                      View Uploaded Screenshot
+                    </Text>
+                  </Pressable>
+                ) : null} */}
+
+                {/* Cancel Booking Button */}
+                <Pressable
+                  onPress={() => {
+                    const seat = activeSeatAction?.seat;
+                    const slot = activeSeatAction?.slot;
+                    setSeatActionModalVisible(false);
+                    setTimeout(() => {
+                      if (seat?.bookingId) {
+                        setSeatToCancel({
+                          bookingId: seat.bookingId,
+                          timeSlot: slot?.time,
+                          seatNumber: seat.seatNumber,
+                        });
+                        setCancelModalVisible(true);
+                      }
+                    }, 250);
+                  }}
+                  style={{
+                    paddingVertical: 13,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "rgba(239, 68, 68, 0.4)",
+                    backgroundColor: "rgba(239, 68, 68, 0.06)",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={17}
+                    color="#ef4444"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      color: "#ef4444",
+                      fontWeight: "700",
+                      fontSize: 14,
+                    }}
+                  >
+                    Cancel Booking
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <Modal
           visible={paymentModalVisible}
           transparent={true}
           animationType="slide"
+          onRequestClose={handleClosePaymentModal}
         >
           <View
             style={{
@@ -1686,183 +2248,361 @@ export default function TeeTimeBookingPage() {
                   </Text>
                 </View>
 
-                {bookingResponse?.subAdminUpiId && (
+                {bookingResponse?.subAdminUpiId ? (
+                  <>
+                    <View
+                      style={{
+                        marginBottom: 16,
+                        padding: 12,
+                        backgroundColor: "#fff",
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowRadius: 5,
+                        elevation: 3,
+                      }}
+                    >
+                      <QRCode
+                        value={`upi://pay?pa=${encodeURIComponent(
+                          bookingResponse.subAdminUpiId.trim()
+                        )}&pn=${encodeURIComponent(
+                          bookingResponse.subAdminUpiPayeeName ||
+                            bookingResponse.subAdminName ||
+                            "Club Admin"
+                        )}&am=${bookingResponse.amountToPay}&cu=INR`}
+                        size={150}
+                      />
+                    </View>
+
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: isDark ? "#fff" : "#000",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Scan with any UPI app
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: isDark ? "#aaa" : "#777",
+                        marginBottom: 16,
+                        textAlign: "center",
+                      }}
+                    >
+                      Awaiting admin confirmation after payment.
+                    </Text>
+
+                    <Pressable
+                      onPress={openUPIApp}
+                      style={{
+                        width: "100%",
+                        padding: 12,
+                        borderWidth: 1,
+                        borderColor: "#3b82f6",
+                        borderRadius: 10,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Ionicons
+                        name="phone-portrait-outline"
+                        size={20}
+                        color="#3b82f6"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={{ color: "#3b82f6", fontWeight: "600" }}>
+                        Open UPI App
+                      </Text>
+                    </Pressable>
+
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: isDark ? "#aaa" : "#777",
+                        marginBottom: 5,
+                      }}
+                    >
+                      Or pay to this UPI ID:
+                    </Text>
+                    <View
+                      style={{
+                        width: "100%",
+                        padding: 12,
+                        backgroundColor: isDark ? "#334155" : "#f1f5f9",
+                        borderRadius: 10,
+                        alignItems: "center",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <Text
+                        selectable
+                        style={{
+                          fontWeight: "700",
+                          color: isDark ? "#fff" : "#000",
+                          fontSize: 15,
+                        }}
+                      >
+                        {bookingResponse.subAdminUpiId}
+                      </Text>
+                    </View>
+                  </>
+                ) : (
                   <View
                     style={{
-                      marginBottom: 20,
-                      padding: 10,
-                      backgroundColor: "#fff",
+                      width: "100%",
+                      padding: 14,
                       borderRadius: 10,
+                      backgroundColor: isDark
+                        ? "rgba(245, 158, 11, 0.15)"
+                        : "rgba(245, 158, 11, 0.1)",
+                      borderWidth: 1,
+                      borderColor: "#f59e0b",
+                      marginBottom: 20,
+                      alignItems: "center",
                     }}
                   >
-                    <QRCode
-                      value={`upi://pay?pa=${bookingResponse.subAdminUpiId}&pn=${encodeURIComponent(bookingResponse.subAdminUpiPayeeName)}&am=${bookingResponse.amountToPay}&cu=INR`}
-                      size={150}
+                    <Ionicons
+                      name="warning-outline"
+                      size={24}
+                      color="#f59e0b"
+                      style={{ marginBottom: 6 }}
                     />
+                    <Text
+                      style={{
+                        color: isDark ? "#fbbf24" : "#d97706",
+                        fontSize: 13,
+                        textAlign: "center",
+                        fontWeight: "500",
+                        lineHeight: 18,
+                      }}
+                    >
+                      The club admin has not configured a UPI ID. Please contact the club directly for payment and upload your receipt below.
+                    </Text>
                   </View>
                 )}
-
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: isDark ? "#fff" : "#000",
-                    marginBottom: 5,
-                  }}
-                >
-                  Scan with any UPI app
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: isDark ? "#aaa" : "#777",
-                    marginBottom: 20,
-                  }}
-                >
-                  Awaiting admin confirmation after payment.
-                </Text>
-
-                <Pressable
-                  onPress={openUPIApp}
-                  style={{
-                    width: "100%",
-                    padding: 12,
-                    borderWidth: 1,
-                    borderColor: "#3b82f6",
-                    borderRadius: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 20,
-                  }}
-                >
-                  <Ionicons
-                    name="phone-portrait-outline"
-                    size={20}
-                    color="#3b82f6"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={{ color: "#3b82f6", fontWeight: "600" }}>
-                    Open UPI App
-                  </Text>
-                </Pressable>
-
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: isDark ? "#aaa" : "#777",
-                    marginBottom: 5,
-                  }}
-                >
-                  Or pay to this UPI ID:
-                </Text>
-                <View
-                  style={{
-                    width: "100%",
-                    padding: 12,
-                    backgroundColor: isDark ? "#334155" : "#f1f5f9",
-                    borderRadius: 10,
-                    alignItems: "center",
-                    marginBottom: 20,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontWeight: "600",
-                      color: isDark ? "#fff" : "#000",
-                    }}
-                  >
-                    {bookingResponse?.subAdminUpiId}
-                  </Text>
-                </View>
 
                 <View style={{ width: "100%", marginBottom: 20 }}>
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 13,
                       color: isDark ? "#fff" : "#000",
-                      marginBottom: 5,
-                      fontWeight: "500",
+                      marginBottom: 8,
+                      fontWeight: "600",
                     }}
                   >
                     Upload Payment Screenshot
                   </Text>
+
                   {screenshotUploaded ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: 12,
-                        backgroundColor: "rgba(139,195,74,0.1)",
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: "#8BC34A",
-                      }}
-                    >
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color="#8BC34A"
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text
-                        style={{ color: "#8BC34A", fontWeight: "600", flex: 1 }}
-                      >
-                        Screenshot uploaded. Awaiting admin approval.
-                      </Text>
-                    </View>
-                  ) : (
-                    <Pressable
-                      onPress={handleUploadScreenshot}
-                      disabled={uploadingScreenshot}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: 12,
-                        borderWidth: 1,
-                        borderColor: isDark ? "#475569" : "#e2e8f0",
-                        borderRadius: 10,
-                      }}
-                    >
+                    <View style={{ width: "100%" }}>
                       <View
                         style={{
-                          backgroundColor: isDark ? "#334155" : "#f1f5f9",
-                          paddingHorizontal: 10,
-                          paddingVertical: 5,
-                          borderRadius: 5,
-                          marginRight: 10,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: 14,
+                          backgroundColor: "rgba(139,195,74,0.15)",
+                          borderRadius: 10,
+                          borderWidth: 1,
+                          borderColor: "#8BC34A",
+                          width: "100%",
+                          marginBottom: 10,
                         }}
                       >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={22}
+                          color="#8BC34A"
+                          style={{ marginRight: 8 }}
+                        />
                         <Text
                           style={{
-                            color: isDark ? "#fff" : "#000",
-                            fontSize: 12,
+                            color: "#8BC34A",
+                            fontWeight: "600",
+                            flex: 1,
+                            fontSize: 13,
                           }}
                         >
-                          Choose File
+                          Screenshot uploaded. Awaiting admin approval.
                         </Text>
                       </View>
-                      <Text
+                    </View>
+                  ) : (
+                    <View style={{ width: "100%" }}>
+                      {/* Button to pick image */}
+                      <Pressable
+                        onPress={handlePickScreenshot}
+                        disabled={uploadingScreenshot}
                         style={{
-                          color: isDark ? "#aaa" : "#777",
-                          fontSize: 12,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: 12,
+                          borderWidth: 1,
+                          borderColor: isDark ? "#475569" : "#e2e8f0",
+                          borderRadius: 10,
+                          backgroundColor: isDark
+                            ? "rgba(255,255,255,0.03)"
+                            : "#f8fafc",
+                          marginBottom: screenshotUri ? 10 : 0,
                         }}
                       >
-                        {uploadingScreenshot
-                          ? "Uploading..."
-                          : screenshotUri
-                            ? "File selected"
-                            : "No file chosen"}
-                      </Text>
-                    </Pressable>
+                        <View
+                          style={{
+                            backgroundColor: isDark ? "#334155" : "#e2e8f0",
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
+                            borderRadius: 6,
+                            marginRight: 10,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isDark ? "#fff" : "#000",
+                              fontSize: 12,
+                              fontWeight: "600",
+                            }}
+                          >
+                            {screenshotUri ? "Change File" : "Choose File"}
+                          </Text>
+                        </View>
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            color: isDark ? "#cbd5e1" : "#64748b",
+                            fontSize: 12,
+                            flex: 1,
+                          }}
+                        >
+                          {selectedFileForUpload?.filename ||
+                            (screenshotUri
+                              ? "Screenshot selected"
+                              : "No file chosen")}
+                        </Text>
+                      </Pressable>
+
+                      {/* Preview selected image thumbnail */}
+                      {screenshotUri ? (
+                        <View
+                          style={{
+                            marginVertical: 10,
+                            borderRadius: 10,
+                            overflow: "hidden",
+                            borderWidth: 1,
+                            borderColor: isDark ? "#334155" : "#e2e8f0",
+                            backgroundColor: isDark ? "#0f172a" : "#f1f5f9",
+                            alignItems: "center",
+                            padding: 8,
+                          }}
+                        >
+                          <Image
+                            source={{ uri: screenshotUri }}
+                            style={{
+                              width: "100%",
+                              height: 140,
+                              borderRadius: 8,
+                              resizeMode: "contain",
+                            }}
+                          />
+                        </View>
+                      ) : null}
+
+                      {/* Explicit Upload Button */}
+                      {selectedFileForUpload ? (
+                        <Pressable
+                          onPress={handleUploadScreenshot}
+                          disabled={uploadingScreenshot}
+                          style={{
+                            borderRadius: 10,
+                            marginTop: 6,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <LinearGradient
+                            colors={["#8bc34a", "#558b2f"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                              paddingVertical: 12,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexDirection: "row",
+                            }}
+                          >
+                            {uploadingScreenshot ? (
+                              <ActivityIndicator
+                                size="small"
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                              />
+                            ) : (
+                              <Ionicons
+                                name="cloud-upload-outline"
+                                size={18}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                              />
+                            )}
+                            <Text
+                              style={{
+                                color: "#fff",
+                                fontWeight: "700",
+                                fontSize: 14,
+                              }}
+                            >
+                              {uploadingScreenshot
+                                ? "Uploading..."
+                                : "Upload Screenshot"}
+                            </Text>
+                          </LinearGradient>
+                        </Pressable>
+                      ) : null}
+                    </View>
                   )}
                 </View>
 
+                {screenshotError && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: isDark
+                        ? "rgba(239,68,68,0.2)"
+                        : "#fee2e2",
+                      borderWidth: 1.5,
+                      borderColor: "#ef4444",
+                      borderRadius: 10,
+                      padding: 10,
+                      marginBottom: 10,
+                      width: "100%",
+                    }}
+                  >
+                    <Ionicons
+                      name="alert-circle"
+                      size={18}
+                      color="#ef4444"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      style={{
+                        color: isDark ? "#fca5a5" : "#b91c1c",
+                        fontSize: 12,
+                        fontWeight: "700",
+                        flex: 1,
+                      }}
+                    >
+                      {screenshotError}
+                    </Text>
+                  </View>
+                )}
+
                 <Pressable
-                  onPress={() => {
-                    setPaymentModalVisible(false);
-                    fetchTeeTiming(false);
-                  }}
+                  onPress={handleClosePaymentModal}
                   style={{
                     width: "100%",
                     padding: 12,
@@ -1870,7 +2610,7 @@ export default function TeeTimeBookingPage() {
                     borderColor: isDark ? "#475569" : "#cbd5e1",
                     borderRadius: 10,
                     alignItems: "center",
-                    marginBottom: 20,
+                    marginBottom: 10,
                   }}
                 >
                   <Text
@@ -1882,8 +2622,87 @@ export default function TeeTimeBookingPage() {
                     Close
                   </Text>
                 </Pressable>
+
+                {!screenshotUploaded && bookingResponse?.bookingId && (
+                  <Pressable
+                    onPress={handleCancelFromPaymentModal}
+                    style={{
+                      width: "100%",
+                      padding: 10,
+                      alignItems: "center",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#ef4444",
+                        fontSize: 13,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Cancel Booking Instead
+                    </Text>
+                  </Pressable>
+                )}
               </ScrollView>
             </View>
+          </View>
+        </Modal>
+
+        {/* SCREENSHOT VIEWER MODAL */}
+        <Modal
+          visible={Boolean(screenshotViewerUrl)}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setScreenshotViewerUrl(null)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.92)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 16,
+            }}
+          >
+            <HStack
+              style={{
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+                paddingHorizontal: 8,
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
+                Payment Screenshot
+              </Text>
+              <Pressable
+                onPress={() => setScreenshotViewerUrl(null)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="close" size={22} color="#fff" />
+              </Pressable>
+            </HStack>
+
+            {screenshotViewerUrl ? (
+              <Image
+                source={{ uri: screenshotViewerUrl }}
+                style={{
+                  width: "100%",
+                  height: "80%",
+                  borderRadius: 12,
+                  resizeMode: "contain",
+                }}
+              />
+            ) : null}
           </View>
         </Modal>
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { StyleSheet, View, Platform } from "react-native";
+import { StyleSheet, View, Platform, Text } from "react-native";
 import MapView, {
   Marker,
   Polyline,
@@ -25,6 +25,10 @@ interface RangefinderMapProps {
   onAimDragEnd?: (coords: [number, number]) => void;
   cameraRef?: React.RefObject<MapView | null>;
   clubDistances?: ClubDistance[];
+  distanceToAim?: number | null;
+  distanceToPin?: number | null;
+  aimToPin?: number | null;
+  unit?: "YD" | "M";
 }
 
 export const RangefinderMap: React.FC<RangefinderMapProps> = ({
@@ -39,6 +43,10 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
   onAimDragEnd,
   cameraRef,
   clubDistances,
+  distanceToAim,
+  distanceToPin,
+  aimToPin,
+  unit = "YD",
 }) => {
   // Convert [lng, lat] to { latitude, longitude } safely
   const toCoord = (loc: [number, number] | null) => {
@@ -77,7 +85,44 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
     playerCoord?.longitude,
     isFlagMode,
     isAimMode,
+    distanceToAim,
+    distanceToPin,
+    aimToPin,
+    unit,
   ]);
+
+  // Format distance based on unit
+  const formatDist = (val: number | string | null | undefined) => {
+    if (val === null || val === undefined || val === "-") return "-";
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    if (isNaN(num)) return "-";
+    if (unit === "M") return Math.round(num * 0.9144);
+    return Math.round(num);
+  };
+
+  // Midpoint between Player and Aim (or Pin)
+  const dist1Coord = useMemo(() => {
+    if (!playerCoord) return null;
+    const target = aimCoord || pinCoord;
+    if (!target) return null;
+    return {
+      latitude: (playerCoord.latitude + target.latitude) / 2,
+      longitude: (playerCoord.longitude + target.longitude) / 2,
+    };
+  }, [playerCoord, aimCoord, pinCoord]);
+
+  // Midpoint between Aim and Pin
+  const dist2Coord = useMemo(() => {
+    if (!aimCoord || !pinCoord) return null;
+    const isSame =
+      Math.abs(aimCoord.latitude - pinCoord.latitude) < 0.00001 &&
+      Math.abs(aimCoord.longitude - pinCoord.longitude) < 0.00001;
+    if (isSame) return null;
+    return {
+      latitude: (aimCoord.latitude + pinCoord.latitude) / 2,
+      longitude: (aimCoord.longitude + pinCoord.longitude) / 2,
+    };
+  }, [aimCoord, pinCoord]);
 
   // Connecting lines
   const lineCoords = useMemo(() => {
@@ -157,8 +202,27 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
           <Polyline
             coordinates={lineCoords}
             strokeColor="#FFA500"
-            strokeWidth={3}
+            strokeWidth={3.5}
           />
+        )}
+
+        {/* Distance Badge 1: Player -> Aim (or Player -> Pin) */}
+        {dist1Coord && (
+          <Marker
+            coordinate={dist1Coord}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={6}
+          >
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceBadgeText}>
+                {formatDist(aimCoord ? distanceToAim : distanceToPin)}{" "}
+                <Text style={styles.distanceBadgeUnit}>
+                  {unit.toLowerCase()}
+                </Text>
+              </Text>
+            </View>
+          </Marker>
         )}
 
         {/* Player Marker */}
@@ -175,7 +239,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
           </Marker>
         )}
 
-        {/* Aim Marker */}
+        {/* Aim Marker with Tooltip */}
         {aimCoord && (
           <Marker
             coordinate={aimCoord}
@@ -186,12 +250,39 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
                 onAimDragEnd([coord.longitude, coord.latitude]);
               }
             }}
+            anchor={{ x: 0.5, y: 0.75 }}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={7}
+          >
+            <View style={{ alignItems: "center" }}>
+              <View style={styles.aimTooltip}>
+                <View style={styles.aimBadge}>
+                  <Text style={styles.aimBadgeText}>Aim-Point</Text>
+                </View>
+                <Text style={styles.aimTooltipText}>Tap & Hold to move</Text>
+              </View>
+              <View style={[styles.marker, { backgroundColor: "#FFA500" }]}>
+                <View style={styles.innerAimDot} />
+              </View>
+            </View>
+          </Marker>
+        )}
+
+        {/* Distance Badge 2: Aim -> Pin */}
+        {dist2Coord && aimToPin != null && Number(aimToPin) > 0 && (
+          <Marker
+            coordinate={dist2Coord}
             anchor={{ x: 0.5, y: 0.5 }}
             tracksViewChanges={tracksViewChanges}
-            zIndex={5}
+            zIndex={6}
           >
-            <View style={[styles.marker, { backgroundColor: "#FFA500" }]}>
-              <View style={styles.innerAimDot} />
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceBadgeText}>
+                {formatDist(aimToPin)}{" "}
+                <Text style={styles.distanceBadgeUnit}>
+                  {unit.toLowerCase()}
+                </Text>
+              </Text>
             </View>
           </Marker>
         )}
@@ -307,5 +398,64 @@ const styles = StyleSheet.create({
     backgroundColor: "#22c55e",
     borderWidth: 1.5,
     borderColor: "#ffffff",
+  },
+  distanceBadge: {
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    borderRadius: 9999,
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.85)",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  distanceBadgeText: {
+    color: "#ffffff",
+    fontWeight: "800",
+    fontSize: 13,
+    letterSpacing: -0.3,
+  },
+  distanceBadgeUnit: {
+    color: "#94a3b8",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  aimTooltip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: 4,
+  },
+  aimBadge: {
+    backgroundColor: "#f59e0b",
+    borderRadius: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    marginRight: 4,
+  },
+  aimBadgeText: {
+    color: "#000",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  aimTooltipText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "600",
   },
 });

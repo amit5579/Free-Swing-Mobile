@@ -11,6 +11,7 @@ import {
   Linking,
   BackHandler,
   StatusBar,
+  Modal,
 } from "react-native";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,51 +42,28 @@ const GreenDistances = ({
   center: number | string;
   front: number | string;
 }) => (
-  <View style={styles.distanceContainer}>
-    <View style={styles.row}>
-      <Ionicons name="caret-up" size={12} color="#FFA500" />
-      <Text style={[styles.smallDist, { color: "#FFA500" }]}>{back}</Text>
-    </View>
-    <Text style={styles.centerDist}>{center}</Text>
-    <View style={styles.row}>
-      <Ionicons name="caret-down" size={12} color="#8BC34A" />
-      <Text style={[styles.smallDist, { color: "#8BC34A" }]}>{front}</Text>
-    </View>
-  </View>
-);
-
-const PlayerBottomBar = ({
-  initials,
-  scoreText,
-  onAddScore,
-  isDark,
-}: {
-  initials: string;
-  scoreText: string;
-  onAddScore: () => void;
-  isDark: boolean;
-}) => (
-  <View
-    style={[
-      styles.bottomBar,
-      { backgroundColor: isDark ? "#1A1C20" : "#ffffff" },
-    ]}
-  >
-    <View style={styles.playerInfo}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{initials}</Text>
+  <View style={styles.greenDistanceCard}>
+    <View style={styles.greenDistanceCol}>
+      <View style={styles.distBadgeRow}>
+        <Ionicons
+          name="caret-up"
+          size={11}
+          color="#f59e0b"
+          style={{ marginRight: 3 }}
+        />
+        <Text style={styles.backDistText}>{back}</Text>
       </View>
-      <View>
-        <Text style={[styles.roundText, { color: isDark ? "#FFF" : "#000" }]}>
-          Player Round
-        </Text>
-        <Text style={styles.scoreText}>Score: {scoreText}</Text>
+      <Text style={styles.centerDistText}>{center}</Text>
+      <View style={styles.distBadgeRow}>
+        <Ionicons
+          name="caret-down"
+          size={11}
+          color="#10b981"
+          style={{ marginRight: 3 }}
+        />
+        <Text style={styles.frontDistText}>{front}</Text>
       </View>
     </View>
-
-    <TouchableOpacity style={styles.addScoreBtn} onPress={onAddScore}>
-      <Text style={styles.addScoreText}>Add Score</Text>
-    </TouchableOpacity>
   </View>
 );
 
@@ -402,51 +380,41 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   // Don't render anything when not visible (same as web's *ngIf="showGpsModal")
   if (!visible) return null;
 
-  // Full-screen absolute overlay instead of <Modal> to prevent Android Activity restart
   return (
-    <View style={styles.fullScreenOverlay}>
-      <StatusBar backgroundColor="#161618" barStyle="light-content" />
-      <View
-        style={[
-          styles.container,
-          { backgroundColor: isDark ? "#161618" : "#F9FAFB" },
-        ]}
-      >
+    <Modal
+      visible={visible}
+      animationType="fade"
+      statusBarTranslucent={true}
+      transparent={false}
+      onRequestClose={onClose}
+    >
+      <StatusBar
+        backgroundColor="transparent"
+        barStyle="light-content"
+        translucent={true}
+      />
+      <View style={styles.container}>
         {/* Location Permission Denied Screen */}
         {locationPermission === "denied" && (
           <View
             style={[
               styles.permissionOverlay,
-              { backgroundColor: isDark ? "#161618" : "#F9FAFB" },
+              { backgroundColor: "#0f172a" },
             ]}
           >
             <View style={styles.permissionCloseRow}>
               <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-                <Ionicons
-                  name="close"
-                  size={24}
-                  color={isDark ? "#fff" : "#000"}
-                />
+                <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
             <View style={styles.permissionContent}>
               <View style={styles.permissionIconCircle}>
                 <Ionicons name="location-outline" size={48} color="#8BC34A" />
               </View>
-              <Text
-                style={[
-                  styles.permissionTitle,
-                  { color: isDark ? "#fff" : "#000" },
-                ]}
-              >
+              <Text style={[styles.permissionTitle, { color: "#fff" }]}>
                 Location Permission Required
               </Text>
-              <Text
-                style={[
-                  styles.permissionDesc,
-                  { color: isDark ? "#aaa" : "#666" },
-                ]}
-              >
+              <Text style={[styles.permissionDesc, { color: "#aaa" }]}>
                 The GPS Rangefinder needs access to your location to show
                 distances to the pin and track your position on the course.
               </Text>
@@ -466,7 +434,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
                 style={[
                   styles.permissionBtn,
                   {
-                    backgroundColor: isDark ? "#333" : "#e5e7eb",
+                    backgroundColor: "#334155",
                     marginTop: 10,
                   },
                 ]}
@@ -475,132 +443,18 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
                 <Ionicons
                   name="settings-outline"
                   size={18}
-                  color={isDark ? "#fff" : "#000"}
+                  color="#fff"
                   style={{ marginRight: 6 }}
                 />
-                <Text
-                  style={[
-                    styles.permissionBtnText,
-                    { color: isDark ? "#fff" : "#000" },
-                  ]}
-                >
+                <Text style={[styles.permissionBtnText, { color: "#fff" }]}>
                   Open Settings
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
-        {/* Header HUD */}
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              paddingTop: Math.max(insets.top, 16),
-              backgroundColor: isDark ? "#1f1f1f" : "#ffffff",
-              opacity: fadeAnim,
-            },
-          ]}
-          pointerEvents={isUiVisible ? "auto" : "none"}
-        >
-          <View style={styles.topRow}>
-            <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-              <Ionicons
-                name="close"
-                size={24}
-                color={isDark ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
 
-            <View style={styles.holeSelector}>
-              <TouchableOpacity
-                onPress={handlePrevHole}
-                disabled={currentHoleIndex === 0}
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={24}
-                  color={
-                    currentHoleIndex === 0 ? "gray" : isDark ? "#fff" : "#000"
-                  }
-                />
-              </TouchableOpacity>
-              <View style={styles.holeInfo}>
-                <Text
-                  style={[
-                    styles.courseName,
-                    { color: isDark ? "#fff" : "#000" },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {courseName ||
-                    fetchedCourseName ||
-                    currentHole?.courseName ||
-                    "Course"}
-                </Text>
-                <Text
-                  style={[
-                    styles.holeNumber,
-                    { color: isDark ? "#fff" : "#000" },
-                  ]}
-                >
-                  Hole {currentHole?.holeNumber || "-"}
-                </Text>
-                <Text
-                  style={[styles.parYards, { color: isDark ? "#aaa" : "#666" }]}
-                >
-                  Par {currentHole?.par || "-"} •{" "}
-                  {unit === "M"
-                    ? Math.round((currentHole?.yardage || 0) * 0.9144)
-                    : currentHole?.yardage || "-"}{" "}
-                  {unit === "M" ? "m" : "yds"} • SI{" "}
-                  {currentHole?.handicap || currentHole?.strokeIndex || "-"}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={handleNextHole}
-                disabled={currentHoleIndex === holes.length - 1}
-              >
-                <Ionicons
-                  name="chevron-forward"
-                  size={24}
-                  color={
-                    currentHoleIndex === holes.length - 1
-                      ? "gray"
-                      : isDark
-                        ? "#fff"
-                        : "#000"
-                  }
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ width: 32 }} />
-          </View>
-
-          {/* Distances Row */}
-          <View style={styles.distancesRow}>
-            <View style={styles.distanceBox}>
-              <Text style={styles.distanceLabel}>TO AIM</Text>
-              <Text style={[styles.distanceValue, { color: "#FFA500" }]}>
-                {displayDist(distanceToAim)}
-              </Text>
-            </View>
-            <View style={styles.distanceBox}>
-              <Text style={styles.distanceLabel}>AIM TO PIN</Text>
-              <Text style={[styles.distanceValue, { color: "#FFA500" }]}>
-                {displayDist(aimToPin)}
-              </Text>
-            </View>
-            <View style={styles.distanceBox}>
-              <Text style={styles.distanceLabel}>TO PIN</Text>
-              <Text style={[styles.distanceValue, { color: "#EA4335" }]}>
-                {displayDist(distanceToPin)}
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Map Container */}
+        {/* Map Container (Full Screen Bleed) */}
         <View style={styles.mapContainer}>
           {!isTracking && !errorMsg && (
             <View style={styles.loadingOverlay}>
@@ -616,93 +470,205 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             pinLocation={pinLocation}
             aimLocation={aimLocation}
             onMapPress={handleMapPress}
-            isDark={isDark}
+            isDark={true}
             isFlagMode={isFlagMode}
             isAimMode={isAimMode}
             onPinDragEnd={handlePinDragEnd}
             onAimDragEnd={handleAimDragEnd}
             cameraRef={cameraRef}
             clubDistances={myClubs}
+            distanceToAim={distanceToAim}
+            distanceToPin={distanceToPin}
+            aimToPin={aimToPin}
+            unit={unit}
           />
-
-          {/* vertical buttons on right side are below */}
-          <Animated.View
-            style={[styles.rightSideButtons, { opacity: fadeAnim }]}
-            pointerEvents={isUiVisible ? "auto" : "none"}
-          >
-            <TouchableOpacity
-              onPress={() => setUnit(unit === "YD" ? "M" : "YD")}
-              style={styles.sideButton}
-            >
-              <Text style={styles.sideButtonText}>{unit}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={toggleFlagMode}
-              style={[styles.sideButton, isFlagMode && styles.activeSideButton]}
-            >
-              <Ionicons
-                name="flag"
-                size={20}
-                color={isFlagMode ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={toggleAimMode}
-              style={[
-                styles.sideButton,
-                isAimMode && styles.activeAimSideButton,
-              ]}
-            >
-              <Ionicons
-                name="locate"
-                size={20}
-                color={isAimMode ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleSavePin}
-              style={styles.sideButton}
-              disabled={isSavingPin}
-            >
-              {isSavingPin ? (
-                <ActivityIndicator size="small" color={"#000"} />
-              ) : (
-                <Ionicons name="location" size={20} color={"#000"} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleGpsPress}
-              style={styles.sideButton}
-            >
-              <Ionicons name="navigate" size={20} color={"#000"} />
-            </TouchableOpacity>
-          </Animated.View>
-
-          <Animated.View
-            style={{ opacity: fadeAnim }}
-            pointerEvents={isUiVisible ? "auto" : "none"}
-          >
-            <GreenDistances
-              back={backDist}
-              center={centerDist}
-              front={frontDist}
-            />
-          </Animated.View>
         </View>
 
+        {/* Floating Top-Left Back Button (Glass Circle) */}
         <Animated.View
-          style={[styles.bottomBarContainer, { opacity: fadeAnim }]}
+          style={[
+            styles.backButtonGlass,
+            { top: Math.max(insets.top, 24) + 6, opacity: fadeAnim },
+          ]}
           pointerEvents={isUiVisible ? "auto" : "none"}
         >
-          <PlayerBottomBar
-            initials={initials}
-            scoreText={scoreText}
-            onAddScore={onClose}
-            isDark={isDark}
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.backButtonTouchable}
+            activeOpacity={0.8}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="arrow-back" size={22} color="#ffffff" />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Floating Top Hole Pill Container (Compact Web Style) */}
+        <Animated.View
+          style={[
+            styles.holePillWrapper,
+            { top: Math.max(insets.top, 24) + 4, opacity: fadeAnim },
+          ]}
+          pointerEvents={isUiVisible ? "auto" : "none"}
+        >
+          <View style={styles.holePillContainer}>
+            {/* Row 1: Chevron - Flag & Number - Chevron */}
+            <View style={styles.holePillRow1}>
+              <TouchableOpacity
+                onPress={handlePrevHole}
+                disabled={currentHoleIndex === 0}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={18}
+                  color={
+                    currentHoleIndex === 0
+                      ? "rgba(255,255,255,0.3)"
+                      : "#ffffff"
+                  }
+                />
+              </TouchableOpacity>
+
+              <View style={styles.holeFlagBadge}>
+                <Ionicons
+                  name="flag"
+                  size={15}
+                  color="#f59e0b"
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={styles.holeNumberText}>
+                  {currentHole?.holeNumber || currentHoleIndex + 1}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleNextHole}
+                disabled={currentHoleIndex === holes.length - 1}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={
+                    currentHoleIndex === holes.length - 1
+                      ? "rgba(255,255,255,0.3)"
+                      : "#ffffff"
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 2: Par • Yds • SI */}
+            <View style={styles.holeMetaRow}>
+              <Text style={styles.holeMetaText}>
+                Par {currentHole?.par || "-"}
+              </Text>
+              <Text style={styles.holeMetaText}>
+                {unit === "M"
+                  ? Math.round((currentHole?.yardage || 0) * 0.9144)
+                  : currentHole?.yardage || "-"}{" "}
+                {unit.toLowerCase()}
+              </Text>
+              <Text style={styles.holeMetaText}>
+                SI {currentHole?.handicap || currentHole?.strokeIndex || "-"}
+              </Text>
+            </View>
+
+            {/* Row 3: Location / Course Name */}
+            {Boolean(
+              courseName || fetchedCourseName || currentHole?.courseName,
+            ) && (
+              <View style={styles.courseLocationRow}>
+                <Ionicons
+                  name="location-sharp"
+                  size={11}
+                  color="#f59e0b"
+                  style={{ marginRight: 3 }}
+                />
+                <Text style={styles.courseLocationText} numberOfLines={1}>
+                  {(
+                    courseName ||
+                    fetchedCourseName ||
+                    currentHole?.courseName ||
+                    ""
+                  ).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+
+        {/* Floating Right Action Controls (Web Stacked Glass Pills) */}
+        <Animated.View
+          style={[styles.rightSideButtons, { opacity: fadeAnim }]}
+          pointerEvents={isUiVisible ? "auto" : "none"}
+        >
+          <TouchableOpacity
+            onPress={() => setUnit(unit === "YD" ? "M" : "YD")}
+            style={styles.actionPillBtn}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.actionPillUnitText}>{unit}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={toggleFlagMode}
+            style={[styles.actionPillBtn, isFlagMode && styles.activeActionPill]}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="flag"
+              size={18}
+              color={"#ffffff"}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={toggleAimMode}
+            style={[styles.actionPillBtn, isAimMode && styles.activeAimActionPill]}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="locate"
+              size={18}
+              color={"#ffffff"}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleSavePin}
+            style={styles.actionPillBtn}
+            disabled={isSavingPin}
+            activeOpacity={0.8}
+          >
+            {isSavingPin ? (
+              <ActivityIndicator size="small" color={"#ffffff"} />
+            ) : (
+              <Ionicons name="location" size={18} color={"#ffffff"} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleGpsPress}
+            style={styles.actionPillBtn}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="navigate" size={18} color={"#ffffff"} />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Floating Bottom-Left Green Distance Card */}
+        <Animated.View
+          style={[
+            styles.greenDistanceCardWrapper,
+            { bottom: Math.max(insets.bottom, 16) + 16, opacity: fadeAnim },
+          ]}
+          pointerEvents={isUiVisible ? "auto" : "none"}
+        >
+          <GreenDistances
+            back={backDist}
+            center={centerDist}
+            front={frontDist}
           />
         </Animated.View>
 
@@ -712,7 +678,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
           </View>
         )}
       </View>
-    </View>
+    </Modal>
   );
 };
 
@@ -724,73 +690,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-  },
-  header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 10,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  holeSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  holeInfo: {
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  holeNumber: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  courseName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#888",
-    marginBottom: 2,
-    maxWidth: 200,
-    textAlign: "center",
-  },
-  parYards: {
-    fontSize: 12,
-  },
-  distancesRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingHorizontal: 16,
-  },
-  distanceBox: {
-    alignItems: "center",
-  },
-  distanceLabel: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#888",
-    marginBottom: 4,
-  },
-  distanceValue: {
-    fontSize: 28,
-    fontWeight: "900",
+    backgroundColor: "#0f172a",
   },
   mapContainer: {
     flex: 1,
@@ -798,11 +698,179 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    zIndex: 5,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    zIndex: 25,
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Floating Top-Left Back Button (Glass Circle)
+  backButtonGlass: {
+    position: "absolute",
+    left: 16,
+    zIndex: 20,
+  },
+  backButtonTouchable: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(15, 23, 42, 0.88)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+
+  // Floating Top Hole Pill Container (Compact Web Style)
+  holePillWrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 15,
+  },
+  holePillContainer: {
+    backgroundColor: "rgba(15, 23, 42, 0.88)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    borderRadius: 26,
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 8,
+    maxWidth: "80%",
+  },
+  holePillRow1: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  holeFlagBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  holeNumberText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#f59e0b",
+  },
+  holeMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 2,
+  },
+  holeMetaText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#cbd5e1",
+  },
+  courseLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+    maxWidth: 220,
+  },
+  courseLocationText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#f59e0b",
+    letterSpacing: 0.3,
+  },
+
+  // Floating Right Action Controls (Web Stacked Glass Pills)
+  rightSideButtons: {
+    position: "absolute",
+    right: 14,
+    top: "38%",
+    gap: 10,
+    zIndex: 15,
+  },
+  actionPillBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "rgba(15, 23, 42, 0.88)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  activeActionPill: {
+    backgroundColor: "#10b981",
+    borderColor: "#059669",
+  },
+  activeAimActionPill: {
+    backgroundColor: "#f59e0b",
+    borderColor: "#d97706",
+  },
+  actionPillUnitText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#ffffff",
+  },
+
+  // Floating Bottom-Left Green Distance Card
+  greenDistanceCardWrapper: {
+    position: "absolute",
+    left: 16,
+    zIndex: 15,
+  },
+  greenDistanceCard: {
+    backgroundColor: "rgba(15, 23, 42, 0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 88,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  greenDistanceCol: {
+    alignItems: "flex-start",
+  },
+  distBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backDistText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#f59e0b",
+  },
+  centerDistText: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#ffffff",
+    letterSpacing: -0.8,
+    marginVertical: 1,
+  },
+  frontDistText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#10b981",
+  },
+
+  // Error Toast
   errorToast: {
     position: "absolute",
     bottom: 40,
@@ -812,122 +880,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
+    zIndex: 30,
   },
   errorText: {
     color: "#fff",
     fontWeight: "bold",
   },
-  rightSideButtons: {
-    position: "absolute",
-    right: 16,
-    top: 200,
-    gap: 12,
-  },
-  sideButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  activeSideButton: {
-    backgroundColor: "#4CAF50", // Match flag green
-  },
-  activeAimSideButton: {
-    backgroundColor: "#FFA500", // Match aim orange
-  },
-  sideButtonText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  distanceContainer: {
-    position: "absolute",
-    bottom: 120,
-    left: 16,
-    backgroundColor: "#1E2024", // Dark theme background
-    padding: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#333",
-    zIndex: 5,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  centerDist: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginVertical: 4,
-  },
-  smallDist: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  bottomBarContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  bottomBar: {
-    backgroundColor: "#1A1C20",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    paddingBottom: 24, // Safe area for iOS
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(0,0,0,0.1)",
-  },
-  playerInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFC107",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    fontWeight: "bold",
-    color: "#000",
-  },
-  roundText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  scoreText: {
-    color: "#8BC34A",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  addScoreBtn: {
-    backgroundColor: "#8BC34A",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  addScoreText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
+
+  // Permission Overlay
   permissionOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
@@ -939,6 +899,12 @@ const styles = StyleSheet.create({
     top: 50,
     left: 16,
     zIndex: 101,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
   permissionContent: {
     alignItems: "center",

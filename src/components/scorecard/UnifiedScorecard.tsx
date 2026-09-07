@@ -49,7 +49,6 @@ import { ScoreIndicator } from "./ScoreIndicator";
 import { ScoreInputCell } from "./ScoreInputCell";
 import { NassauHouses } from "./NassauHouses";
 import { ScoringLegend } from "./ScoringLegend";
-import { PlayerHeaderRow } from "./PlayerHeaderRow";
 import { ScoringTabContent } from "./ScoringTabContent";
 
 // API
@@ -281,7 +280,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
     if (partners.length > 1) {
       return Math.max(320, keyboardHeight + 80);
     }
-    return keyboardHeight > 0 ? keyboardHeight + 80 : 60;
+    return keyboardHeight > 0 ? keyboardHeight + 80 : 100;
   }, [keyboardHeight, partners.length]);
 
   // Refs
@@ -476,6 +475,35 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       groupName || holes[0]?.groupName || holes[0]?.GroupName || "";
     return String(directName).trim();
   }, [groupName, holes]);
+
+  const hasSummaryTab = useMemo(() => {
+    return partners.length <= 1 || gameConfig.hasMatchTab;
+  }, [partners.length, gameConfig.hasMatchTab]);
+
+  const singleOutIn = useMemo(() => {
+    let outScore = 0;
+    let inScore = 0;
+    let hasOut = false;
+    let hasIn = false;
+    holes.forEach((h) => {
+      const s =
+        h.score !== null && h.score !== undefined && h.score !== ""
+          ? Number(h.score)
+          : null;
+      if (s !== null && s > 0) {
+        if (h.holeNumber <= 9) {
+          outScore += s;
+          hasOut = true;
+        } else {
+          inScore += s;
+          hasIn = true;
+        }
+      }
+    });
+    const outStr = hasOut ? String(outScore) : "-";
+    const inStr = hasIn ? String(inScore) : "-";
+    return `${outStr} / ${inStr}`;
+  }, [holes]);
 
   const headerTitleText = useMemo(() => {
     if (tournamentName) return tournamentName;
@@ -2549,7 +2577,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 ? "rgba(18, 18, 20, 0.55)"
                 : "rgba(255, 255, 255, 0.55)",
               borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
-              paddingVertical: isInsideTabs ? 6 : 12,
+              paddingVertical: isInsideTabs ? 5 : 8,
             },
           ]}
         >
@@ -2617,44 +2645,15 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
             ) : null}
           </View>
 
-          {/* Top Right: Completed Status or Finish Button */}
+          {/* Top Right: Handicaps and Completed Status or Finish Button */}
           <View style={styles.headerTopRight}>
-            {!isReadOnly ? (
-              <TouchableOpacity
-                onPress={() => setShowFinishModal(true)}
-                style={styles.finishRoundButton}
-              >
-                <Text style={styles.finishRoundText}>Finish</Text>
-              </TouchableOpacity>
-            ) : (
-              isCompanionView && (
-                <View style={styles.readOnlyBadge}>
-                  <Text style={styles.readOnlyBadgeText}>Live Viewer</Text>
-                </View>
-              )
-            )}
-          </View>
-        </View>
-
-        {/* ── Subheader Controls Bar (Handicap & Inline Action Buttons) ── */}
-        <View
-          style={[
-            styles.subHeaderControlsBar,
-            {
-              backgroundColor: isDark
-                ? "rgba(24, 24, 27, 0.45)"
-                : "rgba(248, 250, 252, 0.45)",
-              borderBottomColor: isDark ? "#27272a" : "#e4e4e7",
-            },
-          ]}
-        >
-          <View style={styles.subHeaderLeft}>
+            {/* Single player standard round handicap */}
             {!gameConfig.isDoublePeoria &&
               !gameConfig.isSystem36 &&
               partners.length <= 1 && (
                 <View
                   style={[
-                    styles.handicapBadge,
+                    styles.headerHandicapBadge,
                     {
                       backgroundColor: isDark
                         ? "rgba(139,195,74,0.15)"
@@ -2665,7 +2664,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 >
                   <Text
                     style={[
-                      styles.handicapText,
+                      styles.headerHandicapText,
                       { color: isDark ? "#8bc34a" : "#2e7d32" },
                     ]}
                   >
@@ -2677,11 +2676,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 </View>
               )}
 
+            {/* Double Peoria: Declared HC and DP HC vertically aligned */}
             {gameConfig.isDoublePeoria && (
-              <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+              <View style={styles.headerHandicapCol}>
                 <View
                   style={[
-                    styles.handicapBadge,
+                    styles.headerHandicapBadge,
                     {
                       backgroundColor: isDark
                         ? "rgba(139,195,74,0.15)"
@@ -2692,7 +2692,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 >
                   <Text
                     style={[
-                      styles.handicapText,
+                      styles.headerHandicapText,
                       { color: isDark ? "#8bc34a" : "#2e7d32" },
                     ]}
                   >
@@ -2701,7 +2701,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 </View>
                 <View
                   style={[
-                    styles.handicapBadge,
+                    styles.headerHandicapBadge,
                     {
                       backgroundColor: isDark
                         ? "rgba(148,163,184,0.15)"
@@ -2712,7 +2712,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 >
                   <Text
                     style={[
-                      styles.handicapText,
+                      styles.headerHandicapText,
                       { color: isDark ? "#cbd5e1" : "#475569" },
                     ]}
                   >
@@ -2727,31 +2727,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               </View>
             )}
 
+            {/* System 36: Declared HC and Sys36 HC vertically aligned */}
             {gameConfig.isSystem36 && (
-              <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+              <View style={styles.headerHandicapCol}>
                 <View
                   style={[
-                    styles.handicapBadge,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(139,195,74,0.15)"
-                        : "rgba(232, 245, 233, 0.50)",
-                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.handicapText,
-                      { color: isDark ? "#8bc34a" : "#2e7d32" },
-                    ]}
-                  >
-                    Declared HC: {primaryHandicap ?? 0}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.handicapBadge,
+                    styles.headerHandicapBadge,
                     {
                       backgroundColor: isDark
                         ? "rgba(148,163,184,0.15)"
@@ -2762,7 +2743,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 >
                   <Text
                     style={[
-                      styles.handicapText,
+                      styles.headerHandicapText,
                       { color: isDark ? "#cbd5e1" : "#475569" },
                     ]}
                   >
@@ -2772,42 +2753,43 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       : "NIL"}
                   </Text>
                 </View>
+                <View
+                  style={[
+                    styles.headerHandicapBadge,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(139,195,74,0.15)"
+                        : "rgba(232, 245, 233, 0.50)",
+                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.headerHandicapText,
+                      { color: isDark ? "#8bc34a" : "#2e7d32" },
+                    ]}
+                  >
+                    Declared HC: {primaryHandicap ?? 0}
+                  </Text>
+                </View>
               </View>
             )}
-          </View>
 
-          {/* Inline Actions: GPS and Eye Details Toggle */}
-          <View style={styles.subHeaderRight}>
-            <TouchableOpacity
-              onPress={() => handleOpenRangefinder(holes[0]?.holeNumber || 1)}
-              style={styles.gpsButton}
-            >
-              <Ionicons
-                name="navigate-outline"
-                size={14}
-                color="#ffffff"
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.gpsButtonText}>GPS</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setIsDetailsVisible(!isDetailsVisible)}
-              style={[
-                styles.iconActionButton,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(39, 39, 42, 0.45)"
-                    : "rgba(226, 232, 240, 0.45)",
-                },
-              ]}
-            >
-              <Ionicons
-                name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
-                size={18}
-                color={isDark ? "#ffffff" : "#0f172a"}
-              />
-            </TouchableOpacity>
+            {!isReadOnly ? (
+              <TouchableOpacity
+                onPress={() => setShowFinishModal(true)}
+                style={styles.finishRoundButton}
+              >
+                <Text style={styles.finishRoundText}>Finish</Text>
+              </TouchableOpacity>
+            ) : (
+              isCompanionView && (
+                <View style={styles.readOnlyBadge}>
+                  <Text style={styles.readOnlyBadgeText}>Live Viewer</Text>
+                </View>
+              )
+            )}
           </View>
         </View>
 
@@ -2850,8 +2832,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           </View>
         )}
 
-        {/* Tab Switcher (Scorecard vs Match Scoring) */}
-        {gameConfig.hasMatchTab && (
+        {/* Tab Switcher (Scorecard vs Game Summary) */}
+        {hasSummaryTab && (
           <View
             style={[
               styles.tabBar,
@@ -2930,7 +2912,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
         )}
 
         {/* Main Content */}
-        {activeTab === "scoring" && gameConfig.hasMatchTab ? (
+        {activeTab === "scoring" && hasSummaryTab ? (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContainer}
@@ -2945,129 +2927,189 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               />
             }
           >
-            <ScoringTabContent
-              mode={
-                gameConfig.isSplit6
-                  ? "split-six"
-                  : gameConfig.isHighLow
-                    ? "high-low"
-                    : gameConfig.isNassauBest
-                      ? "nassau-best"
-                      : "nassau-combined"
-              }
-              players={partners}
-              splitSixSummary={sideScoringSummaries.splitSixSummary}
-              highLowSummary={sideScoringSummaries.highLowSummary}
-              nassauState={sideScoringSummaries.nassauState}
-              isDark={isDark}
-            />
-          </ScrollView>
-        ) : (
-          <View style={styles.scorecardContainer}>
-            {/* Player Header Cards (only for multiplayer rounds) - FIXED */}
-            {partners.length > 1 && (
-              <PlayerHeaderRow
+            {/* Match scoring summary if match game */}
+            {gameConfig.hasMatchTab && (
+              <ScoringTabContent
+                mode={
+                  gameConfig.isSplit6
+                    ? "split-six"
+                    : gameConfig.isHighLow
+                      ? "high-low"
+                      : gameConfig.isNassauBest
+                        ? "nassau-best"
+                        : "nassau-combined"
+                }
                 players={partners}
-                delegationStatuses={delegationStatuses}
+                splitSixSummary={sideScoringSummaries.splitSixSummary}
+                highLowSummary={sideScoringSummaries.highLowSummary}
+                nassauState={sideScoringSummaries.nassauState}
                 isDark={isDark}
-                showTeams={gameConfig.isHighLow || gameConfig.isNassau}
               />
             )}
 
-            {/* Halves Selector (Front 9 / Back 9 / All 18) - FIXED Tab filter switches */}
-            {!isNineHoleOnly && (
-              <View style={styles.halfFilterRow}>
-                <Pressable
-                  onPress={() => setActiveCourseHalf("all")}
-                  style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "all"
-                      ? styles.halfFilterActive
-                      : {
-                          backgroundColor: isDark
-                            ? "rgba(39, 39, 42, 0.35)"
-                            : "rgba(226, 232, 240, 0.35)",
-                        },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "all"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
-                    ]}
-                  >
-                    All 18
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setActiveCourseHalf("front")}
-                  style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "front"
-                      ? styles.halfFilterActive
-                      : {
-                          backgroundColor: isDark
-                            ? "rgba(39, 39, 42, 0.35)"
-                            : "rgba(226, 232, 240, 0.35)",
-                        },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "front"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
-                    ]}
-                  >
-                    Front 9
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setActiveCourseHalf("back")}
-                  style={[
-                    styles.halfFilterButton,
-                    activeCourseHalf === "back"
-                      ? styles.halfFilterActive
-                      : {
-                          backgroundColor: isDark
-                            ? "rgba(39, 39, 42, 0.35)"
-                            : "rgba(226, 232, 240, 0.35)",
-                        },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.halfFilterText,
-                      {
-                        color:
-                          activeCourseHalf === "back"
-                            ? "#ffffff"
-                            : isDark
-                              ? "#a1a1aa"
-                              : "#475569",
-                      },
-                    ]}
-                  >
-                    Back 9
-                  </Text>
-                </Pressable>
+            {/* Scorecard Legend on the Game Summary tab (only for single player mode) */}
+            {partners.length <= 1 && (
+              <View style={{ marginTop: 16 }}>
+                <ScoringLegend counts={legendCounts} isDark={isDark} />
               </View>
             )}
+          </ScrollView>
+        ) : (
+          <View
+            style={[
+              styles.scorecardContainer,
+              {
+                paddingBottom: isInsideTabs
+                  ? 12
+                  : Math.max(insets.bottom, 12) + 8,
+              },
+            ]}
+          >
+            {/* Halves Selector (Front 9 / Back 9 / All 18) and GPS / Eye Toggle */}
+            <View
+              style={[
+                styles.halfFilterRow,
+                {
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                },
+              ]}
+            >
+              {/* Halves Selector Buttons (Front 9 / Back 9 / All 18) */}
+              {!isNineHoleOnly ? (
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("all")}
+                    style={[
+                      styles.halfFilterButton,
+                      activeCourseHalf === "all"
+                        ? styles.halfFilterActive
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.halfFilterText,
+                        {
+                          color:
+                            activeCourseHalf === "all"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
+                        },
+                      ]}
+                    >
+                      All 18
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("front")}
+                    style={[
+                      styles.halfFilterButton,
+                      activeCourseHalf === "front"
+                        ? styles.halfFilterActive
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.halfFilterText,
+                        {
+                          color:
+                            activeCourseHalf === "front"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
+                        },
+                      ]}
+                    >
+                      Front 9
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setActiveCourseHalf("back")}
+                    style={[
+                      styles.halfFilterButton,
+                      activeCourseHalf === "back"
+                        ? styles.halfFilterActive
+                        : {
+                            backgroundColor: isDark
+                              ? "rgba(39, 39, 42, 0.35)"
+                              : "rgba(226, 232, 240, 0.35)",
+                          },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.halfFilterText,
+                        {
+                          color:
+                            activeCourseHalf === "back"
+                              ? "#ffffff"
+                              : isDark
+                                ? "#a1a1aa"
+                                : "#475569",
+                        },
+                      ]}
+                    >
+                      Back 9
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View />
+              )}
+
+              {/* Actions: GPS and Eye Details Toggle */}
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <TouchableOpacity
+                  onPress={() =>
+                    handleOpenRangefinder(holes[0]?.holeNumber || 1)
+                  }
+                  style={styles.gpsButton}
+                >
+                  <Ionicons
+                    name="navigate-outline"
+                    size={14}
+                    color="#ffffff"
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={styles.gpsButtonText}>GPS</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setIsDetailsVisible(!isDetailsVisible)}
+                  style={[
+                    styles.iconActionButton,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(39, 39, 42, 0.45)"
+                        : "rgba(226, 232, 240, 0.45)",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={isDetailsVisible ? "eye-outline" : "eye-off-outline"}
+                    size={18}
+                    color={isDark ? "#ffffff" : "#0f172a"}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Scorecard Table Area with Fixed Header & Scrollable Rows */}
             <View
@@ -3145,50 +3187,89 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       Par
                     </Text>
 
-                    {partners.map((partner) => (
-                      <View
-                        key={partner.playerId}
-                        style={[
-                          styles.colPlayerScores,
-                          partners.length === 1 && {
-                            flex: 1,
-                            justifyContent: "space-around",
-                          },
-                        ]}
-                      >
-                        <View style={styles.colScoreInputWrapper}>
-                          <Text
-                            numberOfLines={1}
-                            style={[
-                              styles.playerScoreHeaderTitle,
-                              { color: isDark ? "#ffffff" : "#0f172a" },
-                            ]}
-                          >
-                            {partners.length === 1 ? "Score" : partner.name}
-                          </Text>
+                    {partners.map((partner) => {
+                      const showTeam =
+                        !gameConfig.isSplit6 &&
+                        (gameConfig.isHighLow || gameConfig.isNassau) &&
+                        partners.length > 1;
+                      const isTeam1 = (partner.team ?? 1) === 1;
+
+                      return (
+                        <View
+                          key={partner.playerId}
+                          style={[
+                            styles.colPlayerScores,
+                            partners.length === 1 && {
+                              flex: 1,
+                              justifyContent: "space-around",
+                            },
+                          ]}
+                        >
+                          <View style={styles.colScoreInputWrapper}>
+                            <Text
+                              numberOfLines={1}
+                              style={[
+                                styles.playerScoreHeaderTitle,
+                                { color: isDark ? "#ffffff" : "#0f172a" },
+                              ]}
+                            >
+                              {partners.length === 1 ? "Score" : partner.name}
+                            </Text>
+                            {showTeam && (
+                              <View
+                                style={[
+                                  styles.teamHeaderBadge,
+                                  {
+                                    backgroundColor: isTeam1
+                                      ? isDark
+                                        ? "#14532d"
+                                        : "#dcfce7"
+                                      : isDark
+                                        ? "#1e3a8a"
+                                        : "#dbeafe",
+                                    borderColor: isTeam1
+                                      ? "#22c55e"
+                                      : "#3b82f6",
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  numberOfLines={1}
+                                  style={[
+                                    styles.teamHeaderBadgeText,
+                                    {
+                                      color: isTeam1 ? "#16a34a" : "#2563eb",
+                                    },
+                                  ]}
+                                >
+                                  Team {partner.team ?? 1}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          {gameConfig.showNetColumns && (
+                            <Text
+                              style={[
+                                styles.subColHeader,
+                                { color: isDark ? "#9ca3af" : "#64748b" },
+                              ]}
+                            >
+                              Net
+                            </Text>
+                          )}
+                          {gameConfig.showPtsColumns && (
+                            <Text
+                              style={[
+                                styles.subColHeader,
+                                { color: isDark ? "#9ca3af" : "#64748b" },
+                              ]}
+                            >
+                              Pts
+                            </Text>
+                          )}
                         </View>
-                        {gameConfig.showNetColumns && (
-                          <Text
-                            style={[
-                              styles.subColHeader,
-                              { color: isDark ? "#9ca3af" : "#64748b" },
-                            ]}
-                          >
-                            Net
-                          </Text>
-                        )}
-                        {gameConfig.showPtsColumns && (
-                          <Text
-                            style={[
-                              styles.subColHeader,
-                              { color: isDark ? "#9ca3af" : "#64748b" },
-                            ]}
-                          >
-                            Pts
-                          </Text>
-                        )}
-                      </View>
-                    ))}
+                      );
+                    })}
 
                     {gameConfig.isSplit6 && (
                       <View
@@ -3997,11 +4078,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 </View>
               </ScrollView>
             </View>
-
-            {/* Scorecard Legend (only for single player rounds - OUTSIDE horizontal scroll) */}
-            {partners.length <= 1 && (
-              <ScoringLegend counts={legendCounts} isDark={isDark} />
-            )}
           </View>
         )}
       </KeyboardAvoidingView>
@@ -4257,7 +4333,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
   backButton: {
@@ -4278,32 +4354,22 @@ const styles = StyleSheet.create({
   headerTopRight: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  subHeaderControlsBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-  },
-  subHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  subHeaderRight: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 8,
   },
-  handicapBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  headerHandicapCol: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    gap: 2,
+  },
+  headerHandicapBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
     borderWidth: 1,
   },
-  handicapText: {
-    fontSize: 11,
+  headerHandicapText: {
+    fontSize: 10,
     fontWeight: "700",
   },
   gpsButton: {
@@ -4350,13 +4416,14 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    padding: 6,
+    paddingTop: 3,
+    paddingHorizontal: 6,
     borderBottomWidth: 1,
     gap: 6,
   },
   tabItem: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 5,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -4373,13 +4440,42 @@ const styles = StyleSheet.create({
   },
   scorecardContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: 7,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  singleSummaryCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 8,
+  },
+  singleSummaryTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  singleSummaryGrid: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  singleSummaryItem: {
+    alignItems: "center",
+  },
+  singleSummaryLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  singleSummaryValue: {
+    fontSize: 18,
+    fontWeight: "800",
   },
   halfFilterRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   halfFilterButton: {
     paddingHorizontal: 14,
@@ -4397,7 +4493,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: 16,
     flex: 1,
   },
   tableRowHeader: {
@@ -4502,6 +4598,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     width: "100%",
+  },
+  teamHeaderBadge: {
+    marginTop: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    maxWidth: 54,
+  },
+  teamHeaderBadgeText: {
+    fontSize: 9,
+    fontWeight: "700",
+    textAlign: "center",
   },
   subColHeader: {
     fontSize: 12,

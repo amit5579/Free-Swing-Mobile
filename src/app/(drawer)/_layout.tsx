@@ -553,7 +553,7 @@ function CustomDrawerContent({ navigation }: any) {
                   navigation.closeDrawer();
                   requestAnimationFrame(() => {
                     Linking.openURL(
-                      "https://www.randa.org/quiz/level/quiz-beginner",
+                      "https://www.randa.org/rules/rules-of-golf-home",
                     );
                   });
                 }}
