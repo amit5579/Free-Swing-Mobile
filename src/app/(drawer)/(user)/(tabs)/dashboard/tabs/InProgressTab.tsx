@@ -196,17 +196,31 @@ export function InProgressTab({
           item.tournamentScoringType ??
           item.TournamentScoringType ??
           item.scoring_type ??
+          item.matchScoringType ??
+          item.MatchScoringType ??
           (item.isStableford ? "stableford" : undefined),
         isStableford: Boolean(
           item.isStableford ??
           item.IsStableford ??
-          String(item.scoringType || "").toLowerCase().includes("stableford"),
+          String(
+            item.scoringType ||
+            item.ScoringType ||
+            item.matchScoringType ||
+            item.MatchScoringType ||
+            "",
+          ).toLowerCase().includes("stableford"),
         ),
         isDoublePeoria: Boolean(
           item.isDoublePeoria ??
           item.IsDoublePeoria ??
           item.is_double_peoria ??
-          false,
+          String(
+            item.scoringType ||
+            item.ScoringType ||
+            item.matchScoringType ||
+            item.MatchScoringType ||
+            "",
+          ).toLowerCase().includes("double-peoria"),
         ),
         tournamentId: item.tournamentId ?? item.TournamentId ?? null,
         tournamentName: item.tournamentName ?? item.TournamentName ?? item.tournament?.name ?? undefined,

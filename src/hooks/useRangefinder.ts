@@ -102,6 +102,50 @@ export function useRangefinder(initialPinLat?: number, initialPinLng?: number) {
 
       setState((prev) => ({ ...prev, isTracking: true, errorMsg: null }));
 
+      // Immediately acquire initial location (cached or balanced) without waiting for watchPositionAsync delay
+      try {
+        const initialLoc =
+          (await Location.getLastKnownPositionAsync()) ||
+          (await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }));
+
+        if (initialLoc?.coords) {
+          const { latitude, longitude } = initialLoc.coords;
+          setState((prev) => {
+            let distanceToPin = null;
+            let distanceToAim = null;
+
+            if (prev.pinLocation) {
+              distanceToPin = haversineDistanceYards(
+                latitude,
+                longitude,
+                prev.pinLocation[1],
+                prev.pinLocation[0],
+              );
+            }
+
+            if (prev.aimLocation) {
+              distanceToAim = haversineDistanceYards(
+                latitude,
+                longitude,
+                prev.aimLocation[1],
+                prev.aimLocation[0],
+              );
+            }
+
+            return {
+              ...prev,
+              playerLocation: [longitude, latitude],
+              distanceToPin,
+              distanceToAim,
+            };
+          });
+        }
+      } catch (locErr) {
+        console.warn("Immediate location acquisition fallback:", locErr);
+      }
+
       locationSubscription.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Highest,

@@ -23,6 +23,7 @@ import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { getLikedUsersApi, LikedUser } from "@/api/modules/dashboard.api";
+import { resolveMediaUrl } from "@/utils/mediaUtils";
 import { verifyScoreApi } from "@/api/modules/admin/dashboard.api";
 import GolferParadise from "./GolferParadise";
 import MembersTab from "./MembersTab";
@@ -151,9 +152,7 @@ const FeedCard = ({
                   !imageError ? (
                     <Image
                       source={{
-                        uri: card.profileImage.startsWith("http")
-                          ? card.profileImage
-                          : `https://kolve18freeswing.com${card.profileImage}`,
+                        uri: resolveMediaUrl(card.profileImage),
                       }}
                       style={{
                         width: "100%",
@@ -908,11 +907,9 @@ export function OverviewTab({
                           interaction.profilePictureUrl !== "null" ? (
                             <Image
                               source={{
-                                uri: interaction.profilePictureUrl.startsWith(
-                                  "http",
-                                )
-                                  ? interaction.profilePictureUrl
-                                  : `https://kolve18freeswing.com${interaction.profilePictureUrl}`,
+                                uri: resolveMediaUrl(
+                                  interaction.profilePictureUrl,
+                                ),
                               }}
                               style={{ width: "100%", height: "100%" }}
                             />

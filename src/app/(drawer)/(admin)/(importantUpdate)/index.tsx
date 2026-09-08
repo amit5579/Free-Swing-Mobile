@@ -19,6 +19,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  StatusBar,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,6 +40,8 @@ import { ThemedView } from "@/components/themed-view";
 import Watermark from "@/components/watermark";
 import { Skeleton } from "@/components/Skeleton";
 import { VStack } from "@/components/vstack";
+import { resolveMediaUrl } from "@/utils/mediaUtils";
+import { formatCommentDate, formatPostDate, parseUtcDate } from "@/utils/dateUtils";
 import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Button } from "@/components/button";
@@ -331,9 +335,7 @@ export default function ManageImportantUpdates() {
     setLinkUrl(update.linkUrl || "");
     if (update.mediaUrl) {
       setImage({
-        uri: update.mediaUrl.startsWith("http")
-          ? update.mediaUrl
-          : `https://kolve18freeswing.com${update.mediaUrl}`,
+        uri: resolveMediaUrl(update.mediaUrl),
         isExisting: true,
       });
     } else {
@@ -488,7 +490,7 @@ export default function ManageImportantUpdates() {
             </Text>
           </View>
           <Text className="text-[10px] text-gray-500 font-medium">
-            {new Date(update.createdAt).toLocaleString()}
+            {parseUtcDate(update.createdAt).toLocaleString()}
           </Text>
         </View>
         <View className="flex-row items-center">
@@ -541,9 +543,7 @@ export default function ManageImportantUpdates() {
       {update.mediaUrl && (
         <TouchableOpacity
           onPress={() => {
-            const finalUrl = update.mediaUrl!.startsWith("http")
-              ? update.mediaUrl!
-              : `https://kolve18freeswing.com${update.mediaUrl}`;
+            const finalUrl = resolveMediaUrl(update.mediaUrl);
             setFullImageUrl(finalUrl);
             setFullImageModalVisible(true);
           }}
@@ -616,9 +616,7 @@ export default function ManageImportantUpdates() {
           ) : (
             <Image
               source={{
-                uri: update.mediaUrl.startsWith("http")
-                  ? update.mediaUrl
-                  : `https://kolve18freeswing.com${update.mediaUrl}`,
+                uri: resolveMediaUrl(update.mediaUrl),
               }}
               style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
@@ -943,9 +941,7 @@ export default function ManageImportantUpdates() {
                           {post.playerAvatar && post.playerAvatar !== "null" ? (
                             <Image
                               source={{
-                                uri: post.playerAvatar.startsWith("http")
-                                  ? post.playerAvatar
-                                  : `https://kolve18freeswing.com${post.playerAvatar}`,
+                                uri: resolveMediaUrl(post.playerAvatar),
                               }}
                               style={{ width: "100%", height: "100%" }}
                               resizeMode="cover"
@@ -978,11 +974,7 @@ export default function ManageImportantUpdates() {
                               color: isDark ? "#9CA3AF" : "#6B7280",
                             }}
                           >
-                            {new Date(post.createdAt).toLocaleDateString()} ·{" "}
-                            {new Date(post.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {formatPostDate(post.createdAt)}
                           </Text>
                         </View>
 
@@ -1055,18 +1047,14 @@ export default function ManageImportantUpdates() {
                           <TouchableOpacity
                             activeOpacity={0.9}
                             onPress={() => {
-                              const finalUrl = post.imageUrl!.startsWith("http")
-                                ? post.imageUrl!
-                                : `https://kolve18freeswing.com${post.imageUrl}`;
+                              const finalUrl = resolveMediaUrl(post.imageUrl);
                               setFullImageUrl(finalUrl);
                               setFullImageModalVisible(true);
                             }}
                           >
                             <Image
                               source={{
-                                uri: post.imageUrl.startsWith("http")
-                                  ? post.imageUrl
-                                  : `https://kolve18freeswing.com${post.imageUrl}`,
+                                uri: resolveMediaUrl(post.imageUrl),
                               }}
                               style={{ width: "100%", aspectRatio: 4 / 3 }}
                               resizeMode="cover"
@@ -1157,24 +1145,41 @@ export default function ManageImportantUpdates() {
             animationType="slide"
             onRequestClose={() => setParadiseCommentModalPostId(null)}
           >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : undefined}
+            <View
               style={{
                 flex: 1,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                justifyContent: "flex-end",
+                backgroundColor: "rgba(0,0,0,0.6)",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 16,
               }}
             >
               <Pressable
-                style={{ flex: 1 }}
-                onPress={() => setParadiseCommentModalPostId(null)}
+                style={StyleSheet.absoluteFill}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setParadiseCommentModalPostId(null);
+                }}
               />
+
               <View
                 style={{
+                  width: "100%",
+                  maxWidth: 480,
                   backgroundColor: isDark ? "#1A1A1A" : "#fff",
-                  borderTopLeftRadius: 24,
-                  borderTopRightRadius: 24,
-                  maxHeight: "80%",
+                  borderRadius: 24,
+                  maxHeight: Dimensions.get("window").height * 0.7,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.08)",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 16,
+                  elevation: 10,
+                  zIndex: 1,
                 }}
               >
                 <View
@@ -1218,6 +1223,7 @@ export default function ManageImportantUpdates() {
                 </View>
                 <ScrollView
                   showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{ padding: 16 }}
                 >
                   {(paradisePosts.find(
@@ -1278,13 +1284,10 @@ export default function ManageImportantUpdates() {
                                 comment.profilePictureUrl !== "null") ? (
                                 <Image
                                   source={{
-                                    uri: (comment.playerAvatar ||
-                                      comment.profilePictureUrl)!.startsWith(
-                                      "http",
-                                    )
-                                      ? (comment.playerAvatar ||
-                                          comment.profilePictureUrl)!
-                                      : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}`,
+                                    uri: resolveMediaUrl(
+                                      comment.playerAvatar ||
+                                        comment.profilePictureUrl,
+                                    ),
                                   }}
                                   style={{ width: "100%", height: "100%" }}
                                   resizeMode="cover"
@@ -1341,15 +1344,7 @@ export default function ManageImportantUpdates() {
                                   color: isDark ? "#6B7280" : "#9CA3AF",
                                 }}
                               >
-                                {new Date(comment.createdAt).toLocaleString(
-                                  undefined,
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )}
+                                {formatCommentDate(comment.createdAt)}
                               </Text>
                             </View>
                           </View>
@@ -1362,7 +1357,6 @@ export default function ManageImportantUpdates() {
                     flexDirection: "row",
                     paddingHorizontal: 16,
                     paddingVertical: 12,
-                    paddingBottom: 24,
                     alignItems: "center",
                     gap: 10,
                     borderTopWidth: 1,
@@ -1413,7 +1407,7 @@ export default function ManageImportantUpdates() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </KeyboardAvoidingView>
+            </View>
           </Modal>
         )}
 
