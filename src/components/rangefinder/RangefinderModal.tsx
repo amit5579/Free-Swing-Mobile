@@ -24,6 +24,7 @@ import MapView from "react-native-maps";
 import { useRef } from "react";
 import { pinMapLocation } from "@/api/modules/scoreCard.api";
 import { getCourseDetails } from "@/api/modules/subAdmin/tournaments.api";
+import { getHolesByTeeBox } from "@/api/modules/admin/courses.api";
 
 interface RangefinderModalProps {
   visible: boolean;
@@ -31,6 +32,9 @@ interface RangefinderModalProps {
   holes: any[];
   initialHoleId: number | null;
   courseName?: string;
+  teeBoxId?: number | null;
+  courseId?: number | null;
+  courseHalf?: string | null;
 }
 
 const GreenDistances = ({
@@ -73,10 +77,21 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   holes,
   initialHoleId,
   courseName,
+  teeBoxId,
+  courseId,
+  courseHalf,
 }) => {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const [effectiveHoles, setEffectiveHoles] = useState<any[]>(holes || []);
+
+  useEffect(() => {
+    if (holes && holes.length > 0) {
+      setEffectiveHoles(holes);
+    }
+  }, [holes]);
 
   const [currentHoleIndex, setCurrentHoleIndex] = useState(0);
   const [unit, setUnit] = useState<"YD" | "M">("YD");
@@ -87,14 +102,19 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   >("unknown");
   const [fetchedCourseName, setFetchedCourseName] = useState<string>("");
 
+  // Maps to remember custom pin and aim points per hole across the session (same as Web)
+  const userPinsRef = useRef<Map<number, [number, number]>>(new Map());
+  const userAimsRef = useRef<Map<number, [number, number]>>(new Map());
+  const cameraFramedHolesRef = useRef<Set<number>>(new Set());
+
   // Stable courseId ref to avoid re-triggering API on holes array reference changes
   const courseIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const courseId = holes[0]?.courseId;
-    if (visible && courseId && courseId !== courseIdRef.current) {
-      courseIdRef.current = courseId;
-      getCourseDetails(courseId)
+    const targetCourseId = courseId || holes[0]?.courseId;
+    if (visible && targetCourseId && targetCourseId !== courseIdRef.current) {
+      courseIdRef.current = targetCourseId;
+      getCourseDetails(targetCourseId)
         .then((response) => {
           if (response?.name) {
             setFetchedCourseName(response.name);
@@ -110,7 +130,68 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     if (!visible) {
       courseIdRef.current = null;
     }
-  }, [visible, holes[0]?.courseId]);
+  }, [visible, courseId, holes[0]?.courseId]);
+
+  // Fetch authoritative hole coordinates from Holes table via TeeBox (matching Web flow)
+  useEffect(() => {
+    const activeTeeBoxId =
+      teeBoxId || holes?.[0]?.teeBoxId || holes?.[0]?.TeeBoxId;
+    if (!visible || !activeTeeBoxId) return;
+
+    getHolesByTeeBox(String(activeTeeBoxId))
+      .then((dbHoles: any[]) => {
+        if (Array.isArray(dbHoles) && dbHoles.length > 0) {
+          setEffectiveHoles((prev) => {
+            const baseList = prev && prev.length > 0 ? prev : dbHoles;
+            return baseList.map((ph) => {
+              const match = dbHoles.find(
+                (dh: any) =>
+                  (dh.holeNumber != null &&
+                    (dh.holeNumber === ph.holeNumber ||
+                      dh.holeNumber === ph.HoleNumber)) ||
+                  (dh.HoleNumber != null &&
+                    (dh.HoleNumber === ph.holeNumber ||
+                      dh.HoleNumber === ph.HoleNumber)) ||
+                  (dh.holeId != null &&
+                    (dh.holeId === ph.holeId || dh.holeId === ph.HoleId)) ||
+                  (dh.HoleId != null &&
+                    (dh.HoleId === ph.holeId || dh.HoleId === ph.HoleId)),
+              );
+              if (!match) return ph;
+              return {
+                ...ph,
+                holeId: match.holeId ?? match.HoleId ?? ph.holeId,
+                holeNumber:
+                  match.holeNumber ?? match.HoleNumber ?? ph.holeNumber,
+                par: match.par ?? match.Par ?? ph.par,
+                yardage: match.yardage ?? match.Yardage ?? ph.yardage,
+                strokeIndex:
+                  match.strokeIndex ??
+                  match.StrokeIndex ??
+                  match.handicap ??
+                  match.Handicap ??
+                  ph.strokeIndex,
+                pinLat:
+                  match.pinLat !== undefined && match.pinLat !== null
+                    ? Number(match.pinLat)
+                    : match.PinLat !== undefined && match.PinLat !== null
+                      ? Number(match.PinLat)
+                      : ph.pinLat ?? null,
+                pinLng:
+                  match.pinLng !== undefined && match.pinLng !== null
+                    ? Number(match.pinLng)
+                    : match.PinLng !== undefined && match.PinLng !== null
+                      ? Number(match.PinLng)
+                      : ph.pinLng ?? null,
+              };
+            });
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch authoritative holes by teebox:", err);
+      });
+  }, [visible, teeBoxId, holes?.[0]?.teeBoxId, holes?.[0]?.TeeBoxId]);
 
   // Check location permission when component mounts
   useEffect(() => {
@@ -206,6 +287,9 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     if (!visible) {
       hasInitializedHole.current = false;
       hasAutoCentered.current = false;
+      cameraFramedHolesRef.current.clear();
+      userPinsRef.current.clear();
+      userAimsRef.current.clear();
     }
   }, [visible]);
 
@@ -215,10 +299,10 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       visible &&
       !hasInitializedHole.current &&
       initialHoleId &&
-      holes &&
-      holes.length > 0
+      effectiveHoles &&
+      effectiveHoles.length > 0
     ) {
-      const index = holes.findIndex(
+      const index = effectiveHoles.findIndex(
         (h) => h.holeId === initialHoleId || h.holeNumber === initialHoleId,
       );
       if (index !== -1) {
@@ -226,42 +310,11 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
         hasInitializedHole.current = true;
       }
     }
-  }, [visible, initialHoleId, holes]);
+  }, [visible, initialHoleId, effectiveHoles]);
 
-  // Auto-center map when location first becomes available
-  useEffect(() => {
-    if (
-      visible &&
-      !hasAutoCentered.current &&
-      playerLocation &&
-      playerLocation[0] &&
-      playerLocation[1] &&
-      cameraRef.current &&
-      typeof cameraRef.current.animateCamera === "function"
-    ) {
-      try {
-        cameraRef.current.animateCamera(
-          {
-            center: {
-              latitude: playerLocation[1],
-              longitude: playerLocation[0],
-            },
-            zoom: 17,
-          },
-          { duration: 1000 },
-        );
-        hasAutoCentered.current = true;
-      } catch (e) {
-        console.warn("animateCamera warning:", e);
-      }
-    }
-  }, [visible, playerLocation]);
-
-  const currentHole = holes[currentHoleIndex];
-
-  // Parse pin coordinates if available from API (default to some fallback if missing for now)
-  const pinLat = currentHole?.pinLat || currentHole?.latitude || 0;
-  const pinLng = currentHole?.pinLng || currentHole?.longitude || 0;
+  const currentHole =
+    effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
+  const currentHoleNum = currentHole?.holeNumber || currentHoleIndex + 1;
 
   // Tracking lifecycle: only start/stop based on visibility
   const isTrackingStarted = useRef(false);
@@ -275,20 +328,173 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     }
   }, [visible]);
 
-  // Update pin when hole changes (separate from tracking to avoid loop)
+  // Set pin and default aim point whenever hole changes or DB holes load
   useEffect(() => {
-    if (visible && pinLat && pinLng) {
-      setPinLocation(pinLng, pinLat);
+    if (!visible) return;
+
+    const currentHoleData =
+      effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
+    if (!currentHoleData) return;
+
+    const holeNum = currentHoleData?.holeNumber || currentHoleIndex + 1;
+    const yardage = currentHoleData?.yardage || 400;
+    const yardsPerDegreeLat = 121391;
+
+    const rawPinLat =
+      currentHoleData?.pinLat ??
+      currentHoleData?.PinLat ??
+      currentHoleData?.latitude ??
+      currentHoleData?.Latitude ??
+      null;
+    const rawPinLng =
+      currentHoleData?.pinLng ??
+      currentHoleData?.PinLng ??
+      currentHoleData?.longitude ??
+      currentHoleData?.Longitude ??
+      null;
+
+    const hasDbPin =
+      rawPinLat != null &&
+      rawPinLng != null &&
+      Number(rawPinLat) !== 0 &&
+      Number(rawPinLng) !== 0;
+
+    let targetPinLng: number | null = null;
+    let targetPinLat: number | null = null;
+
+    // 1. Check if user already moved the pin for this hole in this session
+    const savedUserPin = userPinsRef.current.get(holeNum);
+    if (savedUserPin) {
+      targetPinLng = savedUserPin[0];
+      targetPinLat = savedUserPin[1];
+    } else if (hasDbPin) {
+      targetPinLat = Number(rawPinLat);
+      targetPinLng = Number(rawPinLng);
+      userPinsRef.current.set(holeNum, [targetPinLng, targetPinLat]);
+    } else if (playerLocation && playerLocation[0] && playerLocation[1]) {
+      targetPinLat = playerLocation[1] + yardage / yardsPerDegreeLat;
+      targetPinLng = playerLocation[0];
+      userPinsRef.current.set(holeNum, [targetPinLng, targetPinLat]);
     }
-  }, [visible, currentHoleIndex, pinLat, pinLng, setPinLocation]);
+
+    if (targetPinLng != null && targetPinLat != null) {
+      setPinLocation(targetPinLng, targetPinLat);
+
+      // Check if user already moved the aim point for this hole
+      const savedAim = userAimsRef.current.get(holeNum);
+      if (savedAim) {
+        setAimLocation(savedAim[0], savedAim[1]);
+      } else if (playerLocation && playerLocation[0] && playerLocation[1]) {
+        const defaultAimLng = (playerLocation[0] + targetPinLng) / 2;
+        const defaultAimLat = (playerLocation[1] + targetPinLat) / 2;
+        setAimLocation(defaultAimLng, defaultAimLat);
+        userAimsRef.current.set(holeNum, [defaultAimLng, defaultAimLat]);
+      }
+
+      // Direct centering on user's current location when map opens / hole changes
+      if (
+        playerLocation &&
+        playerLocation[0] &&
+        playerLocation[1] &&
+        !cameraFramedHolesRef.current.has(holeNum)
+      ) {
+        cameraFramedHolesRef.current.add(holeNum);
+        if (
+          cameraRef.current &&
+          typeof cameraRef.current.animateCamera === "function"
+        ) {
+          try {
+            cameraRef.current.animateCamera(
+              {
+                center: {
+                  latitude: playerLocation[1],
+                  longitude: playerLocation[0],
+                },
+                zoom: 17,
+              },
+              { duration: 600 },
+            );
+          } catch (e) {
+            console.warn("animateCamera to player warning:", e);
+          }
+        }
+      }
+    }
+  }, [
+    visible,
+    currentHoleIndex,
+    effectiveHoles,
+    setPinLocation,
+    setAimLocation,
+  ]);
+
+  // One-time fallback when GPS first locks if hole has no DB pin and user hasn't placed a pin
+  useEffect(() => {
+    if (!visible || !playerLocation || !playerLocation[0] || !playerLocation[1])
+      return;
+    const currentHoleData =
+      effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
+    if (!currentHoleData) return;
+
+    const holeNum = currentHoleData?.holeNumber || currentHoleIndex + 1;
+    if (userPinsRef.current.has(holeNum)) return;
+
+    const rawPinLat = currentHoleData?.pinLat ?? currentHoleData?.PinLat;
+    const rawPinLng = currentHoleData?.pinLng ?? currentHoleData?.PinLng;
+    if (
+      rawPinLat &&
+      rawPinLng &&
+      Number(rawPinLat) !== 0 &&
+      Number(rawPinLng) !== 0
+    )
+      return;
+
+    const yardage = currentHoleData?.yardage || 400;
+    const yardsPerDegreeLat = 121391;
+    const targetPinLat = playerLocation[1] + yardage / yardsPerDegreeLat;
+    const targetPinLng = playerLocation[0];
+
+    setPinLocation(targetPinLng, targetPinLat);
+    userPinsRef.current.set(holeNum, [targetPinLng, targetPinLat]);
+
+    if (!userAimsRef.current.has(holeNum)) {
+      const defaultAimLng = (playerLocation[0] + targetPinLng) / 2;
+      const defaultAimLat = (playerLocation[1] + targetPinLat) / 2;
+      setAimLocation(defaultAimLng, defaultAimLat);
+      userAimsRef.current.set(holeNum, [defaultAimLng, defaultAimLat]);
+    }
+
+    if (!cameraFramedHolesRef.current.has(holeNum)) {
+      cameraFramedHolesRef.current.add(holeNum);
+      if (
+        cameraRef.current &&
+        typeof cameraRef.current.animateCamera === "function"
+      ) {
+        try {
+          cameraRef.current.animateCamera(
+            {
+              center: {
+                latitude: playerLocation[1],
+                longitude: playerLocation[0],
+              },
+              zoom: 17,
+            },
+            { duration: 600 },
+          );
+        } catch (e) {}
+      }
+    }
+  }, [visible, Boolean(playerLocation)]);
 
   const handleMapPress = (feature: any) => {
     const coords = feature?.geometry?.coordinates;
     if (coords && Array.isArray(coords) && coords.length === 2) {
       if (isFlagMode) {
         setPinLocation(coords[0], coords[1]);
+        userPinsRef.current.set(currentHoleNum, [coords[0], coords[1]]);
       } else if (isAimMode) {
         setAimLocation(coords[0], coords[1]);
+        userAimsRef.current.set(currentHoleNum, [coords[0], coords[1]]);
       } else {
         toggleUiVisibility();
       }
@@ -297,10 +503,12 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
 
   const handlePinDragEnd = (coords: [number, number]) => {
     setPinLocation(coords[0], coords[1]);
+    userPinsRef.current.set(currentHoleNum, [coords[0], coords[1]]);
   };
 
   const handleAimDragEnd = (coords: [number, number]) => {
     setAimLocation(coords[0], coords[1]);
+    userAimsRef.current.set(currentHoleNum, [coords[0], coords[1]]);
   };
 
   const toggleFlagMode = () => {
@@ -318,10 +526,6 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     try {
       setIsSavingPin(true);
       const payload = { pinLat: pinLocation[1], pinLng: pinLocation[0] };
-      if (!payload) {
-        Alert.alert("Error", "Pin location is required");
-        return;
-      }
       const res = await pinMapLocation(
         currentHole.holeId,
         payload.pinLat,
@@ -332,6 +536,14 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
         Alert.alert("Success", "Pin location saved successfully");
         currentHole.pinLat = payload.pinLat;
         currentHole.pinLng = payload.pinLng;
+        userPinsRef.current.set(currentHoleNum, [payload.pinLng, payload.pinLat]);
+        setEffectiveHoles((prev) =>
+          prev.map((h, idx) =>
+            idx === currentHoleIndex
+              ? { ...h, pinLat: payload.pinLat, pinLng: payload.pinLng }
+              : h,
+          ),
+        );
       }
     } catch (error) {
       Alert.alert("Error", "Failed to update pin location");
@@ -372,7 +584,9 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   };
 
   const handleNextHole = () => {
-    if (currentHoleIndex < holes.length - 1) {
+    const totalHoles =
+      effectiveHoles.length > 0 ? effectiveHoles.length : holes.length;
+    if (currentHoleIndex < totalHoles - 1) {
       setCurrentHoleIndex(currentHoleIndex + 1);
     }
   };
@@ -543,14 +757,22 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
 
               <TouchableOpacity
                 onPress={handleNextHole}
-                disabled={currentHoleIndex === holes.length - 1}
+                disabled={
+                  currentHoleIndex ===
+                  (effectiveHoles.length > 0
+                    ? effectiveHoles.length - 1
+                    : holes.length - 1)
+                }
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
                 <Ionicons
                   name="chevron-forward"
                   size={18}
                   color={
-                    currentHoleIndex === holes.length - 1
+                    currentHoleIndex ===
+                    (effectiveHoles.length > 0
+                      ? effectiveHoles.length - 1
+                      : holes.length - 1)
                       ? "rgba(255,255,255,0.3)"
                       : "#ffffff"
                   }

@@ -709,6 +709,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 (await getDraft(`tournament_${detectedTourId}`)) ||
                 (await getDraft(detectedTourId));
             }
+            if (!draft && propRoundContextId) {
+              draft = await getDraft(`round_${propRoundContextId}`);
+            }
             if (!draft && rawHoles && rawHoles.length > 0) {
               const firstHole = rawHoles[0];
               if (firstHole.courseId && firstHole.teeBoxId) {
@@ -1571,7 +1574,17 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                     ? "system-36"
                     : gameConfig.isStableford
                       ? "stableford"
-                      : undefined,
+                      : gameConfig.isSplit6
+                        ? "split-six"
+                        : gameConfig.isHighLow
+                          ? "high-low"
+                          : gameConfig.isNassauBest
+                            ? "nassau-best"
+                            : gameConfig.isNassauCombined
+                              ? "nassau-combined"
+                              : gameConfig.isGross
+                                ? "gross"
+                                : undefined,
           });
         } catch (draftErr) {
           console.error("Failed to save draft:", draftErr);
@@ -1580,7 +1593,10 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
 
       // 2. Save to Server
       try {
-        const playingGroupRoundKey = roundKey ? String(roundKey) : undefined;
+        const playingGroupRoundKey =
+          roundKey || propRoundContextId
+            ? String(roundKey || propRoundContextId)
+            : undefined;
         const playingPartnersJson =
           partners.length > 0 ? JSON.stringify(partners) : undefined;
 
@@ -1652,7 +1668,15 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                   ? "nassau-combined"
                   : gameConfig.isGross
                     ? "gross"
-                    : h.matchScoringType || null,
+                    : gameConfig.isDoublePeoria && gameConfig.isStableford
+                      ? "double-peoria-stableford"
+                      : gameConfig.isDoublePeoria
+                        ? "double-peoria-net"
+                        : gameConfig.isSystem36
+                          ? "system-36"
+                          : gameConfig.isStableford
+                            ? "stableford"
+                            : h.matchScoringType || null,
           companionScoresJson: h.companionScoresJson || null,
           companionSandysJson: h.companionSandysJson || null,
           companionRsJson: h.companionRsJson || null,
@@ -1799,6 +1823,19 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       setRefreshing(false);
     }
   }, [loadScorecardData, roundKey, mode, syncServerAndDraft]);
+
+  // Save scorecard immediately on first open in write/edit mode so game mode & round details are persisted
+  const initialSavedRef = useRef(false);
+  useEffect(() => {
+    if (loading || isReadOnly) return;
+    if (initialSavedRef.current) return;
+    if (!holes || holes.length === 0) return;
+
+    if (mode === "new-round") {
+      initialSavedRef.current = true;
+      syncServerAndDraft(holes, textScoresRef.current || {}, false);
+    }
+  }, [loading, isReadOnly, mode, holes, syncServerAndDraft]);
 
   // AppState listener to flush saves when app goes to background
   useEffect(() => {
@@ -4099,6 +4136,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               : holes[0]?.holeId || null
           }
           courseName={propCourseName || holes[0]?.courseName}
+          teeBoxId={propTeeBoxId ? Number(propTeeBoxId) : holes[0]?.teeBoxId ? Number(holes[0]?.teeBoxId) : null}
+          courseId={propCourseId ? Number(propCourseId) : holes[0]?.courseId ? Number(holes[0]?.courseId) : null}
+          courseHalf={detectedCourseHalf || propCourseHalf || holes[0]?.courseHalf || null}
         />
       )}
 

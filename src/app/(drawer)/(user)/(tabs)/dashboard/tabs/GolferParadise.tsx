@@ -12,6 +12,10 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
+  Dimensions,
+  Keyboard,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Box } from "@/components/box";
@@ -27,6 +31,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postParadise } from "@/api/modules/dashboard.api";
 import { ThemedText } from "@/components/themed-text";
 import { LinearGradient } from "expo-linear-gradient";
+import { resolveMediaUrl } from "@/utils/mediaUtils";
+import { formatCommentDate, formatPostDate } from "@/utils/dateUtils";
 
 export interface ParadisePost {
   id: number;
@@ -69,7 +75,12 @@ const PostImage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  if (hasError) {
+  useEffect(() => {
+    setHasError(false);
+    setIsLoading(true);
+  }, [imageUrl]);
+
+  if (hasError || !imageUrl) {
     return (
       <View
         style={{
@@ -106,7 +117,8 @@ const PostImage = ({
         contentFit="cover"
         onLoadStart={() => setIsLoading(true)}
         onLoadEnd={() => setIsLoading(false)}
-        onError={() => {
+        onError={(err) => {
+          console.warn("[PostImage] Error loading image:", imageUrl, err);
           setIsLoading(false);
           setHasError(true);
         }}
@@ -386,9 +398,7 @@ export default function GolferParadise({
             {userAvatar && userAvatar !== "null" ? (
               <Image
                 source={{
-                  uri: userAvatar.startsWith("http")
-                    ? userAvatar
-                    : `https://kolve18freeswing.com${userAvatar}`,
+                  uri: resolveMediaUrl(userAvatar),
                 }}
                 style={{ width: "100%", height: "100%" }}
               />
@@ -549,9 +559,7 @@ export default function GolferParadise({
                         {post.playerAvatar && post.playerAvatar !== "null" ? (
                           <Image
                             source={{
-                              uri: post.playerAvatar.startsWith("http")
-                                ? post.playerAvatar
-                                : `https://kolve18freeswing.com${post.playerAvatar}`,
+                              uri: resolveMediaUrl(post.playerAvatar),
                             }}
                             style={{ width: "100%", height: "100%" }}
                           />
@@ -579,16 +587,7 @@ export default function GolferParadise({
                           className="text-[10px]"
                           style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
                         >
-                          {post.createdAt
-                            ? new Date(post.createdAt).toLocaleDateString()
-                            : ""}{" "}
-                          •{" "}
-                          {post.createdAt
-                            ? new Date(post.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : ""}
+                          {formatPostDate(post.createdAt)}
                         </Text>
                       </VStack>
                     </TouchableOpacity>
@@ -706,18 +705,10 @@ export default function GolferParadise({
                         }}
                       >
                         <PostImage
-                          imageUrl={
-                            post.imageUrl.startsWith("http")
-                              ? post.imageUrl
-                              : `https://kolve18freeswing.com${post.imageUrl}`
-                          }
+                          imageUrl={resolveMediaUrl(post.imageUrl)}
                           isDark={isDark}
                           onImagePress={() => {
-                            setFullImageUrl(
-                              post.imageUrl!.startsWith("http")
-                                ? post.imageUrl!
-                                : `https://kolve18freeswing.com${post.imageUrl}`,
-                            );
+                            setFullImageUrl(resolveMediaUrl(post.imageUrl));
                             setFullImageModalVisible(true);
                           }}
                         />
@@ -782,28 +773,44 @@ export default function GolferParadise({
         <Modal
           visible={!!commentModalPostId}
           transparent={true}
-          animationType="slide"
+          animationType="fade"
           onRequestClose={() => setCommentModalPostId(null)}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              justifyContent: "flex-end",
+              backgroundColor: "rgba(0,0,0,0.6)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 16,
             }}
           >
             <Pressable
-              style={{ flex: 1 }}
-              onPress={() => setCommentModalPostId(null)}
+              style={StyleSheet.absoluteFill}
+              onPress={() => {
+                Keyboard.dismiss();
+                setCommentModalPostId(null);
+              }}
             />
 
             <Box
               style={{
+                width: "100%",
+                maxWidth: 480,
                 backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                maxHeight: "80%",
+                borderRadius: 24,
+                maxHeight: Dimensions.get("window").height * 0.7,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.08)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.25,
+                shadowRadius: 16,
+                elevation: 10,
+                zIndex: 1,
               }}
             >
               <HStack
@@ -840,6 +847,7 @@ export default function GolferParadise({
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{ padding: 16 }}
               >
                 {posts.find((p) => p.id === commentModalPostId)?.comments
@@ -902,13 +910,10 @@ export default function GolferParadise({
                                 comment.profilePictureUrl !== "null") ? (
                                 <Image
                                   source={{
-                                    uri: (comment.playerAvatar ||
-                                      comment.profilePictureUrl)!.startsWith(
-                                      "http",
-                                    )
-                                      ? (comment.playerAvatar ||
-                                          comment.profilePictureUrl)!
-                                      : `https://kolve18freeswing.com${comment.playerAvatar || comment.profilePictureUrl}`,
+                                    uri: resolveMediaUrl(
+                                      comment.playerAvatar ||
+                                        comment.profilePictureUrl,
+                                    ),
                                   }}
                                   style={{ width: "100%", height: "100%" }}
                                 />
@@ -952,15 +957,7 @@ export default function GolferParadise({
                                   color: isDark ? "#6B7280" : "#9CA3AF",
                                 }}
                               >
-                                {new Date(comment.createdAt).toLocaleString(
-                                  undefined,
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )}
+                                {formatCommentDate(comment.createdAt)}
                               </Text>
                             </VStack>
                           </HStack>
@@ -971,7 +968,7 @@ export default function GolferParadise({
               </ScrollView>
 
               <HStack
-                className="px-4 py-3 pb-8 items-center border-t"
+                className="px-4 py-3 items-center border-t"
                 style={{
                   borderColor: isDark
                     ? "rgba(255,255,255,0.1)"
@@ -1026,7 +1023,7 @@ export default function GolferParadise({
                 </TouchableOpacity>
               </HStack>
             </Box>
-          </KeyboardAvoidingView>
+          </View>
         </Modal>
       )}
 

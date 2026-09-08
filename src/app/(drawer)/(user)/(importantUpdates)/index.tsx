@@ -16,6 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { getUpdates, UpdateApi } from "@/api/modules/admin/dashboard.api";
 import { useRouter } from "expo-router";
 import { Skeleton } from "@/components/Skeleton";
+import { resolveMediaUrl } from "@/utils/mediaUtils";
+import { parseUtcDate } from "@/utils/dateUtils";
 
 export default function ImportantUpdatesUser() {
   const [updates, setUpdates] = useState<UpdateApi[]>([]);
@@ -200,7 +202,7 @@ export default function ImportantUpdatesUser() {
                         {item.authorName || "Admin"}
                       </Text>
                       <Text style={{ fontSize: 11, color: "#888" }}>
-                        {new Date(item.createdAt).toLocaleString()}
+                        {parseUtcDate(item.createdAt).toLocaleString()}
                       </Text>
                     </View>
                   </View>
@@ -240,9 +242,7 @@ export default function ImportantUpdatesUser() {
 
                 {item.mediaUrl &&
                   (() => {
-                    const finalUrl = item.mediaUrl.startsWith("http")
-                      ? item.mediaUrl
-                      : `https://kolve18freeswing.com${item.mediaUrl}`;
+                    const finalUrl = resolveMediaUrl(item.mediaUrl);
 
                     if (imageErrorMap[item.id]) {
                       return (

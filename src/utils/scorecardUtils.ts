@@ -393,6 +393,18 @@ export function normalizeHoleFromApi(rawHole: any): any {
       rawHole.userHandicap ??
       rawHole.UserHandicap ??
       null,
+    pinLat:
+      rawHole.pinLat !== undefined && rawHole.pinLat !== null
+        ? Number(rawHole.pinLat)
+        : rawHole.PinLat !== undefined && rawHole.PinLat !== null
+          ? Number(rawHole.PinLat)
+          : null,
+    pinLng:
+      rawHole.pinLng !== undefined && rawHole.pinLng !== null
+        ? Number(rawHole.pinLng)
+        : rawHole.PinLng !== undefined && rawHole.PinLng !== null
+          ? Number(rawHole.PinLng)
+          : null,
     score,
     netScore,
     stablefordPoints,

@@ -145,13 +145,38 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
         ];
   }, [clubDistances]);
 
-  // Static initial region - set once so Android MapView doesn't reset on GPS ticks
+  // Static initial region - prioritize player's current location so map immediately opens on user
   const initialRegionRef = useRef({
-    latitude: pinCoord?.latitude || playerCoord?.latitude || 37.78825,
-    longitude: pinCoord?.longitude || playerCoord?.longitude || -122.4324,
+    latitude: playerCoord?.latitude || pinCoord?.latitude || 37.78825,
+    longitude: playerCoord?.longitude || pinCoord?.longitude || -122.4324,
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });
+
+  // Center directly on user when player location first resolves
+  const hasAutoCenteredRef = useRef(false);
+  useEffect(() => {
+    if (
+      playerCoord &&
+      !hasAutoCenteredRef.current &&
+      cameraRef?.current &&
+      typeof cameraRef.current.animateCamera === "function"
+    ) {
+      hasAutoCenteredRef.current = true;
+      try {
+        cameraRef.current.animateCamera(
+          {
+            center: {
+              latitude: playerCoord.latitude,
+              longitude: playerCoord.longitude,
+            },
+            zoom: 17,
+          },
+          { duration: 500 }
+        );
+      } catch (e) {}
+    }
+  }, [playerCoord, cameraRef]);
 
   const handleMapPress = (e: any) => {
     const coord = e.nativeEvent?.coordinate;
@@ -251,7 +276,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
               }
             }}
             anchor={{ x: 0.5, y: 0.75 }}
-            tracksViewChanges={tracksViewChanges}
+            tracksViewChanges={isAimMode || tracksViewChanges}
             zIndex={7}
           >
             <View style={{ alignItems: "center" }}>
@@ -299,7 +324,7 @@ export const RangefinderMap: React.FC<RangefinderMapProps> = ({
               }
             }}
             anchor={{ x: 0.5, y: 1 }}
-            tracksViewChanges={tracksViewChanges}
+            tracksViewChanges={isFlagMode || tracksViewChanges}
             zIndex={10}
           >
             <View style={styles.flagMarkerContainer}>
