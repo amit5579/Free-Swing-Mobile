@@ -9,8 +9,10 @@ import {
   View,
   BackHandler,
   Alert,
+  Platform,
+  StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -28,6 +30,7 @@ export default function CertificatePage() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
   const certificateRef = useRef<any>(null);
   const [role, setRole] = useState<string | null>(null);
 
@@ -40,6 +43,10 @@ export default function CertificatePage() {
   }, []);
 
   const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
     const normalizedRole = role?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
     if (normalizedRole === "subadmin") {
       router.navigate("/(drawer)/(profile)/subAdminProfile");
@@ -197,8 +204,15 @@ export default function CertificatePage() {
   const CertificateSkeleton = () => {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
-        edges={["top", "left", "right"]}
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          paddingTop:
+            Platform.OS === "android" && (StatusBar.currentHeight ?? 0) > insets.top
+              ? (StatusBar.currentHeight ?? 0) - insets.top
+              : 0,
+        }}
+        edges={["top", "bottom", "left", "right"]}
       >
         <ThemedView className="flex-1 px-5">
           <HStack className="items-center my-6">
@@ -309,8 +323,15 @@ export default function CertificatePage() {
   if (userCertificate && !userCertificate.isEligible) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
-        edges={["top", "left", "right"]}
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          paddingTop:
+            Platform.OS === "android" && (StatusBar.currentHeight ?? 0) > insets.top
+              ? (StatusBar.currentHeight ?? 0) - insets.top
+              : 0,
+        }}
+        edges={["top", "bottom", "left", "right"]}
       >
         <ThemedView className="flex-1 px-5">
           <HStack className="items-center my-6">
@@ -414,8 +435,15 @@ export default function CertificatePage() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
-      edges={["top", "left", "right"]}
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? "#161618" : "#FFFFFF",
+        paddingTop:
+          Platform.OS === "android" && (StatusBar.currentHeight ?? 0) > insets.top
+            ? (StatusBar.currentHeight ?? 0) - insets.top
+            : 0,
+      }}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ThemedView className="flex-1 px-5">
         <HStack className="items-center my-6">
@@ -439,7 +467,7 @@ export default function CertificatePage() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={{ paddingBottom: 50 }}
         >
           <ViewShot
             ref={certificateRef}

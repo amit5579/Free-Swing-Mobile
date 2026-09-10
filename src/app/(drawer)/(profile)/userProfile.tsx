@@ -13,8 +13,10 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
+  Platform,
+  StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 
 import { HStack } from "@/components/hstack";
@@ -43,6 +45,7 @@ export default function UserProfile() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
 
   const {
     control,
@@ -271,13 +274,21 @@ export default function UserProfile() {
   return (
     <>
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: isDark ? "#161618" : "#FFFFFF" }}
-        edges={["top", "left", "right"]}
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? "#161618" : "#FFFFFF",
+          paddingTop:
+            Platform.OS === "android" && (StatusBar.currentHeight ?? 0) > insets.top
+              ? (StatusBar.currentHeight ?? 0) - insets.top
+              : 0,
+        }}
+        edges={["top", "bottom", "left", "right"]}
       >
         <ThemedView className="flex-1 px-5">
           <Watermark />
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 50 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}

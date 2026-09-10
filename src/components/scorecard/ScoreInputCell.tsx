@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, Pressable } from "react-native";
 import { ScoreIndicator } from "./ScoreIndicator";
 
 export interface ScoreInputCellProps {
@@ -102,7 +96,10 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
             ]}
             keyboardType="number-pad"
             maxLength={2}
-            value={valueText ?? (score !== null && score !== undefined ? String(score) : "")}
+            value={
+              valueText ??
+              (score !== null && score !== undefined ? String(score) : "")
+            }
             onChangeText={handleChange}
             onFocus={() => {
               setIsFocused(true);
@@ -175,7 +172,9 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
                 <Text
                   style={[
                     styles.miniBadgeText,
-                    { color: sandy ? "#ffffff" : isDark ? "#888888" : "#666666" },
+                    {
+                      color: sandy ? "#ffffff" : isDark ? "#888888" : "#666666",
+                    },
                   ]}
                 >
                   S
@@ -183,7 +182,9 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
               </Pressable>
             ) : sandy ? (
               <View style={[styles.miniBadge, styles.sandyBadgeActive]}>
-                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>S</Text>
+                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>
+                  S
+                </Text>
               </View>
             ) : null}
 
@@ -211,7 +212,9 @@ export const ScoreInputCell: React.FC<ScoreInputCellProps> = ({
               </Pressable>
             ) : r ? (
               <View style={[styles.miniBadge, styles.rBadgeActive]}>
-                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>R</Text>
+                <Text style={[styles.miniBadgeText, { color: "#ffffff" }]}>
+                  R
+                </Text>
               </View>
             ) : null}
           </View>

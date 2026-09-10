@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -117,6 +117,34 @@ export default function SubAdminLeaderboardPage() {
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const horizontalScrollRef = useRef<ScrollView | null>(null);
+  const scrollXRef = useRef<number>(0);
+  const isDraggingRef = useRef<boolean>(false);
+
+  // Reset scroll offset when switching tournaments or teeboxes
+  useEffect(() => {
+    scrollXRef.current = 0;
+  }, [tournamentId, teeboxId]);
+
+  // Restore horizontal scroll offset on background leaderboard data updates
+  useEffect(() => {
+    if (
+      scrollXRef.current > 0 &&
+      horizontalScrollRef.current &&
+      !isDraggingRef.current
+    ) {
+      const rafId = requestAnimationFrame(() => {
+        if (!isDraggingRef.current) {
+          horizontalScrollRef.current?.scrollTo({
+            x: scrollXRef.current,
+            animated: false,
+          });
+        }
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [leaderboard]);
+
   const [editingPlayer, setEditingPlayer] = useState<any>(null);
   const [editingHoleScores, setEditingHoleScores] = useState<
     Record<number, string>
@@ -192,7 +220,7 @@ export default function SubAdminLeaderboardPage() {
     return holeCols + totals + stats + ACTIONS_WIDTH;
   }, [showNetColumn]);
 
-  const EmptyState = () => (
+  const renderEmptyState = () => (
     <VStack
       style={{
         alignItems: "center",
@@ -467,7 +495,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const RenderStatsSection = () => {
+  const renderStatsSection = () => {
     const isDark = colorScheme === "dark";
     const secondaryText = isDark ? "#94a3b8" : "#64748b";
 
@@ -539,7 +567,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const TableHeaderLeft = () => (
+  const renderTableHeaderLeft = () => (
     <HStack
       style={{
         height: 45,
@@ -596,7 +624,7 @@ export default function SubAdminLeaderboardPage() {
     </HStack>
   );
 
-  const TableHeaderRight = () => (
+  const renderTableHeaderRight = () => (
     <HStack
       style={{
         height: 45,
@@ -659,7 +687,7 @@ export default function SubAdminLeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowLeft = ({ label }: { label: string }) => (
+  const renderInfoRowLeft = ({ label }: { label: string }) => (
     <HStack
       style={{
         height: 40,
@@ -678,7 +706,7 @@ export default function SubAdminLeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowRight = ({
+  const renderInfoRowRight = ({
     data,
     type,
   }: {
@@ -735,7 +763,7 @@ export default function SubAdminLeaderboardPage() {
     </HStack>
   );
 
-  const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
+  const renderPlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? isDark
@@ -789,7 +817,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const PlayerRowRight = ({
+  const renderPlayerRowRight = ({
     player,
     index,
   }: {
@@ -982,7 +1010,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const PlayerSubRowRight = ({
+  const renderPlayerSubRowRight = ({
     player,
     index,
     type,
@@ -1101,7 +1129,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const PlayerSubRowLeft = ({
+  const renderPlayerSubRowLeft = ({
     index,
     label,
   }: {
@@ -1154,7 +1182,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const RenderSecretHoles = () => {
+  const renderSecretHoles = () => {
     const isDark = colorScheme === "dark";
 
     if (!holes || holes.length === 0) return null;
@@ -1419,7 +1447,7 @@ export default function SubAdminLeaderboardPage() {
     );
   };
 
-  const TableLoadingSkeleton = () => {
+  const renderTableLoadingSkeleton = () => {
     const rows = 8;
 
     return (
@@ -1565,15 +1593,15 @@ export default function SubAdminLeaderboardPage() {
           }
         >
           {loading ? (
-            <TableLoadingSkeleton />
+            renderTableLoadingSkeleton()
           ) : (
             <ScrollView style={{ flex: 1, marginBottom: 30 }}>
-              <RenderStatsSection />
+              {renderStatsSection()}
 
-              {isDoublePreoria && <RenderSecretHoles />}
+              {isDoublePreoria && renderSecretHoles()}
 
               {leaderboard.length === 0 ? (
-                <EmptyState />
+                renderEmptyState()
               ) : (
                 <HStack
                   style={{
@@ -1583,9 +1611,9 @@ export default function SubAdminLeaderboardPage() {
                 >
                   {/* LEFT FIXED */}
                   <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-                    <TableHeaderLeft />
-                    <InfoRowLeft label="PAR" />
-                    <InfoRowLeft label="SI" />
+                    {renderTableHeaderLeft()}
+                    {renderInfoRowLeft({ label: "PAR" })}
+                    {renderInfoRowLeft({ label: "SI" })}
                     {leaderboard.map((player, idx) => {
                       const hasNetScores =
                         Object.keys(player.holeNetScores || {}).length > 0;
@@ -1593,24 +1621,54 @@ export default function SubAdminLeaderboardPage() {
                         Object.keys(player.holeStablefordPoints || {}).length > 0;
                       return (
                         <React.Fragment key={player.userId}>
-                          <PlayerRowLeft player={player} index={idx} />
-                          {hasNetScores && (
-                            <PlayerSubRowLeft index={idx} label="Net" />
-                          )}
-                          {hasStablefordPoints && (
-                            <PlayerSubRowLeft index={idx} label="Pts" />
-                          )}
+                          {renderPlayerRowLeft({ player, index: idx })}
+                          {hasNetScores &&
+                            renderPlayerSubRowLeft({ index: idx, label: "Net" })}
+                          {hasStablefordPoints &&
+                            renderPlayerSubRowLeft({ index: idx, label: "Pts" })}
                         </React.Fragment>
                       );
                     })}
                   </VStack>
 
                   {/* RIGHT SCROLLABLE */}
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <ScrollView
+                    ref={horizontalScrollRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    scrollEventThrottle={16}
+                    onScrollBeginDrag={() => {
+                      isDraggingRef.current = true;
+                    }}
+                    onScrollEndDrag={() => {
+                      isDraggingRef.current = false;
+                    }}
+                    onMomentumScrollEnd={() => {
+                      isDraggingRef.current = false;
+                    }}
+                    onScroll={(e) => {
+                      const currentX = e.nativeEvent.contentOffset.x;
+                      if (currentX >= 0) {
+                        scrollXRef.current = currentX;
+                      }
+                    }}
+                    onContentSizeChange={() => {
+                      if (
+                        scrollXRef.current > 0 &&
+                        horizontalScrollRef.current &&
+                        !isDraggingRef.current
+                      ) {
+                        horizontalScrollRef.current.scrollTo({
+                          x: scrollXRef.current,
+                          animated: false,
+                        });
+                      }
+                    }}
+                  >
                     <VStack style={{ width: rightContentWidth }}>
-                      <TableHeaderRight />
-                      <InfoRowRight data={holes} type="par" />
-                      <InfoRowRight data={holes} type="si" />
+                      {renderTableHeaderRight()}
+                      {renderInfoRowRight({ data: holes, type: "par" })}
+                      {renderInfoRowRight({ data: holes, type: "si" })}
                       {leaderboard.map((player, idx) => {
                         const hasNetScores =
                           Object.keys(player.holeNetScores || {}).length > 0;
@@ -1619,21 +1677,19 @@ export default function SubAdminLeaderboardPage() {
                           0;
                         return (
                           <React.Fragment key={player.userId}>
-                            <PlayerRowRight player={player} index={idx} />
-                            {hasNetScores && (
-                              <PlayerSubRowRight
-                                player={player}
-                                index={idx}
-                                type="net"
-                              />
-                            )}
-                            {hasStablefordPoints && (
-                              <PlayerSubRowRight
-                                player={player}
-                                index={idx}
-                                type="points"
-                              />
-                            )}
+                            {renderPlayerRowRight({ player, index: idx })}
+                            {hasNetScores &&
+                              renderPlayerSubRowRight({
+                                player,
+                                index: idx,
+                                type: "net",
+                              })}
+                            {hasStablefordPoints &&
+                              renderPlayerSubRowRight({
+                                player,
+                                index: idx,
+                                type: "points",
+                              })}
                           </React.Fragment>
                         );
                       })}

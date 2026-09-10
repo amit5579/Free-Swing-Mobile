@@ -17,6 +17,8 @@ import {
   InteractionManager,
   BackHandler,
   Modal,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 
@@ -54,16 +56,45 @@ export default function LeaderboardUser() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [selectedPlayerAction, setSelectedPlayerAction] = useState<any | null>(null);
 
-  // Rotate ONLY the leaderboard card display
+  // Rotate leaderboard + header
   const [isCardRotated, setIsCardRotated] = useState(false);
   const windowDims = Dimensions.get("window");
   const [containerDimensions, setContainerDimensions] = useState({
     width: windowDims.width,
-    height: windowDims.height - 130,
+    height: windowDims.height,
   });
 
   const isMountedRef = useRef(true);
   const teeboxLoadedRef = useRef(false);
+  const horizontalScrollRef = useRef<ScrollView | null>(null);
+  const scrollXRef = useRef<number>(0);
+  const isDraggingRef = useRef<boolean>(false);
+  const leaderboardRef = useRef(leaderboard);
+  leaderboardRef.current = leaderboard;
+
+  // Reset scroll offset when switching tournaments or teeboxes
+  useEffect(() => {
+    scrollXRef.current = 0;
+  }, [tournamentId, teeboxId]);
+
+  // Restore horizontal scroll offset on background leaderboard data updates
+  useEffect(() => {
+    if (
+      scrollXRef.current > 0 &&
+      horizontalScrollRef.current &&
+      !isDraggingRef.current
+    ) {
+      const rafId = requestAnimationFrame(() => {
+        if (!isDraggingRef.current) {
+          horizontalScrollRef.current?.scrollTo({
+            x: scrollXRef.current,
+            animated: false,
+          });
+        }
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [leaderboard]);
 
   // Toggle card rotation
   const toggleOrientation = useCallback(() => {
@@ -146,7 +177,7 @@ export default function LeaderboardUser() {
     async (showSkeleton = false) => {
       if (!tournamentId) return;
       try {
-        if (showSkeleton && !leaderboard.length) setLoading(true);
+        if (showSkeleton && !leaderboardRef.current.length) setLoading(true);
 
         const lbPromise = getLeaderboard(Number(tournamentId));
         const teeboxPromise =
@@ -173,7 +204,7 @@ export default function LeaderboardUser() {
         }
       }
     },
-    [tournamentId, teeboxId, leaderboard.length],
+    [tournamentId, teeboxId],
   );
 
   useFocusEffect(
@@ -228,7 +259,7 @@ export default function LeaderboardUser() {
     }
   };
 
-  const RenderHeader = () => {
+  const renderHeader = () => {
     return (
       <Box
         style={{
@@ -240,7 +271,11 @@ export default function LeaderboardUser() {
         <VStack
           style={{
             paddingHorizontal: 16,
-            paddingTop: 14,
+            paddingTop: isCardRotated
+              ? 10
+              : Platform.OS === "android"
+                ? (StatusBar.currentHeight ?? 0) + 8
+                : 14,
             paddingBottom: 12,
           }}
         >
@@ -354,11 +389,11 @@ export default function LeaderboardUser() {
     );
   };
 
-  const RenderStatsSection = () => {
+  const renderStatsSection = () => {
     const isDark = colorScheme === "dark";
 
     return (
-      <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}>
+      <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
         {/* Top Info Bar */}
         <View
           style={{
@@ -424,30 +459,39 @@ export default function LeaderboardUser() {
   };
 
   const RANK_WIDTH = 30;
-  const PLAYER_WIDTH = 76;
-  const LEFT_FIXED_WIDTH = RANK_WIDTH + PLAYER_WIDTH; // 106px
-
-  const STAT_WIDTH = 44; // GROSS, NET, PTS
+  const PLAYER_WIDTH = 80;
+  const HCP_WIDTH = 40;
+  const SHCP_WIDTH = 42;
   const HOLE_WIDTH = 32; // Holes 1..18
   const TOTAL_WIDTH = 40; // OUT, IN
+  const STAT_WIDTH = 46; // GROSS, NET, PTS
   const MINI_STAT_WIDTH = 38; // EGL, BRD, PAR
 
   const isSystem36 = scoringType === "system-36";
   const showNetColumn = !isSystem36;
 
+  const leftFixedWidth = useMemo(() => {
+    return (
+      RANK_WIDTH +
+      PLAYER_WIDTH +
+      HCP_WIDTH +
+      (isSystem36 ? SHCP_WIDTH : 0)
+    );
+  }, [isSystem36]);
+
   const rightContentWidth = useMemo(() => {
-    const statsUpfront = STAT_WIDTH * (showNetColumn ? 3 : 2); // GROSS, [NET], PTS
-    const front9 = HOLE_WIDTH * 9 + TOTAL_WIDTH; // 1..9 + OUT
-    const back9 = HOLE_WIDTH * 9 + TOTAL_WIDTH; // 10..18 + IN
-    const endStats = MINI_STAT_WIDTH * 3; // EGL, BRD, PAR
-    return statsUpfront + front9 + back9 + endStats;
+    const front9 = HOLE_WIDTH * 9 + TOTAL_WIDTH; // 1..9 + OUT (328px)
+    const back9 = HOLE_WIDTH * 9 + TOTAL_WIDTH; // 10..18 + IN (328px)
+    const totals = STAT_WIDTH * (showNetColumn ? 3 : 2); // GROSS, NET (opt), PTS (138px or 92px)
+    const endStats = MINI_STAT_WIDTH * 3; // EGL, BRD, PAR (114px)
+    return front9 + back9 + totals + endStats;
   }, [showNetColumn]);
 
-  const TableHeaderLeft = () => (
+  const renderTableHeaderLeft = () => (
     <HStack
       style={{
         height: 45,
-        width: LEFT_FIXED_WIDTH,
+        width: leftFixedWidth,
         backgroundColor: isDark
           ? "rgba(255, 255, 255, 0.08)"
           : "rgba(139, 195, 74, 0.15)",
@@ -470,10 +514,25 @@ export default function LeaderboardUser() {
       >
         PLAYER
       </ThemedText>
+      <ThemedText
+        style={[styles.headerText, { width: HCP_WIDTH, fontSize: 10.5 }]}
+      >
+        HCP
+      </ThemedText>
+      {isSystem36 && (
+        <ThemedText
+          style={[
+            styles.headerText,
+            { width: SHCP_WIDTH, fontSize: 10.5, color: "#f59e0b" },
+          ]}
+        >
+          SHCP
+        </ThemedText>
+      )}
     </HStack>
   );
 
-  const TableHeaderRight = () => (
+  const renderTableHeaderRight = () => (
     <HStack
       style={{
         height: 45,
@@ -484,7 +543,34 @@ export default function LeaderboardUser() {
         alignItems: "center",
       }}
     >
-      {/* 1. Totals Upfront */}
+      {/* 1. Front 9 */}
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText key={i} style={[styles.headerText, { width: HOLE_WIDTH }]}>
+          {i + 1}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        OUT
+      </ThemedText>
+
+      {/* 2. Back 9 */}
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ThemedText
+          key={i + 9}
+          style={[styles.headerText, { width: HOLE_WIDTH }]}
+        >
+          {i + 10}
+        </ThemedText>
+      ))}
+      <ThemedText
+        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
+      >
+        IN
+      </ThemedText>
+
+      {/* 3. Totals */}
       <ThemedText
         style={[styles.headerText, { width: STAT_WIDTH, fontWeight: "800", color: "#84cc16" }]}
       >
@@ -503,33 +589,6 @@ export default function LeaderboardUser() {
         PTS
       </ThemedText>
 
-      {/* 2. Front 9 */}
-      {Array.from({ length: 9 }).map((_, i) => (
-        <ThemedText key={i} style={[styles.headerText, { width: HOLE_WIDTH }]}>
-          {i + 1}
-        </ThemedText>
-      ))}
-      <ThemedText
-        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
-      >
-        OUT
-      </ThemedText>
-
-      {/* 3. Back 9 */}
-      {Array.from({ length: 9 }).map((_, i) => (
-        <ThemedText
-          key={i + 9}
-          style={[styles.headerText, { width: HOLE_WIDTH }]}
-        >
-          {i + 10}
-        </ThemedText>
-      ))}
-      <ThemedText
-        style={[styles.headerText, { width: TOTAL_WIDTH, fontWeight: "800" }]}
-      >
-        IN
-      </ThemedText>
-
       {/* 4. Stat columns */}
       <ThemedText style={[styles.headerText, { width: MINI_STAT_WIDTH }]}>
         EGL
@@ -543,11 +602,15 @@ export default function LeaderboardUser() {
     </HStack>
   );
 
-  const InfoRowLeft = ({ label }: { label: string }) => (
+  const renderInfoRowLeft = (
+    label: string,
+    data?: any[],
+    type?: "par" | "si",
+  ) => (
     <HStack
       style={{
         height: 40,
-        width: LEFT_FIXED_WIDTH,
+        width: leftFixedWidth,
         alignItems: "center",
         borderBottomWidth: 1,
         borderColor: isDark
@@ -566,16 +629,25 @@ export default function LeaderboardUser() {
       >
         {label}
       </ThemedText>
+      <ThemedText
+        style={[styles.infoCellText, { width: HCP_WIDTH }]}
+      >
+        -
+      </ThemedText>
+      {isSystem36 && (
+        <ThemedText
+          style={[styles.infoCellText, { width: SHCP_WIDTH }]}
+        >
+          -
+        </ThemedText>
+      )}
     </HStack>
   );
 
-  const InfoRowRight = ({
-    data,
-    type,
-  }: {
-    data: any[];
-    type: "par" | "si";
-  }) => (
+  const renderInfoRowRight = (
+    data: any[],
+    type: "par" | "si",
+  ) => (
     <HStack
       style={{
         height: 40,
@@ -590,26 +662,7 @@ export default function LeaderboardUser() {
           : "rgba(0, 0, 0, 0.02)",
       }}
     >
-      {/* 1. Totals Upfront */}
-      <ThemedText
-        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
-      >
-        {type === "par" ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
-      </ThemedText>
-      {showNetColumn && (
-        <ThemedText
-          style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
-        >
-          -
-        </ThemedText>
-      )}
-      <ThemedText
-        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
-      >
-        -
-      </ThemedText>
-
-      {/* 2. Front 9 */}
+      {/* 1. Front 9 */}
       {data.slice(0, 9).map((h, i) => (
         <ThemedText
           key={i}
@@ -626,7 +679,7 @@ export default function LeaderboardUser() {
           : "-"}
       </ThemedText>
 
-      {/* 3. Back 9 */}
+      {/* 2. Back 9 */}
       {data.slice(9, 18).map((h, i) => (
         <ThemedText
           key={i}
@@ -643,6 +696,25 @@ export default function LeaderboardUser() {
           : "-"}
       </ThemedText>
 
+      {/* 3. Totals (GROSS course par, NET -, PTS -) */}
+      <ThemedText
+        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+      >
+        {type === "par" && data ? data.reduce((s, h) => s + (h.par || 0), 0) : "-"}
+      </ThemedText>
+      {showNetColumn && (
+        <ThemedText
+          style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+        >
+          -
+        </ThemedText>
+      )}
+      <ThemedText
+        style={[styles.infoCellText, { width: STAT_WIDTH, fontWeight: "700" }]}
+      >
+        -
+      </ThemedText>
+
       {/* 4. Stat columns placeholder */}
       <ThemedText style={[styles.infoCellText, { width: MINI_STAT_WIDTH }]}>
         -
@@ -656,7 +728,7 @@ export default function LeaderboardUser() {
     </HStack>
   );
 
-  const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
+  const renderPlayerRowLeft = (player: any, index: number) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? "transparent"
@@ -665,83 +737,86 @@ export default function LeaderboardUser() {
         : "rgba(0, 0, 0, 0.02)";
 
     return (
-      <Pressable
-        onPress={() => setSelectedPlayerAction(player)}
+      <HStack
         style={{
           height: 50,
-          width: LEFT_FIXED_WIDTH,
+          width: leftFixedWidth,
           backgroundColor: rowBg,
           borderBottomWidth: 0.5,
           borderColor: isDark
             ? "rgba(255, 255, 255, 0.08)"
             : "rgba(0, 0, 0, 0.06)",
           borderRightWidth: 1,
-          flexDirection: "row",
           alignItems: "center",
         }}
       >
         <ThemedText
-          style={[styles.cellText, { width: RANK_WIDTH, fontWeight: "700", lineHeight: undefined }]}
+          style={[styles.cellText, { width: RANK_WIDTH, fontWeight: "700" }]}
         >
           {player.rank || "-"}
         </ThemedText>
 
-        <VStack style={{ width: PLAYER_WIDTH, paddingLeft: 6, paddingRight: 2, justifyContent: "center" }}>
-          <ThemedText
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: isDark ? "#ffffff" : "#0f172a",
-            }}
-          >
-            {player.playerName}
-          </ThemedText>
-          <HStack style={{ alignItems: "center", gap: 2, marginTop: 2 }}>
+        <Pressable
+          onPress={() => setSelectedPlayerAction(player)}
+          hitSlop={4}
+          style={{
+            width: PLAYER_WIDTH,
+            paddingLeft: 6,
+            paddingRight: 4,
+            justifyContent: "center",
+          }}
+        >
+          <HStack style={{ alignItems: "center", gap: 3 }}>
             <ThemedText
               numberOfLines={1}
+              ellipsizeMode="tail"
               style={{
-                fontSize: 9.5,
-                fontWeight: "600",
-                color: isDark ? "#94a3b8" : "#64748b",
+                fontSize: 12,
+                fontWeight: "700",
+                color: isDark ? "#ffffff" : "#0f172a",
+                flexShrink: 1,
               }}
             >
-              HCP {player.handicap ?? "-"}
+              {player.playerName}
             </ThemedText>
-            {isSystem36 && player.dpHandicap != null && (
-              <ThemedText
-                numberOfLines={1}
-                style={{
-                  fontSize: 9.5,
-                  fontWeight: "700",
-                  color: "#f59e0b",
-                }}
-              >
-                • S:{player.dpHandicap}
-              </ThemedText>
-            )}
             {player.isAuthenticated && (
               <Ionicons
                 name="checkmark-circle"
-                size={11}
+                size={12}
                 color="#16a34a"
-                style={{ marginLeft: 1 }}
               />
             )}
           </HStack>
-        </VStack>
-      </Pressable>
+        </Pressable>
+
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: HCP_WIDTH, fontWeight: "600", fontSize: 12 },
+          ]}
+        >
+          {player.handicap ?? "-"}
+        </ThemedText>
+        {isSystem36 && (
+          <ThemedText
+            style={[
+              styles.cellText,
+              {
+                width: SHCP_WIDTH,
+                fontWeight: "700",
+                fontSize: 12,
+                color: "#f59e0b",
+              },
+            ]}
+          >
+            {player.dpHandicap ?? "-"}
+          </ThemedText>
+        )}
+      </HStack>
     );
   };
 
-  const PlayerRowRight = ({
-    player,
-    index,
-  }: {
-    player: any;
-    index: number;
-  }) => {
+  const renderPlayerRowRight = (player: any, index: number) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? "transparent"
@@ -750,8 +825,7 @@ export default function LeaderboardUser() {
         : "rgba(0, 0, 0, 0.02)";
 
     return (
-      <Pressable
-        onPress={() => setSelectedPlayerAction(player)}
+      <HStack
         style={{
           height: 50,
           width: rightContentWidth,
@@ -760,13 +834,55 @@ export default function LeaderboardUser() {
           borderColor: isDark
             ? "rgba(255, 255, 255, 0.08)"
             : "rgba(0, 0, 0, 0.06)",
-          flexDirection: "row",
           alignItems: "center",
         }}
       >
-        {/* 1. Totals Upfront */}
+        {/* 1. Front 9 */}
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 1];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
         <ThemedText
-          style={[styles.cellText, { width: STAT_WIDTH, fontWeight: "800", color: "#84cc16" }]}
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.front9}
+        </ThemedText>
+
+        {/* 2. Back 9 */}
+        {Array.from({ length: 9 }).map((_, i) => {
+          const score = player.holeScores?.[i + 10];
+          return (
+            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
+              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
+                {score ?? "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
+        >
+          {player.back9}
+        </ThemedText>
+
+        {/* 3. Totals */}
+        <ThemedText
+          style={[
+            styles.cellText,
+            { width: STAT_WIDTH, fontWeight: "800", color: "#84cc16" },
+          ]}
         >
           {player.gross}
         </ThemedText>
@@ -789,46 +905,6 @@ export default function LeaderboardUser() {
           {player.points}
         </ThemedText>
 
-        {/* 2. Front 9 */}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const score = player.holeScores?.[i + 1];
-          return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
-              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
-                {score ?? "-"}
-              </ThemedText>
-            </View>
-          );
-        })}
-        <ThemedText
-          style={[
-            styles.cellText,
-            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
-          ]}
-        >
-          {player.front9}
-        </ThemedText>
-
-        {/* 3. Back 9 */}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const score = player.holeScores?.[i + 10];
-          return (
-            <View key={i} style={[styles.cell, { width: HOLE_WIDTH }]}>
-              <ThemedText style={{ fontSize: 13, fontWeight: "600" }}>
-                {score ?? "-"}
-              </ThemedText>
-            </View>
-          );
-        })}
-        <ThemedText
-          style={[
-            styles.cellText,
-            { width: TOTAL_WIDTH, fontWeight: "800", color: "#84cc16" },
-          ]}
-        >
-          {player.back9}
-        </ThemedText>
-
         {/* 4. Stat columns */}
         <ThemedText style={[styles.cellText, { width: MINI_STAT_WIDTH }]}>
           {player.eagles}
@@ -839,20 +915,16 @@ export default function LeaderboardUser() {
         <ThemedText style={[styles.cellText, { width: MINI_STAT_WIDTH }]}>
           {player.pars}
         </ThemedText>
-      </Pressable>
+      </HStack>
     );
   };
 
   // Multi-row sub-rows for System 36 (Net scores row + Points row)
-  const PlayerSubRowRight = ({
-    player,
-    index,
-    type,
-  }: {
-    player: any;
-    index: number;
-    type: "net" | "points";
-  }) => {
+  const renderPlayerSubRowRight = (
+    player: any,
+    index: number,
+    type: "net" | "points",
+  ) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? "transparent"
@@ -884,7 +956,57 @@ export default function LeaderboardUser() {
           alignItems: "center",
         }}
       >
-        {/* 1. Totals Upfront */}
+        {/* 1. Front 9 */}
+        {Array.from({ length: 9 }).map((_, i) => {
+          const val = dataMap?.[i + 1];
+          return (
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
+              <ThemedText
+                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
+              >
+                {val != null ? val : "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.subCellText,
+            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
+          ]}
+        >
+          {front9Total != null ? front9Total : 0}
+        </ThemedText>
+
+        {/* 2. Back 9 */}
+        {Array.from({ length: 9 }).map((_, i) => {
+          const val = dataMap?.[i + 10];
+          return (
+            <View
+              key={i}
+              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
+            >
+              <ThemedText
+                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
+              >
+                {val != null ? val : "-"}
+              </ThemedText>
+            </View>
+          );
+        })}
+        <ThemedText
+          style={[
+            styles.subCellText,
+            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
+          ]}
+        >
+          {back9Total != null ? back9Total : 0}
+        </ThemedText>
+
+        {/* 3. Totals */}
         <ThemedText style={[styles.subCellText, { width: STAT_WIDTH }]}>
           -
         </ThemedText>
@@ -913,56 +1035,6 @@ export default function LeaderboardUser() {
           )}
         </ThemedText>
 
-        {/* 2. Front 9 */}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const val = dataMap?.[i + 1];
-          return (
-            <View
-              key={i}
-              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
-            >
-              <ThemedText
-                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
-              >
-                {val != null ? val : "-"}
-              </ThemedText>
-            </View>
-          );
-        })}
-        <ThemedText
-          style={[
-            styles.subCellText,
-            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
-          ]}
-        >
-          {front9Total != null ? front9Total : 0}
-        </ThemedText>
-
-        {/* 3. Back 9 */}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const val = dataMap?.[i + 10];
-          return (
-            <View
-              key={i}
-              style={[styles.cell, { width: HOLE_WIDTH, height: 36 }]}
-            >
-              <ThemedText
-                style={{ fontSize: 12, fontWeight: "500", color: labelColor }}
-              >
-                {val != null ? val : "-"}
-              </ThemedText>
-            </View>
-          );
-        })}
-        <ThemedText
-          style={[
-            styles.subCellText,
-            { width: TOTAL_WIDTH, fontWeight: "700", color: labelColor },
-          ]}
-        >
-          {back9Total != null ? back9Total : 0}
-        </ThemedText>
-
         {/* 4. Stat columns */}
         <ThemedText style={[styles.subCellText, { width: MINI_STAT_WIDTH }]}>
           -
@@ -977,13 +1049,11 @@ export default function LeaderboardUser() {
     );
   };
 
-  const PlayerSubRowLeft = ({
-    index,
-    label,
-  }: {
-    index: number;
-    label: string;
-  }) => {
+  const renderPlayerSubRowLeft = (
+    player: any,
+    index: number,
+    label: string,
+  ) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? "transparent"
@@ -995,7 +1065,7 @@ export default function LeaderboardUser() {
       <HStack
         style={{
           height: 36,
-          width: LEFT_FIXED_WIDTH,
+          width: leftFixedWidth,
           backgroundColor: rowBg,
           borderBottomWidth: label === "Pts" ? 1.5 : 0.5,
           borderColor:
@@ -1023,11 +1093,19 @@ export default function LeaderboardUser() {
         >
           {label}
         </ThemedText>
+        <ThemedText style={[styles.subCellText, { width: HCP_WIDTH }]}>
+          -
+        </ThemedText>
+        {isSystem36 && (
+          <ThemedText style={[styles.subCellText, { width: SHCP_WIDTH }]}>
+            -
+          </ThemedText>
+        )}
       </HStack>
     );
   };
 
-  const TableLoadingSkeleton = () => {
+  const renderTableLoadingSkeleton = () => {
     const rows = 8;
 
     return (
@@ -1051,7 +1129,7 @@ export default function LeaderboardUser() {
         >
           <HStack>
             {/* Left fixed skeleton */}
-            <VStack style={{ width: LEFT_FIXED_WIDTH }}>
+            <VStack style={{ width: leftFixedWidth }}>
               <View
                 style={{
                   height: 45,
@@ -1078,9 +1156,8 @@ export default function LeaderboardUser() {
                       ? "rgba(255, 255, 255, 0.08)"
                       : "rgba(0, 0, 0, 0.06)",
                     borderRightWidth: 1,
-                    paddingHorizontal: 6,
+                    paddingHorizontal: 4,
                     alignItems: "center",
-                    gap: 6,
                     backgroundColor:
                       i % 2 === 0
                         ? "transparent"
@@ -1089,11 +1166,20 @@ export default function LeaderboardUser() {
                           : "rgba(0, 0, 0, 0.02)",
                   }}
                 >
-                  <Skeleton isDark={isDark} height={12} width={14} />
-                  <VStack style={{ gap: 4 }}>
-                    <Skeleton isDark={isDark} height={11} width={48} />
-                    <Skeleton isDark={isDark} height={8} width={32} />
-                  </VStack>
+                  <View style={{ width: RANK_WIDTH, alignItems: "center" }}>
+                    <Skeleton isDark={isDark} height={12} width={14} />
+                  </View>
+                  <View style={{ width: PLAYER_WIDTH, paddingHorizontal: 4 }}>
+                    <Skeleton isDark={isDark} height={11} width={52} />
+                  </View>
+                  <View style={{ width: HCP_WIDTH, alignItems: "center" }}>
+                    <Skeleton isDark={isDark} height={12} width={20} />
+                  </View>
+                  {isSystem36 && (
+                    <View style={{ width: SHCP_WIDTH, alignItems: "center" }}>
+                      <Skeleton isDark={isDark} height={12} width={20} />
+                    </View>
+                  )}
                 </HStack>
               ))}
             </VStack>
@@ -1133,18 +1219,6 @@ export default function LeaderboardUser() {
                       alignItems: "center",
                     }}
                   >
-                    {/* Totals Upfront */}
-                    <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
-                      <Skeleton isDark={isDark} height={12} width={22} />
-                    </View>
-                    {showNetColumn && (
-                      <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
-                        <Skeleton isDark={isDark} height={12} width={22} />
-                      </View>
-                    )}
-                    <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
-                      <Skeleton isDark={isDark} height={12} width={22} />
-                    </View>
                     {/* Holes 1..9 */}
                     {Array.from({ length: 9 }).map((__, c) => (
                       <View
@@ -1174,6 +1248,18 @@ export default function LeaderboardUser() {
                     ))}
                     <View style={{ width: TOTAL_WIDTH, alignItems: "center" }}>
                       <Skeleton isDark={isDark} height={12} width={20} />
+                    </View>
+                    {/* Totals */}
+                    <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
+                      <Skeleton isDark={isDark} height={12} width={22} />
+                    </View>
+                    {showNetColumn && (
+                      <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
+                        <Skeleton isDark={isDark} height={12} width={22} />
+                      </View>
+                    )}
+                    <View style={{ width: STAT_WIDTH, alignItems: "center" }}>
+                      <Skeleton isDark={isDark} height={12} width={22} />
                     </View>
                     {/* Stats */}
                     {Array.from({ length: 3 }).map((__, c) => (
@@ -1251,7 +1337,7 @@ export default function LeaderboardUser() {
     };
   };
 
-  const RenderEmptyStandings = () => (
+  const renderEmptyStandings = () => (
     <View
       style={{
         marginHorizontal: 12,
@@ -1298,7 +1384,7 @@ export default function LeaderboardUser() {
     </View>
   );
 
-  const RenderDetailedGrid = () => (
+  const renderDetailedGrid = () => (
     <VStack style={{ gap: 8 }}>
       <View
         style={{
@@ -1316,12 +1402,12 @@ export default function LeaderboardUser() {
       >
         <HStack>
           {/* Fixed left block */}
-          <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-            <TableHeaderLeft />
+          <VStack style={{ width: leftFixedWidth }}>
+            {renderTableHeaderLeft()}
             {holes.length > 0 && (
               <>
-                <InfoRowLeft label={"PAR"} />
-                <InfoRowLeft label={"STROKE\nINDEX"} />
+                {renderInfoRowLeft("PAR", holes, "par")}
+                {renderInfoRowLeft("STROKE\nINDEX", holes, "si")}
               </>
             )}
             {leaderboard.map((player, idx) => {
@@ -1331,26 +1417,56 @@ export default function LeaderboardUser() {
                 Object.keys(player.holeStablefordPoints || {}).length > 0;
               return (
                 <React.Fragment key={player.userId}>
-                  <PlayerRowLeft player={player} index={idx} />
-                  {hasNetScores && (
-                    <PlayerSubRowLeft index={idx} label="Net" />
-                  )}
-                  {hasStablefordPoints && (
-                    <PlayerSubRowLeft index={idx} label="Pts" />
-                  )}
+                  {renderPlayerRowLeft(player, idx)}
+                  {hasNetScores &&
+                    renderPlayerSubRowLeft(player, idx, "Net")}
+                  {hasStablefordPoints &&
+                    renderPlayerSubRowLeft(player, idx, "Pts")}
                 </React.Fragment>
               );
             })}
           </VStack>
 
           {/* Horizontally scrollable right block */}
-          <ScrollView horizontal showsHorizontalScrollIndicator>
+          <ScrollView
+            ref={horizontalScrollRef}
+            horizontal
+            showsHorizontalScrollIndicator
+            scrollEventThrottle={16}
+            onScrollBeginDrag={() => {
+              isDraggingRef.current = true;
+            }}
+            onScrollEndDrag={() => {
+              isDraggingRef.current = false;
+            }}
+            onMomentumScrollEnd={() => {
+              isDraggingRef.current = false;
+            }}
+            onScroll={(e) => {
+              const currentX = e.nativeEvent.contentOffset.x;
+              if (currentX >= 0) {
+                scrollXRef.current = currentX;
+              }
+            }}
+            onContentSizeChange={() => {
+              if (
+                scrollXRef.current > 0 &&
+                horizontalScrollRef.current &&
+                !isDraggingRef.current
+              ) {
+                horizontalScrollRef.current.scrollTo({
+                  x: scrollXRef.current,
+                  animated: false,
+                });
+              }
+            }}
+          >
             <VStack style={{ width: rightContentWidth }}>
-              <TableHeaderRight />
+              {renderTableHeaderRight()}
               {holes.length > 0 && (
                 <>
-                  <InfoRowRight data={holes} type="par" />
-                  <InfoRowRight data={holes} type="si" />
+                  {renderInfoRowRight(holes, "par")}
+                  {renderInfoRowRight(holes, "si")}
                 </>
               )}
               {leaderboard.map((player, idx) => {
@@ -1360,21 +1476,11 @@ export default function LeaderboardUser() {
                   Object.keys(player.holeStablefordPoints || {}).length > 0;
                 return (
                   <React.Fragment key={player.userId}>
-                    <PlayerRowRight player={player} index={idx} />
-                    {hasNetScores && (
-                      <PlayerSubRowRight
-                        player={player}
-                        index={idx}
-                        type="net"
-                      />
-                    )}
-                    {hasStablefordPoints && (
-                      <PlayerSubRowRight
-                        player={player}
-                        index={idx}
-                        type="points"
-                      />
-                    )}
+                    {renderPlayerRowRight(player, idx)}
+                    {hasNetScores &&
+                      renderPlayerSubRowRight(player, idx, "net")}
+                    {hasStablefordPoints &&
+                      renderPlayerSubRowRight(player, idx, "points")}
                   </React.Fragment>
                 );
               })}
@@ -1417,10 +1523,9 @@ export default function LeaderboardUser() {
         backgroundColor: isDark ? "#161618" : "#ffffff",
       }}
     >
-      <RenderHeader />
       <Watermark />
 
-      {/* 🔄 Leaderboard Card Area (Only this card rotates when toggled) */}
+      {/* 🔄 Leaderboard Area (Rotates header + table when toggled) */}
       <View
         style={{ flex: 1, overflow: "hidden" }}
         onLayout={(e) => {
@@ -1447,13 +1552,14 @@ export default function LeaderboardUser() {
                     2,
                   transform: [{ rotate: "90deg" }],
                 }
-              : { flex: 1, marginTop: 10 }
+              : { flex: 1 }
           }
         >
-          <RenderStatsSection />
+          {renderHeader()}
+          {renderStatsSection()}
 
           {loading ? (
-            <TableLoadingSkeleton />
+            renderTableLoadingSkeleton()
           ) : (
             <ScrollView
               style={{ flex: 1 }}
@@ -1468,9 +1574,9 @@ export default function LeaderboardUser() {
               }
             >
               {leaderboard.length === 0 ? (
-                <RenderEmptyStandings />
+                renderEmptyStandings()
               ) : (
-                <RenderDetailedGrid />
+                renderDetailedGrid()
               )}
             </ScrollView>
           )}
