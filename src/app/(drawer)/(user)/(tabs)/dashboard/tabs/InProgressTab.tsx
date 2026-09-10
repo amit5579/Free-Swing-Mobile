@@ -204,11 +204,13 @@ export function InProgressTab({
           item.IsStableford ??
           String(
             item.scoringType ||
-            item.ScoringType ||
-            item.matchScoringType ||
-            item.MatchScoringType ||
-            "",
-          ).toLowerCase().includes("stableford"),
+              item.ScoringType ||
+              item.matchScoringType ||
+              item.MatchScoringType ||
+              "",
+          )
+            .toLowerCase()
+            .includes("stableford"),
         ),
         isDoublePeoria: Boolean(
           item.isDoublePeoria ??
@@ -216,23 +218,35 @@ export function InProgressTab({
           item.is_double_peoria ??
           String(
             item.scoringType ||
-            item.ScoringType ||
-            item.matchScoringType ||
-            item.MatchScoringType ||
-            "",
-          ).toLowerCase().includes("double-peoria"),
+              item.ScoringType ||
+              item.matchScoringType ||
+              item.MatchScoringType ||
+              "",
+          )
+            .toLowerCase()
+            .includes("double-peoria"),
         ),
         tournamentId: item.tournamentId ?? item.TournamentId ?? null,
-        tournamentName: item.tournamentName ?? item.TournamentName ?? item.tournament?.name ?? undefined,
+        tournamentName:
+          item.tournamentName ??
+          item.TournamentName ??
+          item.tournament?.name ??
+          undefined,
         hasLocalDraft: !!item.hasLocalDraft,
         isLocalDraftOnly: !!item.isLocalDraftOnly,
         courseHalf: item.courseHalf ?? item.CourseHalf ?? undefined,
-        isGroupDelegation: Boolean(item.isGroupDelegation ?? item.IsGroupDelegation),
-        primaryUserName: item.primaryUserName ?? item.PrimaryUserName ?? undefined,
-        playingGroupRoundKey: item.playingGroupRoundKey ?? item.PlayingGroupRoundKey ?? undefined,
+        isGroupDelegation: Boolean(
+          item.isGroupDelegation ?? item.IsGroupDelegation,
+        ),
+        primaryUserName:
+          item.primaryUserName ?? item.PrimaryUserName ?? undefined,
+        playingGroupRoundKey:
+          item.playingGroupRoundKey ?? item.PlayingGroupRoundKey ?? undefined,
       }));
 
-      const sorted = mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const sorted = mapped.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
       setGames(sorted);
       onCountChange?.(sorted.length);
     } catch (error) {
@@ -250,9 +264,7 @@ export function InProgressTab({
 
   if (loading) {
     return (
-      <View
-        style={{ flex: 1, backgroundColor: "transparent" }}
-      >
+      <View style={{ flex: 1, backgroundColor: "transparent" }}>
         <HStack className="justify-between items-center px-4 mb-3 mt-0 pt-0">
           <VStack>
             <Text
@@ -267,12 +279,7 @@ export function InProgressTab({
               Games you are currently playing
             </Text>
           </VStack>
-          <Skeleton
-            isDark={isDark}
-            width={64}
-            height={26}
-            borderRadius={12}
-          />
+          <Skeleton isDark={isDark} width={64} height={26} borderRadius={12} />
         </HStack>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -391,7 +398,10 @@ export function InProgressTab({
               fontWeight: "800",
             }}
           >
-            Total: {searchQuery && filteredGames.length !== games.length ? `${filteredGames.length} / ${games.length}` : games.length}
+            Total:{" "}
+            {searchQuery && filteredGames.length !== games.length
+              ? `${filteredGames.length} / ${games.length}`
+              : games.length}
           </Text>
         </LinearGradient>
       </HStack>
@@ -409,7 +419,7 @@ export function InProgressTab({
         }
       >
         {/* Pending Scorecard Requests Banner */}
-        {pendingRequests.length > 0 && (
+        {/* {pendingRequests.length > 0 && (
           <VStack space="sm" className="pt-2 pb-1">
             {pendingRequests.map((req) => (
               <Box
@@ -504,7 +514,7 @@ export function InProgressTab({
               </Box>
             ))}
           </VStack>
-        )}
+        )} */}
 
         {!filteredGames.length ? (
           <Box
@@ -597,7 +607,8 @@ export function InProgressTab({
                             fontWeight: "700",
                           }}
                         >
-                          👥 Multiplayer (Scorer: {game.primaryUserName || "Group Scorer"})
+                          👥 Multiplayer (Scorer:{" "}
+                          {game.primaryUserName || "Group Scorer"})
                         </Text>
                       </Badge>
                     )}

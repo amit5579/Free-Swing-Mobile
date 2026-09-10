@@ -26,6 +26,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { HistoryTab } from "./tabs/HistoryTab";
 import { InProgressTab } from "./tabs/InProgressTab";
 import { OverviewTab, type Scorecard } from "./tabs/gameFeed";
+import { HcCertificateTab } from "./tabs/HcCertificateTab";
 import { getFeedApi, likeFeedApi } from "@/api/modules/dashboard.api";
 import { verifyScoreApi } from "@/api/modules/admin/dashboard.api";
 import {
@@ -98,6 +99,7 @@ export default function DashboardScreen() {
     { key: "overview", label: "Overview", icon: "grid-outline" },
     { key: "progress", label: "In Progress", icon: "hourglass-outline" },
     { key: "history", label: "History", icon: "time-outline" },
+    // { key: "hc", label: "HC", icon: "ribbon-outline" },
   ];
 
   const tabKeys = tabs.map((t) => t.key);
@@ -467,8 +469,10 @@ export default function DashboardScreen() {
               </HStack>
 
               {!(
-                activeTab === "overview" &&
-                (overviewSubTab === "paradise" || overviewSubTab === "members")
+                activeTab === "hc" ||
+                (activeTab === "overview" &&
+                  (overviewSubTab === "paradise" ||
+                    overviewSubTab === "members"))
               ) && (
                 <Box
                   className="flex-row items-center px-4 mt-4 rounded-xl border h-11"
@@ -974,7 +978,7 @@ export default function DashboardScreen() {
                         }}
                       >
                         {/* LEFT CONTENT */}
-                        <Box>
+                        <Box className="flex-1 mr-2">
                           <Text
                             style={{
                               fontSize: 11,
@@ -996,6 +1000,49 @@ export default function DashboardScreen() {
                             {renderHomeCourse()}
                           </Text>
                         </Box>
+
+                        {/* HC CERTIFICATE BUTTON */}
+                        <Pressable
+                          onPress={() => setActiveTab("hc")}
+                          style={{
+                            borderRadius: 12,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <LinearGradient
+                            colors={["#8bc34a", "#558b2f"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                              paddingHorizontal: 12,
+                              paddingVertical: 7,
+                              borderRadius: 12,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              shadowColor: "#8bc34a",
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.25,
+                              shadowRadius: 4,
+                              elevation: 3,
+                            }}
+                          >
+                            <Ionicons
+                              name="ribbon-outline"
+                              size={15}
+                              color="#FFFFFF"
+                              style={{ marginRight: 5 }}
+                            />
+                            <Text
+                              style={{
+                                color: "#FFFFFF",
+                                fontWeight: "800",
+                                fontSize: 12,
+                              }}
+                            >
+                              HC
+                            </Text>
+                          </LinearGradient>
+                        </Pressable>
                       </HStack>
                     </>
                   )}
@@ -1061,7 +1108,9 @@ export default function DashboardScreen() {
                     courseName,
                     date,
                     scoringType: scoringType || undefined,
-                    tournamentId: tournamentId ? String(tournamentId) : undefined,
+                    tournamentId: tournamentId
+                      ? String(tournamentId)
+                      : undefined,
                     tournamentName: tournamentName || undefined,
                     isDoublePeoria: isDoublePeoria ? "true" : undefined,
                     courseHalf: courseHalf || undefined,
@@ -1077,6 +1126,13 @@ export default function DashboardScreen() {
               playerId={profile?.id || 0}
               searchQuery={searchQuery}
               // onViewGame={(id) => console.log("View game", id)}
+            />
+          )}
+
+          {activeTab === "hc" && (
+            <HcCertificateTab
+              profile={profile}
+              homeCourseText={renderHomeCourse()}
             />
           )}
         </View>

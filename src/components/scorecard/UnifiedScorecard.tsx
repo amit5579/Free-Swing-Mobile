@@ -4136,9 +4136,23 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
               : holes[0]?.holeId || null
           }
           courseName={propCourseName || holes[0]?.courseName}
-          teeBoxId={propTeeBoxId ? Number(propTeeBoxId) : holes[0]?.teeBoxId ? Number(holes[0]?.teeBoxId) : null}
-          courseId={propCourseId ? Number(propCourseId) : holes[0]?.courseId ? Number(holes[0]?.courseId) : null}
-          courseHalf={detectedCourseHalf || propCourseHalf || holes[0]?.courseHalf || null}
+          teeBoxId={
+            propTeeBoxId
+              ? Number(propTeeBoxId)
+              : holes[0]?.teeBoxId
+                ? Number(holes[0]?.teeBoxId)
+                : null
+          }
+          courseId={
+            propCourseId
+              ? Number(propCourseId)
+              : holes[0]?.courseId
+                ? Number(holes[0]?.courseId)
+                : null
+          }
+          courseHalf={
+            detectedCourseHalf || propCourseHalf || holes[0]?.courseHalf || null
+          }
         />
       )}
 

@@ -13,6 +13,8 @@ import {
   View,
   BackHandler,
   RefreshControl,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 
@@ -20,7 +22,7 @@ import { HStack } from "@/components/hstack";
 import { Box } from "@/components/box";
 import { Divider } from "@/components/divider";
 import { VStack } from "@/components/vstack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Watermark from "@/components/watermark";
 import { useEffect, useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -37,6 +39,7 @@ export default function SubAdminProfile() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
@@ -187,13 +190,21 @@ export default function SubAdminProfile() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
-      edges={["top", "left", "right"]}
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? "#000" : "#f2f2f2",
+        paddingTop:
+          Platform.OS === "android" && (StatusBar.currentHeight ?? 0) > insets.top
+            ? (StatusBar.currentHeight ?? 0) - insets.top
+            : 0,
+      }}
+      edges={["top", "bottom", "left", "right"]}
     >
       <ThemedView className="flex-1 px-5">
         <Watermark />
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 50 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

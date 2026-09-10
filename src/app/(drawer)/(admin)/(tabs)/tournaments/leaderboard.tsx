@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Pressable,
   TouchableOpacity,
@@ -93,6 +93,34 @@ export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [holes, setHoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const horizontalScrollRef = useRef<ScrollView | null>(null);
+  const scrollXRef = useRef<number>(0);
+  const isDraggingRef = useRef<boolean>(false);
+
+  // Reset scroll offset when switching tournaments or teeboxes
+  useEffect(() => {
+    scrollXRef.current = 0;
+  }, [tournamentId, teeboxId]);
+
+  // Restore horizontal scroll offset on background leaderboard data updates
+  useEffect(() => {
+    if (
+      scrollXRef.current > 0 &&
+      horizontalScrollRef.current &&
+      !isDraggingRef.current
+    ) {
+      const rafId = requestAnimationFrame(() => {
+        if (!isDraggingRef.current) {
+          horizontalScrollRef.current?.scrollTo({
+            x: scrollXRef.current,
+            animated: false,
+          });
+        }
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [leaderboard]);
 
   const [editingPlayer, setEditingPlayer] = useState<any>(null);
   const [editingHoleScores, setEditingHoleScores] = useState<
@@ -352,7 +380,7 @@ export default function LeaderboardPage() {
     );
   };
 
-  const RenderSecretHoles = () => {
+  const renderSecretHoles = () => {
     const isDark = colorScheme === "dark";
 
     if (!holes || holes.length === 0) return null;
@@ -721,7 +749,7 @@ export default function LeaderboardPage() {
     return holeCols + totals + stats + ACTIONS_WIDTH;
   }, [showNetColumn]);
 
-  const TableHeaderLeft = () => (
+  const renderTableHeaderLeft = () => (
     <HStack
       style={{
         height: 45,
@@ -778,7 +806,7 @@ export default function LeaderboardPage() {
     </HStack>
   );
 
-  const TableHeaderRight = () => (
+  const renderTableHeaderRight = () => (
     <HStack
       style={{
         height: 45,
@@ -841,7 +869,7 @@ export default function LeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowLeft = ({ label }: { label: string }) => (
+  const renderInfoRowLeft = ({ label }: { label: string }) => (
     <HStack
       style={{
         height: 40,
@@ -864,7 +892,7 @@ export default function LeaderboardPage() {
     </HStack>
   );
 
-  const InfoRowRight = ({
+  const renderInfoRowRight = ({
     data,
     type,
   }: {
@@ -921,7 +949,7 @@ export default function LeaderboardPage() {
     </HStack>
   );
 
-  const PlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
+  const renderPlayerRowLeft = ({ player, index }: { player: any; index: number }) => {
     const isEven = index % 2 === 0;
     const rowBg = isEven
       ? isDark
@@ -975,7 +1003,7 @@ export default function LeaderboardPage() {
     );
   };
 
-  const PlayerRowRight = ({
+  const renderPlayerRowRight = ({
     player,
     index,
   }: {
@@ -1170,7 +1198,7 @@ export default function LeaderboardPage() {
   };
 
   // Multi-row sub-rows for System 36 (Net scores row + Points row)
-  const PlayerSubRowRight = ({
+  const renderPlayerSubRowRight = ({
     player,
     index,
     type,
@@ -1291,7 +1319,7 @@ export default function LeaderboardPage() {
     );
   };
 
-  const PlayerSubRowLeft = ({
+  const renderPlayerSubRowLeft = ({
     index,
     label,
   }: {
@@ -1344,7 +1372,7 @@ export default function LeaderboardPage() {
     );
   };
 
-  const TableLoadingSkeleton = () => {
+  const renderTableLoadingSkeleton = () => {
     const rows = 8;
 
     return (
@@ -1492,10 +1520,10 @@ export default function LeaderboardPage() {
             }
           >
             {loading ? (
-              <TableLoadingSkeleton />
+              renderTableLoadingSkeleton()
             ) : (
               <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-                {isDoublePreoria && <RenderSecretHoles />}
+                {isDoublePreoria && renderSecretHoles()}
 
                 <HStack
                   style={{
@@ -1506,11 +1534,11 @@ export default function LeaderboardPage() {
                 >
                   {/* Fixed left block */}
                   <VStack style={{ width: LEFT_FIXED_WIDTH }}>
-                    <TableHeaderLeft />
+                    {renderTableHeaderLeft()}
                     {holes.length > 0 && (
                       <>
-                        <InfoRowLeft label={"COURSE\nPAR"} />
-                        <InfoRowLeft label={"STROKE\nINDEX"} />
+                        {renderInfoRowLeft({ label: "COURSE\nPAR" })}
+                        {renderInfoRowLeft({ label: "STROKE\nINDEX" })}
                       </>
                     )}
                     {leaderboard.map((player, idx) => {
@@ -1520,26 +1548,56 @@ export default function LeaderboardPage() {
                         Object.keys(player.holeStablefordPoints || {}).length > 0;
                       return (
                         <React.Fragment key={player.userId}>
-                          <PlayerRowLeft player={player} index={idx} />
-                          {hasNetScores && (
-                            <PlayerSubRowLeft index={idx} label="Net" />
-                          )}
-                          {hasStablefordPoints && (
-                            <PlayerSubRowLeft index={idx} label="Pts" />
-                          )}
+                          {renderPlayerRowLeft({ player, index: idx })}
+                          {hasNetScores &&
+                            renderPlayerSubRowLeft({ index: idx, label: "Net" })}
+                          {hasStablefordPoints &&
+                            renderPlayerSubRowLeft({ index: idx, label: "Pts" })}
                         </React.Fragment>
                       );
                     })}
                   </VStack>
 
                   {/* Horizontally scrollable right block */}
-                  <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <ScrollView
+                    ref={horizontalScrollRef}
+                    horizontal
+                    showsHorizontalScrollIndicator
+                    scrollEventThrottle={16}
+                    onScrollBeginDrag={() => {
+                      isDraggingRef.current = true;
+                    }}
+                    onScrollEndDrag={() => {
+                      isDraggingRef.current = false;
+                    }}
+                    onMomentumScrollEnd={() => {
+                      isDraggingRef.current = false;
+                    }}
+                    onScroll={(e) => {
+                      const currentX = e.nativeEvent.contentOffset.x;
+                      if (currentX >= 0) {
+                        scrollXRef.current = currentX;
+                      }
+                    }}
+                    onContentSizeChange={() => {
+                      if (
+                        scrollXRef.current > 0 &&
+                        horizontalScrollRef.current &&
+                        !isDraggingRef.current
+                      ) {
+                        horizontalScrollRef.current.scrollTo({
+                          x: scrollXRef.current,
+                          animated: false,
+                        });
+                      }
+                    }}
+                  >
                     <VStack style={{ width: rightContentWidth }}>
-                      <TableHeaderRight />
+                      {renderTableHeaderRight()}
                       {holes && (
                         <>
-                          <InfoRowRight data={holes} type="par" />
-                          <InfoRowRight data={holes} type="si" />
+                          {renderInfoRowRight({ data: holes, type: "par" })}
+                          {renderInfoRowRight({ data: holes, type: "si" })}
                         </>
                       )}
                       {leaderboard.map((player, idx) => {
@@ -1550,21 +1608,19 @@ export default function LeaderboardPage() {
                           0;
                         return (
                           <React.Fragment key={player.userId}>
-                            <PlayerRowRight player={player} index={idx} />
-                            {hasNetScores && (
-                              <PlayerSubRowRight
-                                player={player}
-                                index={idx}
-                                type="net"
-                              />
-                            )}
-                            {hasStablefordPoints && (
-                              <PlayerSubRowRight
-                                player={player}
-                                index={idx}
-                                type="points"
-                              />
-                            )}
+                            {renderPlayerRowRight({ player, index: idx })}
+                            {hasNetScores &&
+                              renderPlayerSubRowRight({
+                                player,
+                                index: idx,
+                                type: "net",
+                              })}
+                            {hasStablefordPoints &&
+                              renderPlayerSubRowRight({
+                                player,
+                                index: idx,
+                                type: "points",
+                              })}
                           </React.Fragment>
                         );
                       })}

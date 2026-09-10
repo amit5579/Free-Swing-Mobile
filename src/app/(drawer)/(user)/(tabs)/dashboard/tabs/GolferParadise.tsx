@@ -168,9 +168,9 @@ export default function GolferParadise({
     Record<number, boolean>
   >({});
   const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
-  const [commentModalPostId, setCommentModalPostId] = useState<number | null>(
-    null,
-  );
+  const [submittingComment, setSubmittingComment] = useState<
+    Record<number, boolean>
+  >({});
   const [fullImageModalVisible, setFullImageModalVisible] = useState(false);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
 
@@ -197,15 +197,15 @@ export default function GolferParadise({
     } catch (e) {}
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await https.get("paradise?page=1&pageSize=20");
       setPosts(response.data || []);
     } catch (error) {
       console.error("Fetch Paradise error:", error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -334,16 +334,27 @@ export default function GolferParadise({
     }
   };
 
+  const toggleComments = (postId: number) => {
+    setExpandedComments((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
+
   const handleAddComment = async (postId: number) => {
-    const text = commentTexts[postId];
-    if (!text) return;
+    const text = commentTexts[postId]?.trim();
+    if (!text || submittingComment[postId]) return;
 
     try {
+      setSubmittingComment((prev) => ({ ...prev, [postId]: true }));
       await https.post(`paradise/comment/${postId}`, { text });
       setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
-      await fetchPosts();
+      setExpandedComments((prev) => ({ ...prev, [postId]: true }));
+      await fetchPosts(true);
     } catch (error) {
       console.error("Comment error:", error);
+    } finally {
+      setSubmittingComment((prev) => ({ ...prev, [postId]: false }));
     }
   };
 
@@ -748,283 +759,274 @@ export default function GolferParadise({
                     </TouchableOpacity>
                     <TouchableOpacity
                       className="flex-row items-center p-1"
-                      onPress={() => setCommentModalPostId(post.id)}
+                      onPress={() => toggleComments(post.id)}
                     >
                       <Ionicons
-                        name="chatbubble-outline"
+                        name={
+                          expandedComments[post.id]
+                            ? "chatbubble"
+                            : "chatbubble-outline"
+                        }
                         size={20}
-                        color={isDark ? "#D1D5DB" : "#4B5563"}
+                        color={
+                          expandedComments[post.id]
+                            ? "#8BC34A"
+                            : isDark
+                              ? "#D1D5DB"
+                              : "#4B5563"
+                        }
                       />
                       <Text
                         className="ml-1 text-xs font-semibold"
-                        style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}
+                        style={{
+                          color: expandedComments[post.id]
+                            ? "#8BC34A"
+                            : isDark
+                              ? "#D1D5DB"
+                              : "#4B5563",
+                        }}
                       >
                         {post.commentCount}
                       </Text>
                     </TouchableOpacity>
                   </HStack>
+
+                  {/* Inline Comments Section */}
+                  {expandedComments[post.id] && (
+                    <View
+                      style={{
+                        borderTopWidth: 1,
+                        borderTopColor: isDark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.04)",
+                        backgroundColor: isDark
+                          ? "rgba(0,0,0,0.2)"
+                          : "rgba(0,0,0,0.015)",
+                        paddingHorizontal: 16,
+                        paddingTop: 12,
+                        paddingBottom: 14,
+                      }}
+                    >
+                      {/* Comments list */}
+                      {post.comments && post.comments.length > 0 ? (
+                        <VStack space="sm" className="mb-3">
+                          {post.comments.map((comment) => {
+                            const commenterName =
+                              comment.userName ||
+                              comment.playerName ||
+                              comment.user ||
+                              "User";
+                            const commentText =
+                              comment.text || comment.comment || "";
+                            return (
+                              <TouchableOpacity
+                                key={comment.id}
+                                onPress={() =>
+                                  handlePressProfile(comment.userId)
+                                }
+                                activeOpacity={0.7}
+                              >
+                                <HStack space="sm" className="items-start mb-2">
+                                  <Box
+                                    style={{
+                                      width: 32,
+                                      height: 32,
+                                      borderRadius: 16,
+                                      backgroundColor: isDark
+                                        ? "#333"
+                                        : "#E5E7EB",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      overflow: "hidden",
+                                      borderWidth: 1.5,
+                                      borderColor: "rgba(139,195,74,0.4)",
+                                      marginTop: 2,
+                                    }}
+                                  >
+                                    {(comment.playerAvatar &&
+                                      comment.playerAvatar !== "null") ||
+                                    (comment.profilePictureUrl &&
+                                      comment.profilePictureUrl !== "null") ? (
+                                      <Image
+                                        source={{
+                                          uri: resolveMediaUrl(
+                                            comment.playerAvatar ||
+                                              comment.profilePictureUrl,
+                                          ),
+                                        }}
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                        }}
+                                      />
+                                    ) : (
+                                      <Text
+                                        className="font-bold text-xs"
+                                        style={{ color: "#8BC34A" }}
+                                      >
+                                        {commenterName.charAt(0).toUpperCase()}
+                                      </Text>
+                                    )}
+                                  </Box>
+                                  <VStack
+                                    className="flex-1 rounded-xl p-2.5 border"
+                                    style={{
+                                      backgroundColor: isDark
+                                        ? "rgba(255,255,255,0.03)"
+                                        : "#F9FAFB",
+                                      borderColor: isDark
+                                        ? "rgba(255,255,255,0.05)"
+                                        : "rgba(0,0,0,0.05)",
+                                    }}
+                                  >
+                                    <HStack className="items-center justify-between">
+                                      <Text
+                                        className="font-bold text-xs"
+                                        style={{
+                                          color: isDark ? "#fff" : "#111",
+                                        }}
+                                      >
+                                        {commenterName}
+                                      </Text>
+                                      <Text
+                                        className="text-[10px]"
+                                        style={{
+                                          color: isDark ? "#6B7280" : "#9CA3AF",
+                                        }}
+                                      >
+                                        {formatCommentDate(comment.createdAt)}
+                                      </Text>
+                                    </HStack>
+                                    <Text
+                                      className="text-xs mt-1 leading-4"
+                                      style={{
+                                        color: isDark ? "#D1D5DB" : "#4B5563",
+                                      }}
+                                    >
+                                      {commentText}
+                                    </Text>
+                                  </VStack>
+                                </HStack>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </VStack>
+                      ) : (
+                        <View
+                          style={{
+                            paddingVertical: 12,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            className="text-xs font-medium"
+                            style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
+                          >
+                            No comments yet. Be the first to share your thoughts!
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Comment Input */}
+                      <HStack className="items-center mt-1">
+                        <Box
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: isDark ? "#222" : "#eee",
+                            overflow: "hidden",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderWidth: 1,
+                            borderColor: "#8BC34A",
+                            marginRight: 8,
+                          }}
+                        >
+                          {userAvatar && userAvatar !== "null" ? (
+                            <Image
+                              source={{
+                                uri: resolveMediaUrl(userAvatar),
+                              }}
+                              style={{ width: "100%", height: "100%" }}
+                            />
+                          ) : (
+                            <Text
+                              className="font-bold text-xs"
+                              style={{ color: "#8BC34A" }}
+                            >
+                              {userName ? userName.charAt(0).toUpperCase() : "U"}
+                            </Text>
+                          )}
+                        </Box>
+                        <TextInput
+                          placeholder="Write a comment..."
+                          placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
+                          className="flex-1 text-xs h-15 px-3.5 rounded-full border"
+                          style={{
+                            backgroundColor: isDark
+                              ? "rgba(255,255,255,0.06)"
+                              : "#FFFFFF",
+                            borderColor: isDark
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.08)",
+                            color: isDark ? "#fff" : "#111",
+                          }}
+                          value={commentTexts[post.id] || ""}
+                          onChangeText={(val) =>
+                            setCommentTexts((prev) => ({
+                              ...prev,
+                              [post.id]: val,
+                            }))
+                          }
+                          onSubmitEditing={() => handleAddComment(post.id)}
+                          returnKeyType="send"
+                        />
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          style={{ marginLeft: 8 }}
+                          disabled={
+                            submittingComment[post.id] ||
+                            !commentTexts[post.id]?.trim()
+                          }
+                          onPress={() => handleAddComment(post.id)}
+                        >
+                          <LinearGradient
+                            colors={["#8bc34a", "#558b2f"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 17,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              shadowColor: "#8bc34a",
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.35,
+                              shadowRadius: 4,
+                              elevation: 3,
+                              opacity:
+                                submittingComment[post.id] ||
+                                !commentTexts[post.id]?.trim()
+                                  ? 0.5
+                                  : 1,
+                            }}
+                          >
+                            {submittingComment[post.id] ? (
+                              <ActivityIndicator size="small" color="white" />
+                            ) : (
+                              <Ionicons name="send" size={14} color="white" />
+                            )}
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      </HStack>
+                    </View>
+                  )}
                 </Box>
               </View>
             ))}
         </View>
-      )}
-
-      {commentModalPostId && (
-        <Modal
-          visible={!!commentModalPostId}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setCommentModalPostId(null)}
-        >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 16,
-            }}
-          >
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={() => {
-                Keyboard.dismiss();
-                setCommentModalPostId(null);
-              }}
-            />
-
-            <Box
-              style={{
-                width: "100%",
-                maxWidth: 480,
-                backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
-                borderRadius: 24,
-                maxHeight: Dimensions.get("window").height * 0.7,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: isDark
-                  ? "rgba(255,255,255,0.1)"
-                  : "rgba(0,0,0,0.08)",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 16,
-                elevation: 10,
-                zIndex: 1,
-              }}
-            >
-              <HStack
-                className="px-5 py-4 border-b items-center justify-between"
-                style={{
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.05)",
-                }}
-              >
-                <Text
-                  className="font-bold text-lg"
-                  style={{ color: isDark ? "#fff" : "#111" }}
-                >
-                  Comments
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setCommentModalPostId(null)}
-                  style={{
-                    padding: 4,
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.1)"
-                      : "#F3F4F6",
-                    borderRadius: 12,
-                  }}
-                >
-                  <Ionicons
-                    name="close"
-                    size={20}
-                    color={isDark ? "#fff" : "#6b7280"}
-                  />
-                </TouchableOpacity>
-              </HStack>
-
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ padding: 16 }}
-              >
-                {posts.find((p) => p.id === commentModalPostId)?.comments
-                  ?.length === 0 ? (
-                  <View style={{ paddingVertical: 40, alignItems: "center" }}>
-                    <Ionicons
-                      name="chatbubbles-outline"
-                      size={48}
-                      color={isDark ? "#333" : "#E5E7EB"}
-                    />
-                    <Text
-                      className="mt-4 font-semibold"
-                      style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}
-                    >
-                      No comments yet.
-                    </Text>
-                    <Text
-                      className="text-sm mt-1"
-                      style={{ color: isDark ? "#6B7280" : "#9CA3AF" }}
-                    >
-                      Be the first to share your thoughts!
-                    </Text>
-                  </View>
-                ) : (
-                  posts
-                    .find((p) => p.id === commentModalPostId)
-                    ?.comments?.map((comment) => {
-                      const commenterName =
-                        comment.userName ||
-                        comment.playerName ||
-                        comment.user ||
-                        "User";
-                      const commentText = comment.text || comment.comment || "";
-                      return (
-                        <TouchableOpacity
-                          key={comment.id}
-                          onPress={() => {
-                            setCommentModalPostId(null);
-                            handlePressProfile(comment.userId);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <HStack space="md" className="mb-4 items-start">
-                            <Box
-                              style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 18,
-                                backgroundColor: isDark ? "#333" : "#E5E7EB",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                overflow: "hidden",
-                                borderWidth: 1.5,
-                                borderColor: "rgba(139,195,74,0.4)",
-                              }}
-                            >
-                              {(comment.playerAvatar &&
-                                comment.playerAvatar !== "null") ||
-                              (comment.profilePictureUrl &&
-                                comment.profilePictureUrl !== "null") ? (
-                                <Image
-                                  source={{
-                                    uri: resolveMediaUrl(
-                                      comment.playerAvatar ||
-                                        comment.profilePictureUrl,
-                                    ),
-                                  }}
-                                  style={{ width: "100%", height: "100%" }}
-                                />
-                              ) : (
-                                <Text
-                                  className="font-bold text-xs"
-                                  style={{ color: "#8BC34A" }}
-                                >
-                                  {commenterName.charAt(0).toUpperCase()}
-                                </Text>
-                              )}
-                            </Box>
-                            <VStack
-                              className="flex-1 bg-transparent rounded-xl p-3 border"
-                              style={{
-                                backgroundColor: isDark
-                                  ? "rgba(255,255,255,0.03)"
-                                  : "#F9FAFB",
-                                borderColor: isDark
-                                  ? "rgba(255,255,255,0.05)"
-                                  : "rgba(0,0,0,0.05)",
-                              }}
-                            >
-                              <Text
-                                className="font-bold text-xs"
-                                style={{ color: isDark ? "#fff" : "#111" }}
-                              >
-                                {commenterName}
-                              </Text>
-                              <Text
-                                className="text-xs mt-1"
-                                style={{
-                                  color: isDark ? "#D1D5DB" : "#4B5563",
-                                }}
-                              >
-                                {commentText}
-                              </Text>
-                              <Text
-                                className="text-[10px] mt-2"
-                                style={{
-                                  color: isDark ? "#6B7280" : "#9CA3AF",
-                                }}
-                              >
-                                {formatCommentDate(comment.createdAt)}
-                              </Text>
-                            </VStack>
-                          </HStack>
-                        </TouchableOpacity>
-                      );
-                    })
-                )}
-              </ScrollView>
-
-              <HStack
-                className="px-4 py-3 items-center border-t"
-                style={{
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.05)",
-                  backgroundColor: isDark ? "#1A1A1A" : "#fff",
-                }}
-              >
-                <TextInput
-                  placeholder="Write a comment..."
-                  placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
-                  className="flex-1 text-sm h-10 px-4 rounded-full"
-                  style={{
-                    backgroundColor: isDark
-                      ? "rgba(255,255,255,0.05)"
-                      : "#F3F4F6",
-                    color: isDark ? "#fff" : "#111",
-                  }}
-                  value={commentTexts[commentModalPostId] || ""}
-                  onChangeText={(val) =>
-                    setCommentTexts((prev) => ({
-                      ...prev,
-                      [commentModalPostId]: val,
-                    }))
-                  }
-                />
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={{ marginLeft: 12, borderRadius: 20 }}
-                  onPress={() => {
-                    handleAddComment(commentModalPostId);
-                  }}
-                >
-                  <LinearGradient
-                    colors={["#8bc34a", "#558b2f"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      shadowColor: "#8bc34a",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.35,
-                      shadowRadius: 6,
-                      elevation: 4,
-                    }}
-                  >
-                    <Ionicons name="send" size={16} color="white" />
-                  </LinearGradient>
-                </TouchableOpacity>
-              </HStack>
-            </Box>
-          </View>
-        </Modal>
       )}
 
       {/* Full Image Preview Modal */}
