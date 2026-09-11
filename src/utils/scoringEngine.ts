@@ -480,11 +480,13 @@ export function determineNassauHoleWinner(
   mode: 'best' | 'combined',
   teamAScores: (number | null)[],
   teamBScores: (number | null)[],
-): 'teamA' | 'teamB' | 'tie' {
+): 'teamA' | 'teamB' | 'tie' | null {
   const validA = teamAScores.filter((s): s is number => s !== null && s !== undefined && s > 0);
   const validB = teamBScores.filter((s): s is number => s !== null && s !== undefined && s > 0);
 
-  if (validA.length === 0 || validB.length === 0) return 'tie';
+  // If either team has no valid scores, or any player's score on either team is missing, hole is not filled yet
+  if (validA.length === 0 || validB.length === 0) return null;
+  if (validA.length < teamAScores.length || validB.length < teamBScores.length) return null;
 
   if (mode === 'best') {
     const minA = Math.min(...validA);
@@ -644,6 +646,11 @@ export function computeNassauState(
       hole.teamARawScores,
       hole.teamBRawScores,
     );
+
+    // If scores are not filled for this hole, do not update houses and do not record hole result
+    if (winner === null) {
+      continue;
+    }
 
     const isFront9 = holeNum <= 9;
 
