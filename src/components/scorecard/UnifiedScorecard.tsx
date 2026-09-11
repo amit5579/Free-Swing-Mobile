@@ -2390,54 +2390,36 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       const team2Partners = partners.filter((p) => p.team === 2);
 
       const allHolesData = holes.map((h) => {
-        const t1p1 = team1Partners[0]
-          ? getPlayerHoleInfo(
-              h,
-              team1Partners[0],
-              primaryHandicap,
-              companionHandicaps,
-              gameConfig,
-            )
-          : null;
-        const t1p2 = team1Partners[1]
-          ? getPlayerHoleInfo(
-              h,
-              team1Partners[1],
-              primaryHandicap,
-              companionHandicaps,
-              gameConfig,
-            )
-          : null;
-        const t2p1 = team2Partners[0]
-          ? getPlayerHoleInfo(
-              h,
-              team2Partners[0],
-              primaryHandicap,
-              companionHandicaps,
-              gameConfig,
-            )
-          : null;
-        const t2p2 = team2Partners[1]
-          ? getPlayerHoleInfo(
-              h,
-              team2Partners[1],
-              primaryHandicap,
-              companionHandicaps,
-              gameConfig,
-            )
-          : null;
+        const teamAInfos = team1Partners.map((p) =>
+          getPlayerHoleInfo(
+            h,
+            p,
+            primaryHandicap,
+            companionHandicaps,
+            gameConfig,
+          ),
+        );
+        const teamBInfos = team2Partners.map((p) =>
+          getPlayerHoleInfo(
+            h,
+            p,
+            primaryHandicap,
+            companionHandicaps,
+            gameConfig,
+          ),
+        );
 
         return {
           holeNumber: h.holeNumber,
           par: h.par,
-          teamANetScores: [t1p1?.netScore ?? null, t1p2?.netScore ?? null],
-          teamBNetScores: [t2p1?.netScore ?? null, t2p2?.netScore ?? null],
-          teamARawScores: [t1p1?.score ?? null, t1p2?.score ?? null],
-          teamBRawScores: [t2p1?.score ?? null, t2p2?.score ?? null],
-          teamASandys: [Boolean(t1p1?.sandy), Boolean(t1p2?.sandy)],
-          teamBSandys: [Boolean(t2p1?.sandy), Boolean(t2p2?.sandy)],
-          teamARs: [Boolean(t1p1?.r), Boolean(t1p2?.r)],
-          teamBRs: [Boolean(t2p1?.r), Boolean(t2p2?.r)],
+          teamANetScores: teamAInfos.map((i) => i?.netScore ?? null),
+          teamBNetScores: teamBInfos.map((i) => i?.netScore ?? null),
+          teamARawScores: teamAInfos.map((i) => i?.score ?? null),
+          teamBRawScores: teamBInfos.map((i) => i?.score ?? null),
+          teamASandys: teamAInfos.map((i) => Boolean(i?.sandy)),
+          teamBSandys: teamBInfos.map((i) => Boolean(i?.sandy)),
+          teamARs: teamAInfos.map((i) => Boolean(i?.r)),
+          teamBRs: teamBInfos.map((i) => Boolean(i?.r)),
         };
       });
 
@@ -4012,9 +3994,17 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                         const firstLabel = halvesData.isBackStart
                           ? "Back 9"
                           : "Front 9";
-                        const firstNassauHouses = halvesData.isBackStart
-                          ? sideScoringSummaries.nassauState?.back9Houses
-                          : sideScoringSummaries.nassauState?.front9Houses;
+                        const hasAnyFirstHalfScore = firstHalf.some(
+                          (h) =>
+                            sideScoringSummaries.nassauState?.holeResults?.[
+                              h.holeNumber
+                            ] !== undefined,
+                        );
+                        const firstNassauHouses = hasAnyFirstHalfScore
+                          ? halvesData.isBackStart
+                            ? sideScoringSummaries.nassauState?.back9Houses
+                            : sideScoringSummaries.nassauState?.front9Houses
+                          : undefined;
 
                         const secondHalf = halvesData.isBackStart
                           ? halvesData.front9
@@ -4022,9 +4012,20 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                         const secondLabel = halvesData.isBackStart
                           ? "Front 9"
                           : "Back 9";
-                        const secondNassauHouses = halvesData.isBackStart
-                          ? sideScoringSummaries.nassauState?.front9Houses
-                          : sideScoringSummaries.nassauState?.back9Houses;
+                        const hasAnySecondHalfScore = secondHalf.some(
+                          (h) =>
+                            sideScoringSummaries.nassauState?.holeResults?.[
+                              h.holeNumber
+                            ] !== undefined,
+                        );
+                        const secondNassauHouses = hasAnySecondHalfScore
+                          ? halvesData.isBackStart
+                            ? sideScoringSummaries.nassauState?.front9Houses
+                            : sideScoringSummaries.nassauState?.back9Houses
+                          : undefined;
+
+                        const hasAnyScore =
+                          hasAnyFirstHalfScore || hasAnySecondHalfScore;
 
                         return (
                           <>
@@ -4058,7 +4059,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             {renderTotalRow(
                               "Total",
                               halvesData.allSorted,
-                              sideScoringSummaries.nassauState?.overallHouses,
+                              hasAnyScore
+                                ? sideScoringSummaries.nassauState?.overallHouses
+                                : undefined,
                               true,
                             )}
                           </>
@@ -4066,6 +4069,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       }
 
                       if (activeCourseHalf === "front") {
+                        const hasAnyFrontScore = halvesData.front9.some(
+                          (h) =>
+                            sideScoringSummaries.nassauState?.holeResults?.[
+                              h.holeNumber
+                            ] !== undefined,
+                        );
                         return (
                           <>
                             {halvesData.front9.map((hole, index) =>
@@ -4074,7 +4083,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             {renderTotalRow(
                               "Front 9",
                               halvesData.front9,
-                              sideScoringSummaries.nassauState?.front9Houses,
+                              hasAnyFrontScore
+                                ? sideScoringSummaries.nassauState?.front9Houses
+                                : undefined,
                               true,
                             )}
                           </>
@@ -4082,6 +4093,12 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                       }
 
                       if (activeCourseHalf === "back") {
+                        const hasAnyBackScore = halvesData.back9.some(
+                          (h) =>
+                            sideScoringSummaries.nassauState?.holeResults?.[
+                              h.holeNumber
+                            ] !== undefined,
+                        );
                         return (
                           <>
                             {halvesData.back9.map((hole, index) =>
@@ -4090,13 +4107,21 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                             {renderTotalRow(
                               "Back 9",
                               halvesData.back9,
-                              sideScoringSummaries.nassauState?.back9Houses,
+                              hasAnyBackScore
+                                ? sideScoringSummaries.nassauState?.back9Houses
+                                : undefined,
                               true,
                             )}
                           </>
                         );
                       }
 
+                      const hasAnyScore = displayedHoles.some(
+                        (h) =>
+                          sideScoringSummaries.nassauState?.holeResults?.[
+                            h.holeNumber
+                          ] !== undefined,
+                      );
                       return (
                         <>
                           {displayedHoles.map((hole, index) =>
@@ -4105,7 +4130,9 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                           {renderTotalRow(
                             "Total",
                             displayedHoles,
-                            sideScoringSummaries.nassauState?.overallHouses,
+                            hasAnyScore
+                              ? sideScoringSummaries.nassauState?.overallHouses
+                              : undefined,
                             true,
                           )}
                         </>

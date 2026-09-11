@@ -2419,7 +2419,22 @@ const ScoreCard: React.FC = () => {
                               const hRes = ns?.holeResults[h.holeNumber];
                               if (!hRes)
                                 return (
-                                  <View style={{ width: colNassauWidth }} />
+                                  <View
+                                    style={{
+                                      width: colNassauWidth,
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <Text
+                                      style={{
+                                        color: isDark ? "#94a3b8" : "#64748b",
+                                        fontSize: 11,
+                                      }}
+                                    >
+                                      -
+                                    </Text>
+                                  </View>
                                 );
 
                               return (
