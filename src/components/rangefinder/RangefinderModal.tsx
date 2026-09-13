@@ -30,11 +30,13 @@ interface RangefinderModalProps {
   visible: boolean;
   onClose: () => void;
   holes: any[];
-  initialHoleId: number | null;
+  initialHoleId?: number | null;
+  initialHoleNumber?: number | null;
   courseName?: string;
   teeBoxId?: number | null;
   courseId?: number | null;
   courseHalf?: string | null;
+  onHoleChange?: (holeNumber: number) => void;
 }
 
 const GreenDistances = ({
@@ -76,10 +78,12 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   onClose,
   holes,
   initialHoleId,
+  initialHoleNumber,
   courseName,
   teeBoxId,
   courseId,
   courseHalf,
+  onHoleChange,
 }) => {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -260,13 +264,20 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        const targetHole =
+          effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
+        const hNum =
+          targetHole?.holeNumber ||
+          targetHole?.HoleNumber ||
+          currentHoleIndex + 1;
+        onHoleChange?.(hNum);
         onClose();
         return true; // Prevent default back navigation
       },
     );
 
     return () => backHandler.remove();
-  }, [visible, onClose]);
+  }, [visible, onClose, currentHoleIndex, effectiveHoles, holes, onHoleChange]);
 
   const toggleUiVisibility = () => {
     const toValue = isUiVisible ? 0 : 1;
@@ -298,19 +309,46 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     if (
       visible &&
       !hasInitializedHole.current &&
-      initialHoleId &&
+      (initialHoleNumber || initialHoleId) &&
       effectiveHoles &&
       effectiveHoles.length > 0
     ) {
-      const index = effectiveHoles.findIndex(
-        (h) => h.holeId === initialHoleId || h.holeNumber === initialHoleId,
-      );
+      let index = -1;
+      if (initialHoleNumber != null) {
+        index = effectiveHoles.findIndex(
+          (h) =>
+            h.holeNumber === initialHoleNumber ||
+            h.HoleNumber === initialHoleNumber,
+        );
+      }
+      if (index === -1 && initialHoleId != null) {
+        index = effectiveHoles.findIndex(
+          (h) => h.holeId === initialHoleId || h.HoleId === initialHoleId,
+        );
+        if (index === -1) {
+          index = effectiveHoles.findIndex(
+            (h) =>
+              h.holeNumber === initialHoleId || h.HoleNumber === initialHoleId,
+          );
+        }
+      }
       if (index !== -1) {
         setCurrentHoleIndex(index);
         hasInitializedHole.current = true;
+        const targetHole = effectiveHoles[index] || holes[index];
+        const hNum =
+          targetHole?.holeNumber || targetHole?.HoleNumber || index + 1;
+        onHoleChange?.(hNum);
       }
     }
-  }, [visible, initialHoleId, effectiveHoles]);
+  }, [
+    visible,
+    initialHoleNumber,
+    initialHoleId,
+    effectiveHoles,
+    holes,
+    onHoleChange,
+  ]);
 
   const currentHole =
     effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
@@ -577,9 +615,23 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
   const scoreText = "E 0";
   const initials = "AJ";
 
+  const handleClose = () => {
+    const targetHole =
+      effectiveHoles[currentHoleIndex] || holes[currentHoleIndex];
+    const hNum =
+      targetHole?.holeNumber || targetHole?.HoleNumber || currentHoleIndex + 1;
+    onHoleChange?.(hNum);
+    onClose();
+  };
+
   const handlePrevHole = () => {
     if (currentHoleIndex > 0) {
-      setCurrentHoleIndex(currentHoleIndex - 1);
+      const newIndex = currentHoleIndex - 1;
+      setCurrentHoleIndex(newIndex);
+      const targetHole = effectiveHoles[newIndex] || holes[newIndex];
+      const hNum =
+        targetHole?.holeNumber || targetHole?.HoleNumber || newIndex + 1;
+      onHoleChange?.(hNum);
     }
   };
 
@@ -587,7 +639,12 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
     const totalHoles =
       effectiveHoles.length > 0 ? effectiveHoles.length : holes.length;
     if (currentHoleIndex < totalHoles - 1) {
-      setCurrentHoleIndex(currentHoleIndex + 1);
+      const newIndex = currentHoleIndex + 1;
+      setCurrentHoleIndex(newIndex);
+      const targetHole = effectiveHoles[newIndex] || holes[newIndex];
+      const hNum =
+        targetHole?.holeNumber || targetHole?.HoleNumber || newIndex + 1;
+      onHoleChange?.(hNum);
     }
   };
 
@@ -600,7 +657,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
       animationType="fade"
       statusBarTranslucent={true}
       transparent={false}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <StatusBar
         backgroundColor="transparent"
@@ -617,7 +674,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
             ]}
           >
             <View style={styles.permissionCloseRow}>
-              <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+              <TouchableOpacity onPress={handleClose} style={styles.iconButton}>
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -707,7 +764,7 @@ export const RangefinderModal: React.FC<RangefinderModalProps> = ({
           pointerEvents={isUiVisible ? "auto" : "none"}
         >
           <TouchableOpacity
-            onPress={onClose}
+            onPress={handleClose}
             style={styles.backButtonTouchable}
             activeOpacity={0.8}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}

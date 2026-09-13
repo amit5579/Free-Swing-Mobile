@@ -1196,7 +1196,7 @@ export default function MyBookingsScreen() {
               <Text
                 style={[
                   styles.emptySubtext,
-                  { color: isDark ? "#94a3b8" : "#64748b" },
+                  { color: isDark ? "#f1f5f9" : "#0f172a" },
                 ]}
               >
                 {activeTab === "pending"
@@ -1664,7 +1664,7 @@ export default function MyBookingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 7,
     paddingBottom: 28,
     gap: 14,
   },
@@ -1672,7 +1672,7 @@ const styles = StyleSheet.create({
   // Status Tabs Container
   statusTabsContainer: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 5,
     marginBottom: 8,
     gap: 8,
   },
@@ -1709,7 +1709,7 @@ const styles = StyleSheet.create({
   // Type Chips
   typeChipsContainer: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     marginBottom: 14,
     gap: 8,
   },

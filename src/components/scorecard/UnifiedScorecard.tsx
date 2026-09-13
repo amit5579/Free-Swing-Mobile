@@ -235,9 +235,49 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   const [isDetailsVisible, setIsDetailsVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // GPS Modal
+  // GPS Modal & Tracking (matching web targetHoleForGps flow)
   const [rangefinderModalVisible, setRangefinderModalVisible] = useState(false);
-  const [rangefinderHole, setRangefinderHole] = useState<number | null>(null);
+  const [targetHoleForGps, setTargetHoleForGps] = useState<number | null>(null);
+
+  const getLastHoleNumber = useCallback(() => {
+    if (targetHoleForGps != null) {
+      const exists = holes.some((h) => h.holeNumber === targetHoleForGps);
+      if (exists) return targetHoleForGps;
+    }
+
+    if (holes && holes.length > 0) {
+      // Find the last hole that has any recorded score
+      let lastScoredHole: number | null = null;
+      for (const h of holes) {
+        const hasScore = partners.some((p) => {
+          const key = `${h.holeId}_${p.playerId}`;
+          const val = textScores[key];
+          if (val !== undefined && val !== "" && val !== "0") return true;
+          const scoreVal =
+            (h as any)?.scores?.[p.playerId] ?? (h as any)?.score;
+          return scoreVal !== null && scoreVal !== undefined && scoreVal !== "";
+        });
+        if (hasScore) {
+          lastScoredHole = h.holeNumber;
+        }
+      }
+
+      if (lastScoredHole !== null) {
+        return lastScoredHole;
+      }
+
+      return holes[0]?.holeNumber || 1;
+    }
+
+    return detectedCourseHalf === "Back9" || propCourseHalf === "Back9" ? 10 : 1;
+  }, [
+    targetHoleForGps,
+    holes,
+    partners,
+    textScores,
+    detectedCourseHalf,
+    propCourseHalf,
+  ]);
 
   // Finish confirmation modal
   const [showFinishModal, setShowFinishModal] = useState(false);
@@ -626,11 +666,11 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
   // Location Permission & Rangefinder Handler
   // ─────────────────────────────────────────────
   const handleOpenRangefinder = async (holeNumber?: number) => {
-    const targetHole = holeNumber ?? holes[0]?.holeNumber ?? 1;
+    const targetHole = holeNumber ?? getLastHoleNumber();
+    setTargetHoleForGps(targetHole);
     try {
       const { status } = await Location.getForegroundPermissionsAsync();
       if (status === "granted") {
-        setRangefinderHole(targetHole);
         setRangefinderModalVisible(true);
         return;
       }
@@ -638,7 +678,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       const { status: requestStatus } =
         await Location.requestForegroundPermissionsAsync();
       if (requestStatus === "granted") {
-        setRangefinderHole(targetHole);
         setRangefinderModalVisible(true);
       } else {
         Alert.alert(
@@ -652,7 +691,6 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
       }
     } catch (err) {
       console.warn("Location permission check error:", err);
-      setRangefinderHole(targetHole);
       setRangefinderModalVisible(true);
     }
   };
@@ -2694,121 +2732,130 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                   </Text>
                 </View>
               )}
-
-            {/* Double Peoria: Declared HC and DP HC vertically aligned */}
-            {gameConfig.isDoublePeoria && (
-              <View style={styles.headerHandicapCol}>
-                <View
-                  style={[
-                    styles.headerHandicapBadge,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(139,195,74,0.15)"
-                        : "rgba(232, 245, 233, 0.50)",
-                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.headerHandicapText,
-                      { color: isDark ? "#8bc34a" : "#2e7d32" },
-                    ]}
-                  >
-                    Declared HC: {primaryHandicap ?? 0}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.headerHandicapBadge,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(148,163,184,0.15)"
-                        : "rgba(241, 245, 249, 0.50)",
-                      borderColor: isDark ? "#64748b" : "#94a3b8",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.headerHandicapText,
-                      { color: isDark ? "#cbd5e1" : "#475569" },
-                    ]}
-                  >
-                    DP HC:{" "}
-                    {isReadOnly &&
-                    primaryTotals.hasScore &&
-                    primaryTotals.gross > 0
-                      ? primaryTotals.gross - primaryTotals.net
-                      : "NIL"}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* System 36: Declared HC and Sys36 HC vertically aligned */}
-            {gameConfig.isSystem36 && (
-              <View style={styles.headerHandicapCol}>
-                <View
-                  style={[
-                    styles.headerHandicapBadge,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(148,163,184,0.15)"
-                        : "rgba(241, 245, 249, 0.50)",
-                      borderColor: isDark ? "#64748b" : "#94a3b8",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.headerHandicapText,
-                      { color: isDark ? "#cbd5e1" : "#475569" },
-                    ]}
-                  >
-                    Sys36 HC:{" "}
-                    {primaryTotals.hasScore && primaryTotals.gross > 0
-                      ? Math.min(24, Math.max(0, 36 - primaryTotals.pts))
-                      : "NIL"}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.headerHandicapBadge,
-                    {
-                      backgroundColor: isDark
-                        ? "rgba(139,195,74,0.15)"
-                        : "rgba(232, 245, 233, 0.50)",
-                      borderColor: isDark ? "#4d7c0f" : "#8bc34a",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.headerHandicapText,
-                      { color: isDark ? "#8bc34a" : "#2e7d32" },
-                    ]}
-                  >
-                    Declared HC: {primaryHandicap ?? 0}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {!isReadOnly ? (
-              <TouchableOpacity
-                onPress={() => setShowFinishModal(true)}
-                style={styles.finishRoundButton}
+              <View
+                style={{
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 4,
+                }}
               >
-                <Text style={styles.finishRoundText}>Finish</Text>
-              </TouchableOpacity>
-            ) : (
-              isCompanionView && (
-                <View style={styles.readOnlyBadge}>
-                  <Text style={styles.readOnlyBadgeText}>Live Viewer</Text>
-                </View>
-              )
-            )}
+                {!isReadOnly ? (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setShowFinishModal(true)}
+                    style={styles.finishRoundButton}
+                  >
+                    <Text style={styles.finishRoundText}>Finish</Text>
+                  </TouchableOpacity>
+                ) : (
+                  isCompanionView && (
+                    <View style={styles.readOnlyBadge}>
+                      <Text style={styles.readOnlyBadgeText}>Live Viewer</Text>
+                    </View>
+                  )
+                )}
+
+                {/* Double Peoria: Declared HC and DP HC */}
+                {gameConfig.isDoublePeoria && (
+                  <View style={styles.headerHandicapCol}>
+                    <View
+                      style={[
+                        styles.headerHandicapBadge,
+                        {
+                          backgroundColor: isDark
+                            ? "rgba(139,195,74,0.15)"
+                            : "rgba(232, 245, 233, 0.50)",
+                          borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.headerHandicapText,
+                          { color: isDark ? "#8bc34a" : "#2e7d32" },
+                        ]}
+                      >
+                        Declared HC: {primaryHandicap ?? 0}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.headerHandicapBadge,
+                        {
+                          backgroundColor: isDark
+                            ? "rgba(148,163,184,0.15)"
+                            : "rgba(241, 245, 249, 0.50)",
+                          borderColor: isDark ? "#64748b" : "#94a3b8",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.headerHandicapText,
+                          { color: isDark ? "#cbd5e1" : "#475569" },
+                        ]}
+                      >
+                        DP HC:{" "}
+                        {isReadOnly &&
+                        primaryTotals.hasScore &&
+                        primaryTotals.gross > 0
+                          ? primaryTotals.gross - primaryTotals.net
+                          : "NIL"}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* System 36: Declared HC and Sys36 HC */}
+                {gameConfig.isSystem36 && (
+                  <View style={styles.headerHandicapCol}>
+                    <View
+                      style={[
+                        styles.headerHandicapBadge,
+                        {
+                          backgroundColor: isDark
+                            ? "rgba(139,195,74,0.15)"
+                            : "rgba(232, 245, 233, 0.50)",
+                          borderColor: isDark ? "#4d7c0f" : "#8bc34a",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.headerHandicapText,
+                          { color: isDark ? "#8bc34a" : "#2e7d32" },
+                        ]}
+                      >
+                        Declared HC: {primaryHandicap ?? 0}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.headerHandicapBadge,
+                        {
+                          backgroundColor: isDark
+                            ? "rgba(148,163,184,0.15)"
+                            : "rgba(241, 245, 249, 0.50)",
+                          borderColor: isDark ? "#64748b" : "#94a3b8",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.headerHandicapText,
+                          { color: isDark ? "#cbd5e1" : "#475569" },
+                        ]}
+                      >
+                        Sys36 HC:{" "}
+                        {primaryTotals.hasScore && primaryTotals.gross > 0
+                          ? Math.min(24, Math.max(0, 36 - primaryTotals.pts))
+                          : "NIL"}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+          
           </View>
         </View>
 
@@ -3096,9 +3143,7 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               >
                 <TouchableOpacity
-                  onPress={() =>
-                    handleOpenRangefinder(holes[0]?.holeNumber || 1)
-                  }
+                  onPress={() => handleOpenRangefinder()}
                   style={styles.gpsButton}
                 >
                   <Ionicons
@@ -3522,28 +3567,35 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                                       isDark={isDark}
                                       valueText={valueText}
                                       cellBackgroundColor={nassauCellBg}
-                                      onChangeText={(t) =>
+                                      onChangeText={(t) => {
+                                        setTargetHoleForGps(hole.holeNumber);
                                         handleScoreChange(
                                           hole.holeId,
                                           partner.playerId,
                                           t,
-                                        )
-                                      }
+                                        );
+                                      }}
+                                      onFocus={() => {
+                                        setTargetHoleForGps(hole.holeNumber);
+                                      }}
                                       sandy={holeInfo.sandy}
-                                      onToggleSandy={() =>
+                                      onToggleSandy={() => {
+                                        setTargetHoleForGps(hole.holeNumber);
                                         handleToggleSandy(
                                           hole.holeId,
                                           partner.playerId,
-                                        )
-                                      }
+                                        );
+                                      }}
                                       r={holeInfo.r}
-                                      onToggleR={() =>
+                                      onToggleR={() => {
+                                        setTargetHoleForGps(hole.holeNumber);
                                         handleToggleR(
                                           hole.holeId,
                                           partner.playerId,
-                                        )
-                                      }
+                                        );
+                                      }}
                                       onDisabledPress={() => {
+                                        setTargetHoleForGps(hole.holeNumber);
                                         if (isReadOnly) return;
                                         if (partner.userId) {
                                           const uid = Number(partner.userId);
@@ -4060,7 +4112,8 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
                               "Total",
                               halvesData.allSorted,
                               hasAnyScore
-                                ? sideScoringSummaries.nassauState?.overallHouses
+                                ? sideScoringSummaries.nassauState
+                                    ?.overallHouses
                                 : undefined,
                               true,
                             )}
@@ -4152,14 +4205,16 @@ export const UnifiedScorecard: React.FC<UnifiedScorecardProps> = ({
           visible={rangefinderModalVisible}
           onClose={() => {
             setRangefinderModalVisible(false);
-            setRangefinderHole(null);
+          }}
+          onHoleChange={(holeNum) => {
+            setTargetHoleForGps(holeNum);
           }}
           holes={holes}
+          initialHoleNumber={targetHoleForGps ?? getLastHoleNumber()}
           initialHoleId={
-            rangefinderHole !== null
-              ? holes.find((h) => h.holeNumber === rangefinderHole)?.holeId ||
-                holes[0]?.holeId ||
-                null
+            targetHoleForGps !== null
+              ? holes.find((h) => h.holeNumber === targetHoleForGps)?.holeId ||
+                targetHoleForGps
               : holes[0]?.holeId || null
           }
           courseName={propCourseName || holes[0]?.courseName}
@@ -4438,10 +4493,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerHandicapCol: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 4,
   },
   headerHandicapBadge: {
     paddingHorizontal: 6,
@@ -4476,12 +4531,13 @@ const styles = StyleSheet.create({
   finishRoundButton: {
     backgroundColor: "#8bc34a",
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 8,
+    alignSelf: "flex-end",
   },
   finishRoundText: {
     color: "#ffffff",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
   readOnlyBadge: {
@@ -4497,19 +4553,19 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    paddingTop: 3,
+    padding: 3,
     paddingHorizontal: 6,
     borderBottomWidth: 1,
     gap: 6,
   },
   tabItem: {
     flex: 1,
-    paddingVertical: 5,
+    paddingVertical: 7,
     alignItems: "center",
     justifyContent: "center",
   },
   tabItemText: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
   },
   tabActiveText: {

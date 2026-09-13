@@ -27,6 +27,7 @@ import { resolveMediaUrl } from "@/utils/mediaUtils";
 import { verifyScoreApi } from "@/api/modules/admin/dashboard.api";
 import GolferParadise from "./GolferParadise";
 import MembersTab from "./MembersTab";
+import ImportantUpdatesTab from "./ImportantUpdatesTab";
 import { useFocusEffect } from "expo-router";
 
 export type Scorecard = {
@@ -607,8 +608,11 @@ type OverviewTabProps = {
   handleVerify?: (id: string, playerName: string) => void;
   searchQuery?: string;
   isSearchFocused?: boolean;
+  section?: "updates" | "community";
+  onSectionChange?: (section: "updates" | "community") => void;
   subTab: "feed" | "paradise" | "members";
   onSubTabChange: (tab: "feed" | "paradise" | "members") => void;
+  refreshing?: boolean;
 };
 
 export function OverviewTab({
@@ -617,11 +621,27 @@ export function OverviewTab({
   handleVerify,
   searchQuery = "",
   isSearchFocused = false,
+  section,
+  onSectionChange,
   subTab,
   onSubTabChange,
+  refreshing,
 }: OverviewTabProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [internalSection, setInternalSection] = useState<
+    "updates" | "community"
+  >("updates");
+  const currentSection = section !== undefined ? section : internalSection;
+
+  const handleSectionChange = (sec: "updates" | "community") => {
+    if (onSectionChange) {
+      onSectionChange(sec);
+    } else {
+      setInternalSection(sec);
+    }
+  };
+
   const [expandedId, setExpandedId] = useState<string | null>(
     cards.length > 0 ? cards[0].id : null,
   );
@@ -655,11 +675,12 @@ export function OverviewTab({
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <VStack>
+        {/* Main Tab Switches: Imp Update (left, opened by default) vs Community (right) */}
         {!searchQuery && (
           <HStack
-            className="mb-4 p-1.5 rounded-full"
+            className="mb-3 p-1.5 rounded-full"
             style={{
               backgroundColor: isDark
                 ? "rgba(15, 23, 42, 0.7)"
@@ -671,19 +692,24 @@ export function OverviewTab({
             }}
           >
             {[
-              { key: "feed", label: "Game Feed", icon: "pulse" },
               {
-                key: "paradise",
-                label: "Golfer Paradise",
-                icon: "trophy-outline",
+                key: "updates",
+                label: "Important Updates",
+                icon: "megaphone",
+                inactiveIcon: "megaphone-outline",
               },
-              { key: "members", label: "Members", icon: "people-outline" },
+              {
+                key: "community",
+                label: "Community",
+                icon: "people",
+                inactiveIcon: "people-outline",
+              },
             ].map((st) => {
-              const active = subTab === st.key;
+              const active = currentSection === st.key;
               return (
                 <Pressable
                   key={st.key}
-                  onPress={() => handleSubTabChange(st.key as any)}
+                  onPress={() => handleSectionChange(st.key as any)}
                   className="flex-1"
                   style={{ borderRadius: 9999 }}
                 >
@@ -700,7 +726,7 @@ export function OverviewTab({
                         shadowRadius: 10,
                         elevation: 6,
                       }}
-                      className="flex-row py-2.5 px-1 items-center justify-center rounded-full"
+                      className="flex-row py-2.5 px-2 items-center justify-center rounded-full"
                     >
                       <HStack space="xs" className="items-center">
                         <Ionicons
@@ -709,7 +735,7 @@ export function OverviewTab({
                           color="#fff"
                         />
                         <Text
-                          className="text-xs text-white"
+                          className="text-md text-white ml-1"
                           style={{ fontWeight: "800" }}
                         >
                           {st.label}
@@ -717,15 +743,15 @@ export function OverviewTab({
                       </HStack>
                     </LinearGradient>
                   ) : (
-                    <View className="flex-row py-2.5 px-1 items-center justify-center rounded-full">
+                    <View className="flex-row py-2.5 px-2 items-center justify-center rounded-full">
                       <HStack space="xs" className="items-center">
                         <Ionicons
-                          name={st.icon as any}
+                          name={st.inactiveIcon as any}
                           size={16}
                           color={isDark ? "#D1D5DB" : "#4B5563"}
                         />
                         <Text
-                          className="font-bold text-xs"
+                          className="font-bold text-md ml-1"
                           style={{
                             color: isDark ? "#D1D5DB" : "#4B5563",
                           }}
@@ -741,56 +767,165 @@ export function OverviewTab({
           </HStack>
         )}
 
-        {subTab === "feed" || searchQuery ? (
-          <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
-            {cards.length === 0 && (
-              <Box
-                className="rounded-2xl border py-14 items-center"
-                style={{
-                  backgroundColor: isDark
-                    ? "rgba(15, 23, 42, 0.7)"
-                    : "rgba(255, 255, 255, 0.7)",
-                  borderColor: isDark
-                    ? "rgba(139, 195, 74, 0.35)"
-                    : "rgba(139, 195, 74, 0.45)",
-                  borderRadius: 20,
-                }}
-              >
-                <Text className="text-5xl">⛳</Text>
-                <Text
-                  className="font-semibold mt-3"
-                  style={{ color: isDark ? "#aaa" : "#6B7280", fontSize: 15 }}
-                >
-                  {searchQuery
-                    ? "No matching scorecards found"
-                    : "No scorecards yet"}
-                </Text>
-              </Box>
-            )}
+        {/* Updates Section (Kept mounted for instantaneous zero-latency switching) */}
+        <View
+          style={{
+            display: currentSection === "updates" ? "flex" : "none",
+            width: SCREEN_WIDTH - 32,
+            overflow: "hidden",
+          }}
+        >
+          <ImportantUpdatesTab
+            searchQuery={searchQuery}
+            isDark={isDark}
+            refreshing={refreshing}
+          />
+        </View>
 
-            {cards.map((card) => (
-              <FeedCard
-                key={card.id}
-                card={card}
-                groupName={card.groupName}
-                isDark={isDark}
-                isExpanded={expandedId === card.id}
-                onToggle={() => toggleCard(card.id)}
-                handleLike={handleLike}
-                handleVerify={handleVerify}
-                onActivity={handleShowActivity}
-              />
-            ))}
-          </View>
-        ) : subTab === "paradise" ? (
-          <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
-            <GolferParadise searchQuery={searchQuery} />
-          </View>
-        ) : (
-          <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
-            <MembersTab searchQuery={searchQuery} />
-          </View>
-        )}
+        {/* Community Section (Kept mounted for instantaneous zero-latency switching) */}
+        <View
+          style={{
+            display: currentSection === "community" ? "flex" : "none",
+            width: SCREEN_WIDTH - 32,
+            overflow: "hidden",
+          }}
+        >
+          {/* Community Subtabs: Game Feed, Golfer Paradise, Members */}
+          {!searchQuery && (
+            <HStack
+              className="mb-4 p-1.5 rounded-full"
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(15, 23, 42, 0.5)"
+                  : "rgba(255, 255, 255, 0.5)",
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(139, 195, 74, 0.25)"
+                  : "rgba(139, 195, 74, 0.35)",
+              }}
+            >
+              {[
+                { key: "feed", label: "Game Feed", icon: "pulse" },
+                {
+                  key: "paradise",
+                  label: "Golfer Paradise",
+                  icon: "trophy-outline",
+                },
+                { key: "members", label: "Members", icon: "people-outline" },
+              ].map((st) => {
+                const active = subTab === st.key;
+                return (
+                  <Pressable
+                    key={st.key}
+                    onPress={() => handleSubTabChange(st.key as any)}
+                    className="flex-1"
+                    style={{ borderRadius: 9999 }}
+                  >
+                    {active ? (
+                      <LinearGradient
+                        colors={["#8bc34a", "#558b2f"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          borderRadius: 9999,
+                          shadowColor: "#8bc34a",
+                          shadowOffset: { width: 0, height: 6 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 10,
+                          elevation: 6,
+                        }}
+                        className="flex-row py-2.5 px-1 items-center justify-center rounded-full"
+                      >
+                        <HStack space="xs" className="items-center">
+                          <Ionicons
+                            name={st.icon as any}
+                            size={16}
+                            color="#fff"
+                          />
+                          <Text
+                            className="text-xs text-white"
+                            style={{ fontWeight: "800" }}
+                          >
+                            {st.label}
+                          </Text>
+                        </HStack>
+                      </LinearGradient>
+                    ) : (
+                      <View className="flex-row py-2.5 px-1 items-center justify-center rounded-full">
+                        <HStack space="xs" className="items-center">
+                          <Ionicons
+                            name={st.icon as any}
+                            size={16}
+                            color={isDark ? "#D1D5DB" : "#4B5563"}
+                          />
+                          <Text
+                            className="font-bold text-xs"
+                            style={{
+                              color: isDark ? "#D1D5DB" : "#4B5563",
+                            }}
+                          >
+                            {st.label}
+                          </Text>
+                        </HStack>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </HStack>
+          )}
+
+          {subTab === "feed" || searchQuery ? (
+            <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
+              {cards.length === 0 && (
+                <Box
+                  className="rounded-2xl border py-14 items-center"
+                  style={{
+                    backgroundColor: isDark
+                      ? "rgba(15, 23, 42, 0.7)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDark
+                      ? "rgba(139, 195, 74, 0.35)"
+                      : "rgba(139, 195, 74, 0.45)",
+                    borderRadius: 20,
+                  }}
+                >
+                  <Text className="text-5xl">⛳</Text>
+                  <Text
+                    className="font-semibold mt-3"
+                    style={{ color: isDark ? "#aaa" : "#6B7280", fontSize: 15 }}
+                  >
+                    {searchQuery
+                      ? "No matching scorecards found"
+                      : "No scorecards yet"}
+                  </Text>
+                </Box>
+              )}
+
+              {cards.map((card) => (
+                <FeedCard
+                  key={card.id}
+                  card={card}
+                  groupName={card.groupName}
+                  isDark={isDark}
+                  isExpanded={expandedId === card.id}
+                  onToggle={() => toggleCard(card.id)}
+                  handleLike={handleLike}
+                  handleVerify={handleVerify}
+                  onActivity={handleShowActivity}
+                />
+              ))}
+            </View>
+          ) : subTab === "paradise" ? (
+            <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
+              <GolferParadise searchQuery={searchQuery} />
+            </View>
+          ) : (
+            <View style={{ width: SCREEN_WIDTH - 32, overflow: "hidden" }}>
+              <MembersTab searchQuery={searchQuery} />
+            </View>
+          )}
+        </View>
       </VStack>
 
       <Modal
@@ -960,7 +1095,7 @@ export function OverviewTab({
           </Box>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
