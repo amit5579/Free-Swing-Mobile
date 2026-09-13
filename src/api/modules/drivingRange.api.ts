@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import client from "../client";
 
 export const getDrivingRangeSlots = async (date: string, subAdminId: number) => {
@@ -22,9 +23,14 @@ export const bookDrivingRangeSlot = async (payload: any) => {
 
 export const uploadScreenshot = async (bookingId: number, fileUri: string, fileType: string, fileName: string) => {
     try {
+        const normalizedUri =
+            Platform.OS === "android" && !fileUri.startsWith("file://") && !fileUri.startsWith("content://")
+                ? `file://${fileUri}`
+                : fileUri;
+
         const formData = new FormData();
-        formData.append("file", {
-            uri: fileUri,
+        formData.append("image", {
+            uri: normalizedUri,
             type: fileType,
             name: fileName,
         } as any);

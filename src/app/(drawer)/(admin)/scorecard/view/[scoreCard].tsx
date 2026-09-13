@@ -114,6 +114,9 @@ const ScoreCard: React.FC = () => {
   const [activeRangefinderHole, setActiveRangefinderHole] = useState<
     number | null
   >(null);
+  const [lastViewedHoleNumber, setLastViewedHoleNumber] = useState<
+    number | null
+  >(null);
 
   // Multiplayer layout state variables
   const [partners, setPartners] = useState<any[]>([]);
@@ -1419,7 +1422,14 @@ const ScoreCard: React.FC = () => {
           </HStack>
           <HStack style={{ alignItems: "center" }}>
             <Pressable
-              onPress={() => setActiveRangefinderHole(holes[0]?.holeId || null)}
+              onPress={() => {
+                const targetHole =
+                  lastViewedHoleNumber !== null
+                    ? holes.find((h) => h.holeNumber === lastViewedHoleNumber)
+                        ?.holeId || holes[0]?.holeId || null
+                    : holes[0]?.holeId || null;
+                setActiveRangefinderHole(targetHole);
+              }}
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 6,
@@ -1581,7 +1591,10 @@ const ScoreCard: React.FC = () => {
                         {h.holeNumber}
                       </Text>
                       <TouchableOpacity
-                        onPress={() => setActiveRangefinderHole(h.holeId)}
+                        onPress={() => {
+                          setLastViewedHoleNumber(h.holeNumber);
+                          setActiveRangefinderHole(h.holeId);
+                        }}
                         className="ml-1"
                       >
                         <Ionicons
@@ -1724,7 +1737,10 @@ const ScoreCard: React.FC = () => {
                         {h.holeNumber}
                       </Text>
                       <TouchableOpacity
-                        onPress={() => setActiveRangefinderHole(h.holeId)}
+                        onPress={() => {
+                          setLastViewedHoleNumber(h.holeNumber);
+                          setActiveRangefinderHole(h.holeId);
+                        }}
                         className="ml-1"
                       >
                         <Ionicons
@@ -2230,7 +2246,10 @@ const ScoreCard: React.FC = () => {
                               {h.holeNumber}
                             </ThemedText>
                             <TouchableOpacity
-                              onPress={() => setActiveRangefinderHole(h.holeId)}
+                              onPress={() => {
+                                setLastViewedHoleNumber(h.holeNumber);
+                                setActiveRangefinderHole(h.holeId);
+                              }}
                               style={{ marginLeft: 2 }}
                             >
                               <Ionicons
@@ -4037,7 +4056,9 @@ const ScoreCard: React.FC = () => {
       <RangefinderModal
         visible={activeRangefinderHole !== null}
         onClose={() => setActiveRangefinderHole(null)}
+        onHoleChange={(holeNum) => setLastViewedHoleNumber(holeNum)}
         holes={holes}
+        initialHoleNumber={lastViewedHoleNumber}
         initialHoleId={activeRangefinderHole}
         courseName={holes[0]?.courseName || ""}
       />

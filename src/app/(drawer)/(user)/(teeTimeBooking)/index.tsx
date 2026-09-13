@@ -1082,7 +1082,7 @@ export default function TeeTimeBookingPage() {
             />
           }
         >
-          <VStack className="px-4 pt-5 pb-20">
+          <VStack className="px-2 pt-5 pb-20">
             {/* Date tabs */}
             <ThemedView
               style={{
@@ -1700,7 +1700,7 @@ export default function TeeTimeBookingPage() {
                       >
                         Affiliated Club / Serving / Retired
                       </Text>
-                      <Text
+                      {/* <Text
                         style={{
                           fontSize: 11,
                           color: isDark ? "#94a3b8" : "#64748b",
@@ -1708,7 +1708,7 @@ export default function TeeTimeBookingPage() {
                         }}
                       >
                         Defence / Retired / Affiliated club rates
-                      </Text>
+                      </Text> */}
                     </View>
                   </View>
 
@@ -1786,7 +1786,7 @@ export default function TeeTimeBookingPage() {
                       >
                         Non-Affiliated Member
                       </Text>
-                      <Text
+                      {/* <Text
                         style={{
                           fontSize: 11,
                           color: isDark ? "#94a3b8" : "#64748b",
@@ -1794,7 +1794,7 @@ export default function TeeTimeBookingPage() {
                         }}
                       >
                         Civil / Non-affiliated guest rates
-                      </Text>
+                      </Text> */}
                     </View>
                   </View>
 

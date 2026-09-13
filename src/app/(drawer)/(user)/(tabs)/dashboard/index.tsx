@@ -65,6 +65,9 @@ export default function DashboardScreen() {
   const [overviewSubTab, setOverviewSubTab] = useState<
     "feed" | "paradise" | "members"
   >("feed");
+  const [dashboardSection, setDashboardSection] = useState<
+    "updates" | "community"
+  >("updates");
   const [pendingScorecardRequests, setPendingScorecardRequests] = useState<
     any[]
   >([]);
@@ -471,6 +474,7 @@ export default function DashboardScreen() {
               {!(
                 activeTab === "hc" ||
                 (activeTab === "overview" &&
+                  dashboardSection === "community" &&
                   (overviewSubTab === "paradise" ||
                     overviewSubTab === "members"))
               ) && (
@@ -489,9 +493,11 @@ export default function DashboardScreen() {
                   <TextInput
                     placeholder={
                       activeTab === "overview"
-                        ? overviewSubTab === "members"
-                          ? "Search members..."
-                          : "Search game feed..."
+                        ? dashboardSection === "updates"
+                          ? "Search updates..."
+                          : overviewSubTab === "members"
+                            ? "Search members..."
+                            : "Search game feed..."
                         : activeTab === "progress"
                           ? "Search in progress..."
                           : "Search game history..."
@@ -1049,14 +1055,16 @@ export default function DashboardScreen() {
                   {searchQuery !== "" && (
                     <Box>
                       <Text
-                        className="text-2xl font-bold"
+                        className="text-2xl font-bold mb-2"
                         style={{ color: isDark ? "#fff" : "#000" }}
                       >
-                        Game Feed Results
+                        {dashboardSection === "updates"
+                          ? "Update Results"
+                          : "Game Feed Results"}
                       </Text>
                     </Box>
                   )}
-                  <Box className="mb-4">
+                  <Box className="mt-1 mb-4">
                     <OverviewTab
                       cards={cards.filter(
                         (c) =>
@@ -1071,11 +1079,17 @@ export default function DashboardScreen() {
                       handleVerify={handleVerify}
                       searchQuery={searchQuery}
                       isSearchFocused={isSearchFocused}
+                      section={dashboardSection}
+                      onSectionChange={(sec) => {
+                        setDashboardSection(sec);
+                        setSearchQuery("");
+                      }}
                       subTab={overviewSubTab}
                       onSubTabChange={(tab) => {
                         setOverviewSubTab(tab);
                         setSearchQuery(""); // Reset search when changing subtabs
                       }}
+                      refreshing={refreshing}
                     />
                   </Box>
                 </>

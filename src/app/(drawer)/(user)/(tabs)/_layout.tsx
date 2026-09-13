@@ -83,7 +83,7 @@ export default function TabLayout() {
               gap: 12,
             }}
           >
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => router.push("/(drawer)/(user)/(importantUpdates)")}
               style={{
                 width: 38,
@@ -97,7 +97,7 @@ export default function TabLayout() {
               }}
             >
               <Ionicons name="megaphone-outline" size={22} color="#8BC34A" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity
               onPress={() =>
                 navigation.getParent()?.dispatch(DrawerActions.openDrawer())

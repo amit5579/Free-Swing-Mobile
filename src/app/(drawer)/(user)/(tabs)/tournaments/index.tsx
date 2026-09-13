@@ -1646,11 +1646,21 @@ export default function TournamentsScreen() {
                     labelField="label"
                     valueField="value"
                     mode="modal"
-                    maxHeight={200}
+                    maxHeight={350}
                     value={value}
                     onChange={(item) => {
                       onChange(item.value);
                       setSelectedCourse(item.value);
+                    }}
+                    search={true}
+                    searchPlaceholder="Search courses..."
+                    inputSearchStyle={{
+                      color: isDark ? "white" : "black",
+                      backgroundColor: isDark ? "#1a1a1a" : "#fff",
+                      borderColor: isDark ? "#333" : "#ddd",
+                      borderRadius: 8,
+                      fontSize: 14,
+                      height: 44,
                     }}
                   />
                 )}
